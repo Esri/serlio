@@ -8,6 +8,7 @@ add_library(${PRT4MAYA_TARGET} SHARED
         node/PRTMaterialNode.cpp
 		node/Utilities.cpp
 		node/MayaCallbacks.cpp
+        prtModifier/ResolveMapCache.cpp
         prtModifier/PRTModifierAction.cpp
         prtModifier/PRTModifierCommand.cpp
         prtModifier/PRTModifierNode.cpp
@@ -19,7 +20,8 @@ add_library(${PRT4MAYA_TARGET} SHARED
 set_target_properties(${PRT4MAYA_TARGET} PROPERTIES
 	INSTALL_RPATH_USE_LINK_PATH FALSE
 	SKIP_RPATH FALSE
-	INSTALL_RPATH "\$ORIGIN/")
+	INSTALL_RPATH "\$ORIGIN/"
+    CXX_STANDARD 17)
 
 if(WIN32)
     # On Windows, Maya requires plugins to have the extension "mll"
@@ -79,7 +81,6 @@ install(FILES scripts/prt4mayaCreateUI.mel DESTINATION scripts)
 install(FILES scripts/prt4mayaDeleteUI.mel DESTINATION scripts)
 install(FILES shaders/prtShaderStingray.sfx DESTINATION shaders)
 install(FILES ${PROJECT_SOURCE_DIR}/../../../LICENSE DESTINATION .)
-install(FILES ${PROJECT_SOURCE_DIR}/../../../EULA.pdf DESTINATION .)
 if(WIN32)
 	install(FILES ${PROJECT_SOURCE_DIR}/../README_windows.md DESTINATION .)
 else()

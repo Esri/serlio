@@ -22,6 +22,7 @@
 #include "node/Utilities.h"
 
 #include "maya/MString.h"
+#include "prt/StringUtils.h"
 
 #include <cstdio>
 #include <cstdarg>
@@ -163,5 +164,74 @@ namespace prtu {
 		return computeSeed(a);
 	}
 
+	std::string toOSNarrowFromUTF16(const std::wstring& osWString) {
+		std::vector<char> temp(osWString.size());
+		size_t size = temp.size();
+		prt::Status status = prt::STATUS_OK;
+		prt::StringUtils::toOSNarrowFromUTF16(osWString.c_str(), temp.data(), &size, &status);
+		if (size > temp.size()) {
+			temp.resize(size);
+			prt::StringUtils::toOSNarrowFromUTF16(osWString.c_str(), temp.data(), &size, &status);
+		}
+		return std::string(temp.data());
+	}
+
+	std::wstring toUTF16FromOSNarrow(const std::string& osString) {
+		std::vector<wchar_t> temp(osString.size());
+		size_t size = temp.size();
+		prt::Status status = prt::STATUS_OK;
+		prt::StringUtils::toUTF16FromOSNarrow(osString.c_str(), temp.data(), &size, &status);
+		if (size > temp.size()) {
+			temp.resize(size);
+			prt::StringUtils::toUTF16FromOSNarrow(osString.c_str(), temp.data(), &size, &status);
+		}
+		return std::wstring(temp.data());
+	}
+
+	std::string toUTF8FromOSNarrow(const std::string& osString) {
+		std::wstring utf16String = toUTF16FromOSNarrow(osString);
+		std::vector<char> temp(utf16String.size());
+		size_t size = temp.size();
+		prt::Status status = prt::STATUS_OK;
+		prt::StringUtils::toUTF8FromUTF16(utf16String.c_str(), temp.data(), &size, &status);
+		if (size > temp.size()) {
+			temp.resize(size);
+			prt::StringUtils::toUTF8FromUTF16(utf16String.c_str(), temp.data(), &size, &status);
+		}
+		return std::string(temp.data());
+	}
+
+
+	std::wstring percentEncode(const std::string& utf8String) {
+		std::vector<char> temp(2 * utf8String.size());
+		size_t size = temp.size();
+		prt::Status status = prt::STATUS_OK;
+		prt::StringUtils::percentEncode(utf8String.c_str(), temp.data(), &size, &status);
+		if (size > temp.size()) {
+			temp.resize(size);
+			prt::StringUtils::percentEncode(utf8String.c_str(), temp.data(), &size, &status);
+		}
+
+		std::vector<wchar_t> u16temp(temp.size());
+		size = u16temp.size();
+		prt::StringUtils::toUTF16FromUTF8(temp.data(), u16temp.data(), &size, &status);
+		if (size > u16temp.size()) {
+			u16temp.resize(size);
+			prt::StringUtils::toUTF16FromUTF8(temp.data(), u16temp.data(), &size, &status);
+		}
+
+		return std::wstring(u16temp.data());
+	}
+
+	std::wstring toFileURI(const std::filesystem::path& p) {
+#ifdef _WIN32
+		static const std::wstring schema = L"file:/";
+#else
+		static const std::wstring schema = L"file:";
+#endif
+		std::string utf8Path = toUTF8FromOSNarrow(p.generic_string());
+		std::wstring pecString = percentEncode(utf8Path);
+		return schema + pecString;
+	}
 
 } // namespace prtu

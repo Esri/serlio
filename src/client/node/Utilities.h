@@ -36,6 +36,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <filesystem>
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 #   include <cfloat>
@@ -101,4 +102,29 @@ namespace prtu {
 #endif
 	}
 
+	std::string toOSNarrowFromUTF16(const std::wstring& osWString);
+	std::wstring toUTF16FromOSNarrow(const std::string& osString);
+	std::string toUTF8FromOSNarrow(const std::string& osString);
+
+	std::wstring toFileURI(const std::filesystem::path& p);
+	std::wstring percentEncode(const std::string& utf8String);
+
 } // namespace prtu
+
+inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {
+    std::wstring::size_type pos = 0;
+    while (pos < s.size()) {
+        pos = s.find_first_not_of(allowedChars, pos);
+        if (pos == std::wstring::npos)
+            break;
+        s[pos++] = L'_';
+    }
+}
+
+inline bool startsWithAnyOf(const std::string& s, const std::vector<std::string>& sv) {
+    for (const auto& v : sv) {
+        if (s.find(v) == 0)
+            return true;
+    }
+    return false;
+}

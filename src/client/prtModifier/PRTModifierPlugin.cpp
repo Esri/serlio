@@ -5,13 +5,24 @@
 #include "node/Utilities.h"
 
 #include <maya/MFnPlugin.h>
-
+#include <process.h>
 
 namespace {
 	const wchar_t*      PRT_EXT_SUBDIR = L"ext";
 	const prt::LogLevel PRT_LOG_LEVEL = prt::LOG_DEBUG;
 	const bool          ENABLE_LOG_CONSOLE = true;
 	const bool          ENABLE_LOG_FILE = false;
+
+    constexpr const char*         MAYA_TMP_PREFIX = "maya_";
+
+    std::filesystem::path getProcessTempDir() {
+        std::error_code ec;
+        auto tp = std::filesystem::temp_directory_path(ec);
+        if (ec)
+            tp = "/tmp/"; // TODO: other OSes
+        std::string n = std::string(MAYA_TMP_PREFIX) + std::to_string(::_getpid());
+        return { tp.append(n) };
+    }
 } // namespace
 
 // called when the plug-in is loaded into Maya.
@@ -49,6 +60,7 @@ MStatus initializePlugin(MObject obj)
 		return MS::kFailure;
 
 	PRTModifierAction::theCache = prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT);
+    PRTModifierAction::mResolveMapCache = new ResolveMapCache(getProcessTempDir());
 
 	MFnPlugin plugin(obj, "Esri R&D Center Zurich", "1.0", "Any");
 
@@ -71,6 +83,7 @@ MStatus uninitializePlugin(MObject obj)
 
 	PRTModifierAction::theCache->destroy();
 	PRTModifierAction::thePRT->destroy();
+    delete PRTModifierAction::mResolveMapCache;
 
 	if (ENABLE_LOG_CONSOLE) {
 		prt::removeLogHandler(PRTModifierAction::theLogHandler);

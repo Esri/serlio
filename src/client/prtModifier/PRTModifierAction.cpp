@@ -17,6 +17,8 @@
 #	include <dlfcn.h>
 #endif
 
+#include <mutex>
+
 #define CHECK_STATUS(st) if ((st) != MS::kSuccess) { break; }
 namespace {
 	const wchar_t* ENC_MAYA = L"MayaEncoder";
@@ -31,6 +33,7 @@ namespace {
 	const wchar_t* ANNOT_DIR = L"@Directory";
 	const wchar_t* ANNOT_FILE = L"@File";
 	const wchar_t* NULL_KEY = L"#NULL#";
+	std::mutex mResolveMapCacheMutex;
 } // namespace
 
 PRTModifierAction::PRTModifierAction()
@@ -179,43 +182,28 @@ const std::string& PRTModifierAction::getPluginRoot() {
 }
 
 
+const ResolveMapUPtr& PRTModifierAction::getResolveMap() {
+
+	std::lock_guard<std::mutex> lock(mResolveMapCacheMutex);
+	ResolveMapCache::LookupResult lookupResult = mResolveMapCache->get(std::filesystem::path(mRulePkg.asWChar()));
+
+	const ResolveMapUPtr& resolveMap = lookupResult.first;
+	return resolveMap;
+}
 
 MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg) {
 	mRulePkg = rulePkg;
 	MStatus  stat;
 
-	const std::string utf8Path(mRulePkg.asUTF8());
-	std::vector<char> percentEncodedPath(2 * utf8Path.size() + 1);
-	size_t len = percentEncodedPath.size();
-	prt::StringUtils::percentEncode(utf8Path.c_str(), &percentEncodedPath[0], &len);
-	if (len > percentEncodedPath.size() + 1) {
-		percentEncodedPath.resize(len);
-		prt::StringUtils::percentEncode(utf8Path.c_str(), &percentEncodedPath[0], &len);
-	}
-
-	std::string uri(FILE_PREFIX);
-	uri.append(&percentEncodedPath[0]);
-
 	mEnums.clear();
 	mRuleFile.clear();
 	mStartRule.clear();
 
-	MString unpackDir = MGlobal::executeCommandStringResult("workspace -q -fullName");
-	unpackDir += "/assets";
-	prt::Status resolveMapStatus = prt::STATUS_UNSPECIFIED_ERROR;
+	const ResolveMapUPtr& resolveMap = getResolveMap();
 
-	std::wstring utf16URI;
-	utf16URI.resize(uri.size() + 1);
-	len = utf16URI.size();
-	if (prt::StringUtils::toUTF16FromUTF8(uri.c_str(), &utf16URI[0], &len)) {
-		utf16URI.resize(len);
-		prt::StringUtils::toUTF16FromUTF8(uri.c_str(), &utf16URI[0], &len);
-	}
-
-	mResolveMap.reset(prt::createResolveMap(utf16URI.c_str(), unpackDir.asWChar(), &resolveMapStatus));
-	if (resolveMapStatus == prt::STATUS_OK) {
+	if (resolveMap != nullptr) {
 		size_t nKeys;
-		const wchar_t * const* keys = mResolveMap->getKeys(&nKeys);
+		const wchar_t * const* keys = resolveMap->getKeys(&nKeys);
 		std::wstring sCGB(L".cgb");
 		for (size_t k = 0; k < nKeys; k++) {
 			const std::wstring key = std::wstring(keys[k]);
@@ -230,7 +218,7 @@ MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg
 			const prt::RuleFileInfo::Entry* startRule = nullptr;
 
 			prt::Status infoStatus = prt::STATUS_UNSPECIFIED_ERROR;
-			RuleFileInfoUPtr info(prt::createRuleFileInfo(mResolveMap->getString(mRuleFile.c_str()), nullptr, &infoStatus));
+			RuleFileInfoUPtr info(prt::createRuleFileInfo(resolveMap->getString(mRuleFile.c_str()), nullptr, &infoStatus));
 			if (infoStatus == prt::STATUS_OK) {
 				for (size_t r = 0; r < info->getNumRules(); r++) {
 					if (info->getRule(r)->getNumParameters() > 0)
@@ -254,9 +242,6 @@ MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg
 
 		}
 
-	}
-	else {
-		mResolveMap = nullptr;
 	}
 
 	return MS::kSuccess;
@@ -309,7 +294,7 @@ MStatus PRTModifierAction::doIt()
 		prtu::computeSeed(vertices),
 		L"",
 		mGenerateAttrs.get(),
-		mResolveMap.get()
+		getResolveMap().get()
 	);
 
 	std::unique_ptr <const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
@@ -361,7 +346,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		UnitQuad::seed,
 		L"",
 		attrs.get(),
-		mResolveMap.get()
+		getResolveMap().get()
 	);
 	std::unique_ptr<const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
 	InitialShapeNOPtrVector shapes = { shape.get() };
@@ -737,3 +722,4 @@ prt::ConsoleLogHandler* PRTModifierAction::theLogHandler = nullptr;
 prt::FileLogHandler*    PRTModifierAction::theFileLogHandler = nullptr;
 const prt::Object*      PRTModifierAction::thePRT = nullptr;
 prt::CacheObject*       PRTModifierAction::theCache = nullptr;
+ResolveMapCache*        PRTModifierAction::mResolveMapCache = nullptr;
