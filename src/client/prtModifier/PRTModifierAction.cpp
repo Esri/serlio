@@ -31,6 +31,7 @@ namespace {
 	const wchar_t* ANNOT_DIR = L"@Directory";
 	const wchar_t* ANNOT_FILE = L"@File";
 	const wchar_t* NULL_KEY = L"#NULL#";
+	const MString  PRT("PRT");
 } // namespace
 
 PRTModifierAction::PRTModifierAction()
@@ -380,7 +381,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 
 		if (info->getAttribute(i)->getNumParameters() != 0) continue;
 
-		mBriefName2prtAttr[prtu::toCleanId(name).asWChar()] = name.asWChar();
+		mBriefName2prtAttr[briefName(name).asWChar()] = name.asWChar();
 
 		switch (info->getAttribute(i)->getReturnType()) {
 		case prt::AAT_BOOL: {
@@ -482,6 +483,51 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		}
 	}
 
+
+	std::list<MString> attrToRemove;
+	std::list<MString> isUsedAsColor;
+
+	for (unsigned int i = 0; i < node.attributeCount(); i++) {
+		MObject attr = node.attribute(i);
+		MFnAttribute mfn(attr);
+		MString attrName = mfn.shortName();
+
+		if (mfn.isUsedAsColor())
+			isUsedAsColor.push_back(mfn.name());
+
+		if (std::string(attrName.asChar()).find("PRT") == 0)
+		{
+			bool found = false;
+			for (size_t j = 0; j < info->getNumAttributes(); j++) {
+				const MString name = briefName(MString(info->getAttribute(j)->getName()));
+				if (name == attrName)
+				{
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				attrToRemove.push_back(mfn.name());
+			}
+		}
+	}
+
+	for (MString attrName : attrToRemove) {
+		bool isColorChannel = false;
+		for (MString colName : isUsedAsColor) {
+			if (attrName.length() == (colName.length() + 1) &&
+				std::string(attrName.asChar()).find(std::string(colName.asChar())) == 0)
+			{
+				isColorChannel = true;
+				break;
+			}
+		}
+		if (isColorChannel)
+			continue; //don't delete channels individually, this causes a crash
+		MObject attr = node.attribute(attrName);
+		node.removeAttribute(attr);
+	}
+
 	return MS::kSuccess;
 }
 
@@ -545,7 +591,7 @@ MString PRTModifierAction::longName(const MString& attrName) {
 }
 
 MString PRTModifierAction::briefName(const MString & attrName) {
-	return prtu::toCleanId(attrName);
+	return PRT+prtu::toCleanId(attrName);
 }
 
 MStatus PRTModifierAction::addParameter(MFnDependencyNode & node, MObject & attr, MFnAttribute& tAttr) {
