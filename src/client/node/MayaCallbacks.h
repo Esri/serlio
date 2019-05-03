@@ -23,6 +23,7 @@
 
 #include "codec/encoder/IMayaCallbacks.h"
 #include "prt/Cache.h"
+#include "prtx/Material.h"
 
 #include "maya/MStatus.h"
 #include "maya/MObject.h"
@@ -111,22 +112,21 @@ public:
 	virtual prt::Status attrString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, const wchar_t* /*value*/) override;
 
 public:
-	virtual void setVertices(const double* vtx, size_t size) override;
-	virtual void setNormals(const double* nrm, size_t size) override;
-	virtual void setUVs(const double* u, const double* v, size_t size) override;
 
-	virtual void setFaces(
+	virtual void add(
+		const wchar_t* name,
+		const double* vtx, size_t vtxSize,
+		const double* nrm, size_t nrmSize,
 		const uint32_t* counts, size_t countsSize,
-		const uint32_t* connects, size_t connectsSize,
-		const uint32_t* uvCounts, size_t uvCountsSize,
-		const uint32_t* uvConnects, size_t uvConnectsSize
-	) override;
+		const uint32_t* indices, size_t indicesSize,
+		double const* const* uvs, size_t const* uvsSizes, uint32_t uvSets,
+		const uint32_t* faceRanges, size_t faceRangesSize,
+		const prt::AttributeMap** materials,
+		const prt::AttributeMap** reports,
+		const int32_t* shapeIDs
+	);
 
-	virtual void createMesh() override;
 	void checkStringLength(std::wstring string, const size_t &maxStringLength);
-	virtual void finishMesh() override;
-
-	virtual void setMaterial(uint32_t start, uint32_t count, const prtx::MaterialPtr& mat) override;
 
 public:
 	const NamedAttributeHolders& getAttrs() const { return mAttrs; }
@@ -137,20 +137,10 @@ private:
 
 public:
 	std::unique_ptr<MFnMesh> mFnMesh;
-	MFloatPointArray         mVertices;
-	MIntArray                mVerticesCounts;
-	MIntArray                mVerticesConnects;
-	MFloatVectorArray        mNormals;
-	MFloatArray              mU;
-	MFloatArray              mV;
-	MIntArray                mUVCounts;
-	MIntArray                mUVConnects;
 
 private:
 	MObject                 outMeshObj;
 	MObject                 inMeshObj;
 
-	std::vector<prtx::MaterialPtr> mMaterials;
-	MIntArray               mShadingRanges;
 	NamedAttributeHolders    mAttrs;
 };
