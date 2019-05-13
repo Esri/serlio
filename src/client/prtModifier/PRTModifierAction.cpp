@@ -483,7 +483,13 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		}
 	}
 
+	removeUnusedAttribs(info, node);
 
+	return MS::kSuccess;
+}
+
+void PRTModifierAction::removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDependencyNode &node)
+{
 	std::list<MString> attrToRemove;
 	std::list<MString> isUsedAsColor;
 
@@ -495,7 +501,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		if (mfn.isUsedAsColor())
 			isUsedAsColor.push_back(mfn.name());
 
-		if (std::string(attrName.asChar()).find("PRT") == 0)
+		if (attrName.indexW("PRT") == 0)
 		{
 			bool found = false;
 			for (size_t j = 0; j < info->getNumAttributes(); j++) {
@@ -516,7 +522,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		bool isColorChannel = false;
 		for (MString colName : isUsedAsColor) {
 			if (attrName.length() == (colName.length() + 1) &&
-				std::string(attrName.asChar()).find(std::string(colName.asChar())) == 0)
+				attrName.indexW(colName) == 0)
 			{
 				isColorChannel = true;
 				break;
@@ -527,8 +533,6 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		MObject attr = node.attribute(attrName);
 		node.removeAttribute(attr);
 	}
-
-	return MS::kSuccess;
 }
 
 

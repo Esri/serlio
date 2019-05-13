@@ -81,6 +81,8 @@ private:
 	std::list<PRTModifierEnum> mEnums;
 	std::map<std::wstring, std::wstring> mBriefName2prtAttr;
 	MStatus createNodeAttributes(MObject& node, const std::wstring & ruleFile, const std::wstring & startRule, prt::AttributeMapBuilder* aBuilder, const prt::RuleFileInfo* info);
+	void removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDependencyNode &node);
+
 	static MStatus  addParameter(MFnDependencyNode & node, MObject & attr, MFnAttribute& tAttr);
 	static MStatus  addBoolParameter(MFnDependencyNode & node, MObject & attr, const MString & name, bool defaultValue);
 	static MStatus  addFloatParameter(MFnDependencyNode & node, MObject & attr, const MString & name, double defaultValue, double min, double max);
