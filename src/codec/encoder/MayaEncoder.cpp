@@ -51,7 +51,7 @@ constexpr const wchar_t* ENC_DESCRIPTION    = L"Encodes geometry into the Maya f
 
 const prtx::EncodePreparator::PreparationFlags PREP_FLAGS = prtx::EncodePreparator::PreparationFlags()
 	.instancing(false)
-	.mergeByMaterial(false)
+	.mergeByMaterial(true)
 	.triangulate(false)
 	.processHoles(prtx::HoleProcessor::TRIANGULATE_FACES_WITH_HOLES)
 	.mergeVertices(true)
@@ -170,12 +170,12 @@ void convertMaterialToAttributeMap(
 		const prtx::Material& prtxAttr,
 		const prtx::WStringVector& keys
 ) {
-	//if (DBG) log_wdebug(L"-- converting material: %1%") % prtxAttr.name();
+	if (DBG) log_debug("-- converting material: %1%") % prtxAttr.name();
 	for(const auto& key : keys) {
 		if (MATERIAL_ATTRIBUTE_BLACKLIST.count(key) > 0)
 			continue;
 
-//		if (DBG) log_wdebug(L"   key: %1%") % key;
+	if (DBG) log_debug("   key: %1%") % key;
 
 		switch(prtxAttr.getType(key)) {
 			case prt::Attributable::PT_BOOL:
@@ -243,7 +243,7 @@ void convertMaterialToAttributeMap(
 			}
 
 			default:
-//				if (DBG) log_wdebug(L"ignored atttribute '%s' with type %d") % key % prtxAttr.getType(key);
+			if (DBG) log_debug("ignored atttribute '%s' with type %d") % key % prtxAttr.getType(key);
 				break;
 		}
 	}
@@ -388,12 +388,12 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 			sg.normals.insert(sg.normals.end(), norms.begin(), norms.end());
 
 			const uint32_t numUVSets = mesh->getUVSetsCount();
-//			log_wdebug(L"mesh name: %1% (numUVSets %2%)") % mesh->getName() % numUVSets;
+			if (DBG) log_debug("mesh name: %1% (numUVSets %2%)") % mesh->getName() % numUVSets;
 			if (numUVSets > 0) {
 				const prtx::DoubleVector& uvs0 = mesh->getUVCoords(0);
 				for (uint32_t uvSet = 0; uvSet < sg.uvs.size(); uvSet++) {
 					const prtx::DoubleVector& uvs = (uvSet < numUVSets) ? mesh->getUVCoords(uvSet) : EMPTY_UVS;
-//					log_wdebug(L"uvSet %1%: uvs.size() = %2%") % uvSet % uvs.size();
+					if (DBG) log_debug(L"uvSet %1%: uvs.size() = %2%") % uvSet % uvs.size();
 					const auto& src = uvs.empty() ? uvs0 : uvs;
 					auto& tgt = sg.uvs[uvSet];
 					tgt.insert(tgt.end(), src.begin(), src.end());
@@ -563,8 +563,8 @@ MayaEncoderFactory* MayaEncoderFactory::createInstance() {
 	encoderInfoBuilder.setType(prt::CT_GEOMETRY);
 
 	prtx::PRTUtils::AttributeMapBuilderPtr amb(prt::AttributeMapBuilder::create());
-	amb->setBool(EO_EMIT_ATTRIBUTES, prtx::PRTX_FALSE);
-	amb->setBool(EO_EMIT_MATERIALS,  prtx::PRTX_FALSE);
+	amb->setBool(EO_EMIT_ATTRIBUTES, prtx::PRTX_TRUE);
+	amb->setBool(EO_EMIT_MATERIALS,  prtx::PRTX_TRUE);
 	amb->setBool(EO_EMIT_REPORTS,    prtx::PRTX_FALSE);
 	encoderInfoBuilder.setDefaultOptions(amb->createAttributeMap());
 

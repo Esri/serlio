@@ -135,9 +135,6 @@ private:
 	// must not be called
 	MayaCallbacks() { }
 
-public:
-	std::unique_ptr<MFnMesh> mFnMesh;
-
 private:
 	MObject                 outMeshObj;
 	MObject                 inMeshObj;

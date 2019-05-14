@@ -51,6 +51,30 @@ namespace {
 
 }
 
+struct TextureUVOrder {
+	MString      mayaUvSetName;
+	uint8_t       mayaUvSetIndex;
+	uint8_t      prtUvSetIndex;
+};
+
+//maya pbs stingray shader only supports 4 first uvsets -> reoder so 4 first are most important ones
+//other shaders support >4 sets
+const std::vector<TextureUVOrder> TEXTURE_UV_ORDERS = []() -> std::vector<TextureUVOrder> {
+	return {
+		// maya uvset name | maya idx | prt idx  | CGA key
+		{ L"map1",         0,    0 },  // colormap
+		{ L"dirtMap",      1,    2 },  // dirtmap
+		{ L"normalMap",    2,    5 },  // normalmap
+		{ L"opacityMap",   3,    4 },  // opacitymap
+
+		{ L"bumpMap",      4,    1 },  // bumpmap
+		{ L"specularMap",  5,    3 },  // specularmap
+		{ L"emissiveMap",  6,    6 },  // emissivemap
+		{ L"occlusionMap", 7,    7 },  // occlusionmap
+		{ L"roughnessMap", 8,    8 },  // roughnessmap
+		{ L"metallicMap",  9,    9 }   // metallicmap
+	};
+}();
 
 void MayaCallbacks::add(
 	const wchar_t* name,
@@ -64,7 +88,7 @@ void MayaCallbacks::add(
 	const prt::AttributeMap** reports,
 	const int32_t* shapeIDs)
 {
-	   	  
+
 
 	MFloatPointArray mVertices;
 	for (size_t i = 0; i < vtxSize; i += 3)
@@ -99,23 +123,34 @@ void MayaCallbacks::add(
 	prtu::dbg("    mVerticesConnects.length = %d", mVerticesIndices.length());
 	prtu::dbg("    mNormals.length          = %d", mNormals.length());
 
-	mFnMesh.reset(new MFnMesh());
-	MObject oMesh = mFnMesh->create(mVertices.length(), mVerticesCounts.length(), mVertices, mVerticesCounts, mVerticesIndices, newOutputData, &stat);
+	MFnMesh mFnMesh1;
+	MObject oMesh = mFnMesh1.create(mVertices.length(), mVerticesCounts.length(), mVertices, mVerticesCounts, mVerticesIndices, newOutputData, &stat);
 	MCHECK(stat);
+	MFnMesh mFnMesh(oMesh);
 
+
+
+	mFnMesh.clearUVs();
 
 	// -- add texture coordinates
-	for (size_t uvSet = 0; uvSet < uvSets; uvSet++) {
-		if (uvsSizes[uvSet] > 0) {
+	for (TextureUVOrder o : TEXTURE_UV_ORDERS) {
+		uint8_t uvSet = o.prtUvSetIndex;
 
-			MFloatArray              mU;
-			MFloatArray              mV;
+		if (uvSets > uvSet && uvsSizes[uvSet] > 0) {
+
+			MFloatArray mU;
+			MFloatArray mV;
 			for (size_t uvIdx = 0; uvIdx < uvsSizes[uvSet]; ++uvIdx) {
 				mU.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 0])); //maya mesh only supports float uvs
-				mV.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 0]));
+				mV.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 1]));
 			}
-			MString uvSetName = "map" + uvSet;
-			MCHECK(mFnMesh->setUVs(mU, mV, &uvSetName));
+
+			MString uvSetName = o.mayaUvSetName;
+
+			if (uvSet != 0) {
+				mFnMesh.createUVSetDataMeshWithName(uvSetName, &stat);
+				MCHECK(stat);
+			}
 
 			MIntArray mUVCounts;
 			for (size_t i = 0; i < countsSize; ++i)
@@ -125,10 +160,16 @@ void MayaCallbacks::add(
 			for (size_t i = 0; i < indicesSize; ++i)
 				mUVIndices.append(indices[i]);
 
+			MCHECK(mFnMesh.assignUVs(mUVCounts, mUVIndices, &uvSetName));
 
-			MCHECK(mFnMesh->assignUVs(mUVCounts, mUVIndices, &uvSetName));
-			
-		}		
+		}
+		else {
+			if (uvSet > 0) {
+				//add empty set to keep order consistent
+				mFnMesh.createUVSetDataMeshWithName(o.mayaUvSetName, &stat);
+				MCHECK(stat);
+			}
+		}
 	}
 
 	if (mNormals.length() > 0) {
@@ -140,8 +181,7 @@ void MayaCallbacks::add(
 			expandedNormals[i] = mNormals[mVerticesIndices[i]];
 
 		prtu::dbg("    expandedNormals.length = %d", expandedNormals.length());
-
-		MCHECK(mFnMesh->setVertexNormals(expandedNormals, mVerticesIndices));
+		MCHECK(mFnMesh.setVertexNormals(expandedNormals, mVerticesIndices));
 	}
 
 	MFnMesh outputMesh(outMeshObj);
@@ -302,7 +342,8 @@ void MayaCallbacks::add(
 								std::wstring keyToUse = key + std::to_wstring(i);
 								maxStringLengthTmp = maxStringLength;
 								prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp, &maxStringLengthTmp);
-								handle.setPositionByMemberName(tmp + i);
+								if (!handle.setPositionByMemberName(tmp))
+									continue;
 							}
 
 							maxStringLengthTmp = maxStringLength;
@@ -331,7 +372,8 @@ void MayaCallbacks::add(
 								std::wstring keyToUse = key + std::to_wstring(i);
 								maxStringLengthTmp = maxStringLength;
 								prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp, &maxStringLengthTmp);
-								handle.setPositionByMemberName(tmp);
+								if (!handle.setPositionByMemberName(tmp))
+									continue;
 							}
 
 							maxStringLengthTmp = maxStringLength;

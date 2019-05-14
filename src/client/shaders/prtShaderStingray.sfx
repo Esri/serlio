@@ -4,24 +4,18 @@ GroupVersion=-1.000000
 Advanced=0
 HelpID=0
 ParentMaterial=0
-NumberOfNodes=73
+NumberOfNodes=76
 #NT=20178 0
 	PC=3
-	posx=1 v=2003 -568.095337
-	posy=1 v=2003 -673.571533
+	posx=1 v=2003 -438.892761
+	posy=1 v=2003 -1197.870361
 	previewswatch=1 v=2002 1
 	group=-1
 	ISC=0
 	OSC=1
 		SVT=5022 3001 1 
-		CC=4
+		CC=1
 			C=0 0 1 44 1 2 0
-			CPC=0
-			C=0 0 1 47 1 2 0
-			CPC=0
-			C=0 0 1 50 1 2 0
-			CPC=0
-			C=0 0 1 53 1 2 0
 			CPC=0
 #NT=20189 0
 	PC=3
@@ -137,11 +131,10 @@ NumberOfNodes=73
 			C=7 0 2 2 2 3 0
 			CPC=0
 #NT=20176 0
-	PC=4
+	PC=3
 	posx=1 v=2003 1636.499512
 	posy=1 v=2003 871.666687
 	normalspace=2 e=0 v=5012 1
-	blendmode=2 e=0 v=5012 1
 	group=-1
 	ISC=13
 		SVT=5022 3002 1 0 0 
@@ -176,10 +169,11 @@ NumberOfNodes=73
 			C=9 0 5 30 0 1 0
 			CPC=0
 #NT=20177 0
-	PC=4
+	PC=5
 	name=1 v=5000 color_map
 	posx=1 v=2003 543.512024
 	posy=1 v=2003 -1111.884766
+	texturepath=2 e=1 v=5000 C:/Users/ZRH-MARKUSL2/Documents/maya/projects/default/assets/candler.rpk/assets/facade/walls/bricks.jpg
 	uiorder=2 e=0 v=2002 2
 	group=-1
 	ISC=2
@@ -269,11 +263,12 @@ NumberOfNodes=73
 			C=15 0 3 8 7 8 0
 			CPC=0
 #NT=20185 0
-	PC=6
+	PC=7
 	name=1 v=5000 use_color_map
 	posx=1 v=2003 542.361267
 	posy=1 v=2003 -1214.742188
 	type=2 e=0 v=5012 0
+	defaultscalar=2 e=0 v=2003 1.000000
 	uitype=2 e=0 v=5012 1
 	uiorder=2 e=0 v=2002 11
 	group=-1
@@ -289,7 +284,7 @@ NumberOfNodes=73
 	posx=1 v=2003 542.261963
 	posy=1 v=2003 -977.162415
 	type=2 e=0 v=5012 2
-	defaultvecthree=2 e=0 v=3002 1.000000,0.000000,0.000000
+	defaultvecthree=2 e=0 v=3002 0.988235,0.937255,0.886275
 	defaultvector=2 e=0 v=3003 0.500000,0.500000,0.500000,0.000000
 	uiorder=2 e=0 v=2002 21
 	group=-1
@@ -619,10 +614,11 @@ NumberOfNodes=73
 			C=39 0 5 43 1 2 0
 			CPC=0
 #NT=20177 0
-	PC=4
+	PC=5
 	name=1 v=5000 dirt_map
 	posx=1 v=2003 544.877319
 	posy=1 v=2003 -723.943176
+	texturepath=2 e=1 v=5000 C:/Users/ZRH-MARKUSL2/Documents/maya/projects/default/assets/candler.rpk/assets/facade/misc/dirtmap.jpg
 	uiorder=2 e=0 v=2002 2
 	group=-1
 	ISC=2
@@ -634,11 +630,12 @@ NumberOfNodes=73
 			C=40 0 3 39 2 3 0
 			CPC=0
 #NT=20185 0
-	PC=6
+	PC=7
 	name=1 v=5000 use_dirt_map
 	posx=1 v=2003 544.976563
 	posy=1 v=2003 -833.050415
 	type=2 e=0 v=5012 0
+	defaultscalar=2 e=0 v=2003 1.000000
 	uitype=2 e=0 v=5012 1
 	uiorder=2 e=0 v=2002 11
 	group=-1
@@ -1005,21 +1002,6 @@ NumberOfNodes=73
 		CC=1
 			C=64 0 1 62 0 1 0
 			CPC=0
-#NT=20178 0
-	PC=2
-	posx=1 v=2003 -480.095581
-	posy=1 v=2003 1604.428467
-	group=-1
-	ISC=0
-	OSC=1
-		SVT=5022 3001 1 
-		CC=3
-			C=65 0 1 56 1 2 0
-			CPC=0
-			C=65 0 1 59 1 2 0
-			CPC=0
-			C=65 0 1 62 1 2 0
-			CPC=0
 #NT=20185 0
 	PC=8
 	name=1 v=5000 colormap_trafo_tuv
@@ -1035,7 +1017,7 @@ NumberOfNodes=73
 	OSC=1
 		SVT=5022 3001 1 
 		CC=1
-			C=66 0 1 45 0 1 0
+			C=65 0 1 45 0 1 0
 			CPC=0
 #NT=20185 0
 	PC=8
@@ -1052,7 +1034,7 @@ NumberOfNodes=73
 	OSC=1
 		SVT=5022 3001 1 
 		CC=1
-			C=67 0 1 48 0 1 0
+			C=66 0 1 48 0 1 0
 			CPC=0
 #NT=20185 0
 	PC=8
@@ -1069,7 +1051,7 @@ NumberOfNodes=73
 	OSC=1
 		SVT=5022 3001 1 
 		CC=1
-			C=68 0 1 51 0 1 0
+			C=67 0 1 51 0 1 0
 			CPC=0
 #NT=20185 0
 	PC=8
@@ -1086,7 +1068,7 @@ NumberOfNodes=73
 	OSC=1
 		SVT=5022 3001 1 
 		CC=1
-			C=69 0 1 54 0 1 0
+			C=68 0 1 54 0 1 0
 			CPC=0
 #NT=20185 0
 	PC=8
@@ -1103,7 +1085,7 @@ NumberOfNodes=73
 	OSC=1
 		SVT=5022 3001 1 
 		CC=1
-			C=70 0 1 57 0 1 0
+			C=69 0 1 57 0 1 0
 			CPC=0
 #NT=20185 0
 	PC=8
@@ -1120,7 +1102,7 @@ NumberOfNodes=73
 	OSC=1
 		SVT=5022 3001 1 
 		CC=1
-			C=71 0 1 60 0 1 0
+			C=70 0 1 60 0 1 0
 			CPC=0
 #NT=20185 0
 	PC=8
@@ -1137,7 +1119,55 @@ NumberOfNodes=73
 	OSC=1
 		SVT=5022 3001 1 
 		CC=1
-			C=72 0 1 63 0 1 0
+			C=71 0 1 63 0 1 0
+			CPC=0
+#NT=20179 0
+	PC=2
+	posx=1 v=2003 -451.357483
+	posy=1 v=2003 -924.207947
+	group=-1
+	ISC=0
+	OSC=1
+		SVT=5022 3001 1 
+		CC=1
+			C=72 0 1 47 1 2 0
+			CPC=0
+#NT=20180 0
+	PC=2
+	posx=1 v=2003 -432.126617
+	posy=1 v=2003 -47.511288
+	group=-1
+	ISC=0
+	OSC=1
+		SVT=5022 3001 1 
+		CC=1
+			C=73 0 1 53 1 2 0
+			CPC=0
+#NT=20181 0
+	PC=2
+	posx=1 v=2003 -450.226135
+	posy=1 v=2003 -447.963623
+	group=-1
+	ISC=0
+	OSC=1
+		SVT=5022 3001 1 
+		CC=1
+			C=74 0 1 50 1 2 0
+			CPC=0
+#NT=20178 0
+	PC=2
+	posx=1 v=2003 -427.295807
+	posy=1 v=2003 1451.530151
+	group=-1
+	ISC=0
+	OSC=1
+		SVT=5022 3001 1 
+		CC=3
+			C=75 0 1 56 1 2 0
+			CPC=0
+			C=75 0 1 59 1 2 0
+			CPC=0
+			C=75 0 1 62 1 2 0
 			CPC=0
 
  */ } 
@@ -1243,33 +1273,6 @@ connections = [
 	} 
 	{ 
 		destination = { 
-			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab48" 
-		} 
-		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb1" 
-		} 
-	} 
-	{ 
-		destination = { 
-			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab51" 
-		} 
-		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb1" 
-		} 
-	} 
-	{ 
-		destination = { 
-			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab54" 
-		} 
-		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb1" 
-		} 
-	} 
-	{ 
-		destination = { 
 			connector_id = "F2F74E58-402D-472B-87DD-331E00DB416C" 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb6" 
 		} 
@@ -1356,6 +1359,15 @@ connections = [
 			] 
 		source = { 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab50" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab48" 
+		} 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab74" 
 		} 
 	} 
 	{ 
@@ -1472,6 +1484,15 @@ connections = [
 	{ 
 		destination = { 
 			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab51" 
+		} 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab76" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab34" 
 		} 
 		select = [ 
@@ -1582,6 +1603,15 @@ connections = [
 	} 
 	{ 
 		destination = { 
+			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab54" 
+		} 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab75" 
+		} 
+	} 
+	{ 
+		destination = { 
 			connector_id = "F2F74E58-402D-472B-87DD-331E00DB416C" 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb3" 
 		} 
@@ -1676,7 +1706,7 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab57" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab66" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab77" 
 		} 
 	} 
 	{ 
@@ -1685,7 +1715,7 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab60" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab66" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab77" 
 		} 
 	} 
 	{ 
@@ -1694,7 +1724,7 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab63" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab66" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab77" 
 		} 
 	} 
 	{ 
@@ -2030,7 +2060,6 @@ nodes = [
 		} 
 		id = "abbaabba-abba-abba-abba-abbaabbaabb9" 
 		options = [ 
-			"dd7fcf97-0627-48ab-b29a-95b5685bb123"
 			"2b136447-676e-4943-997b-04a28ae68497"
 		] 
 		position = [ 
@@ -2117,7 +2146,7 @@ nodes = [
 					ui_type = "checkbox" 
 				} 
 				type = "float" 
-				value = 0.000000 
+				value = 1.000000 
 			} 
 		} 
 		id = "abbaabba-abba-abba-abba-abbaabbaab17" 
@@ -2273,8 +2302,8 @@ nodes = [
 		options = [ 
 		] 
 		position = [ 
-			-568 
-			-673 
+			-438 
+			-1197 
 		] 
 		samplers = { 
 		} 
@@ -2317,7 +2346,7 @@ nodes = [
 					ui_type = "color" 
 				} 
 				type = "float3" 
-				value = [1.000000 0.000000 0.000000] 
+				value = [0.988235 0.937255 0.886275] 
 			} 
 		} 
 		id = "abbaabba-abba-abba-abba-abbaabbaab18" 
@@ -2369,7 +2398,7 @@ nodes = [
 					ui_type = "checkbox" 
 				} 
 				type = "float" 
-				value = 0.000000 
+				value = 1.000000 
 			} 
 		} 
 		id = "abbaabba-abba-abba-abba-abbaabbaab42" 
@@ -2513,6 +2542,25 @@ nodes = [
 		} 
 		title = "Dirtmap Trafo Suvw" 
 		type = "core/shader_nodes/material_variable" 
+	} 
+	{ 
+		content_size = [ 
+			160 
+			0 
+		] 
+		export = { 
+		} 
+		id = "abbaabba-abba-abba-abba-abbaabbaab74" 
+		options = [ 
+		] 
+		position = [ 
+			-451 
+			-924 
+		] 
+		samplers = { 
+		} 
+		title = "Texcoord1" 
+		type = "core/shader_nodes/texture_coordinate1" 
 	} 
 	{ 
 		content_size = [ 
@@ -2752,6 +2800,25 @@ nodes = [
 		} 
 		title = "Opacitymap Trafo Suvw" 
 		type = "core/shader_nodes/material_variable" 
+	} 
+	{ 
+		content_size = [ 
+			160 
+			0 
+		] 
+		export = { 
+		} 
+		id = "abbaabba-abba-abba-abba-abbaabbaab76" 
+		options = [ 
+		] 
+		position = [ 
+			-450 
+			-447 
+		] 
+		samplers = { 
+		} 
+		title = "Texcoord3" 
+		type = "core/shader_nodes/texture_coordinate3" 
 	} 
 	{ 
 		content_size = [ 
@@ -3031,6 +3098,25 @@ nodes = [
 		] 
 		export = { 
 		} 
+		id = "abbaabba-abba-abba-abba-abbaabbaab75" 
+		options = [ 
+		] 
+		position = [ 
+			-432 
+			-47 
+		] 
+		samplers = { 
+		} 
+		title = "Texcoord2" 
+		type = "core/shader_nodes/texture_coordinate2" 
+	} 
+	{ 
+		content_size = [ 
+			160 
+			0 
+		] 
+		export = { 
+		} 
 		id = "abbaabba-abba-abba-abba-abbaabbaabb7" 
 		options = [ 
 		] 
@@ -3251,12 +3337,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab66" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab77" 
 		options = [ 
 		] 
 		position = [ 
-			-480 
-			1604 
+			-427 
+			1451 
 		] 
 		samplers = { 
 		} 
