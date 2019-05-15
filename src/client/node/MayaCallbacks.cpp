@@ -45,10 +45,6 @@ namespace {
 		}
 	}
 
-	std::wstring uriToPath(const prtx::TexturePtr& t) {
-		return t->getURI()->getPath();
-	}
-
 }
 
 struct TextureUVOrder {
@@ -77,7 +73,7 @@ const std::vector<TextureUVOrder> TEXTURE_UV_ORDERS = []() -> std::vector<Textur
 }();
 
 void MayaCallbacks::add(
-	const wchar_t* name,
+	const wchar_t*,
 	const double* vtx, size_t vtxSize,
 	const double* nrm, size_t nrmSize,
 	const uint32_t* counts, size_t countsSize,
@@ -86,7 +82,7 @@ void MayaCallbacks::add(
 	const uint32_t* faceRanges, size_t faceRangesSize,
 	const prt::AttributeMap** materials,
 	const prt::AttributeMap** reports,
-	const int32_t* shapeIDs)
+	const int32_t*)
 {
 
 
@@ -265,8 +261,6 @@ void MayaCallbacks::add(
 	if (faceRangesSize > 1) {
 
 		for (size_t fri = 0; fri < faceRangesSize - 1; fri++) {
-			const uint32_t rangeStart = faceRanges[fri];
-			const uint32_t   rangeSize = faceRanges[fri + 1] - faceRanges[fri];
 
 			if (materials != nullptr) {
 				adsk::Data::Handle handle(*fStructure);
@@ -382,7 +376,11 @@ void MayaCallbacks::add(
 						}
 						break;
 					}
+					case prtx::Material::PT_UNDEFINED: break;
+					case prtx::Material::PT_BLIND_DATA: break;
+					case prtx::Material::PT_BLIND_DATA_ARRAY: break;
 					}
+
 				}
 				delete tmp;
 

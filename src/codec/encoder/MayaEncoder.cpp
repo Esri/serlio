@@ -170,12 +170,12 @@ void convertMaterialToAttributeMap(
 		const prtx::Material& prtxAttr,
 		const prtx::WStringVector& keys
 ) {
-	if (DBG) log_debug("-- converting material: %1%") % prtxAttr.name();
+	if (DBG) log_wdebug(L"-- converting material: %1%") % prtxAttr.name();
 	for(const auto& key : keys) {
 		if (MATERIAL_ATTRIBUTE_BLACKLIST.count(key) > 0)
 			continue;
 
-	if (DBG) log_debug("   key: %1%") % key;
+	if (DBG) log_wdebug(L"   key: %1%") % key;
 
 		switch(prtxAttr.getType(key)) {
 			case prt::Attributable::PT_BOOL:
@@ -243,7 +243,7 @@ void convertMaterialToAttributeMap(
 			}
 
 			default:
-			if (DBG) log_debug("ignored atttribute '%s' with type %d") % key % prtxAttr.getType(key);
+			if (DBG) log_wdebug(L"ignored atttribute '%s' with type %d") % key % prtxAttr.getType(key);
 				break;
 		}
 	}
@@ -388,12 +388,12 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 			sg.normals.insert(sg.normals.end(), norms.begin(), norms.end());
 
 			const uint32_t numUVSets = mesh->getUVSetsCount();
-			if (DBG) log_debug("mesh name: %1% (numUVSets %2%)") % mesh->getName() % numUVSets;
+			if (DBG) log_wdebug(L"mesh name: %1% (numUVSets %2%)") % mesh->getName() % numUVSets;
 			if (numUVSets > 0) {
 				const prtx::DoubleVector& uvs0 = mesh->getUVCoords(0);
 				for (uint32_t uvSet = 0; uvSet < sg.uvs.size(); uvSet++) {
 					const prtx::DoubleVector& uvs = (uvSet < numUVSets) ? mesh->getUVCoords(uvSet) : EMPTY_UVS;
-					if (DBG) log_debug(L"uvSet %1%: uvs.size() = %2%") % uvSet % uvs.size();
+					if (DBG) log_wdebug(L"uvSet %1%: uvs.size() = %2%") % uvSet % uvs.size();
 					const auto& src = uvs.empty() ? uvs0 : uvs;
 					auto& tgt = sg.uvs[uvSet];
 					tgt.insert(tgt.end(), src.begin(), src.end());
@@ -426,9 +426,9 @@ MayaEncoder::MayaEncoder(const std::wstring& id, const prt::AttributeMap* option
 
 void MayaEncoder::init(prtx::GenerateContext&) {
 	prt::Callbacks* cb = getCallbacks();
-	if (DBG) log_debug("MayaEncoder::init: cb = %x") % (size_t)cb;
+	if (DBG) log_wdebug(L"MayaEncoder::init: cb = %x") % (size_t)cb;
 	auto* oh = dynamic_cast<IMayaCallbacks*>(cb);
-	if (DBG) log_debug("                   oh = %x") % (size_t)oh;
+	if (DBG) log_wdebug(L"                   oh = %x") % (size_t)oh;
 	if(oh == nullptr) throw prtx::StatusException(prt::STATUS_ILLEGAL_CALLBACK_OBJECT);
 }
 
@@ -547,7 +547,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 	        reportAttrMaps.v.empty() ? nullptr : reportAttrMaps.v.data(),
 			shapeIDs.data());
 
-	if (DBG) log_debug("MayaEncoder::convertGeometry: end");
+	if (DBG) log_wdebug(L"MayaEncoder::convertGeometry: end");
 }
 
 void MayaEncoder::finish(prtx::GenerateContext& /*context*/) {
