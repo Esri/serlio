@@ -185,7 +185,7 @@ const std::string& PRTModifierAction::getPluginRoot() {
 const ResolveMapUPtr& PRTModifierAction::getResolveMap() {
 
 	std::lock_guard<std::mutex> lock(mResolveMapCacheMutex);
-	ResolveMapCache::LookupResult lookupResult = mResolveMapCache->get(std::filesystem::path(mRulePkg.asWChar()));
+	ResolveMapCache::LookupResult lookupResult = mResolveMapCache->get(std::wstring(mRulePkg.asWChar()));
 
 	const ResolveMapUPtr& resolveMap = lookupResult.first;
 	return resolveMap;

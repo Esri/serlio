@@ -2,16 +2,15 @@
 
 #include "node/Utilities.h"
 
-#include <filesystem>
 #include <map>
 #include <chrono>
 
 
 class ResolveMapCache {
 public:
-	using KeyType = std::string;
+	using KeyType = std::wstring;
 
-	explicit ResolveMapCache(const std::filesystem::path& unpackPath) : mRPKUnpackPath{unpackPath} { }
+	explicit ResolveMapCache(const std::wstring unpackPath) : mRPKUnpackPath{unpackPath} { }
 	ResolveMapCache(const ResolveMapCache&) = delete;
 	ResolveMapCache(ResolveMapCache&&) = delete;
 	ResolveMapCache& operator=(ResolveMapCache const&) = delete;
@@ -20,17 +19,17 @@ public:
 
 	enum class CacheStatus { HIT, MISS };
 	using LookupResult = std::pair<const ResolveMapUPtr&, CacheStatus>;
-	LookupResult get(const std::filesystem::path& rpk);
+	LookupResult get(const std::wstring& rpk);
 
 private:
 	struct ResolveMapCacheEntry {
 		ResolveMapUPtr mResolveMap;
-		std::filesystem::file_time_type mTimeStamp;
+		time_t mTimeStamp;
 	};
 	using Cache = std::map<KeyType, ResolveMapCacheEntry>;
 	Cache mCache;
 
-	const std::filesystem::path mRPKUnpackPath;
+	const std::wstring mRPKUnpackPath;
 };
 
 using ResolveMapCacheUPtr = std::unique_ptr<ResolveMapCache>;

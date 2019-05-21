@@ -26,14 +26,28 @@
 
 #include <cstdio>
 #include <cstdarg>
+#include <string>
+
+#ifdef _MSC_VER
+#include <windows.h>
+#include <tchar.h>
+#include <shellapi.h>
+#else
+#include <ftw.h>
+#endif
 
 
 namespace prtu {
 
 
-	const char* filename(const char* path) {
-		while (*(--path) != '\\');
-		return path + 1;
+
+	const std::wstring filename(const std::wstring& path) {
+		size_t pos = path.find_last_of(L'/');
+		if (pos != std::string::npos)
+		{
+			return path.substr(pos+1);
+		}
+		else return path;
 	}
 
 
@@ -56,6 +70,23 @@ namespace prtu {
 		return SEPARATOR;
 	}
 
+	template<> std::string getDirSeparator() {
+#ifdef _MSC_VER
+		static const std::string SEPARATOR = std::string("\\");
+#else
+		static const std::string SEPARATOR = std::string("/");
+#endif
+		return SEPARATOR;
+	}
+
+	template<> std::wstring getDirSeparator() {
+#ifdef _MSC_VER
+		static const std::wstring SEPARATOR = std::wstring(L"\\");
+#else
+		static const std::wstring SEPARATOR = std::wstring(L"/");
+#endif
+		return SEPARATOR;
+	}
 
 #if DO_DBG == 1
 
@@ -223,15 +254,106 @@ namespace prtu {
 		return std::wstring(u16temp.data());
 	}
 
-	std::wstring toFileURI(const std::filesystem::path& p) {
-#ifdef _WIN32
+	std::wstring toFileURI(const std::wstring& p) {
+#ifdef _MSC_VER
 		static const std::wstring schema = L"file:/";
 #else
 		static const std::wstring schema = L"file:";
 #endif
-		std::string utf8Path = toUTF8FromOSNarrow(p.generic_string());
+		std::string utf8Path = toUTF8FromOSNarrow(toOSNarrowFromUTF16(p));
 		std::wstring pecString = percentEncode(utf8Path);
 		return schema + pecString;
+	
 	}
 
+	void remove_all(std::wstring path)
+	{
+		
+
+#ifdef _MSC_VER
+
+		std::replace(path.begin(), path.end(), L'/', L'\\');
+		const wchar_t* lpszDir = path.c_str();
+
+		size_t len = wcslen(lpszDir);
+		wchar_t *pszFrom = new wchar_t[len + 2];
+		wcscpy(pszFrom, lpszDir);
+		pszFrom[len] = 0;
+		pszFrom[len + 1] = 0;
+
+		SHFILEOPSTRUCTW fileop;
+		fileop.hwnd = NULL;    // no status display
+		fileop.wFunc = FO_DELETE;  // delete operation
+		fileop.pFrom = pszFrom;  // source file name as double null terminated string
+		fileop.pTo = NULL;    // no destination needed
+		fileop.fFlags = FOF_NOCONFIRMATION | FOF_SILENT;  // do not prompt the user
+		fileop.fAnyOperationsAborted = FALSE;
+		fileop.lpszProgressTitle = NULL;
+		fileop.hNameMappings = NULL;
+
+		int ret = SHFileOperationW(&fileop);
+		delete[] pszFrom;
+
+#else
+		system((std::string("rm -rf ")+ toOSNarrowFromUTF16(path)).c_str());
+#endif
+
+	}
+
+	std::wstring temp_directory_path() {
+#ifdef _MSC_VER
+		DWORD dwRetVal = 0;
+		wchar_t lpTempPathBuffer[MAX_PATH];
+
+		dwRetVal = GetTempPathW(MAX_PATH,
+			lpTempPathBuffer);
+		if (dwRetVal > MAX_PATH || (dwRetVal == 0))
+		{
+			return L".\tmp";
+		}
+		else {
+			return std::wstring(lpTempPathBuffer);
+		}
+
+#else
+
+		char const *folder = getenv("TMPDIR");
+		if (folder == 0) {
+			folder = getenv("TMP");
+			if (folder == 0)
+			{
+				folder = getenv("TEMP");
+				if (folder == 0)
+				{
+					folder = getenv("TEMPDIR");
+					if (folder == 0)
+						folder = "/tmp";
+				}
+			}
+		}
+
+		return toUTF16FromOSNarrow(std::string(folder));
+#endif
+
+	}
+
+	time_t getFileModificationTime(const std::wstring& p) {
+
+		std::wstring pn = std::wstring(p);
+
+#ifdef _MSC_VER
+		std::replace(pn.begin(), pn.end(), L'/', L'\\');
+#endif
+
+		cout << "filemod for file" << prtu::toOSNarrowFromUTF16(pn).c_str() << "\n";
+
+
+		struct stat st;
+		int ierr = stat(prtu::toOSNarrowFromUTF16(pn).c_str(), &st);
+
+		if (ierr == 0) {
+			return st.st_mtime;
+		}
+		return -1;
+	}
 } // namespace prtu

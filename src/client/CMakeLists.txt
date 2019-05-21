@@ -20,8 +20,7 @@ add_library(${PRT4MAYA_TARGET} SHARED
 set_target_properties(${PRT4MAYA_TARGET} PROPERTIES
 	INSTALL_RPATH_USE_LINK_PATH FALSE
 	SKIP_RPATH FALSE
-	INSTALL_RPATH "\$ORIGIN/"
-    CXX_STANDARD 17)
+	INSTALL_RPATH "\$ORIGIN/")
 
 if(WIN32)
     # On Windows, Maya requires plugins to have the extension "mll"

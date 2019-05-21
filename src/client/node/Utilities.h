@@ -36,7 +36,6 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <filesystem>
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 #   include <cfloat>
@@ -77,7 +76,7 @@ namespace prtu {
 		return pv;
 	}
 
-	const char* filename(const char* path);
+	const std::wstring filename(const std::wstring& path);
 
 	void dbg(const char* fmt, ...);
 	void wdbg(const wchar_t* fmt, ...);
@@ -106,8 +105,14 @@ namespace prtu {
 	std::wstring toUTF16FromOSNarrow(const std::string& osString);
 	std::string toUTF8FromOSNarrow(const std::string& osString);
 
-	std::wstring toFileURI(const std::filesystem::path& p);
+	std::wstring toFileURI(const std::wstring& p);
 	std::wstring percentEncode(const std::string& utf8String);
+	
+	time_t getFileModificationTime(const std::wstring& p);
+
+	//we don't want a boost or c++17 dependency for just 2 functions, therefore done ourselfs
+	std::wstring temp_directory_path();
+	void remove_all(std::wstring path);
 
 } // namespace prtu
 
