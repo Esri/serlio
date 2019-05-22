@@ -23,7 +23,6 @@
 namespace {
 	const wchar_t* ENC_MAYA = L"MayaEncoder";
 	const wchar_t* ENC_ATTR = L"com.esri.prt.core.AttributeEvalEncoder";
-	const char*    FILE_PREFIX = "file:///";
 	const MString  NAME_GENERATE = "Generate_Model";
 
 	const wchar_t* ANNOT_START_RULE = L"@StartRule";

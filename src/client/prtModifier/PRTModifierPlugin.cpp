@@ -28,12 +28,17 @@ namespace {
 		wchar_t sep = prtu::getDirSeparator<wchar_t>();
 		if (tp[tp.size()-1] != sep)
 			tp += sep;
-        std::wstring n = std::wstring(L"maya_") + std::to_wstring(::getpid());
+        std::wstring n = std::wstring(L"maya_") +
+#ifdef _MSC_VER
+			std::to_wstring(::_getpid()); //prevent warning in win32
+#else
+			std::to_wstring(::getpid());
+#endif
         return { tp.append(n) };
     }
 } // namespace
 
-static void mayaExiting(void* clientData)
+static void mayaExiting(void*)
 {
 	uninitializePlugin(MObject::kNullObj);
 }

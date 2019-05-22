@@ -277,7 +277,7 @@ namespace prtu {
 
 		size_t len = wcslen(lpszDir);
 		wchar_t *pszFrom = new wchar_t[len + 2];
-		wcscpy(pszFrom, lpszDir);
+		wcscpy_s(pszFrom, len + 2, lpszDir);
 		pszFrom[len] = 0;
 		pszFrom[len + 1] = 0;
 
