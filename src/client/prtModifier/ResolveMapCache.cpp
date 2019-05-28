@@ -12,11 +12,6 @@ namespace {
 const ResolveMapUPtr RESOLVE_MAP_NONE;
 const ResolveMapCache::LookupResult LOOKUP_FAILURE = { RESOLVE_MAP_NONE, ResolveMapCache::CacheStatus::MISS };
 
-
-ResolveMapCache::KeyType createCacheKey(const std::wstring& rpk) {
-	return rpk; // TODO: try FS_Reader::splitIndexFileSectionPath for embedded resources
-}
-
 } // namespace
 
 
@@ -27,7 +22,6 @@ ResolveMapCache::~ResolveMapCache() {
 }
 
 ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
-	const auto cacheKey = createCacheKey(rpk);
 
 	const time_t timeStamp = prtu::getFileModificationTime(rpk);
 	LOG_DBG << "rpk: " << rpk << " current timestamp: " << timeStamp;
@@ -37,7 +31,7 @@ ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
 		return LOOKUP_FAILURE;
 
 	CacheStatus cs = CacheStatus::HIT;
-	auto it = mCache.find(cacheKey);
+	auto it = mCache.find(rpk);
 	if (it != mCache.end()) {
 		LOG_DBG << "rpk: cache timestamp: " << it->second.mTimeStamp;
 		if (it->second.mTimeStamp != timeStamp) {
@@ -67,7 +61,7 @@ ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
 		if (status != prt::STATUS_OK)
 			return LOOKUP_FAILURE;
 
-		it = mCache.emplace(cacheKey, std::move(rmce)).first;
+		it = mCache.emplace(rpk, std::move(rmce)).first;
 		LOG_INF << "Upacked RPK " << rpk << " to " << mRPKUnpackPath;
 	}
 

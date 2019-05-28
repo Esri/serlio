@@ -73,7 +73,6 @@ public:
 	}
 
 	virtual void handleLogEvent(const wchar_t* msg, prt::LogLevel) override {
-		// probably not the best idea - is there a houdini logging framework?
 		std::wcout << L"[" << mName << L"] " << msg << std::endl;
 	}
 
