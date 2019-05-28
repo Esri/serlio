@@ -36,6 +36,9 @@
 #include <ftw.h>
 #endif
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <wchar.h>
 
 namespace prtu {
 
@@ -324,18 +327,19 @@ namespace prtu {
 	}
 
 	time_t getFileModificationTime(const std::wstring& p) {
-
-		std::wstring pn = std::wstring(p);
+		std::wstring pn = p;
 
 #ifdef _WIN32
 		std::replace(pn.begin(), pn.end(), L'/', L'\\');
 #endif
 
-		cout << "filemod for file" << prtu::toOSNarrowFromUTF16(pn).c_str() << "\n";
-
-
+#ifdef _WIN32
+		struct _stat st;
+		int ierr = _wstat(pn.c_str(), &st);
+#else
 		struct stat st;
 		int ierr = stat(prtu::toOSNarrowFromUTF16(pn).c_str(), &st);
+#endif
 
 		if (ierr == 0) {
 			return st.st_mtime;

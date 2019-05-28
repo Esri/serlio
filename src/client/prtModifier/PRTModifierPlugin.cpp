@@ -11,8 +11,6 @@
 #include <process.h>
 #else
 #include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #endif
 
 

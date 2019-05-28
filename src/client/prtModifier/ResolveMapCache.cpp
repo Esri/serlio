@@ -4,7 +4,6 @@
 
 #include "ResolveMapCache.h"
 #include "LogHandler.h"
-#include <sys/stat.h> 
 #include "node/Utilities.h"
 
 
