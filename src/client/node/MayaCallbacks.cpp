@@ -137,7 +137,7 @@ void MayaCallbacks::addMesh(
 	mFnMesh.clearUVs();
 
 	// -- add texture coordinates
-	for (TextureUVOrder o : TEXTURE_UV_ORDERS) {
+	for (const TextureUVOrder& o : TEXTURE_UV_ORDERS) {
 		uint8_t uvSet = o.prtUvSetIndex;
 
 		if (uvSetsCount > uvSet && uvsSizes[uvSet] > 0) {
@@ -354,39 +354,6 @@ void MayaCallbacks::addMesh(
 						}
 						break;
 					}
-					case prtx::Material::PT_TEXTURE: {
-						const wchar_t* str = mat->getString(key);
-						if (wcslen(str) == 0)
-							break;
-						checkStringLength(str, maxStringLength);
-						prt::StringUtils::toOSNarrowFromUTF16(str, (char*)handle.asUInt8(), &maxStringLengthTmp);
-						break;
-					}
-					case prtx::Material::PT_TEXTURE_ARRAY: {
-						const wchar_t* const* stringArray = mat->getStringArray(key, &arraySize);
-
-						for (unsigned int i = 0; i < arraySize && i < maxStringLength; i++)
-						{
-							if (wcslen(stringArray[i]) == 0)
-								continue;
-
-							if (i > 0) {
-								std::wstring keyToUse = key + std::to_wstring(i);
-								maxStringLengthTmp = maxStringLength;
-								prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp, &maxStringLengthTmp);
-								if (!handle.setPositionByMemberName(tmp))
-									continue;
-							}
-
-							maxStringLengthTmp = maxStringLength;
-							checkStringLength(stringArray[i], maxStringLength);
-							prt::StringUtils::toOSNarrowFromUTF16(stringArray[i], (char*)handle.asUInt8(), &maxStringLengthTmp);
-						}
-						break;
-					}
-					case prtx::Material::PT_UNDEFINED: break;
-					case prtx::Material::PT_BLIND_DATA: break;
-					case prtx::Material::PT_BLIND_DATA_ARRAY: break;
 					}
 
 				}
