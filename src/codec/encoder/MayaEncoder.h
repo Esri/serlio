@@ -36,24 +36,6 @@
 
 class IMayaCallbacks;
 
-namespace detail {
-
-struct SerializedGeometry {
-	prtx::DoubleVector              coords;
-	prtx::DoubleVector              normals; // uses same indexing as coords
-	std::vector<prtx::DoubleVector> uvs;     // uses same indexing as coords per uv set
-	std::vector<uint32_t>           counts;
-	std::vector<uint32_t>           indices;
-
-	SerializedGeometry(uint32_t uvSets) : uvs(uvSets) { }
-};
-
-// visible for tests
-CODEC_EXPORTS_API SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector &geometries, const std::vector<prtx::MaterialPtrVector>& materials);
-
-} // namespace detail
-
-
 class MayaEncoder : public prtx::GeometryEncoder {
 public:
 	MayaEncoder(const std::wstring& id, const prt::AttributeMap* options, prt::Callbacks* callbacks);

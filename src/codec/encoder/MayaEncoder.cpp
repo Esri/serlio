@@ -49,6 +49,16 @@ constexpr bool           DBG                = false;
 constexpr const wchar_t* ENC_NAME           = L"SideFX(tm) Maya(tm) Encoder";
 constexpr const wchar_t* ENC_DESCRIPTION    = L"Encodes geometry into the Maya format.";
 
+struct SerializedGeometry {
+	prtx::DoubleVector              coords;
+	prtx::DoubleVector              normals; // uses same indexing as coords
+	std::vector<prtx::DoubleVector> uvs;     // uses same indexing as coords per uv set
+	std::vector<uint32_t>           counts;
+	std::vector<uint32_t>           indices;
+
+	SerializedGeometry(uint32_t uvSets) : uvs(uvSets) { }
+};
+
 const prtx::EncodePreparator::PreparationFlags PREP_FLAGS = prtx::EncodePreparator::PreparationFlags()
 	.instancing(false)
 	.mergeByMaterial(true)
@@ -374,7 +384,7 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 		}
 		++matsIt;
 	}
-	detail::SerializedGeometry sg(maxNumUVSets);
+	SerializedGeometry sg(maxNumUVSets);
 
 	// PASS 2: copy
 	uint32_t vertexIndexBase = 0;
@@ -485,7 +495,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 		shapeIDs.push_back(inst.getShapeId());
 	}
 
-	const detail::SerializedGeometry sg = detail::serializeGeometry(geometries, materials);
+	const SerializedGeometry sg = detail::serializeGeometry(geometries, materials);
 
 	if (DBG) {
 		log_debug("resolvemap: %s") % prtx::PRTUtils::objectToXML(initialShape.getResolveMap());
