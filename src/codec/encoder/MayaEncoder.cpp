@@ -46,7 +46,7 @@ namespace {
 
 constexpr bool           DBG                = false;
 
-constexpr const wchar_t* ENC_NAME           = L"SideFX(tm) Maya(tm) Encoder";
+constexpr const wchar_t* ENC_NAME           = L"Autodesk(tm) Maya(tm) Encoder";
 constexpr const wchar_t* ENC_DESCRIPTION    = L"Encodes geometry into the Maya format.";
 
 struct SerializedGeometry {
@@ -426,7 +426,6 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 
 	return sg;
 }
-
 } // namespace detail
 
 
@@ -553,8 +552,8 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 			sg.indices.data(), sg.indices.size(),
 			puvs.first.data(), puvs.second.data(), sg.uvs.size(),
 			faceRanges.data(), faceRanges.size(),
-	        matAttrMaps.v.empty() ? nullptr : matAttrMaps.v.data(),
-	        reportAttrMaps.v.empty() ? nullptr : reportAttrMaps.v.data(),
+			matAttrMaps.v.empty() ? nullptr : matAttrMaps.v.data(),
+			reportAttrMaps.v.empty() ? nullptr : reportAttrMaps.v.data(),
 			shapeIDs.data());
 
 	if (DBG) log_wdebug(L"MayaEncoder::convertGeometry: end");

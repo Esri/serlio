@@ -61,7 +61,7 @@ struct TextureUVOrder {
 	uint8_t      prtUvSetIndex;
 };
 
-//maya pbs stingray shader only supports 4 first uvsets -> reoder so 4 first are most important ones
+//maya pbr stingray shader only supports first 4 uvsets -> reoder so first 4 are most important ones
 //other shaders support >4 sets
 const std::vector<TextureUVOrder> TEXTURE_UV_ORDERS = []() -> std::vector<TextureUVOrder> {
 	return {
@@ -82,14 +82,14 @@ const std::vector<TextureUVOrder> TEXTURE_UV_ORDERS = []() -> std::vector<Textur
 
 void MayaCallbacks::addMesh(
 		const wchar_t* name,
-	const double* vtx, size_t vtxSize,
-	const double* nrm, size_t nrmSize,
+		const double* vtx, size_t vtxSize,
+		const double* nrm, size_t nrmSize,
 		const uint32_t* faceSizes, size_t numFaces,
-	const uint32_t* indices, size_t indicesSize,
+		const uint32_t* indices, size_t indicesSize,
 		double const* const* uvs, size_t const* uvsSizes, uint32_t uvSetsCount,
-	const uint32_t* faceRanges, size_t faceRangesSize,
-	const prt::AttributeMap** materials,
-	const prt::AttributeMap** reports,
+		const uint32_t* faceRanges, size_t faceRangesSize,
+		const prt::AttributeMap** materials,
+		const prt::AttributeMap** reports,
 		const int32_t* shapeIDs)
 {
 
