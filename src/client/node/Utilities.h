@@ -42,7 +42,7 @@
 #endif
 
 
-#define DO_DBG 1
+#define DO_DBG 0
 #define MCHECK(_stat_) {if(MS::kSuccess != _stat_) { prtu::dbg("maya err at %s:%d: %s %d\n", __FILE__, __LINE__, _stat_.errorString().asChar(), _stat_.statusCode());}}
 
 struct PRTDestroyer {

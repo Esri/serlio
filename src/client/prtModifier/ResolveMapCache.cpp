@@ -23,7 +23,7 @@ ResolveMapCache::KeyType createCacheKey(const std::wstring& rpk) {
 ResolveMapCache::~ResolveMapCache() {
 	if (mRPKUnpackPath.size()>0)
 		prtu::remove_all(mRPKUnpackPath);
-    LOG_INF << "Removed RPK unpack directory";
+	LOG_DBG << "Removed RPK unpack directory";
 }
 
 ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
