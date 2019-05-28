@@ -28,7 +28,7 @@
 #include <cstdarg>
 #include <string>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <windows.h>
 #include <tchar.h>
 #include <shellapi.h>
@@ -52,7 +52,7 @@ namespace prtu {
 
 
 	template<> char getDirSeparator() {
-#ifdef _MSC_VER
+#ifdef _WIN32
 		static const char SEPARATOR = '\\';
 #else
 		static const char SEPARATOR = '/';
@@ -62,7 +62,7 @@ namespace prtu {
 
 
 	template<> wchar_t getDirSeparator() {
-#ifdef _MSC_VER
+#ifdef _WIN32
 		static const wchar_t SEPARATOR = L'\\';
 #else
 		static const wchar_t SEPARATOR = L'/';
@@ -71,21 +71,11 @@ namespace prtu {
 	}
 
 	template<> std::string getDirSeparator() {
-#ifdef _MSC_VER
-		static const std::string SEPARATOR = std::string("\\");
-#else
-		static const std::string SEPARATOR = std::string("/");
-#endif
-		return SEPARATOR;
+		return std::string(1, getDirSeparator<char>());
 	}
 
 	template<> std::wstring getDirSeparator() {
-#ifdef _MSC_VER
-		static const std::wstring SEPARATOR = std::wstring(L"\\");
-#else
-		static const std::wstring SEPARATOR = std::wstring(L"/");
-#endif
-		return SEPARATOR;
+		return std::wstring(1, getDirSeparator<wchar_t>());
 	}
 
 #if DO_DBG == 1
@@ -255,7 +245,7 @@ namespace prtu {
 	}
 
 	std::wstring toFileURI(const std::wstring& p) {
-#ifdef _MSC_VER
+#ifdef _WIN32
 		static const std::wstring schema = L"file:/";
 #else
 		static const std::wstring schema = L"file:";
@@ -268,10 +258,7 @@ namespace prtu {
 
 	void remove_all(std::wstring path)
 	{
-		
-
-#ifdef _MSC_VER
-
+#ifdef _WIN32
 		std::replace(path.begin(), path.end(), L'/', L'\\');
 		const wchar_t* lpszDir = path.c_str();
 
@@ -293,7 +280,6 @@ namespace prtu {
 
 		int ret = SHFileOperationW(&fileop);
 		delete[] pszFrom;
-
 #else
 		system((std::string("rm -rf ")+ toOSNarrowFromUTF16(path)).c_str());
 #endif
@@ -301,7 +287,7 @@ namespace prtu {
 	}
 
 	std::wstring temp_directory_path() {
-#ifdef _MSC_VER
+#ifdef _WIN32
 		DWORD dwRetVal = 0;
 		wchar_t lpTempPathBuffer[MAX_PATH];
 
@@ -341,7 +327,7 @@ namespace prtu {
 
 		std::wstring pn = std::wstring(p);
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 		std::replace(pn.begin(), pn.end(), L'/', L'\\');
 #endif
 

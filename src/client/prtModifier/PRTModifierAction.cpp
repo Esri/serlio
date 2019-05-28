@@ -152,7 +152,7 @@ void PRTModifierAction::setMesh(MObject& _inMesh, MObject& _outMesh)
 const std::string& PRTModifierAction::getPluginRoot() {
 	static std::string* rootPath = nullptr;
 	if (rootPath == nullptr) {
-#ifdef _MSC_VER
+#ifdef _WIN32
 		char dllPath[_MAX_PATH];
 		char drive[8];
 		char dir[_MAX_PATH];

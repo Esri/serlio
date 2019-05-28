@@ -7,7 +7,7 @@
 #include <maya/MFnPlugin.h>
 #include <maya/MSceneMessage.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <process.h>
 #else
 #include <unistd.h>
@@ -29,7 +29,7 @@ namespace {
 		if (tp[tp.size()-1] != sep)
 			tp += sep;
         std::wstring n = std::wstring(L"maya_") +
-#ifdef _MSC_VER
+#ifdef _WIN32
 			std::to_wstring(::_getpid()); //prevent warning in win32
 #else
 			std::to_wstring(::getpid());
