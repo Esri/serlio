@@ -546,7 +546,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 
 	const std::pair<std::vector<const double*>, std::vector<size_t>> puvs = toPtrVec(sg.uvs);
 
-	cb->add(initialShape.getName(),
+	cb->addMesh(initialShape.getName(),
 	        sg.coords.data(), sg.coords.size(),
 			sg.normals.data(), sg.normals.size(),
 			sg.counts.data(), sg.counts.size(),

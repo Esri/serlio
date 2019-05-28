@@ -113,13 +113,13 @@ public:
 
 public:
 
-	virtual void add(
+	virtual void addMesh(
 		const wchar_t* name,
 		const double* vtx, size_t vtxSize,
 		const double* nrm, size_t nrmSize,
-		const uint32_t* counts, size_t countsSize,
+		const uint32_t* faceSizes, size_t numFaces,
 		const uint32_t* indices, size_t indicesSize,
-		double const* const* uvs, size_t const* uvsSizes, uint32_t uvSets,
+		double const* const* uvs, size_t const* uvsSizes, uint32_t uvSetsCount,
 		const uint32_t* faceRanges, size_t faceRangesSize,
 		const prt::AttributeMap** materials,
 		const prt::AttributeMap** reports,

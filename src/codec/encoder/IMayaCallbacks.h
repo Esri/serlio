@@ -35,25 +35,25 @@ public:
 	 * @param length of vertex coordinate array
 	 * @param nrm vertex normal array
 	 * @param nrmSize length of vertex normal array
-	 * @param counts polygon count array
-	 * @param countsSize length of polygon count array
+	 * @param faceSizes polygon sizes array
+	 * @param numFaces number of faces
 	 * @param indices vertex attribute index array (grouped by counts)
 	 * @param indicesSize vertex attribute index array
 	 * @param uvs array of texture coordinate arrays (same indexing as vertices per uv set)
 	 * @param uvsSizes lengths of uv arrays per uv set
-	 * @param uvSets number of uv sets
+	 * @param uvSetsCount number of uv sets
 	 * @param faceRanges ranges for materials and reports
 	 * @param materials contains faceRangesSize-1 attribute maps (all materials must have an identical set of keys and types)
 	 * @param reports contains faceRangesSize-1 attribute maps
 	 * @param shapeIDs shape ids per face, contains faceRangesSize-1 values
 	 */
-	virtual void add(
+	virtual void addMesh(
 			const wchar_t* name,
 			const double* vtx, size_t vtxSize,
 			const double* nrm, size_t nrmSize,
-			const uint32_t* counts, size_t countsSize,
+			const uint32_t* faceSizes, size_t numFaces,
 			const uint32_t* indices, size_t indicesSize,
-			double const* const* uvs, size_t const* uvsSizes, uint32_t uvSets,
+			double const* const* uvs, size_t const* uvsSizes, uint32_t uvSetsCount,
 			const uint32_t* faceRanges, size_t faceRangesSize,
 			const prt::AttributeMap** materials,
 			const prt::AttributeMap** reports,

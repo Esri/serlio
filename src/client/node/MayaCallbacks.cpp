@@ -80,17 +80,17 @@ const std::vector<TextureUVOrder> TEXTURE_UV_ORDERS = []() -> std::vector<Textur
 	};
 }();
 
-void MayaCallbacks::add(
-	const wchar_t*,
+void MayaCallbacks::addMesh(
+		const wchar_t* name,
 	const double* vtx, size_t vtxSize,
 	const double* nrm, size_t nrmSize,
-	const uint32_t* counts, size_t countsSize,
+		const uint32_t* faceSizes, size_t numFaces,
 	const uint32_t* indices, size_t indicesSize,
-	double const* const* uvs, size_t const* uvsSizes, uint32_t uvSets,
+		double const* const* uvs, size_t const* uvsSizes, uint32_t uvSetsCount,
 	const uint32_t* faceRanges, size_t faceRangesSize,
 	const prt::AttributeMap** materials,
 	const prt::AttributeMap** reports,
-	const int32_t*)
+		const int32_t* shapeIDs)
 {
 
 
@@ -103,9 +103,9 @@ void MayaCallbacks::add(
 		mNormals.append(MVector(nrm[i], nrm[i + 1], nrm[i + 2]));
 
 	MIntArray mVerticesCounts;
-	for (size_t i = 0; i < countsSize; ++i)
-		mVerticesCounts.append(counts[i]);
-	prtTrace(L"countsSize = ", countsSize);
+	for (size_t i = 0; i < numFaces; ++i)
+		mVerticesCounts.append(faceSizes[i]);
+	prtTrace(L"countsSize = ", numFaces);
 
 	MIntArray mVerticesIndices;
 	for (size_t i = 0; i < indicesSize; ++i)
@@ -140,7 +140,7 @@ void MayaCallbacks::add(
 	for (TextureUVOrder o : TEXTURE_UV_ORDERS) {
 		uint8_t uvSet = o.prtUvSetIndex;
 
-		if (uvSets > uvSet && uvsSizes[uvSet] > 0) {
+		if (uvSetsCount > uvSet && uvsSizes[uvSet] > 0) {
 
 			MFloatArray mU;
 			MFloatArray mV;
@@ -157,8 +157,8 @@ void MayaCallbacks::add(
 			}
 
 			MIntArray mUVCounts;
-			for (size_t i = 0; i < countsSize; ++i)
-				mUVCounts.append(counts[i]);
+			for (size_t i = 0; i < numFaces; ++i)
+				mUVCounts.append(faceSizes[i]);
 
 			MIntArray  mUVIndices;
 			for (size_t i = 0; i < indicesSize; ++i)
