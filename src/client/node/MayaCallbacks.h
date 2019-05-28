@@ -126,8 +126,6 @@ public:
 		const int32_t* shapeIDs
 	);
 
-	void checkStringLength(std::wstring string, const size_t &maxStringLength);
-
 public:
 	const NamedAttributeHolders& getAttrs() const { return mAttrs; }
 

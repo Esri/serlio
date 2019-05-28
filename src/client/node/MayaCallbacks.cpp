@@ -45,6 +45,14 @@ namespace {
 		}
 	}
 
+	void checkStringLength(const wchar_t* string, const size_t &maxStringLength)
+	{
+		if (wcslen(string) >= maxStringLength) {
+			const std::wstring msg = L"Maximum texture path size is " + std::to_wstring(maxStringLength);
+			prt::log(msg.c_str(), prt::LOG_ERROR);
+		}
+	}
+
 }
 
 struct TextureUVOrder {
@@ -406,15 +414,6 @@ void MayaCallbacks::add(
 
 	outputMesh.setMetadata(newMetadata);
 }
-
-void MayaCallbacks::checkStringLength(std::wstring string, const size_t &maxStringLength)
-{
-	if (string.length() >= maxStringLength) {
-		const std::wstring msg = L"Maximum texture path size is " + std::to_wstring(maxStringLength);
-		prt::log(msg.c_str(), prt::LOG_ERROR);
-	}
-}
-
 
 prt::Status MayaCallbacks::attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, bool value) {
 	mAttrs[key].mBool = value;
