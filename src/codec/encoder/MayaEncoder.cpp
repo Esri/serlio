@@ -437,14 +437,14 @@ MayaEncoder::MayaEncoder(const std::wstring& id, const prt::AttributeMap* option
 void MayaEncoder::init(prtx::GenerateContext&) {
 	prt::Callbacks* cb = getCallbacks();
 	if (DBG) log_wdebug(L"MayaEncoder::init: cb = %x") % (size_t)cb;
-	auto* oh = dynamic_cast<IMayaCallbacks*>(cb);
+	auto* oh = static_cast<IMayaCallbacks*>(cb);
 	if (DBG) log_wdebug(L"                   oh = %x") % (size_t)oh;
 	if(oh == nullptr) throw prtx::StatusException(prt::STATUS_ILLEGAL_CALLBACK_OBJECT);
 }
 
 void MayaEncoder::encode(prtx::GenerateContext& context, size_t initialShapeIndex) {
 	const prtx::InitialShape& initialShape = *context.getInitialShape(initialShapeIndex);
-	auto* cb = dynamic_cast<IMayaCallbacks*>(getCallbacks());
+	auto* cb = static_cast<IMayaCallbacks*>(getCallbacks());
 
 	const bool emitAttrs = getOptions()->getBool(EO_EMIT_ATTRIBUTES);
 
