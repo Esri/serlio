@@ -156,6 +156,8 @@ void MayaCallbacks::addMesh(
 				MCHECK(stat);
 			}
 
+			MCHECK(mFnMesh.setUVs(mU, mV, &uvSetName));
+
 			MIntArray mUVCounts;
 			for (size_t i = 0; i < numFaces; ++i)
 				mUVCounts.append(faceSizes[i]);
