@@ -22,17 +22,16 @@ class PRTModifierEnum {
 public:
 	PRTModifierEnum() = default;
 
-	void add(const MString & key, const MString & value);
 	MStatus fill(const prt::Annotation*  annot);
 
 public:
 	MFnEnumAttribute        mAttr;
 
 private:
-	MStringArray            mKeys;
 	MStringArray            mSVals;
 	MDoubleArray            mFVals;
 	MIntArray               mBVals;
+	bool                    mRestricted;
 }; // class PRTModifierEnum
 
 

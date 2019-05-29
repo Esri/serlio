@@ -27,11 +27,13 @@ namespace {
 	const wchar_t* ANNOT_START_RULE = L"@StartRule";
 	const wchar_t* ANNOT_RANGE = L"@Range";
 	const wchar_t* ANNOT_ENUM = L"@Enum";
+	const wchar_t* ANNOT_HIDDEN = L"@Hidden";
 	const wchar_t* ANNOT_COLOR = L"@Color";
 	const wchar_t* ANNOT_DIR = L"@Directory";
 	const wchar_t* ANNOT_FILE = L"@File";
 	const wchar_t* NULL_KEY = L"#NULL#";
 	const MString  PRT("PRT");
+	const wchar_t* RESTRICTED_KEY = L"restricted";
 } // namespace
 
 PRTModifierAction::PRTModifierAction()
@@ -375,7 +377,6 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 
 	for (size_t i = 0; i < info->getNumAttributes(); i++) {
 
-
 		const MString name = MString(info->getAttribute(i)->getName());
 		MObject attr;
 
@@ -383,14 +384,21 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 
 		mBriefName2prtAttr[briefName(name).asWChar()] = name.asWChar();
 
-		switch (info->getAttribute(i)->getReturnType()) {
-		case prt::AAT_BOOL: {
 			const prt::Annotation* enumAnnotation = nullptr;
+		bool hidden = false;
 			for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
 				const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
-				if (!(std::wcscmp(an->getName(), ANNOT_ENUM)))
+			const wchar_t* anName = an->getName();
+			if (!(std::wcscmp(anName, ANNOT_ENUM)))
 					enumAnnotation = an;
+			if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
+				hidden = true;
 			}
+		if (hidden)
+			continue;
+
+		switch (info->getAttribute(i)->getReturnType()) {
+		case prt::AAT_BOOL: {
 			const bool value = evalAttrs.find(name.asWChar())->second.mBool;
 			if (enumAnnotation) {
 				mEnums.emplace_front();
@@ -404,7 +412,6 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		case prt::AAT_FLOAT: {
 			double min = std::numeric_limits<double>::quiet_NaN();
 			double max = std::numeric_limits<double>::quiet_NaN();
-			const prt::Annotation* enumAnnotation = nullptr;
 			for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
 				const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
 				if (!(std::wcscmp(an->getName(), ANNOT_RANGE))) {
@@ -412,9 +419,6 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 						min = an->getArgument(0)->getFloat();
 						max = an->getArgument(1)->getFloat();
 					}
-				}
-				else if (!(std::wcscmp(an->getName(), ANNOT_ENUM))) {
-						enumAnnotation = an;
 				}
 			}
 
@@ -436,15 +440,14 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 			const prt::Annotation* enumAnnotation = nullptr;
 			for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
 				const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
-				if (!(std::wcscmp(an->getName(), ANNOT_ENUM)))
-					enumAnnotation = an;
-				else if (!(std::wcscmp(an->getName(), ANNOT_COLOR)))
+				const wchar_t* anName = an->getName();
+				if (!(std::wcscmp(anName, ANNOT_COLOR)))
 					asColor = true;
-				else if (!(std::wcscmp(an->getName(), ANNOT_DIR))) {
-					exts = MString(an->getName());
+				else if (!(std::wcscmp(anName, ANNOT_DIR))) {
+					exts = MString(anName);
 					asFile = true;
 				}
-				else if (!(std::wcscmp(an->getName(), ANNOT_FILE))) {
+				else if (!(std::wcscmp(anName, ANNOT_FILE))) {
 					asFile = true;
 					for (size_t arg = 0; arg < an->getNumArguments(); arg++) {
 						if (an->getArgument(arg)->getType() == prt::AAT_STR) {
@@ -537,41 +540,50 @@ void PRTModifierAction::removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDe
 
 
 MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
-	if (annot) {
+	mRestricted = true;
 		MStatus stat;
+
 		for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
+
 			const wchar_t* key = annot->getArgument(arg)->getKey();
-			if (!(std::wcscmp(key, NULL_KEY)))
-				key = annot->getArgument(arg)->getStr();
-			mKeys.append(MString(annot->getArgument(arg)->getKey()));
+		if (std::wcscmp(key, NULL_KEY)!=0) {
+			if (std::wcscmp(key, RESTRICTED_KEY) == 0) {
+				mRestricted = annot->getArgument(arg)->getBool();
+			}
+			continue;
+		}
+
 			switch (annot->getArgument(arg)->getType()) {
-			case prt::AAT_BOOL:
-				MCHECK(mAttr.addField(MString(key), mBVals.length()));
-				mBVals.append(annot->getArgument(arg)->getBool());
+		case prt::AAT_BOOL: {
+			bool val = annot->getArgument(arg)->getBool();
+			MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), mBVals.length()));
+			mBVals.append(val);
 				mFVals.append(std::numeric_limits<double>::quiet_NaN());
 				mSVals.append("");
 				break;
-			case prt::AAT_FLOAT:
-				MCHECK(mAttr.addField(MString(key), mFVals.length()));
+		}
+		case prt::AAT_FLOAT: {
+			double val = annot->getArgument(arg)->getFloat();
+			MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), mFVals.length()));
 				mBVals.append(false);
-				mFVals.append(annot->getArgument(arg)->getFloat());
+			mFVals.append(val);
 				mSVals.append("");
 				break;
-			case prt::AAT_STR:
-				MCHECK(mAttr.addField(MString(key), mSVals.length()));
+		}
+		case prt::AAT_STR: {
+			const wchar_t* val = annot->getArgument(arg)->getStr();
+			MCHECK(mAttr.addField(MString(val), mSVals.length()));
 				mBVals.append(false);
 				mFVals.append(std::numeric_limits<double>::quiet_NaN());
-				mSVals.append(MString(annot->getArgument(arg)->getStr()));
+			mSVals.append(MString(val));
 				break;
+		}
 			default:
 				break;
 			}
 		}
-	}
-	else {
-		for (unsigned int i = 0; i < mKeys.length(); i++)
-			mAttr.addField(mKeys[i], (short)i);
-	}
+	
+
 	return MS::kSuccess;
 }
 
@@ -773,14 +785,6 @@ MStatus PRTModifierAction::addStrParameter(MFnDependencyNode & node, MObject & a
 	return MS::kSuccess;
 }
 
-
-
-void PRTModifierEnum::add(const MString & key, const MString & value) {
-	mKeys.append(key);
-	mBVals.append(false);
-	mFVals.append(std::numeric_limits<double>::quiet_NaN());
-	mSVals.append(value);
-}
 
 // statics
 prt::ConsoleLogHandler* PRTModifierAction::theLogHandler = nullptr;
