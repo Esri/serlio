@@ -81,16 +81,16 @@ const std::vector<TextureUVOrder> TEXTURE_UV_ORDERS = []() -> std::vector<Textur
 }();
 
 void MayaCallbacks::addMesh(
-		const wchar_t* name,
+		const wchar_t*,
 		const double* vtx, size_t vtxSize,
 		const double* nrm, size_t nrmSize,
 		const uint32_t* faceSizes, size_t numFaces,
 		const uint32_t* indices, size_t indicesSize,
-		double const* const* uvs, size_t const* uvsSizes, uint32_t uvSetsCount,
+		double const* const* uvs, size_t const* uvsSizes, size_t uvSetsCount,
 		const uint32_t* faceRanges, size_t faceRangesSize,
 		const prt::AttributeMap** materials,
 		const prt::AttributeMap** reports,
-		const int32_t* shapeIDs)
+		const int32_t*)
 {
 
 
@@ -231,11 +231,10 @@ void MayaCallbacks::addMesh(
 			case prt::Attributable::PT_FLOAT_ARRAY: type = adsk::Data::Member::kDouble; size = maxFloatArrayLength; break;
 			case prt::Attributable::PT_STRING_ARRAY: type = adsk::Data::Member::kUInt8; size = maxStringLength; arrayLength = maxStringArrayLength; break;
 
-			case prtx::Material::PT_TEXTURE: type = adsk::Data::Member::kUInt8; size = maxStringLength;  break;
-			case prtx::Material::PT_TEXTURE_ARRAY: type = adsk::Data::Member::kUInt8; size = maxStringLength; arrayLength = maxStringArrayLength; break;
-
-			default:
-				break;
+			case prt::Attributable::PT_UNDEFINED: break;
+			case prt::Attributable::PT_BLIND_DATA: break;
+			case prt::Attributable::PT_BLIND_DATA_ARRAY: break;
+			case prt::Attributable::PT_COUNT: break;
 			}
 
 			if (size > 0) {
@@ -356,6 +355,11 @@ void MayaCallbacks::addMesh(
 						}
 						break;
 					}
+
+					case prt::Attributable::PT_UNDEFINED: break;
+					case prt::Attributable::PT_BLIND_DATA: break;
+					case prt::Attributable::PT_BLIND_DATA_ARRAY: break;
+					case prt::Attributable::PT_COUNT: break;
 					}
 
 				}
@@ -369,7 +373,7 @@ void MayaCallbacks::addMesh(
 				handle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str());
 				handle.asInt32()[0] = faceRanges[fri+1];
 
-				newStream.setElement(fri, handle);
+				newStream.setElement(static_cast<adsk::Data::IndexCount>(fri), handle);
 
 			}
 
