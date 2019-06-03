@@ -17,8 +17,6 @@
 #	include <dlfcn.h>
 #endif
 
-#include <mutex>
-
 #define CHECK_STATUS(st) if ((st) != MS::kSuccess) { break; }
 namespace {
 	const wchar_t* ENC_MAYA = L"MayaEncoder";
@@ -32,7 +30,6 @@ namespace {
 	const wchar_t* ANNOT_DIR = L"@Directory";
 	const wchar_t* ANNOT_FILE = L"@File";
 	const wchar_t* NULL_KEY = L"#NULL#";
-	std::mutex resolveMapCacheMutex;
 } // namespace
 
 PRTModifierAction::PRTModifierAction()
@@ -182,10 +179,7 @@ const std::string& PRTModifierAction::getPluginRoot() {
 
 
 const ResolveMapUPtr& PRTModifierAction::getResolveMap() {
-
-	std::lock_guard<std::mutex> lock(resolveMapCacheMutex);
 	ResolveMapCache::LookupResult lookupResult = mResolveMapCache->get(std::wstring(mRulePkg.asWChar()));
-
 	const ResolveMapUPtr& resolveMap = lookupResult.first;
 	return resolveMap;
 }

@@ -6,11 +6,13 @@
 #include "LogHandler.h"
 #include "node/Utilities.h"
 
+#include <mutex>
 
 namespace {
 
 const ResolveMapUPtr RESOLVE_MAP_NONE;
 const ResolveMapCache::LookupResult LOOKUP_FAILURE = { RESOLVE_MAP_NONE, ResolveMapCache::CacheStatus::MISS };
+std::mutex resolveMapCacheMutex;
 
 } // namespace
 
@@ -22,6 +24,8 @@ ResolveMapCache::~ResolveMapCache() {
 }
 
 ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
+
+	std::lock_guard<std::mutex> lock(resolveMapCacheMutex);
 
 	const time_t timeStamp = prtu::getFileModificationTime(rpk);
 	LOG_DBG << "rpk: " << rpk << " current timestamp: " << timeStamp;
