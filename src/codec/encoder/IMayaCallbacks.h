@@ -1,17 +1,12 @@
-/**
- * Esri CityEngine SDK Maya Plugin Example
- *
- * This example demonstrates the main functionality of the Procedural Runtime API.
- *
- * See README.md in https://github.com/Esri/esri-cityengine-sdk for build instructions.
- *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+/*
+ * Copyright 2014-2018 Esri R&D Zurich and VRBN
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,25 +17,46 @@
 #pragma once
 
 #include "prt/Callbacks.h"
-#include "prtx/Material.h"
+
+constexpr const wchar_t* ENCODER_ID_Maya = L"MayaEncoder";
+constexpr const wchar_t* EO_EMIT_ATTRIBUTES = L"emitAttributes";
+constexpr const wchar_t* EO_EMIT_MATERIALS  = L"emitMaterials";
+constexpr const wchar_t* EO_EMIT_REPORTS    = L"emitReports";
+
 
 class IMayaCallbacks : public prt::Callbacks {
 public:
-	virtual ~IMayaCallbacks() { }
 
-	virtual void setVertices(const double* vtx, size_t size) = 0;
-	virtual void setNormals(const double* nrm, size_t size) = 0;
-	virtual void setUVs(const double* u, const double* v, size_t size) = 0;
-    virtual void setMaterial(uint32_t start, uint32_t count, const prtx::MaterialPtr& mat) = 0;
+	virtual ~IMayaCallbacks() override = default;
 
-	virtual void setFaces(
-			const uint32_t* counts, size_t countsSize,
-			const uint32_t* connects, size_t connectsSize,
-			const uint32_t* uvCounts, size_t uvCountsSize,
-			const uint32_t* uvConnects, size_t uvConnectsSize
+	/**
+	 * @param name initial shape (primitive group) name, optionally used to create primitive groups on output
+	 * @param vtx vertex coordinate array
+	 * @param length of vertex coordinate array
+	 * @param nrm vertex normal array
+	 * @param nrmSize length of vertex normal array
+	 * @param faceSizes polygon sizes array
+	 * @param numFaces number of faces
+	 * @param indices vertex attribute index array (grouped by counts)
+	 * @param indicesSize vertex attribute index array
+	 * @param uvs array of texture coordinate arrays (same indexing as vertices per uv set)
+	 * @param uvsSizes lengths of uv arrays per uv set
+	 * @param uvSetsCount number of uv sets
+	 * @param faceRanges ranges for materials and reports
+	 * @param materials contains faceRangesSize-1 attribute maps (all materials must have an identical set of keys and types)
+	 * @param reports contains faceRangesSize-1 attribute maps
+	 * @param shapeIDs shape ids per face, contains faceRangesSize-1 values
+	 */
+	virtual void addMesh(
+			const wchar_t* name,
+			const double* vtx, size_t vtxSize,
+			const double* nrm, size_t nrmSize,
+			const uint32_t* faceSizes, size_t numFaces,
+			const uint32_t* indices, size_t indicesSize,
+			double const* const* uvs, size_t const* uvsSizes, size_t uvSetsCount,
+			const uint32_t* faceRanges, size_t faceRangesSize,
+			const prt::AttributeMap** materials,
+			const prt::AttributeMap** reports,
+			const int32_t* shapeIDs
 	) = 0;
-
-	virtual void createMesh() = 0;
-	virtual void finishMesh() = 0;
-
 };

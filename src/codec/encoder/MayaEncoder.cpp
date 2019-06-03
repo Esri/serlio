@@ -1,17 +1,12 @@
-/**
- * Esri CityEngine SDK Maya Plugin Example
- *
- * This example demonstrates the main functionality of the Procedural Runtime API.
- *
- * See README.md in https://github.com/Esri/esri-cityengine-sdk for build instructions.
- *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+/*
+ * Copyright 2014-2018 Esri R&D Zurich and VRBN
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,181 +14,568 @@
  * limitations under the License.
  */
 
-#include "encoder/IMayaCallbacks.h"
-#include "encoder/MayaEncoder.h"
+#include "MayaEncoder.h"
+#include "IMayaCallbacks.h"
 
 #include "prtx/Exception.h"
 #include "prtx/Log.h"
 #include "prtx/Geometry.h"
-#include "prtx/Material.h"
 #include "prtx/Mesh.h"
+#include "prtx/Material.h"
 #include "prtx/Shape.h"
 #include "prtx/ShapeIterator.h"
 #include "prtx/ExtensionManager.h"
 #include "prtx/GenerateContext.h"
-#include "prtx/EncodePreparator.h"
+#include "prtx/Attributable.h"
+#include "prtx/URI.h"
+#include "prtx/ReportsCollector.h"
+
+#include "prt/prt.h"
 
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <numeric>
+#include <limits>
 #include <algorithm>
+#include <set>
+#include <memory>
 
 
 namespace {
 
-const bool DBG = true;
+constexpr bool           DBG                = false;
+
+constexpr const wchar_t* ENC_NAME           = L"Autodesk(tm) Maya(tm) Encoder";
+constexpr const wchar_t* ENC_DESCRIPTION    = L"Encodes geometry into the Maya format.";
+
+struct SerializedGeometry {
+	prtx::DoubleVector              coords;
+	prtx::DoubleVector              normals; // uses same indexing as coords
+	std::vector<prtx::DoubleVector> uvs;     // uses same indexing as coords per uv set
+	std::vector<uint32_t>           counts;
+	std::vector<uint32_t>           indices;
+
+	SerializedGeometry(uint32_t uvSets) : uvs(uvSets) { }
+};
 
 const prtx::EncodePreparator::PreparationFlags PREP_FLAGS = prtx::EncodePreparator::PreparationFlags()
 	.instancing(false)
 	.mergeByMaterial(true)
 	.triangulate(false)
-	.mergeVertices(false)
-	.cleanupVertexNormals(false)
-	.cleanupUVs(false)
+	.processHoles(prtx::HoleProcessor::TRIANGULATE_FACES_WITH_HOLES)
+	.mergeVertices(true)
+	.cleanupVertexNormals(true)
+	.cleanupUVs(true)
 	.processVertexNormals(prtx::VertexNormalProcessor::SET_MISSING_TO_FACE_NORMALS)
-	.indexSharing(prtx::EncodePreparator::PreparationFlags::INDICES_SAME_FOR_VERTICES_AND_NORMALS);
+	.indexSharing(prtx::EncodePreparator::PreparationFlags::INDICES_SAME_FOR_ALL_VERTEX_ATTRIBUTES);
 
-std::wstring getBaseName(const wchar_t* path) {
-	const std::wstring bn{ path };
-	const size_t p = bn.find_last_of(L"/\\");
-	const size_t e = bn.find_last_of(L'.');
-	if (e == std::wstring::npos || e < p)
-		return bn.substr(p+1);
-	return bn.substr(p+1, e);
+std::vector<const wchar_t*> toPtrVec(const prtx::WStringVector& wsv) {
+	std::vector<const wchar_t*> pw(wsv.size());
+	for (size_t i = 0; i < wsv.size(); i++)
+		pw[i] = wsv[i].c_str();
+	return pw;
 }
+
+std::pair<std::vector<const double*>, std::vector<size_t>> toPtrVec(const std::vector<prtx::DoubleVector>& v) {
+	std::vector<const double*> pv(v.size());
+	std::vector<size_t> ps(v.size());
+	for (size_t i = 0; i < v.size(); i++) {
+		pv[i] = v[i].data();
+		ps[i] = v[i].size();
+	}
+	return std::make_pair(pv, ps);
+}
+
+std::wstring uriToPath(const prtx::TexturePtr& t){
+	return t->getURI()->getPath();
+}
+
+// we blacklist all CGA-style material attribute keys, see prtx/Material.h
+const std::set<std::wstring> MATERIAL_ATTRIBUTE_BLACKLIST = {
+	L"ambient.b",
+	L"ambient.g",
+	L"ambient.r",
+	L"bumpmap.rw",
+	L"bumpmap.su",
+	L"bumpmap.sv",
+	L"bumpmap.tu",
+	L"bumpmap.tv",
+	L"color.a",
+	L"color.b",
+	L"color.g",
+	L"color.r",
+	L"color.rgb",
+	L"colormap.rw",
+	L"colormap.su",
+	L"colormap.sv",
+	L"colormap.tu",
+	L"colormap.tv",
+	L"dirtmap.rw",
+	L"dirtmap.su",
+	L"dirtmap.sv",
+	L"dirtmap.tu",
+	L"dirtmap.tv",
+	L"normalmap.rw",
+	L"normalmap.su",
+	L"normalmap.sv",
+	L"normalmap.tu",
+	L"normalmap.tv",
+	L"opacitymap.rw",
+	L"opacitymap.su",
+	L"opacitymap.sv",
+	L"opacitymap.tu",
+	L"opacitymap.tv",
+	L"specular.b",
+	L"specular.g",
+	L"specular.r",
+	L"specularmap.rw",
+	L"specularmap.su",
+	L"specularmap.sv",
+	L"specularmap.tu",
+	L"specularmap.tv",
+	L"bumpmap",
+	L"colormap",
+	L"dirtmap",
+	L"normalmap",
+	L"opacitymap",
+	L"opacitymap.mode",
+	L"specularmap"
+
+#if PRT_VERSION_MAJOR > 1
+	// also blacklist CGA-style PBR attrs from CE 2019.0, PRT 2.x
+	,
+	L"emissive.b",
+	L"emissive.g",
+	L"emissive.r",
+	L"emissivemap.rw",
+	L"emissivemap.su",
+	L"emissivemap.sv",
+	L"emissivemap.tu",
+	L"emissivemap.tv",
+	L"metallicmap.rw",
+	L"metallicmap.su",
+	L"metallicmap.sv",
+	L"metallicmap.tu",
+	L"metallicmap.tv",
+	L"occlusionmap.rw",
+	L"occlusionmap.su",
+	L"occlusionmap.sv",
+	L"occlusionmap.tu",
+	L"occlusionmap.tv",
+	L"roughnessmap.rw",
+	L"roughnessmap.su",
+	L"roughnessmap.sv",
+	L"roughnessmap.tu",
+	L"roughnessmap.tv",
+	L"emissivemap",
+	L"metallicmap",
+	L"occlusionmap",
+	L"roughnessmap"
+#endif
+};
+
+void convertMaterialToAttributeMap(
+		prtx::PRTUtils::AttributeMapBuilderPtr& aBuilder,
+		const prtx::Material& prtxAttr,
+		const prtx::WStringVector& keys
+) {
+	if (DBG) log_wdebug(L"-- converting material: %1%") % prtxAttr.name();
+	for(const auto& key : keys) {
+		if (MATERIAL_ATTRIBUTE_BLACKLIST.count(key) > 0)
+			continue;
+
+	if (DBG) log_wdebug(L"   key: %1%") % key;
+
+		switch(prtxAttr.getType(key)) {
+			case prt::Attributable::PT_BOOL:
+				aBuilder->setBool(key.c_str(), prtxAttr.getBool(key) == prtx::PRTX_TRUE);
+				break;
+
+			case prt::Attributable::PT_FLOAT:
+				aBuilder->setFloat(key.c_str(), prtxAttr.getFloat(key));
+				break;
+
+			case prt::Attributable::PT_INT:
+				aBuilder->setInt(key.c_str(), prtxAttr.getInt(key));
+				break;
+
+			case prt::Attributable::PT_STRING: {
+				const std::wstring& v = prtxAttr.getString(key); // explicit copy
+				aBuilder->setString(key.c_str(), v.c_str()); // also passing on empty strings
+				break;
+			}
+
+			case prt::Attributable::PT_BOOL_ARRAY: {
+				const std::vector<uint8_t>& ba = prtxAttr.getBoolArray(key);
+				auto boo = std::unique_ptr<bool[]>(new bool[ba.size()]);
+				for (size_t i = 0; i < ba.size(); i++)
+					boo[i] = (ba[i] == prtx::PRTX_TRUE);
+				aBuilder->setBoolArray(key.c_str(), boo.get(), ba.size());
+				break;
+			}
+
+			case prt::Attributable::PT_INT_ARRAY: {
+				const std::vector<int32_t>& array = prtxAttr.getIntArray(key);
+				aBuilder->setIntArray(key.c_str(), &array[0], array.size());
+				break;
+			}
+
+			case prt::Attributable::PT_FLOAT_ARRAY: {
+				const std::vector<double>& array = prtxAttr.getFloatArray(key);
+				aBuilder->setFloatArray(key.c_str(), array.data(), array.size());
+				break;
+			}
+
+			case prt::Attributable::PT_STRING_ARRAY: {
+				const prtx::WStringVector& a = prtxAttr.getStringArray(key);
+				std::vector<const wchar_t*> pw = toPtrVec(a);
+				aBuilder->setStringArray(key.c_str(), pw.data(), pw.size());
+				break;
+			}
+
+			case prtx::Material::PT_TEXTURE: {
+				const auto& t = prtxAttr.getTexture(key);
+				const std::wstring p = uriToPath(t);
+				aBuilder->setString(key.c_str(), p.c_str());
+				break;
+			}
+
+			case prtx::Material::PT_TEXTURE_ARRAY: {
+				const auto& ta = prtxAttr.getTextureArray(key);
+
+				prtx::WStringVector pa(ta.size());
+				std::transform(ta.begin(), ta.end(), pa.begin(), uriToPath);
+
+				std::vector<const wchar_t*> ppa = toPtrVec(pa);
+				aBuilder->setStringArray(key.c_str(), ppa.data(), ppa.size());
+				break;
+			}
+
+			default:
+			if (DBG) log_wdebug(L"ignored atttribute '%s' with type %d") % key % prtxAttr.getType(key);
+				break;
+		}
+	}
+}
+
+void convertReportsToAttributeMap(prtx::PRTUtils::AttributeMapBuilderPtr& amb, const prtx::ReportsPtr& r) {
+	if (!r)
+		return;
+
+	for (const auto& b: r->mBools)
+		amb->setBool(b.first->c_str(), b.second);
+	for (const auto& f: r->mFloats)
+		amb->setFloat(f.first->c_str(), f.second);
+	for (const auto& s: r->mStrings)
+		amb->setString(s.first->c_str(), s.second->c_str());
+}
+
+template<typename F>
+void forEachKey(prt::Attributable const* a, F f) {
+	if (a == nullptr)
+		return;
+
+	size_t keyCount = 0;
+	wchar_t const* const* keys = a->getKeys(&keyCount);
+
+	for (size_t k = 0; k < keyCount; k++) {
+		wchar_t const* const key = keys[k];
+		f(a, key);
+	}
+}
+
+void forwardGenericAttributes(IMayaCallbacks* hc, size_t initialShapeIndex, const prtx::InitialShape& initialShape, const prtx::ShapePtr& shape) {
+	forEachKey(initialShape.getAttributeMap(), [&hc,&shape,&initialShapeIndex,&initialShape](prt::Attributable const* a, wchar_t const* key) {
+		switch (shape->getType(key)) {
+			case prtx::Attributable::PT_STRING: {
+				const auto v = shape->getString(key);
+				hc->attrString(initialShapeIndex, shape->getID(), key, v.c_str());
+				break;
+			}
+			case prtx::Attributable::PT_FLOAT: {
+				const auto v = shape->getFloat(key);
+				hc->attrFloat(initialShapeIndex, shape->getID(), key, v);
+				break;
+			}
+			case prtx::Attributable::PT_BOOL: {
+				const auto v = shape->getBool(key);
+				hc->attrBool(initialShapeIndex, shape->getID(), key, (v == prtx::PRTX_TRUE));
+				break;
+			}
+			default:
+				break;
+		}
+	});
+}
+
+using AttributeMapNOPtrVector = std::vector<const prt::AttributeMap*>;
+
+struct AttributeMapNOPtrVectorOwner {
+	AttributeMapNOPtrVector v;
+	~AttributeMapNOPtrVectorOwner() {
+		for (const auto& m: v) {
+			if (m) m->destroy();
+		}
+	}
+};
+
+struct TextureUVMapping {
+	std::wstring key;
+	uint8_t      index;
+	int8_t       uvSet;
+};
+
+const std::vector<TextureUVMapping> TEXTURE_UV_MAPPINGS = []() -> std::vector<TextureUVMapping> {
+	return {
+		// shader key   | idx | uv set  | CGA key
+		{ L"diffuseMap",   0,    0 },  // colormap
+		{ L"bumpMap",      0,    1 },  // bumpmap
+		{ L"diffuseMap",   1,    2 },  // dirtmap
+		{ L"specularMap",  0,    3 },  // specularmap
+		{ L"opacityMap",   0,    4 },  // opacitymap
+		{ L"normalMap",    0,    5 }   // normalmap
+
+#if PRT_VERSION_MAJOR > 1
+		,
+		{ L"emissiveMap",  0,    6 },  // emissivemap
+		{ L"occlusionMap", 0,    7 },  // occlusionmap
+		{ L"roughnessMap", 0,    8 },  // roughnessmap
+		{ L"metallicMap",  0,    9 }   // metallicmap
+#endif
+
+	};
+}();
+
+// return the highest required uv set (where a valid texture is present)
+uint32_t scanValidTextures(const prtx::MaterialPtr& mat) {
+	int8_t highestUVSet = -1;
+	for (const auto& t: TEXTURE_UV_MAPPINGS) {
+		const auto& ta = mat->getTextureArray(t.key);
+		if (ta.size() > t.index && ta[t.index]->isValid())
+			highestUVSet = std::max(highestUVSet, t.uvSet);
+	}
+	if (highestUVSet < 0)
+		return 0;
+	else
+		return highestUVSet+1;
+}
+
+const prtx::DoubleVector EMPTY_UVS;
 
 } // namespace
 
 
-const std::wstring MayaEncoder::ID          = L"MayaEncoder";
-const std::wstring MayaEncoder::NAME        = L"Autodesk(tm) Maya(tm) Encoder";
-const std::wstring MayaEncoder::DESCRIPTION	= L"Encodes geometry into Autodesk(tm) Maya(tm) format.";
+namespace detail {
+
+SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, const std::vector<prtx::MaterialPtrVector>& materials) {
+	// PASS 1: scan
+	uint32_t maxNumUVSets = 0;
+	auto matsIt = materials.cbegin();
+	for (const auto& geo: geometries) {
+		const prtx::MeshPtrVector& meshes = geo->getMeshes();
+		const prtx::MaterialPtrVector& mats = *matsIt;
+		auto matIt = mats.cbegin();
+		for (const auto& mesh: meshes) {
+			const prtx::MaterialPtr& mat = *matIt;
+			const uint32_t requiredUVSetsByMaterial = scanValidTextures(mat);
+			maxNumUVSets = std::max(maxNumUVSets, std::max(mesh->getUVSetsCount(), requiredUVSetsByMaterial));
+			++matIt;
+		}
+		++matsIt;
+	}
+	SerializedGeometry sg(maxNumUVSets);
+
+	// PASS 2: copy
+	uint32_t vertexIndexBase = 0;
+	for (const auto& geo: geometries) {
+		const prtx::MeshPtrVector& meshes = geo->getMeshes();
+		for (const auto& mesh: meshes) {
+			const prtx::DoubleVector& verts = mesh->getVertexCoords();
+			sg.coords.insert(sg.coords.end(), verts.begin(), verts.end());
+
+			const prtx::DoubleVector& norms = mesh->getVertexNormalsCoords();
+			sg.normals.insert(sg.normals.end(), norms.begin(), norms.end());
+
+			const uint32_t numUVSets = mesh->getUVSetsCount();
+			if (DBG) log_wdebug(L"mesh name: %1% (numUVSets %2%)") % mesh->getName() % numUVSets;
+			if (numUVSets > 0) {
+				const prtx::DoubleVector& uvs0 = mesh->getUVCoords(0);
+				for (uint32_t uvSet = 0; uvSet < sg.uvs.size(); uvSet++) {
+					const prtx::DoubleVector& uvs = (uvSet < numUVSets) ? mesh->getUVCoords(uvSet) : EMPTY_UVS;
+					if (DBG) log_wdebug(L"uvSet %1%: uvs.size() = %2%") % uvSet % uvs.size();
+					const auto& src = uvs.empty() ? uvs0 : uvs;
+					auto& tgt = sg.uvs[uvSet];
+					tgt.insert(tgt.end(), src.begin(), src.end());
+				}
+			}
+
+			sg.counts.reserve(sg.counts.size() + mesh->getFaceCount());
+			for (uint32_t fi = 0, faceCount = mesh->getFaceCount(); fi < faceCount; ++fi) {
+				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
+				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
+				sg.counts.push_back(vtxCnt);
+				sg.indices.reserve(sg.indices.size() + vtxCnt);
+				for (uint32_t vi = 0; vi < vtxCnt; vi++)
+					sg.indices.push_back(vertexIndexBase + vtxIdx[vtxCnt - vi - 1]); // reverse winding
+			}
+
+			vertexIndexBase += (uint32_t)verts.size() / 3u;
+		} // for all meshes
+	} // for all geometries
+
+	return sg;
+}
+} // namespace detail
 
 
 MayaEncoder::MayaEncoder(const std::wstring& id, const prt::AttributeMap* options, prt::Callbacks* callbacks)
-: prtx::GeometryEncoder(id, options, callbacks) { }
+: prtx::GeometryEncoder(id, options, callbacks)
+{  }
 
 void MayaEncoder::init(prtx::GenerateContext&) {
-	const prt::Callbacks* cb = getCallbacks();
-	const IMayaCallbacks* oh = dynamic_cast<const IMayaCallbacks*>(cb);
-	if (oh == nullptr)
-		throw prtx::StatusException(prt::STATUS_ILLEGAL_CALLBACK_OBJECT);
+	prt::Callbacks* cb = getCallbacks();
+	if (DBG) log_wdebug(L"MayaEncoder::init: cb = %x") % (size_t)cb;
+	auto* oh = dynamic_cast<IMayaCallbacks*>(cb);
+	if (DBG) log_wdebug(L"                   oh = %x") % (size_t)oh;
+	if(oh == nullptr) throw prtx::StatusException(prt::STATUS_ILLEGAL_CALLBACK_OBJECT);
 }
 
 void MayaEncoder::encode(prtx::GenerateContext& context, size_t initialShapeIndex) {
-	const prtx::InitialShape* initialShape = context.getInitialShape(initialShapeIndex);
+	const prtx::InitialShape& initialShape = *context.getInitialShape(initialShapeIndex);
+	auto* cb = static_cast<IMayaCallbacks*>(getCallbacks());
 
-	prtx::DefaultNamePreparator namePrep;
-	prtx::NamePreparator::NamespacePtr nsMesh{ namePrep.newNamespace() };
-	prtx::NamePreparator::NamespacePtr nsMaterial{ namePrep.newNamespace() };
+	const bool emitAttrs = getOptions()->getBool(EO_EMIT_ATTRIBUTES);
+
+	prtx::DefaultNamePreparator        namePrep;
+	prtx::NamePreparator::NamespacePtr nsMesh     = namePrep.newNamespace();
+	prtx::NamePreparator::NamespacePtr nsMaterial = namePrep.newNamespace();
 	prtx::EncodePreparatorPtr encPrep = prtx::EncodePreparator::create(true, namePrep, nsMesh, nsMaterial);
 
+	// generate geometry
+	prtx::ReportsAccumulatorPtr reportsAccumulator{prtx::WriteFirstReportsAccumulator::create()};
+	prtx::ReportingStrategyPtr reportsCollector{prtx::LeafShapeReportingStrategy::create(context, initialShapeIndex, reportsAccumulator)};
 	prtx::LeafIteratorPtr li = prtx::LeafIterator::create(context, initialShapeIndex);
-	for (prtx::ShapePtr shape = li->getNext(); shape != nullptr; shape = li->getNext())
-		encPrep->add(context.getCache(), shape, initialShape->getAttributeMap());
+	for (prtx::ShapePtr shape = li->getNext(); shape; shape = li->getNext()) {
+		prtx::ReportsPtr r = reportsCollector->getReports(shape->getID());
+		encPrep->add(context.getCache(), shape, initialShape.getAttributeMap(), r);
 
-	prtx::GeometryPtrVector geometries;
-	std::vector<prtx::DoubleVector> trafos;
-	std::vector<prtx::MaterialPtrVector> materials;
-
-	prtx::EncodePreparator::InstanceVector finalizedInstances;
-	encPrep->fetchFinalizedInstances(finalizedInstances, PREP_FLAGS);
-	for (const auto& fi: finalizedInstances) {
-		geometries.emplace_back(fi.getGeometry());
-		trafos.emplace_back(fi.getTransformation());
-		materials.emplace_back(fi.getMaterials());
+		// get final values of generic attributes
+		if (emitAttrs)
+			forwardGenericAttributes(cb, initialShapeIndex, initialShape, shape);
 	}
 
-	std::wstring cgbName = getBaseName(initialShape->getRuleFile());
-	convertGeometry(cgbName, geometries, materials);
+	prtx::EncodePreparator::InstanceVector instances;
+	encPrep->fetchFinalizedInstances(instances, PREP_FLAGS);
+	convertGeometry(initialShape, instances, cb);
 }
 
-void MayaEncoder::convertGeometry(const std::wstring& cgbName, const prtx::GeometryPtrVector& geometries, const std::vector<prtx::MaterialPtrVector>& mats) {
-	std::vector<double>	vertices, normals, tcsU, tcsV;
-	std::vector<uint32_t> counts, connects, uvCounts, uvConnects;
-	uint32_t base{0}, uvBase{0};
+void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
+                                     const prtx::EncodePreparator::InstanceVector& instances,
+                                     IMayaCallbacks* cb)
+{
+	const bool emitMaterials = getOptions()->getBool(EO_EMIT_MATERIALS);
+	const bool emitReports = getOptions()->getBool(EO_EMIT_REPORTS);
 
-	for (const prtx::GeometryPtr& geo: geometries) {
-		const prtx::MeshPtrVector& meshes = geo->getMeshes();
-		for (const prtx::MeshPtr& mesh: meshes) {
-			const uint32_t				faceCnt		= mesh->getFaceCount();
-			const prtx::DoubleVector&	verts		= mesh->getVertexCoords();
-			const prtx::DoubleVector&	norms		= mesh->getVertexNormalsCoords();
-			const bool					hasUVs		= mesh->getUVSetsCount() > 0;
-			size_t						uvsCount	= 0;
+	prtx::GeometryPtrVector geometries;
+	std::vector<prtx::MaterialPtrVector> materials;
+	std::vector<prtx::ReportsPtr> reports;
+	std::vector<int32_t> shapeIDs;
 
-			vertices.insert(vertices.end(), verts.cbegin(), verts.cend());
-			normals.insert(normals.end(), norms.cbegin(), norms.cend());
+	geometries.reserve(instances.size());
+	materials.reserve(instances.size());
+	reports.reserve(instances.size());
+	shapeIDs.reserve(instances.size());
 
-			if (hasUVs) {
-				const prtx::DoubleVector& uvs = mesh->getUVCoords(0);
-				uvsCount = uvs.size();
-				tcsU.reserve(tcsU.size() + uvsCount/2);
-				tcsV.reserve(tcsV.size() + uvsCount/2);
-				for(size_t i = 0, size = uvsCount; i < size; i += 2) {
-					tcsU.push_back(uvs[i+0]);
-					tcsV.push_back(uvs[i+1]);
-				}
-			}
-
-			counts.reserve(counts.size() + faceCnt);
-			uvCounts.reserve(uvCounts.size() + faceCnt);
-
-			for (uint32_t fi = 0; fi < faceCnt; ++fi) {
-				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
-				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
-				counts.push_back(vtxCnt);
-				std::for_each(vtxIdx, vtxIdx + vtxCnt, [&connects,&base](uint32_t idx){ connects.push_back(base + idx); });
-
-				if (hasUVs && mesh->getFaceUVCount(fi, 0) > 0) {
-					assert(mesh->getFaceUVCount(fi, 0) == mesh->getFaceVertexCount(fi));
-					const uint32_t* uv0Idx = mesh->getFaceUVIndices(fi, 0);
-					const uint32_t uv0IdxCnt = mesh->getFaceUVCount(fi, 0);
-					uvCounts.push_back(uv0IdxCnt);
-					std::for_each(uv0Idx, uv0Idx + uv0IdxCnt, [&uvConnects,&uvBase](uint32_t uvIdx){ uvConnects.push_back(uvBase + uvIdx); });
-				}
-				else
-					uvCounts.push_back(0);
-			}
-
-			base   += static_cast<uint32_t>(verts.size()) / 3;
-			uvBase += static_cast<uint32_t>(uvsCount) / 2;
-		}
+	for (const auto& inst: instances) {
+		geometries.push_back(inst.getGeometry());
+		materials.push_back(inst.getMaterials());
+		reports.push_back(inst.getReports());
+		shapeIDs.push_back(inst.getShapeId());
 	}
 
-	IMayaCallbacks* mayaOutput = dynamic_cast<IMayaCallbacks*>(getCallbacks());
+	const SerializedGeometry sg = detail::serializeGeometry(geometries, materials);
 
-	mayaOutput->setVertices(vertices.data(), vertices.size());
-	mayaOutput->setUVs(tcsU.data(), tcsV.data(), tcsU.size());
+	if (DBG) {
+		log_debug("resolvemap: %s") % prtx::PRTUtils::objectToXML(initialShape.getResolveMap());
+		log_debug("encoder #materials = %s") % materials.size();
+	}
 
-	mayaOutput->setNormals(normals.data(), normals.size());
-	mayaOutput->setFaces(
-			counts.data(), counts.size(),
-			connects.data(), connects.size(),
-			uvCounts.data(), uvCounts.size(),
-			uvConnects.data(), uvConnects.size()
-	);
+	uint32_t faceCount = 0;
+	std::vector<uint32_t> faceRanges;
+	AttributeMapNOPtrVectorOwner matAttrMaps;
+	AttributeMapNOPtrVectorOwner reportAttrMaps;
+
+	assert(geometries.size() == reports.size());
+	assert(materials.size() == reports.size());
+	auto matIt = materials.cbegin();
+	auto repIt = reports.cbegin();
+	prtx::PRTUtils::AttributeMapBuilderPtr amb(prt::AttributeMapBuilder::create());
+	for (const auto& geo: geometries) {
+		const prtx::MeshPtrVector& meshes = geo->getMeshes();
+
+		for (size_t mi = 0; mi < meshes.size(); mi++) {
+			const prtx::MeshPtr& m = meshes.at(mi);
+			const prtx::MaterialPtr& mat = matIt->at(mi);
+
+			faceRanges.push_back(faceCount);
+
+			if (emitMaterials) {
+				convertMaterialToAttributeMap(amb, *(mat.get()), mat->getKeys());
+				matAttrMaps.v.push_back(amb->createAttributeMapAndReset());
+			}
+
+			if (emitReports) {
+				convertReportsToAttributeMap(amb, *repIt);
+				reportAttrMaps.v.push_back(amb->createAttributeMapAndReset());
+				if (DBG) log_debug("report attr map: %1%") % prtx::PRTUtils::objectToXML(reportAttrMaps.v.back());
+			}
+
+			faceCount += m->getFaceCount();
+		}
+
+		++matIt;
+		++repIt;
+	}
+	faceRanges.push_back(faceCount); // close last range
+
+	assert(matAttrMaps.v.empty() || matAttrMaps.v.size() == faceRanges.size()-1);
+	assert(reportAttrMaps.v.empty() || reportAttrMaps.v.size() == faceRanges.size()-1);
+	assert(shapeIDs.size() == faceRanges.size()-1);
+
+	const std::pair<std::vector<const double*>, std::vector<size_t>> puvs = toPtrVec(sg.uvs);
+
+	cb->addMesh(initialShape.getName(),
+	        sg.coords.data(), sg.coords.size(),
+			sg.normals.data(), sg.normals.size(),
+			sg.counts.data(), sg.counts.size(),
+			sg.indices.data(), sg.indices.size(),
+			puvs.first.data(), puvs.second.data(), sg.uvs.size(),
+			faceRanges.data(), faceRanges.size(),
+			matAttrMaps.v.empty() ? nullptr : matAttrMaps.v.data(),
+			reportAttrMaps.v.empty() ? nullptr : reportAttrMaps.v.data(),
+			shapeIDs.data());
+
+	if (DBG) log_wdebug(L"MayaEncoder::convertGeometry: end");
+}
+
+void MayaEncoder::finish(prtx::GenerateContext& /*context*/) {
+}
 
 
-	uint32_t startFace = 0;
-	uint32_t geoIdx = 0;
-	auto matIt = mats.cbegin();
-	for (auto geoIt = geometries.cbegin(); geoIt != geometries.cend(); ++geoIt, ++matIt) {
-		const prtx::GeometryPtr& geo = *geoIt;
-		const prtx::MaterialPtr& mat = matIt->front();
+MayaEncoderFactory* MayaEncoderFactory::createInstance() {
+	prtx::EncoderInfoBuilder encoderInfoBuilder;
 
-        const prtx::MeshPtrVector& meshes = geo->getMeshes();
-        const uint32_t faceCount = std::accumulate(meshes.begin(), meshes.end(), 0, [](uint32_t c, const prtx::MeshPtr& m) {
-            return c + m->getFaceCount();
-        });
+	encoderInfoBuilder.setID(ENCODER_ID_Maya);
+	encoderInfoBuilder.setName(ENC_NAME);
+	encoderInfoBuilder.setDescription(ENC_DESCRIPTION);
+	encoderInfoBuilder.setType(prt::CT_GEOMETRY);
 
+	prtx::PRTUtils::AttributeMapBuilderPtr amb(prt::AttributeMapBuilder::create());
+	amb->setBool(EO_EMIT_ATTRIBUTES, prtx::PRTX_TRUE);
+	amb->setBool(EO_EMIT_MATERIALS,  prtx::PRTX_TRUE);
+	amb->setBool(EO_EMIT_REPORTS,    prtx::PRTX_FALSE);
+	encoderInfoBuilder.setDefaultOptions(amb->createAttributeMap());
 
-        mayaOutput->setMaterial(startFace, faceCount, mat);
-        startFace += faceCount;
-    }
-
-
-	mayaOutput->createMesh();
-	mayaOutput->finishMesh();
+	return new MayaEncoderFactory(encoderInfoBuilder.create());
 }

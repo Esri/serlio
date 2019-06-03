@@ -5,8 +5,9 @@ cmake_policy(SET CMP0015 NEW)
 ### setup build target
 
 add_library(${CODEC_TARGET} SHARED
-	codecs_maya.cpp
-	encoder/MayaEncoder.cpp)
+	CodecMain.cpp
+	encoder/MayaEncoder.cpp
+	encoder/IMayaCallbacks.h)
 
 
 ### setup compiler flags
