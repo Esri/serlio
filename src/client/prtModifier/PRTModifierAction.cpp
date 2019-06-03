@@ -178,9 +178,9 @@ const std::string& PRTModifierAction::getPluginRoot() {
 }
 
 
-const ResolveMapUPtr& PRTModifierAction::getResolveMap() {
+const ResolveMapSPtr& PRTModifierAction::getResolveMap() {
 	ResolveMapCache::LookupResult lookupResult = mResolveMapCache->get(std::wstring(mRulePkg.asWChar()));
-	const ResolveMapUPtr& resolveMap = lookupResult.first;
+	const ResolveMapSPtr& resolveMap = lookupResult.first;
 	return resolveMap;
 }
 
@@ -192,7 +192,7 @@ MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg
 	mRuleFile.clear();
 	mStartRule.clear();
 
-	const ResolveMapUPtr& resolveMap = getResolveMap();
+	const ResolveMapSPtr& resolveMap = getResolveMap();
 
 	if (resolveMap != nullptr) {
 		size_t nKeys;

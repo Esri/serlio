@@ -18,12 +18,12 @@ public:
 	~ResolveMapCache();
 
 	enum class CacheStatus { HIT, MISS };
-	using LookupResult = std::pair<const ResolveMapUPtr&, CacheStatus>;
+	using LookupResult = std::pair<const ResolveMapSPtr&, CacheStatus>;
 	LookupResult get(const std::wstring& rpk);
 
 private:
 	struct ResolveMapCacheEntry {
-		ResolveMapUPtr mResolveMap;
+		ResolveMapSPtr mResolveMap;
 		time_t mTimeStamp;
 	};
 	using Cache = std::map<KeyType, ResolveMapCacheEntry>;

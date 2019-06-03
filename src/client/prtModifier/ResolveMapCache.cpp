@@ -10,7 +10,7 @@
 
 namespace {
 
-const ResolveMapUPtr RESOLVE_MAP_NONE;
+const ResolveMapSPtr RESOLVE_MAP_NONE;
 const ResolveMapCache::LookupResult LOOKUP_FAILURE = { RESOLVE_MAP_NONE, ResolveMapCache::CacheStatus::MISS };
 std::mutex resolveMapCacheMutex;
 
@@ -61,7 +61,7 @@ ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
 
 		prt::Status status = prt::STATUS_UNSPECIFIED_ERROR;
 		LOG_DBG << "createResolveMap from " << rpk;
-		rmce.mResolveMap.reset(prt::createResolveMap(rpkURI.c_str(), mRPKUnpackPath.c_str(), &status));
+		rmce.mResolveMap.reset(prt::createResolveMap(rpkURI.c_str(), mRPKUnpackPath.c_str(), &status), PRTDestroyer());
 		if (status != prt::STATUS_OK)
 			return LOOKUP_FAILURE;
 
