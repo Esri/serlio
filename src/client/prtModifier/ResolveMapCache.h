@@ -18,7 +18,7 @@ public:
 	~ResolveMapCache();
 
 	enum class CacheStatus { HIT, MISS };
-	using LookupResult = std::pair<const ResolveMapSPtr&, CacheStatus>;
+	using LookupResult = std::pair<ResolveMapSPtr, CacheStatus>;
 	LookupResult get(const std::wstring& rpk);
 
 private:

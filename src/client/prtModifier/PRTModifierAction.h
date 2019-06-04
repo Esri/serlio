@@ -75,7 +75,7 @@ private:
 	std::wstring                  mRuleFile;
 	std::wstring                  mStartRule;
 
-	const ResolveMapSPtr& getResolveMap();
+	ResolveMapSPtr getResolveMap();
 
 	//init in fillAttributesFromNode()
 	AttributeMapUPtr mGenerateAttrs;
