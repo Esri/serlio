@@ -22,22 +22,40 @@
 #include "node/Utilities.h"
 
 #include "maya/MString.h"
+#include "prt/StringUtils.h"
 
 #include <cstdio>
 #include <cstdarg>
+#include <string>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <tchar.h>
+#include <shellapi.h>
+#else
+#include <ftw.h>
+#endif
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <wchar.h>
 
 namespace prtu {
 
 
-	const char* filename(const char* path) {
-		while (*(--path) != '\\');
-		return path + 1;
+
+	const std::wstring filename(const std::wstring& path) {
+		size_t pos = path.find_last_of(L'/');
+		if (pos != std::string::npos)
+		{
+			return path.substr(pos+1);
+		}
+		else return path;
 	}
 
 
 	template<> char getDirSeparator() {
-#ifdef _MSC_VER
+#ifdef _WIN32
 		static const char SEPARATOR = '\\';
 #else
 		static const char SEPARATOR = '/';
@@ -47,7 +65,7 @@ namespace prtu {
 
 
 	template<> wchar_t getDirSeparator() {
-#ifdef _MSC_VER
+#ifdef _WIN32
 		static const wchar_t SEPARATOR = L'\\';
 #else
 		static const wchar_t SEPARATOR = L'/';
@@ -55,6 +73,13 @@ namespace prtu {
 		return SEPARATOR;
 	}
 
+	template<> std::string getDirSeparator() {
+		return std::string(1, getDirSeparator<char>());
+	}
+
+	template<> std::wstring getDirSeparator() {
+		return std::wstring(1, getDirSeparator<wchar_t>());
+	}
 
 #if DO_DBG == 1
 
@@ -163,5 +188,162 @@ namespace prtu {
 		return computeSeed(a);
 	}
 
+	std::string toOSNarrowFromUTF16(const std::wstring& osWString) {
+		std::vector<char> temp(osWString.size());
+		size_t size = temp.size();
+		prt::Status status = prt::STATUS_OK;
+		prt::StringUtils::toOSNarrowFromUTF16(osWString.c_str(), temp.data(), &size, &status);
+		if (size > temp.size()) {
+			temp.resize(size);
+			prt::StringUtils::toOSNarrowFromUTF16(osWString.c_str(), temp.data(), &size, &status);
+		}
+		return std::string(temp.data());
+	}
 
+	std::wstring toUTF16FromOSNarrow(const std::string& osString) {
+		std::vector<wchar_t> temp(osString.size());
+		size_t size = temp.size();
+		prt::Status status = prt::STATUS_OK;
+		prt::StringUtils::toUTF16FromOSNarrow(osString.c_str(), temp.data(), &size, &status);
+		if (size > temp.size()) {
+			temp.resize(size);
+			prt::StringUtils::toUTF16FromOSNarrow(osString.c_str(), temp.data(), &size, &status);
+		}
+		return std::wstring(temp.data());
+	}
+
+	std::string toUTF8FromOSNarrow(const std::string& osString) {
+		std::wstring utf16String = toUTF16FromOSNarrow(osString);
+		std::vector<char> temp(utf16String.size());
+		size_t size = temp.size();
+		prt::Status status = prt::STATUS_OK;
+		prt::StringUtils::toUTF8FromUTF16(utf16String.c_str(), temp.data(), &size, &status);
+		if (size > temp.size()) {
+			temp.resize(size);
+			prt::StringUtils::toUTF8FromUTF16(utf16String.c_str(), temp.data(), &size, &status);
+		}
+		return std::string(temp.data());
+	}
+
+
+	std::wstring percentEncode(const std::string& utf8String) {
+		std::vector<char> temp(2 * utf8String.size());
+		size_t size = temp.size();
+		prt::Status status = prt::STATUS_OK;
+		prt::StringUtils::percentEncode(utf8String.c_str(), temp.data(), &size, &status);
+		if (size > temp.size()) {
+			temp.resize(size);
+			prt::StringUtils::percentEncode(utf8String.c_str(), temp.data(), &size, &status);
+		}
+
+		std::vector<wchar_t> u16temp(temp.size());
+		size = u16temp.size();
+		prt::StringUtils::toUTF16FromUTF8(temp.data(), u16temp.data(), &size, &status);
+		if (size > u16temp.size()) {
+			u16temp.resize(size);
+			prt::StringUtils::toUTF16FromUTF8(temp.data(), u16temp.data(), &size, &status);
+		}
+
+		return std::wstring(u16temp.data());
+	}
+
+	std::wstring toFileURI(const std::wstring& p) {
+#ifdef _WIN32
+		static const std::wstring schema = L"file:/";
+#else
+		static const std::wstring schema = L"file:";
+#endif
+		std::string utf8Path = toUTF8FromOSNarrow(toOSNarrowFromUTF16(p));
+		std::wstring pecString = percentEncode(utf8Path);
+		return schema + pecString;
+	
+	}
+
+	void remove_all(std::wstring path)
+	{
+#ifdef _WIN32
+		std::replace(path.begin(), path.end(), L'/', L'\\');
+		const wchar_t* lpszDir = path.c_str();
+
+		size_t len = wcslen(lpszDir);
+		wchar_t *pszFrom = new wchar_t[len + 2];
+		wcscpy_s(pszFrom, len + 2, lpszDir);
+		pszFrom[len] = 0;
+		pszFrom[len + 1] = 0;
+
+		SHFILEOPSTRUCTW fileop;
+		fileop.hwnd = NULL;    // no status display
+		fileop.wFunc = FO_DELETE;  // delete operation
+		fileop.pFrom = pszFrom;  // source file name as double null terminated string
+		fileop.pTo = NULL;    // no destination needed
+		fileop.fFlags = FOF_NOCONFIRMATION | FOF_SILENT;  // do not prompt the user
+		fileop.fAnyOperationsAborted = FALSE;
+		fileop.lpszProgressTitle = NULL;
+		fileop.hNameMappings = NULL;
+
+		int ret = SHFileOperationW(&fileop);
+		delete[] pszFrom;
+#else
+		system((std::string("rm -rf ")+ toOSNarrowFromUTF16(path)).c_str());
+#endif
+
+	}
+
+	std::wstring temp_directory_path() {
+#ifdef _WIN32
+		DWORD dwRetVal = 0;
+		wchar_t lpTempPathBuffer[MAX_PATH];
+
+		dwRetVal = GetTempPathW(MAX_PATH,
+			lpTempPathBuffer);
+		if (dwRetVal > MAX_PATH || (dwRetVal == 0))
+		{
+			return L".\tmp";
+		}
+		else {
+			return std::wstring(lpTempPathBuffer);
+		}
+
+#else
+
+		char const *folder = getenv("TMPDIR");
+		if (folder == 0) {
+			folder = getenv("TMP");
+			if (folder == 0)
+			{
+				folder = getenv("TEMP");
+				if (folder == 0)
+				{
+					folder = getenv("TEMPDIR");
+					if (folder == 0)
+						folder = "/tmp";
+				}
+			}
+		}
+
+		return toUTF16FromOSNarrow(std::string(folder));
+#endif
+
+	}
+
+	time_t getFileModificationTime(const std::wstring& p) {
+		std::wstring pn = p;
+
+#ifdef _WIN32
+		std::replace(pn.begin(), pn.end(), L'/', L'\\');
+#endif
+
+#ifdef _WIN32
+		struct _stat st;
+		int ierr = _wstat(pn.c_str(), &st);
+#else
+		struct stat st;
+		int ierr = stat(prtu::toOSNarrowFromUTF16(pn).c_str(), &st);
+#endif
+
+		if (ierr == 0) {
+			return st.st_mtime;
+		}
+		return -1;
+	}
 } // namespace prtu

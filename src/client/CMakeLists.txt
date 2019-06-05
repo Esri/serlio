@@ -8,6 +8,7 @@ add_library(${PRT4MAYA_TARGET} SHARED
         node/PRTMaterialNode.cpp
 		node/Utilities.cpp
 		node/MayaCallbacks.cpp
+        prtModifier/ResolveMapCache.cpp
         prtModifier/PRTModifierAction.cpp
         prtModifier/PRTModifierCommand.cpp
         prtModifier/PRTModifierNode.cpp

@@ -2,6 +2,7 @@
 
 #include "polyModifierBase/polyModifierFty.h"
 #include "node/Utilities.h"
+#include "ResolveMapCache.h"
 
 #include "prt/API.h"
 #include <maya/MObject.h>
@@ -56,7 +57,7 @@ public:
 	static prt::ConsoleLogHandler*  theLogHandler;
 	static prt::FileLogHandler*     theFileLogHandler;
 	static const std::string&       getPluginRoot();
-
+	static ResolveMapCache*         mResolveMapCache;
 
 private:
 
@@ -72,7 +73,8 @@ private:
 	MString                       mRulePkg;
 	std::wstring                  mRuleFile;
 	std::wstring                  mStartRule;
-	ResolveMapUPtr                mResolveMap;
+
+	ResolveMapSPtr getResolveMap();
 
 	//init in fillAttributesFromNode()
 	AttributeMapUPtr mGenerateAttrs;

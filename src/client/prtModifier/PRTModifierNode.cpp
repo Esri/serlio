@@ -182,7 +182,7 @@ MStatus PRTModifierNode::initialize()
 	MCHECK(stat2);
 	MCHECK(stat);
 	MCHECK(fAttr.setCached(true));
-	MCHECK(fAttr.setStorable(true));
+	MCHECK(fAttr.setStorable(false));
 	MCHECK(fAttr.setHidden(true));
 	MCHECK(fAttr.setConnectable(false));
 	MCHECK(addAttribute(currentRulePkg));

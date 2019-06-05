@@ -5,6 +5,14 @@
 #include "node/Utilities.h"
 
 #include <maya/MFnPlugin.h>
+#include <maya/MSceneMessage.h>
+
+#ifdef _WIN32
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
+
 
 
 namespace {
@@ -12,7 +20,26 @@ namespace {
 	const prt::LogLevel PRT_LOG_LEVEL = prt::LOG_DEBUG;
 	const bool          ENABLE_LOG_CONSOLE = true;
 	const bool          ENABLE_LOG_FILE = false;
+
+	std::wstring getProcessTempDir() {
+        std::wstring tp = prtu::temp_directory_path();
+		wchar_t sep = prtu::getDirSeparator<wchar_t>();
+		if (tp[tp.size()-1] != sep)
+			tp += sep;
+        std::wstring n = std::wstring(L"maya_") +
+#ifdef _WIN32
+			std::to_wstring(::_getpid()); //prevent warning in win32
+#else
+			std::to_wstring(::getpid());
+#endif
+        return { tp.append(n) };
+    }
 } // namespace
+
+static void mayaExiting(void*)
+{
+	uninitializePlugin(MObject::kNullObj);
+}
 
 // called when the plug-in is loaded into Maya.
 MStatus initializePlugin(MObject obj)
@@ -49,6 +76,7 @@ MStatus initializePlugin(MObject obj)
 		return MS::kFailure;
 
 	PRTModifierAction::theCache = prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT);
+    PRTModifierAction::mResolveMapCache = new ResolveMapCache(getProcessTempDir());
 
 	MFnPlugin plugin(obj, "Esri R&D Center Zurich", "1.0", "Any");
 
@@ -62,31 +90,50 @@ MStatus initializePlugin(MObject obj)
 	MCHECK(plugin.registerNode("prtMaterial", PRTMaterialNode::id, &PRTMaterialNode::creator, &PRTMaterialNode::initialize, MPxNode::kDependNode));
 	MCHECK(plugin.registerUI("prt4mayaCreateUI", "prt4mayaDeleteUI"));
 
+	MStatus mayaStatus = MStatus::kFailure; //maya exit does not call uninitializePlugin, therefore addCallback
+	MSceneMessage::addCallback(MSceneMessage::kMayaExiting, mayaExiting, NULL, &mayaStatus);
+	MCHECK(mayaStatus);
+
 	return MStatus::kSuccess;
 }
+
+
 
 // called when the plug-in is unloaded from Maya.
 MStatus uninitializePlugin(MObject obj)
 {
+	if (PRTModifierAction::theCache) {
+		PRTModifierAction::theCache->destroy();
+		PRTModifierAction::theCache = nullptr;
+	}
+	if (PRTModifierAction::thePRT) {
+		PRTModifierAction::thePRT->destroy();
+		PRTModifierAction::thePRT = nullptr;
+	}
+	if (PRTModifierAction::mResolveMapCache) {
+		delete PRTModifierAction::mResolveMapCache;
+		PRTModifierAction::mResolveMapCache = nullptr;
+	}
 
-	PRTModifierAction::theCache->destroy();
-	PRTModifierAction::thePRT->destroy();
-
-	if (ENABLE_LOG_CONSOLE) {
+	if (ENABLE_LOG_CONSOLE && PRTModifierAction::theLogHandler) {
 		prt::removeLogHandler(PRTModifierAction::theLogHandler);
 		PRTModifierAction::theLogHandler->destroy();
+		PRTModifierAction::theLogHandler = nullptr;
 	}
-	if (ENABLE_LOG_FILE) {
+	if (ENABLE_LOG_FILE && PRTModifierAction::theFileLogHandler) {
 		prt::removeLogHandler(PRTModifierAction::theFileLogHandler);
 		PRTModifierAction::theFileLogHandler->destroy();
+		PRTModifierAction::theFileLogHandler = nullptr;
 	}
 
 	MStatus   status;
-	MFnPlugin plugin(obj);
 
-	MCHECK(plugin.deregisterCommand("prtAssign"));
-	MCHECK(plugin.deregisterNode(PRTModifierNode::id));
-	MCHECK(plugin.deregisterNode(PRTMaterialNode::id));
+	if (obj != MObject::kNullObj) {
+		MFnPlugin plugin(obj);
+		MCHECK(plugin.deregisterCommand("prtAssign"));
+		MCHECK(plugin.deregisterNode(PRTModifierNode::id));
+		MCHECK(plugin.deregisterNode(PRTMaterialNode::id));
+	}
 
 	return status;
 }

@@ -42,7 +42,7 @@
 #endif
 
 
-#define DO_DBG 1
+#define DO_DBG 0
 #define MCHECK(_stat_) {if(MS::kSuccess != _stat_) { prtu::dbg("maya err at %s:%d: %s %d\n", __FILE__, __LINE__, _stat_.errorString().asChar(), _stat_.statusCode());}}
 
 struct PRTDestroyer {
@@ -61,11 +61,11 @@ using AttributeMapBuilderUPtr = std::unique_ptr<prt::AttributeMapBuilder, PRTDes
 using AttributeMapBuilderVector = std::vector<AttributeMapBuilderUPtr>;
 using InitialShapeBuilderUPtr = std::unique_ptr<prt::InitialShapeBuilder, PRTDestroyer>;
 using InitialShapeBuilderVector = std::vector<InitialShapeBuilderUPtr>;
-using ResolveMapUPtr = std::unique_ptr<const prt::ResolveMap, PRTDestroyer>;
 using ResolveMapBuilderUPtr = std::unique_ptr<prt::ResolveMapBuilder, PRTDestroyer>;
 using RuleFileInfoUPtr = std::unique_ptr<const prt::RuleFileInfo, PRTDestroyer>;
 using EncoderInfoUPtr = std::unique_ptr<const prt::EncoderInfo, PRTDestroyer>;
 using OcclusionSetUPtr = std::unique_ptr<prt::OcclusionSet, PRTDestroyer>;
+using ResolveMapSPtr = std::shared_ptr<const prt::ResolveMap>;
 
 namespace prtu {
 
@@ -76,7 +76,7 @@ namespace prtu {
 		return pv;
 	}
 
-	const char* filename(const char* path);
+	const std::wstring filename(const std::wstring& path);
 
 	void dbg(const char* fmt, ...);
 	void wdbg(const wchar_t* fmt, ...);
@@ -101,4 +101,35 @@ namespace prtu {
 #endif
 	}
 
+	std::string toOSNarrowFromUTF16(const std::wstring& osWString);
+	std::wstring toUTF16FromOSNarrow(const std::string& osString);
+	std::string toUTF8FromOSNarrow(const std::string& osString);
+
+	std::wstring toFileURI(const std::wstring& p);
+	std::wstring percentEncode(const std::string& utf8String);
+	
+	time_t getFileModificationTime(const std::wstring& p);
+
+	//we don't want a boost or c++17 dependency for just 2 functions, therefore done ourselfs
+	std::wstring temp_directory_path();
+	void remove_all(std::wstring path);
+
 } // namespace prtu
+
+inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {
+    std::wstring::size_type pos = 0;
+    while (pos < s.size()) {
+        pos = s.find_first_not_of(allowedChars, pos);
+        if (pos == std::wstring::npos)
+            break;
+        s[pos++] = L'_';
+    }
+}
+
+inline bool startsWithAnyOf(const std::string& s, const std::vector<std::string>& sv) {
+    for (const auto& v : sv) {
+        if (s.find(v) == 0)
+            return true;
+    }
+    return false;
+}
