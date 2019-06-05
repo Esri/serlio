@@ -144,7 +144,7 @@ void MayaCallbacks::addMesh(
 
 			MFloatArray mU;
 			MFloatArray mV;
-			for (size_t uvIdx = 0; uvIdx < uvsSizes[uvSet]; ++uvIdx) {
+			for (size_t uvIdx = 0; uvIdx < uvsSizes[uvSet]/2; ++uvIdx) {
 				mU.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 0])); //maya mesh only supports float uvs
 				mV.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 1]));
 			}
