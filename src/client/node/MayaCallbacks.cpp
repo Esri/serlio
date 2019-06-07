@@ -200,8 +200,10 @@ void MayaCallbacks::addMesh(
 
 	adsk::Data::Structure* fStructure;	  // Structure to use for creation
 	fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
-	if (fStructure == NULL)
+	if (fStructure == NULL && materials != nullptr && faceRangesSize > 1)
 	{
+		const prt::AttributeMap* mat = materials[0];
+
 		// Register our structure since it is not registered yet.
 		fStructure = adsk::Data::Structure::create();
 		fStructure->setName(gPRTMatStructure.c_str());
@@ -209,17 +211,17 @@ void MayaCallbacks::addMesh(
 		fStructure->addMember(adsk::Data::Member::kInt32, 1, gPRTMatMemberFaceStart.c_str());
 		fStructure->addMember(adsk::Data::Member::kInt32, 1, gPRTMatMemberFaceEnd.c_str());
 
-		prtx::MaterialBuilder mb;
-		prtx::MaterialPtr m = mb.createShared();
-		const prtx::WStringVector&    keys = m->getKeys();
 
-		for (const auto& key : keys) {
+		size_t keyCount = 0;
+		wchar_t const* const* keys = mat->getKeys(&keyCount);
+		for (int k = 0; k < keyCount; k++) {
+			wchar_t const* key = keys[k];
 
 			adsk::Data::Member::eDataType type;
 			unsigned int size = 0;
 			unsigned int arrayLength = 1;
 
-			switch (m->getType(key)) {
+			switch (mat->getType(key)) {
 			case prt::Attributable::PT_BOOL: type = adsk::Data::Member::kBoolean; size = 1;  break;
 			case prt::Attributable::PT_FLOAT: type = adsk::Data::Member::kDouble; size = 1; break;
 			case prt::Attributable::PT_INT: type = adsk::Data::Member::kInt32; size = 1; break;
