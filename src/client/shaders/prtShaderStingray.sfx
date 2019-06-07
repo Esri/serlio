@@ -169,11 +169,10 @@ NumberOfNodes=76
 			C=9 0 5 30 0 1 0
 			CPC=0
 #NT=20177 0
-	PC=5
+	PC=4
 	name=1 v=5000 color_map
 	posx=1 v=2003 543.512024
 	posy=1 v=2003 -1111.884766
-	texturepath=2 e=1 v=5000 C:/Users/ZRH-MARKUSL2/Documents/maya/projects/default/assets/candler.rpk/assets/facade/walls/bricks.jpg
 	uiorder=2 e=0 v=2002 2
 	group=-1
 	ISC=2
@@ -614,11 +613,10 @@ NumberOfNodes=76
 			C=39 0 5 43 1 2 0
 			CPC=0
 #NT=20177 0
-	PC=5
+	PC=4
 	name=1 v=5000 dirt_map
 	posx=1 v=2003 544.877319
 	posy=1 v=2003 -723.943176
-	texturepath=2 e=1 v=5000 C:/Users/ZRH-MARKUSL2/Documents/maya/projects/default/assets/candler.rpk/assets/facade/misc/dirtmap.jpg
 	uiorder=2 e=0 v=2002 2
 	group=-1
 	ISC=2
