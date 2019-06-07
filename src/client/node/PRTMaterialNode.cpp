@@ -494,5 +494,8 @@ void PRTMaterialNode::setTexture(MString &mShadingCmd, std::string tex, std::str
 		mShadingCmd += "connectAttr -force ($nodeName + \".outColor\") ($shName + \".TEX_"+ MString(target.c_str()) +"\");\n";
 		mShadingCmd += "setAttr ($shName+\".use_"+ MString(target.c_str())+"\") 1;\n";
 	}
+	else {
+		mShadingCmd += "setAttr ($shName+\".use_" + MString(target.c_str()) + "\") 0;\n";
+	}
 }
 
