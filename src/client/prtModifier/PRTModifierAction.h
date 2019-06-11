@@ -46,7 +46,7 @@ public:
 	MStatus updateRuleFiles(MObject& node, const MString& rulePkg);
 	void fillAttributesFromNode(const MObject& node);
 	void setMesh(MObject& _inMesh, MObject& _outMesh);
-
+	void setRandomSeed(int32_t randomSeed) { mRandomSeed = randomSeed; };
 
 	// polyModifierFty inherited methods
 	MStatus		doIt() override;
@@ -73,6 +73,7 @@ private:
 	MString                       mRulePkg;
 	std::wstring                  mRuleFile;
 	std::wstring                  mStartRule;
+	int32_t                       mRandomSeed;
 
 	ResolveMapSPtr getResolveMap();
 

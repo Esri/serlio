@@ -4,6 +4,7 @@
 #include <maya/MItSelectionList.h>
 #include <maya/MGlobal.h>
 #include <maya/MArgList.h>
+#include <maya/MFNMesh.h>
 
 void* PRTModifierCommand::creator()
 {
@@ -78,6 +79,12 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList)
 
 	if (found)
 	{
+		MFnMesh meshFn(getMeshNode());
+
+		MFloatPointArray vertices;
+		MCHECK(meshFn.getPoints(vertices, MSpace::kWorld));
+		mInitialSeed = prtu::computeSeed(vertices);
+
 		// Now, pass control over to the polyModifierCmd::doModifyPoly() method
 		// to handle the operation.
 		status = doModifyPoly();
@@ -141,6 +148,11 @@ MStatus PRTModifierCommand::initModifierNode(MObject modifierNode)
 	MObject attr = depNodeFn.attribute("Rule_Package");
 	MPlug plug(modifierNode, attr);
 	status = plug.setValue(mRulePkg);
+
+	MObject attrSeed = depNodeFn.attribute("Random_Seed");
+	MPlug plugRnd(modifierNode, attrSeed);
+	plugRnd.setValue(mInitialSeed);
+
 	return status;
 }
 
@@ -149,6 +161,7 @@ MStatus PRTModifierCommand::directModifier(MObject mesh)
 	MStatus status;
 	PRTModifierAction fPRTModifierAction;
 
+	fPRTModifierAction.setRandomSeed(mInitialSeed);
 	fPRTModifierAction.updateRuleFiles(MObject::kNullObj, mRulePkg);
 	fPRTModifierAction.setMesh(mesh, mesh);
 

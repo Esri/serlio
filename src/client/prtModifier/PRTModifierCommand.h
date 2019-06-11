@@ -23,5 +23,6 @@ public:
 private:
 
 	MString mRulePkg;
+	int32_t mInitialSeed = 0;
 };
 
