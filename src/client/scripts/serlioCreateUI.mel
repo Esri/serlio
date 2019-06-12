@@ -43,7 +43,7 @@ global proc createPrtNode() {
 	if(size($rulePackage)) {
 		for($node in $initialShapes) {
 			select -r $node;
-			prtAssign $rulePackage;
+			serlioAssign $rulePackage;
 		}
 	}
 	select -r $select;
@@ -59,7 +59,7 @@ global proc createPrtMaterialNode() {
 	}	
 	
 	for($node in $initialShapes) {
-		$prtMaterialName = `createNode prtMaterial`;
+		$prtMaterialName = `createNode serlioMaterial`;
 		$im =  `connectionInfo -sfd ($node +".inMesh")`;
 		if (size($im)>0) {
 			connectAttr -force ( $prtMaterialName + ".outMesh" ) ( $node + ".inMesh" );

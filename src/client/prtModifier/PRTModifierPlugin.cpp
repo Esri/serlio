@@ -16,6 +16,9 @@
 
 
 namespace {
+	constexpr const char* MODIFIER_NODE = "serlio";
+	constexpr const char* CMD_ASSIGN    = "serlioAssign";
+
 	const wchar_t*      PRT_EXT_SUBDIR = L"ext";
 	const prt::LogLevel PRT_LOG_LEVEL = prt::LOG_DEBUG;
 	const bool          ENABLE_LOG_CONSOLE = true;
@@ -80,14 +83,14 @@ MStatus initializePlugin(MObject obj)
 
 	MFnPlugin plugin(obj, "Esri R&D Center Zurich", SRL_VERSION, "Any");
 
-	MCHECK(plugin.registerCommand("prtAssign", PRTModifierCommand::creator));
+	MCHECK(plugin.registerCommand(CMD_ASSIGN, PRTModifierCommand::creator));
 
-	MCHECK(plugin.registerNode("prt",
+	MCHECK(plugin.registerNode(MODIFIER_NODE,
 		PRTModifierNode::id,
 		PRTModifierNode::creator,
 		PRTModifierNode::initialize));
 
-	MCHECK(plugin.registerNode("prtMaterial", PRTMaterialNode::id, &PRTMaterialNode::creator, &PRTMaterialNode::initialize, MPxNode::kDependNode));
+	MCHECK(plugin.registerNode("serlioMaterial", PRTMaterialNode::id, &PRTMaterialNode::creator, &PRTMaterialNode::initialize, MPxNode::kDependNode));
 	MCHECK(plugin.registerUI("serlioCreateUI", "serlioDeleteUI"));
 
 	MStatus mayaStatus = MStatus::kFailure; //maya exit does not call uninitializePlugin, therefore addCallback
@@ -130,7 +133,7 @@ MStatus uninitializePlugin(MObject obj)
 
 	if (obj != MObject::kNullObj) {
 		MFnPlugin plugin(obj);
-		MCHECK(plugin.deregisterCommand("prtAssign"));
+		MCHECK(plugin.deregisterCommand(CMD_ASSIGN));
 		MCHECK(plugin.deregisterNode(PRTModifierNode::id));
 		MCHECK(plugin.deregisterNode(PRTMaterialNode::id));
 	}

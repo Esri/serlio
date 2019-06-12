@@ -295,7 +295,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 			pluginRoot = pluginRoot.substr(0, pluginRoot.rfind("plug-ins"));
 			//mel command wants forward slashes
 			std::replace(pluginRoot.begin(), pluginRoot.end(), '\\', '/');
-			sfxFile = MString(pluginRoot.c_str()) + "shaders/prtShaderStingray.sfx";
+			sfxFile = MString(pluginRoot.c_str()) + "shaders/serlioShaderStingray.sfx";
 		}
 
 		adsk::Data::Channel* channel = outputAssociations.findChannel(gPRTMatChannel);
@@ -360,8 +360,8 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					}
 
 					//get unique name
-					std::string shaderName = "prtGeneratedMaterialSh";
-					std::string shadingGroupName = "prtGeneratedMaterialSg";
+					std::string shaderName = "serlioGeneratedMaterialSh";
+					std::string shadingGroupName = "serlioGeneratedMaterialSg";
 
 					int shIdx = 0;
 					while (shaderNames.find(shaderName + std::to_string(shIdx)) != shaderNames.end()) {
