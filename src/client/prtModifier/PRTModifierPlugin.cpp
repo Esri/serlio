@@ -78,7 +78,7 @@ MStatus initializePlugin(MObject obj)
 	PRTModifierAction::theCache = prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT);
     PRTModifierAction::mResolveMapCache = new ResolveMapCache(getProcessTempDir());
 
-	MFnPlugin plugin(obj, "Esri R&D Center Zurich", "1.0", "Any");
+	MFnPlugin plugin(obj, "Esri R&D Center Zurich", SRL_VERSION, "Any");
 
 	MCHECK(plugin.registerCommand("prtAssign", PRTModifierCommand::creator));
 

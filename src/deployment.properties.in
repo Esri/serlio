@@ -1,0 +1,5 @@
+package_name = @CPACK_PACKAGE_NAME@
+package_version_base = @SRL_VERSION_BASE@
+package_version = @SRL_VERSION@
+package_file = @CPACK_PACKAGE_FILE_NAME@
+package_classifier = @SRL_PKG_OS@

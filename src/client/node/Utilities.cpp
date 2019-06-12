@@ -104,8 +104,8 @@ namespace prtu {
 	}
 
 #else
-	void dbg(const char* fmt, ...) { }
-	void wdbg(const wchar_t* fmt, ...) { }
+	void dbg(const char*, ...) { }
+	void wdbg(const wchar_t*, ...) { }
 #endif
 
 	int fromHex(wchar_t c) {
