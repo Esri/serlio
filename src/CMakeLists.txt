@@ -16,10 +16,8 @@ endif()
 
 # we use semver.org, Semantic Versioning 2.0.0
 # i.e. <major>.<minor>.<patch>+b<buildnr>.maya<maya major ver>.prt<prt ver>
-set(SRL_VERSION "${SRL_VERSION_MAJOR}.${SRL_VERSION_MINOR}.${SRL_VERSION_PATCH}\
-+b${SRL_VERSION_BUILD}\
-.maya${maya_VERSION_MAJOR}\
-.prt${PRT_VERSION_MAJOR}-${PRT_VERSION_MINOR}-${PRT_VERSION_MICRO}")
+set(SRL_VERSION_BASE "${SRL_VERSION_MAJOR}.${SRL_VERSION_MINOR}.${SRL_VERSION_PATCH}+b${SRL_VERSION_BUILD}")
+set(SRL_VERSION "${SRL_VERSION_BASE}.maya${maya_VERSION_MAJOR}.prt${PRT_VERSION_MAJOR}-${PRT_VERSION_MINOR}-${PRT_VERSION_MICRO}")
 message(STATUS "Using SRL_VERSION = ${SRL_VERSION}")
 
 
@@ -61,5 +59,7 @@ set(CPACK_PACKAGE_VERSION_MINOR       ${SRL_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH       ${SRL_VERSION_PATCH})
 set(CPACK_PACKAGE_INSTALL_DIRECTORY   "serlio-${SRL_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME           "${CPACK_PACKAGE_NAME}-${SRL_VERSION}-${SRL_PKG_OS}")
+
+configure_file(deployment.properties.in deployment.properties @ONLY)
 
 include(CPack)
