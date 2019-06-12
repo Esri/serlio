@@ -30,6 +30,9 @@ endif()
 
 ### setup compiler flags
 
+target_compile_definitions(${PRT4MAYA_TARGET} PRIVATE
+	-DSRL_VERSION=\"${SRL_VERSION}\") # quoted to use it as string literal
+
 target_include_directories(${PRT4MAYA_TARGET} PRIVATE
 		${CMAKE_SOURCE_DIR} # for IMayaCallbacks.h
 		${CMAKE_CURRENT_SOURCE_DIR}
@@ -86,30 +89,3 @@ else()
 	install(FILES ${PROJECT_SOURCE_DIR}/../README_linux_osx.md DESTINATION .)
 endif()
 
-
-### package target
-
-set(CPACK_PACKAGE_NAME					"esri_prt4maya")
-set(CPACK_PACKAGE_VENDOR				"Esri R&D Center Zurich")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY	"Maya Plugin Example for CityEngine SDK")
-set(CPACK_PACKAGE_VERSION_MAJOR			${PRT4MAYA_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR			${PRT4MAYA_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH			${PRT4MAYA_VERSION_MICRO})
-set(CPACK_PACKAGE_INSTALL_DIRECTORY		"${CPACK_PACKAGE_NAME}")
-set(CPACK_PACKAGE_FILE_NAME				"${CPACK_PACKAGE_INSTALL_DIRECTORY}")
-
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-	set(CPACK_GENERATOR					ZIP)
-	set(CPACK_SOURCE_GENERATOR			ZIP)
-	set(CPACK_ZIP_COMPONENT_INSTALL		1)
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-	set(CPACK_GENERATOR					ZIP) # TODO: use tgz
-	set(CPACK_SOURCE_GENERATOR			ZIP)
-	set(CPACK_TGZ_COMPONENT_INSTALL		1)
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-	set(CPACK_GENERATOR					ZIP) # TODO: use tgz
-	set(CPACK_SOURCE_GENERATOR			ZIP)
-	set(CPACK_TGZ_COMPONENT_INSTALL		1)
-endif()
-
-include(CPack)

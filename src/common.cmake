@@ -70,12 +70,20 @@ message(STATUS "Using maya_DIR = ${maya_DIR} (use '-Dmaya_DIR=xxx' to override)"
 
 find_path(maya_INCLUDE_PATH NAMES "maya/MApiVersion.h" PATHS "${maya_DIR}/include" NO_DEFAULT_PATH)
 
+# TODO: use cmake scripts provided by maya devkit
 set(MAYA_LIB_DIR "${maya_DIR}/lib")
 find_library(maya_LINK_LIB_FOUNDATION NAMES "Foundation" PATHS "${MAYA_LIB_DIR}")
 find_library(maya_LINK_LIB_OPENMAYA   NAMES "OpenMaya"   PATHS "${MAYA_LIB_DIR}")
 find_library(maya_LINK_LIB_OPENMAYAUI NAMES "OpenMayaUI" PATHS "${MAYA_LIB_DIR}")
 find_library(maya_LINK_LIB_METADATA NAMES "MetaData" PATHS "${MAYA_LIB_DIR}")
 list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_FOUNDATION} ${maya_LINK_LIB_OPENMAYA} ${maya_LINK_LIB_OPENMAYAUI} ${maya_LINK_LIB_METADATA})
+
+# temporary heuristic to detect maya version number
+if(maya_DIR MATCHES "maya2018")
+	set(maya_VERSION_MAJOR "2018")
+elseif(maya_DIR MATCHES "maya2019")
+	set(maya_VERSION_MAJOR "2019")
+endif()
 
 
 ### targets installation location
