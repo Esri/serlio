@@ -415,6 +415,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 
 					//ignored: ambientColor, specularColor
 					setAttribute(mShadingCmd, matInfo.diffuseColor, 3, "diffuse_color");
+					setAttribute(mShadingCmd, matInfo.emissiveColor, 3, "emissive_color");
 					setAttribute(mShadingCmd, matInfo.opacity, "opacity");
 					setAttribute(mShadingCmd, matInfo.roughness, "roughness");
 					setAttribute(mShadingCmd, matInfo.metallic, "metallic");
