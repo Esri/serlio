@@ -84,7 +84,7 @@ global proc createPrtMenu() {
 	}
 }
 
-global proc prt4mayaCreateUI() {
+global proc serlioCreateUI() {
  	createPrtMenu();
 }
 

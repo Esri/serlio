@@ -148,7 +148,7 @@ void PRTModifierAction::setMesh(MObject& _inMesh, MObject& _outMesh)
 	outMesh = _outMesh;
 }
 
-// plugin root = location of prt4maya shared library
+// plugin root = location of serlio shared library
 const std::string& PRTModifierAction::getPluginRoot() {
 	static std::string* rootPath = nullptr;
 	if (rootPath == nullptr) {

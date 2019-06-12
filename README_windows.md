@@ -1,4 +1,4 @@
-# PRT4MAYA - CityEngine SDK for Autodesk Maya
+# SERLIO - CityEngine SDK for Autodesk Maya
 
 
 ## DISCLAIMER
@@ -21,20 +21,20 @@ explain how to get the sdk binaries and example data.
 ## BUILD INSTRUCTIONS
 
 ### Building with Visual Studio
-1. Open a Windows Command Shell in the `prt4maya` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\prt4maya`.
+1. Open a Windows Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
 2. Create a build directory with `mkdir build` and change into it with `cd build`.
 3. Run `cmake` to generate a Visual Studio solution:
    ```
    cmake -G "Visual Studio 15 2017 Win64" ../src
    ```
    Use options `-Dprt_DIR=<ce sdk root>\cmake` and `-Dmaya_DIR=<maya installation root>` to override the default locations of CityEngine SDK and Maya.
-1. Open the generated `prt4maya_parent.sln` in Visual Studio.
+1. Open the generated `serlio_parent.sln` in Visual Studio.
 2. Switch the solution configuration to "Release" or "RelWithDebInfo" ("Debug" is not supported with release CE SDK).
 3. Call `build` on the `INSTALL` project.
 1. Proceed with the Installation Instructions below.
 
 ### Building on the Command Line
-1. Open a Visual Studio 2017 x64 Command Shell in the `prt4maya` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\prt4maya`.
+1. Open a Visual Studio 2017 x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
 2. Create a build directory with `mkdir build` and change into it with `cd build`.
 3. Run `cmake` to generate the Makefiles:
    ```
@@ -50,7 +50,7 @@ explain how to get the sdk binaries and example data.
 
 
 ## INSTALLATION INSTRUCTIONS
-1. Locate the directory where you copied the plugin (or keep `<your path to>\esri-cityengine-sdk\examples\prt4maya\install`), let's call it `PLUGINDIR`
+1. Locate the directory where you copied the plugin (or keep `<your path to>\esri-cityengine-sdk\examples\serlio\install`), let's call it `PLUGINDIR`
 1. Locate the Maya.env file in your home, usually its in `<home directory>\Documents\maya\2018`
 1. Edit Maya.env as follows:
    ```
@@ -61,7 +61,7 @@ explain how to get the sdk binaries and example data.
    ```
 1. Start maya
 1. Open the plugin manager: Windows -> Settings/Preferences -> Plug-in Manager
-1. Enable `prt4maya.mll`
+1. Enable `serlio.mll`
 1. The plugin should load and a new menu item `PRT` should appear in Maya.
 
 

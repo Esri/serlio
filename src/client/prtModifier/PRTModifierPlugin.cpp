@@ -26,7 +26,7 @@ namespace {
 		wchar_t sep = prtu::getDirSeparator<wchar_t>();
 		if (tp[tp.size()-1] != sep)
 			tp += sep;
-        std::wstring n = std::wstring(L"maya_") +
+        std::wstring n = std::wstring(L"serlio_") +
 #ifdef _WIN32
 			std::to_wstring(::_getpid()); //prevent warning in win32
 #else
@@ -51,7 +51,7 @@ MStatus initializePlugin(MObject obj)
 	}
 
 	if (ENABLE_LOG_FILE) {
-		const std::string logPath = PRTModifierAction::getPluginRoot() + prtu::getDirSeparator<char>() + "prt4maya.log";
+		const std::string logPath = PRTModifierAction::getPluginRoot() + prtu::getDirSeparator<char>() + "serlio.log";
 		std::wstring wLogPath(logPath.length(), L' ');
 		std::copy(logPath.begin(), logPath.end(), wLogPath.begin());
 		PRTModifierAction::theFileLogHandler = prt::FileLogHandler::create(prt::LogHandler::ALL, prt::LogHandler::ALL_COUNT, wLogPath.c_str());
@@ -88,7 +88,7 @@ MStatus initializePlugin(MObject obj)
 		PRTModifierNode::initialize));
 
 	MCHECK(plugin.registerNode("prtMaterial", PRTMaterialNode::id, &PRTMaterialNode::creator, &PRTMaterialNode::initialize, MPxNode::kDependNode));
-	MCHECK(plugin.registerUI("prt4mayaCreateUI", "prt4mayaDeleteUI"));
+	MCHECK(plugin.registerUI("serlioCreateUI", "serlioDeleteUI"));
 
 	MStatus mayaStatus = MStatus::kFailure; //maya exit does not call uninitializePlugin, therefore addCallback
 	MSceneMessage::addCallback(MSceneMessage::kMayaExiting, mayaExiting, NULL, &mayaStatus);

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(prt4maya CXX)
+project(serlio CXX)
 
 include(common.cmake)
 
@@ -23,13 +23,13 @@ message(STATUS "Using SRL_VERSION = ${SRL_VERSION}")
 
 ### setup targets
 
-set(CODEC_TARGET prt4maya_codec)
-set(PRT4MAYA_TARGET prt4maya)
+set(CODEC_TARGET serlio_codec)
+set(SERLIO_TARGET serlio)
 
 add_subdirectory(codec)
 add_subdirectory(client)
 
-add_dependencies(${PRT4MAYA_TARGET} ${CODEC_TARGET})
+add_dependencies(${SERLIO_TARGET} ${CODEC_TARGET})
 
 
 ### setup packaging

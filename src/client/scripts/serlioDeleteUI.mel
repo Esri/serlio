@@ -6,6 +6,6 @@
 //
 // See http://github.com/ArcGIS/esri-cityengine-sdk for instructions.
 
-global proc prt4mayaDeleteUI() {
+global proc serlioDeleteUI() {
  	deleteUI -menu "prtMenu";
 }
