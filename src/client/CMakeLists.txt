@@ -82,10 +82,7 @@ install(FILES scripts/AEprtTemplate.mel DESTINATION scripts)
 install(FILES scripts/serlioCreateUI.mel DESTINATION scripts)
 install(FILES scripts/serlioDeleteUI.mel DESTINATION scripts)
 install(FILES shaders/serlioShaderStingray.sfx DESTINATION shaders)
-install(FILES ${PROJECT_SOURCE_DIR}/../../../LICENSE DESTINATION .)
-if(WIN32)
-	install(FILES ${PROJECT_SOURCE_DIR}/../README_windows.md DESTINATION .)
-else()
-	install(FILES ${PROJECT_SOURCE_DIR}/../README_linux_osx.md DESTINATION .)
-endif()
+
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/../doc DESTINATION .)
+install(FILES ${PROJECT_SOURCE_DIR}/../README.md ${PROJECT_SOURCE_DIR}/../LICENSE DESTINATION .)
 
