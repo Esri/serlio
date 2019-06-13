@@ -1,9 +1,7 @@
 /**
- * Esri CityEngine SDK Maya Plugin Example
+ * Serlio - Esri CityEngine Plugin for Autodesk Maya
  *
- * This example demonstrates the main functionality of the Procedural Runtime API.
- *
- * See README.md in https://github.com/Esri/esri-cityengine-sdk for build instructions.
+ * See https://github.com/esri/serlio for build and usage instructions.
  *
  * Copyright (c) 2012-2019 Esri R&D Center Zurich
  *
@@ -18,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 #include "prtModifier/MayaCallbacks.h"
 #include "prtModifier/PRTModifierNode.h"
