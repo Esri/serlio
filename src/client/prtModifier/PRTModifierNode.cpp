@@ -185,10 +185,10 @@ MStatus PRTModifierNode::initialize()
 	MFnNumericAttribute nAttr;
 	mRandomSeed = nAttr.create(NAME_RANDOM_SEED, "randomSeed", MFnNumericData::kInt, 0, &stat);
 	MCHECK(stat);
-	MCHECK(fAttr.setUsedAsFilename(false));
-	MCHECK(fAttr.setCached(true));
-	MCHECK(fAttr.setStorable(true));
-	MCHECK(fAttr.setNiceNameOverride(MString("Random Seed")));
+	MCHECK(nAttr.setUsedAsFilename(false));
+	MCHECK(nAttr.setCached(true));
+	MCHECK(nAttr.setStorable(true));
+	MCHECK(nAttr.setNiceNameOverride(MString("Random Seed")));
 	MCHECK(addAttribute(mRandomSeed));
 	MCHECK(attributeAffects(mRandomSeed, outMesh));
 
