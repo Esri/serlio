@@ -27,7 +27,7 @@ set(CODEC_TARGET serlio_codec)
 set(SERLIO_TARGET serlio)
 
 add_subdirectory(codec)
-add_subdirectory(client)
+add_subdirectory(serlio)
 
 add_dependencies(${SERLIO_TARGET} ${CODEC_TARGET})
 
