@@ -288,7 +288,7 @@ MStatus PRTModifierAction::doIt()
 	isb->setAttributes(
 		mRuleFile.c_str(),
 		mStartRule.c_str(),
-		prtu::computeSeed(vertices),
+		mRandomSeed,
 		L"",
 		mGenerateAttrs.get(),
 		getResolveMap().get()

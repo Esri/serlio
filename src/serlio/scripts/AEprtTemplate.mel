@@ -118,9 +118,7 @@ global proc AEprtTemplate(string $node) {
 	eval ("global string $" + $varname + "=\"" + `getAttr ($node + ".Rule_Package")` + "\"");
 	editorTemplate -callCustom "prtFileBrowse" "prtFileBrowseReplaceRPK" "Rule_Package" $varname;
 
-	editorTemplate -l "Rule_File" -adc "Rule_File";
-	editorTemplate -l "Start_Rule" -adc "Start_Rule";
-	editorTemplate -l "Generate_Model" -adc "Generate_Model";
+	editorTemplate -l "Random_Seed" -adc "Random_Seed";
 	
 	editorTemplate -endLayout;
 	editorTemplate -beginLayout "CGA Attributes" -collapse 0;
@@ -129,7 +127,7 @@ global proc AEprtTemplate(string $node) {
 	
 	$skip = 0;
 	for($attr in $attrs) {
-		if($attr == "Start_Rule" || $attr == "Rule_File")
+		if($attr == "Rule_Package" || $attr == "Random_Seed")
 			$skip = 1;
 		
 		if($skip-- > 0) continue;

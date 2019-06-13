@@ -2,9 +2,11 @@
 
 #include "util/Utilities.h"
 
+#include "maya/MDataHandle.h"
 #include "maya/MFnTypedAttribute.h"
 #include "maya/MFnMeshData.h"
 #include "maya/MFnStringData.h"
+#include "maya/MFnNumericAttribute.h"
 
 
 #define MCheckStatus(status,message) \
@@ -16,13 +18,14 @@
 
 namespace {
 	const MString NAME_RULE_PKG = "Rule_Package";
+	const MString NAME_RANDOM_SEED = "Random_Seed";
 }
 
 // Unique Node TypeId
 MTypeId PRTModifierNode::id(0x00085000);
 MObject PRTModifierNode::rulePkg;
 MObject PRTModifierNode::currentRulePkg;
-
+MObject PRTModifierNode::mRandomSeed;
 
 // make sure the dynamically added plugs affect the outMesh
 MStatus PRTModifierNode::setDependentsDirty(const MPlug& /*plugBeingDirtied*/, MPlugArray& affectedPlugs) {
@@ -91,6 +94,9 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
 			}
 			fPRTModifierAction.fillAttributesFromNode(thisMObject());
 			fPRTModifierAction.setMesh(iMesh, oMesh);
+
+			MDataHandle randomSeed = data.inputValue(mRandomSeed, &status);
+			fPRTModifierAction.setRandomSeed(randomSeed.asInt());
 
 			// Now, perform the PRT
 			status = fPRTModifierAction.doIt();
@@ -168,6 +174,16 @@ MStatus PRTModifierNode::initialize()
 	MCHECK(fAttr.setNiceNameOverride(MString("Rule Package(*.rpk)")));
 	MCHECK(addAttribute(rulePkg));
 	MCHECK(attributeAffects(rulePkg, outMesh));
+
+	MFnNumericAttribute nAttr;
+	mRandomSeed = nAttr.create(NAME_RANDOM_SEED, "randomSeed", MFnNumericData::kInt, 0, &stat);
+	MCHECK(stat);
+	MCHECK(nAttr.setUsedAsFilename(false));
+	MCHECK(nAttr.setCached(true));
+	MCHECK(nAttr.setStorable(true));
+	MCHECK(nAttr.setNiceNameOverride(MString("Random Seed")));
+	MCHECK(addAttribute(mRandomSeed));
+	MCHECK(attributeAffects(mRandomSeed, outMesh));
 
 	currentRulePkg = fAttr.create("current"+NAME_RULE_PKG, "currentRulePkg", MFnData::kString, stringData.create(&stat2), &stat);
 	MCHECK(stat2);

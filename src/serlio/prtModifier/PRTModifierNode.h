@@ -24,6 +24,7 @@ public:
 	static MObject      rulePkg;
 	static MObject      currentRulePkg;
 	static MTypeId      id;
+	static MObject      mRandomSeed;
 
 	PRTModifierAction   fPRTModifierAction;
 

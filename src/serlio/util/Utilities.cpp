@@ -161,8 +161,10 @@ namespace prtu {
 
 
 	int32_t computeSeed(const MFloatPoint& p) {
-		int32_t seed = static_cast<int32_t>(p[0]);
-		seed ^= static_cast<int32_t>(p[2]);
+		float x = p[0];
+		float z = p[2];
+		int32_t seed = *(int32_t*)(&x);
+		seed ^= *(int32_t*)(&z);
 		seed %= 714025;
 		return seed;
 	}
