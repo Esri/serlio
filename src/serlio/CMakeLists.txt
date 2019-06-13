@@ -5,17 +5,17 @@ cmake_policy(SET CMP0015 NEW)
 ### setup build target
 
 add_library(${SERLIO_TARGET} SHARED
-        node/PRTMaterialNode.cpp
-		node/Utilities.cpp
-		node/MayaCallbacks.cpp
-        prtModifier/ResolveMapCache.cpp
+		prtMaterial/PRTMaterialNode.cpp
+		util/Utilities.cpp
+		prtModifier/MayaCallbacks.cpp
+		util/ResolveMapCache.cpp
         prtModifier/PRTModifierAction.cpp
         prtModifier/PRTModifierCommand.cpp
         prtModifier/PRTModifierNode.cpp
-        prtModifier/PRTModifierPlugin.cpp
-        prtModifier/polyModifierBase/polyModifierCmd.cpp
-        prtModifier/polyModifierBase/polyModifierFty.cpp
-        prtModifier/polyModifierBase/polyModifierNode.cpp)
+		serlioPlugin.cpp
+		prtModifier/polyModifier/polyModifierCmd.cpp
+		prtModifier/polyModifier/polyModifierFty.cpp
+		prtModifier/polyModifier/polyModifierNode.cpp)
 
 set_target_properties(${SERLIO_TARGET} PROPERTIES
 	INSTALL_RPATH_USE_LINK_PATH FALSE

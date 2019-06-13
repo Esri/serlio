@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-#include "node/Utilities.h"
+#include "Utilities.h"
 
 #include "maya/MString.h"
 #include "prt/StringUtils.h"

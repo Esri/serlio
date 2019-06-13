@@ -1,6 +1,6 @@
 #pragma once
 
-#include "polyModifierBase/polyModifierNode.h"
+#include "polyModifier/polyModifierNode.h"
 #include "PRTModifierAction.h"
 
 #include <maya/MTypeId.h>

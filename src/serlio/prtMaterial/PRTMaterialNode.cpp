@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
-#include "node/PRTMaterialNode.h"
+#include "prtMaterial/PRTMaterialNode.h"
 #include "prtModifier/PRTModifierAction.h"
-#include "node/Utilities.h"
+#include "serlio/util/Utilities.h"
 #include "prt/StringUtils.h"
 
 #include <maya/MFnTransform.h>

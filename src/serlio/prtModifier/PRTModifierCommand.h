@@ -1,6 +1,6 @@
 #pragma once
 
-#include "polyModifierBase/polyModifierCmd.h"
+#include "polyModifier/polyModifierCmd.h"
 
 // based on the splitUVCommand and meshOpCommand Maya example . 
 class PRTModifierCommand : public polyModifierCmd

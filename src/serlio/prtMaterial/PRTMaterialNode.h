@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include "node/MayaCallbacks.h"
+#include "serlio/prtModifier/MayaCallbacks.h"
 
 #include <maya/MPxNode.h>
 #include <maya/MString.h>

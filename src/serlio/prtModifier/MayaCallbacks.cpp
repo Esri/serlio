@@ -19,10 +19,10 @@
  * limitations under the License.
  */
 
-#include "node/MayaCallbacks.h"
-#include "node/Utilities.h"
+#include "MayaCallbacks.h"
+#include "serlio/util/Utilities.h"
 #include "prtModifier/PRTModifierNode.h"
-#include "node/PRTMaterialNode.h"
+#include "serlio/prtMaterial/PRTMaterialNode.h"
 
 #include "prt/StringUtils.h"
 #include "prtx/Material.h"

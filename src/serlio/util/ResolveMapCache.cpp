@@ -3,8 +3,8 @@
 //
 
 #include "ResolveMapCache.h"
-#include "LogHandler.h"
-#include "node/Utilities.h"
+#include "serlio/util/LogHandler.h"
+#include "Utilities.h"
 
 #include <mutex>
 

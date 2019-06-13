@@ -1,6 +1,6 @@
 #include "PRTModifierNode.h"
 
-#include "node/Utilities.h"
+#include "serlio/util/Utilities.h"
 
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnMeshData.h>

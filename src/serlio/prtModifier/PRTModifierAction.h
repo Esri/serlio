@@ -1,8 +1,8 @@
 #pragma once
 
-#include "polyModifierBase/polyModifierFty.h"
-#include "node/Utilities.h"
-#include "ResolveMapCache.h"
+#include "polyModifier/polyModifierFty.h"
+#include "serlio/util/Utilities.h"
+#include "serlio/util/ResolveMapCache.h"
 
 #include "prt/API.h"
 #include <maya/MObject.h>
