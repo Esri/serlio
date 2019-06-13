@@ -1,9 +1,10 @@
-#include "PRTModifierCommand.h"
-#include "PRTModifierNode.h"
+#include "prtModifier/PRTModifierCommand.h"
+#include "prtModifier/PRTModifierNode.h"
 
-#include <maya/MItSelectionList.h>
-#include <maya/MGlobal.h>
-#include <maya/MArgList.h>
+#include "maya/MItSelectionList.h"
+#include "maya/MGlobal.h"
+#include "maya/MArgList.h"
+
 
 void* PRTModifierCommand::creator()
 {

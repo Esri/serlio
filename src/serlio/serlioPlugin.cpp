@@ -1,8 +1,8 @@
-#include "serlio/prtModifier/PRTModifierAction.h"
-#include "serlio/prtModifier/PRTModifierCommand.h"
-#include "serlio/prtModifier/PRTModifierNode.h"
+#include "prtModifier/PRTModifierAction.h"
+#include "prtModifier/PRTModifierCommand.h"
+#include "prtModifier/PRTModifierNode.h"
 #include "prtMaterial/PRTMaterialNode.h"
-#include "serlio/util/Utilities.h"
+#include "util/Utilities.h"
 
 #include <maya/MFnPlugin.h>
 #include <maya/MSceneMessage.h>

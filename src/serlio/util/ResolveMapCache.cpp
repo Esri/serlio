@@ -3,7 +3,7 @@
 //
 
 #include "ResolveMapCache.h"
-#include "serlio/util/LogHandler.h"
+#include "util/LogHandler.h"
 #include "Utilities.h"
 
 #include <mutex>

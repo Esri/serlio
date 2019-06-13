@@ -1,19 +1,10 @@
-#include "PRTModifierNode.h"
+#include "prtModifier/PRTModifierNode.h"
 
-#include "serlio/util/Utilities.h"
+#include "util/Utilities.h"
 
-#include <maya/MFnTypedAttribute.h>
-#include <maya/MFnMeshData.h>
-#include <maya/MFnComponentListData.h>
-#include <maya/MFnSingleIndexedComponent.h>
-#include <maya/MFnEnumAttribute.h>
-#include <maya/MFnStringData.h>
-
-#include <maya/MGlobal.h>
-#include <maya/MPlug.h>
-#include <maya/MDataBlock.h>
-#include <maya/MDataHandle.h>
-#include <maya/MIOStream.h>
+#include "maya/MFnTypedAttribute.h"
+#include "maya/MFnMeshData.h"
+#include "maya/MFnStringData.h"
 
 
 #define MCheckStatus(status,message) \

@@ -19,18 +19,24 @@
  * limitations under the License.
  */
 
-#include "MayaCallbacks.h"
-#include "serlio/util/Utilities.h"
+#include "prtModifier/MayaCallbacks.h"
 #include "prtModifier/PRTModifierNode.h"
-#include "serlio/prtMaterial/PRTMaterialNode.h"
+
+#include "prtMaterial/PRTMaterialNode.h"
+
+#include "util/Utilities.h"
 
 #include "prt/StringUtils.h"
 #include "prtx/Material.h"
 
-#include <maya/adskDataStream.h>
-#include <maya/adskDataChannel.h>
-#include <maya/adskDataAssociations.h>
-#include <maya/adskDataAccessorMaya.h>
+#include "maya/MFloatArray.h"
+#include "maya/MFloatVectorArray.h"
+#include "maya/MFnMesh.h"
+#include "maya/MFnMeshData.h"
+#include "maya/adskDataStream.h"
+//#include <maya/adskDataChannel.h>
+#include "maya/adskDataAssociations.h"
+//#include <maya/adskDataAccessorMaya.h>
 
 #include <sstream>
 

@@ -21,49 +21,19 @@
 
 #pragma once
 
-#include "codec/encoder/IMayaCallbacks.h"
+#include "encoder/IMayaCallbacks.h"
+
 #include "prt/Cache.h"
 #include "prtx/Material.h"
 
-#include "maya/MStatus.h"
 #include "maya/MObject.h"
-#include "maya/MDoubleArray.h"
-#include "maya/MPointArray.h"
-#include "maya/MPoint.h"
-#include "maya/MString.h"
-#include "maya/MFileIO.h"
-#include "maya/MLibrary.h"
-#include "maya/MIOStream.h"
-#include "maya/MGlobal.h"
-#include "maya/MStringArray.h"
-#include "maya/MFloatArray.h"
-#include "maya/MFloatPoint.h"
-#include "maya/MFloatPointArray.h"
-#include "maya/MFloatVectorArray.h"
-#include "maya/MDataBlock.h"
-#include "maya/MDataHandle.h"
-#include "maya/MIntArray.h"
-#include "maya/MDoubleArray.h"
-#include "maya/MLibrary.h"
-#include "maya/MPlug.h"
-#include "maya/MDGModifier.h"
-#include "maya/MSelectionList.h"
-#include "maya/MDagPath.h"
-#include "maya/MFileObject.h"
-
-#include "maya/MFnNurbsSurface.h"
-#include "maya/MFnMesh.h"
-#include "maya/MFnMeshData.h"
-#include "maya/MFnLambertShader.h"
-#include "maya/MFnTransform.h"
-#include "maya/MFnSet.h"
-#include "maya/MFnPartition.h"
 
 #include <memory>
 #include <stdexcept>
 #include <map>
 #include <vector>
 #include <string>
+#include <iostream>
 
 
 class MayaCallbacks : public IMayaCallbacks {

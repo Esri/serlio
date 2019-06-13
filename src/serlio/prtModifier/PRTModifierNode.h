@@ -1,9 +1,12 @@
 #pragma once
 
 #include "polyModifier/polyModifierNode.h"
-#include "PRTModifierAction.h"
+#include "prtModifier/PRTModifierAction.h"
 
-#include <maya/MTypeId.h>
+#include "maya/MObject.h"
+#include "maya/MTypeId.h"
+#include "maya/MStatus.h"
+
 
 class PRTModifierNode : public polyModifierNode
 {

@@ -21,20 +21,18 @@
 
 #include "prtMaterial/PRTMaterialNode.h"
 #include "prtModifier/PRTModifierAction.h"
-#include "serlio/util/Utilities.h"
+
+#include "util/Utilities.h"
+
 #include "prt/StringUtils.h"
 
-#include <maya/MFnTransform.h>
-#include <maya/MFnSet.h>
-#include <maya/MFnPhongShader.h>
-#include <maya/MDGModifier.h>
-#include <maya/MItMeshPolygon.h>
-#include <maya/MDagPath.h>
-#include <maya/MItDependencyNodes.h>
-#include <maya/adskDataStream.h>
-#include <maya/adskDataChannel.h>
-#include <maya/adskDataAssociations.h>
-#include <maya/adskDataAccessorMaya.h>
+#include "maya/MGlobal.h"
+#include "maya/MObject.h"
+#include "maya/MFnMesh.h"
+#include "maya/MFnTypedAttribute.h"
+#include "maya/MItDependencyNodes.h"
+#include "maya/adskDataStream.h"
+#include "maya/adskDataAssociations.h"
 
 #include <cstdio>
 #include <sstream>

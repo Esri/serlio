@@ -12,9 +12,9 @@ add_library(${CODEC_TARGET} SHARED
 
 ### setup compiler flags
 
-target_include_directories(${CODEC_TARGET} PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${PRT_INCLUDE_PATH})
+target_include_directories(${CODEC_TARGET}
+	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+	PRIVATE ${PRT_INCLUDE_PATH})
 
 target_compile_definitions(${CODEC_TARGET} PRIVATE
 	-DSRL_VERSION=\"${SRL_VERSION}\" # quoted to use it as string literal

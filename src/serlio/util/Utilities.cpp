@@ -19,10 +19,11 @@
  * limitations under the License.
  */
 
-#include "Utilities.h"
+#include "util/Utilities.h"
+
+#include "prt/StringUtils.h"
 
 #include "maya/MString.h"
-#include "prt/StringUtils.h"
 
 #include <cstdio>
 #include <cstdarg>

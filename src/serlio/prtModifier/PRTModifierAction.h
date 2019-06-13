@@ -1,17 +1,20 @@
 #pragma once
 
 #include "polyModifier/polyModifierFty.h"
-#include "serlio/util/Utilities.h"
-#include "serlio/util/ResolveMapCache.h"
+
+#include "util/Utilities.h"
+#include "util/ResolveMapCache.h"
 
 #include "prt/API.h"
-#include <maya/MObject.h>
-#include <maya/MFnEnumAttribute.h>
-#include <maya/MStringArray.h>
-#include <maya/MIntArray.h>
-#include <maya/MDoubleArray.h>
-#include <maya/MString.h>
-#include <maya/MPlugArray.h>
+
+#include "maya/MObject.h"
+#include "maya/MString.h"
+#include "maya/MStringArray.h"
+#include "maya/MIntArray.h"
+#include "maya/MDoubleArray.h"
+#include "maya/MPlugArray.h"
+#include "maya/MFnEnumAttribute.h"
+
 #include <map>
 #include <list>
 

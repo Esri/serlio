@@ -5,17 +5,17 @@ cmake_policy(SET CMP0015 NEW)
 ### setup build target
 
 add_library(${SERLIO_TARGET} SHARED
-		prtMaterial/PRTMaterialNode.cpp
-		util/Utilities.cpp
+		serlioPlugin.cpp
 		prtModifier/MayaCallbacks.cpp
-		util/ResolveMapCache.cpp
         prtModifier/PRTModifierAction.cpp
         prtModifier/PRTModifierCommand.cpp
         prtModifier/PRTModifierNode.cpp
-		serlioPlugin.cpp
 		prtModifier/polyModifier/polyModifierCmd.cpp
 		prtModifier/polyModifier/polyModifierFty.cpp
-		prtModifier/polyModifier/polyModifierNode.cpp)
+		prtModifier/polyModifier/polyModifierNode.cpp
+		prtMaterial/PRTMaterialNode.cpp
+		util/Utilities.cpp
+		util/ResolveMapCache.cpp)
 
 set_target_properties(${SERLIO_TARGET} PROPERTIES
 	INSTALL_RPATH_USE_LINK_PATH FALSE
@@ -34,7 +34,7 @@ target_compile_definitions(${SERLIO_TARGET} PRIVATE
 	-DSRL_VERSION=\"${SRL_VERSION}\") # quoted to use it as string literal
 
 target_include_directories(${SERLIO_TARGET} PRIVATE
-		${CMAKE_SOURCE_DIR} # for IMayaCallbacks.h
+		$<TARGET_PROPERTY:${CODEC_TARGET},INTERFACE_INCLUDE_DIRECTORIES> # for IMayaCallbacks.h
 		${CMAKE_CURRENT_SOURCE_DIR}
 		${PRT_INCLUDE_PATH}
 		${maya_INCLUDE_PATH})

@@ -1,14 +1,15 @@
-#include "PRTModifierAction.h"
+#include "prtModifier/PRTModifierAction.h"
+#include "prtModifier/PRTModifierCommand.h"
+#include "prtModifier/MayaCallbacks.h"
 
-#include "PRTModifierCommand.h"
-#include "MayaCallbacks.h"
-#include "serlio/util/Utilities.h"
+#include "util/Utilities.h"
 
 #include "prt/StringUtils.h"
 
-#include <maya/MFnNumericAttribute.h>
-#include <maya/MFnTypedAttribute.h>
-#include <maya/MFnStringData.h>
+#include "maya/MFnMesh.h"
+#include "maya/MFnNumericAttribute.h"
+#include "maya/MFnTypedAttribute.h"
+#include "maya/MFnStringData.h"
 
 #include <limits>
 #ifdef _WIN32
