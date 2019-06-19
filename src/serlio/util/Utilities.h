@@ -95,7 +95,7 @@ namespace prtu {
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 		return ::isnan(d);
 #else
-		return std::isnan(d);
+		return (std::isnan(d) != 0);
 #endif
 	}
 
