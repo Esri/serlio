@@ -41,7 +41,7 @@ const std::wstring WLEVELS[] = { L"trace", L"debug", L"info", L"warning", L"erro
 
 // log to std streams
 template<prt::LogLevel L> struct StreamLogger : Logger {
-	StreamLogger(std::wostream& out = std::wcout) : Logger(), mOut(out) { mOut << prefix(); }
+	explicit StreamLogger(std::wostream& out = std::wcout) : Logger(), mOut(out) { mOut << prefix(); }
 	virtual ~StreamLogger() { mOut << std::endl; }
 	StreamLogger<L>& operator<<(std::wostream&(*x)(std::wostream&)) { mOut << x; return *this; }
 	StreamLogger<L>& operator<<(const std::string& x) { std::copy(x.begin(), x.end(), std::ostream_iterator<char, wchar_t>(mOut)); return *this; }
@@ -73,8 +73,7 @@ template<prt::LogLevel L> struct PRTLogger : Logger {
 
 class LogHandler : public prt::LogHandler {
 public:
-	LogHandler(const std::wstring& name) : mName(name) {
-	}
+	explicit LogHandler(const std::wstring& name) : mName(name) { }
 
 	virtual void handleLogEvent(const wchar_t* msg, prt::LogLevel) override {
 		std::wcout << L"[" << mName << L"] " << msg << std::endl;
