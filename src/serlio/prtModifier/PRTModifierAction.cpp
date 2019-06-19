@@ -834,7 +834,7 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 	return MS::kSuccess;
 }
 
-MStatus PRTModifierAction::addFileParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue, const MString & exts) {
+MStatus PRTModifierAction::addFileParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue, const MString & /*exts*/) {
 	MStatus           stat;
 	MStatus           stat2;
 	MFnStringData     stringData;

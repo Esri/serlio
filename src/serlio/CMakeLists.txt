@@ -30,6 +30,9 @@ endif()
 
 ### setup compiler flags
 
+set_target_properties(${CLIENT_TARGET} PROPERTIES
+		CXX_STANDARD 14)
+
 target_compile_definitions(${SERLIO_TARGET} PRIVATE
 	-DSRL_VERSION=\"${SRL_VERSION}\") # quoted to use it as string literal
 
@@ -61,7 +64,7 @@ if(WIN32)
 
 else()
 	target_compile_options(${SERLIO_TARGET} PRIVATE
-			-std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0 -Wl,--exclude-libs,ALL
+			-D_GLIBCXX_USE_CXX11_ABI=0 -Wl,--exclude-libs,ALL
 			-fvisibility=hidden -fvisibility-inlines-hidden
 			-m64 -fPIC -fno-strict-aliasing -funsigned-char -Wno-reorder -fno-gnu-keywords -ftemplate-depth=50 -pthread
 			-Wall -Wextra -Wno-deprecated -Wno-multichar -Wno-comment -Wno-sign-compare

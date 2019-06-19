@@ -42,7 +42,7 @@ const std::string gPRTMatMemberFaceEnd = "faceIndexEnd";
 
 class MaterialInfo {
 public:
-	MaterialInfo(adsk::Data::Handle sHandle);
+	explicit MaterialInfo(adsk::Data::Handle sHandle);
 
 	std::string bumpMap;
 	std::string colormap;
@@ -79,9 +79,9 @@ public:
 	static MString toMString(const std::vector<double> &d, size_t size, size_t offset);
 
 private:
-	std::string getTexture(adsk::Data::Handle sHandle, const std::string& texName);
-	std::vector<double>  getDoubleVector(adsk::Data::Handle sHandle,const std::string& name, size_t numElements);
-	double getDouble(adsk::Data::Handle sHandle, const std::string& name);
+	static std::string getTexture(adsk::Data::Handle sHandle, const std::string& texName);
+	static std::vector<double>  getDoubleVector(adsk::Data::Handle sHandle,const std::string& name, size_t numElements);
+	static double getDouble(adsk::Data::Handle sHandle, const std::string& name);
 };
 
 class PRTMaterialNode : public MPxNode {
@@ -93,17 +93,17 @@ public:
 	static  MStatus     initialize();
 	static  const char* nodeName();
 
-	virtual MStatus compute(const MPlug& plug, MDataBlock& data) override;
+	MStatus compute(const MPlug& plug, MDataBlock& data) override;
 
 	static MTypeId  id;
 	static  MObject aInMesh;
 	static  MObject aOutMesh;
 
 private:
-	void setAttribute(MString &mShadingCmd, std::vector<double> vec, size_t elements, std::string target);
-	void setAttribute(MString &mShadingCmd, std::vector<double> vec, size_t elements, size_t offset, std::string target);
-	void setTexture(MString &mShadingCmd, std::string tex, std::string target);
-	void setAttribute(MString &mShadingCmd, double vec, std::string target);
+	static void setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, const std::string& target);
+	static void setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, size_t offset, const std::string& target);
+	static void setTexture(MString& mShadingCmd, const std::string& tex, const std::string& target);
+	static void setAttribute(MString& mShadingCmd, double vec, const std::string& target);
 	static MString sfxFile;
 }; // class PRTMaterialNode
 

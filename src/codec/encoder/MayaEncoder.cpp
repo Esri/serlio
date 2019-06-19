@@ -59,7 +59,7 @@ struct SerializedGeometry {
 	std::vector<uint32_t>           counts;
 	std::vector<uint32_t>           indices;
 
-	SerializedGeometry(uint32_t uvSets) : uvs(uvSets) { }
+	explicit SerializedGeometry(uint32_t uvSets) : uvs(uvSets) { }
 };
 
 const prtx::EncodePreparator::PreparationFlags PREP_FLAGS = prtx::EncodePreparator::PreparationFlags()
@@ -426,8 +426,7 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 			else {
 				//no uvs? fill with (0,0) so indices match
 				prtx::DoubleVector uv0s((sg.indices.size() - indicesSizesBefore) * 2);
-				for (uint32_t uvSet = 0; uvSet < sg.uvs.size(); uvSet++) {
-					auto& tgt = sg.uvs[uvSet];
+				for (auto& tgt : sg.uvs) {
 					tgt.insert(tgt.end(), uv0s.begin(), uv0s.end());
 				}
 			}

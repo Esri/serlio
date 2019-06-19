@@ -88,14 +88,14 @@ namespace prtu {
 	void toHex(wchar_t* color, double r, double g, double b);
 	MString toCleanId(const MString& name);
 
-	int32_t computeSeed(MFloatPointArray& vertices);
+	int32_t computeSeed(const MFloatPointArray& vertices);
 	int32_t computeSeed(const double* vertices, size_t count);
 
 	inline bool isnan(double d) {
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 		return ::isnan(d);
 #else
-		return std::isnan(d);
+		return (std::isnan(d) != 0);
 #endif
 	}
 
@@ -110,7 +110,7 @@ namespace prtu {
 
 	//we don't want a boost or c++17 dependency for just 2 functions, therefore done ourselfs
 	std::wstring temp_directory_path();
-	void remove_all(std::wstring path);
+	void remove_all(const std::wstring& path);
 
 } // namespace prtu
 

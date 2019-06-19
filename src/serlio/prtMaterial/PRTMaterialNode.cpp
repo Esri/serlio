@@ -36,6 +36,7 @@
 #include <sstream>
 #include <set>
 #include <algorithm>
+#include <array>
 
 #ifdef _WIN32
 #	include <Windows.h>
@@ -307,7 +308,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 				mShadingCmd += "string $nodeName;\n";
 				mShadingCmd += "int $shadingNodeIndex;\n";
 
-				wchar_t* buf = new wchar_t[512];
+				std::array<wchar_t, 512> buf;
 
 				for (unsigned int i = 0; i < stream->elementCount(); ++i)
 				{
@@ -325,8 +326,8 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					{
 						MObject obj = it.thisNode();
 						MFnDependencyNode n(obj);
-						
-						for (auto kv : existinMaterialInfos) {
+
+						for (const auto& kv : existinMaterialInfos) {
 							if (matInfo.equals(kv.second)) {
 								matchingMaterial = kv.first;
 								break;
@@ -350,8 +351,8 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 						size_t idx = matName.find_last_of(L"Sh");
 						if (idx != std::wstring::npos)
 							matName[idx] = L'g';
-						swprintf(buf, 511, L"sets -forceElement %ls %ls.f[%d:%d];\n", matName.c_str(), MString(meshName).asWChar(), faceStart, faceEnd);
-						mShadingCmd += buf;
+						swprintf(buf.data(), buf.size()-1, L"sets -forceElement %ls %ls.f[%d:%d];\n", matName.c_str(), MString(meshName).asWChar(), faceStart, faceEnd);
+						mShadingCmd += buf.data();
 						continue;
 					}
 
@@ -403,8 +404,8 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					mShadingCmd += "sets -empty -renderable true -noSurfaceShader true -name $sgName;\n";
 					mShadingCmd += "setAttr ($shName+\".initgraph\") true;\n";
 					mShadingCmd += "connectAttr -force ($shName + \".outColor\") ($sgName + \".surfaceShader\");\n";
-					
-					MString blendMode = (matInfo.opacityMap.size() == 0 && matInfo.opacity >= 1.0) ? "0": "1";
+
+					MString blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? "0": "1";
 					mShadingCmd += "$shadingNodeIndex = `shaderfx -sfxnode $shName -getNodeIDByName \"Standard_Base\"`;\n";
 					mShadingCmd += "shaderfx - sfxnode $shName - edit_stringlist $shadingNodeIndex blendmode "+ blendMode +";\n";
 
@@ -442,11 +443,10 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					setTexture(mShadingCmd, matInfo.roughnessMap, "roughness_map");
 					setTexture(mShadingCmd, matInfo.opacityMap, "opacity_map");
 
-					swprintf(buf, 511, L"sets -forceElement $sgName %ls.f[%d:%d];\n", MString(meshName).asWChar(), faceStart, faceEnd);
-					mShadingCmd += buf;
+					swprintf(buf.data(), buf.size()-1, L"sets -forceElement $sgName %ls.f[%d:%d];\n", MString(meshName).asWChar(), faceStart, faceEnd);
+					mShadingCmd += buf.data();
 				}
 
-				delete[] buf;
 				MCHECK(MGlobal::executeCommandOnIdle(mShadingCmd, DO_DBG));
 
 			}
@@ -458,7 +458,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 	return status;
 }
 
-void PRTMaterialNode::setAttribute(MString &mShadingCmd, std::vector<double> vec, size_t elements, std::string target)
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, const std::string& target)
 {
 	if (vec.size() >= elements) {
 		MString colString = MaterialInfo::toMString(vec, elements, 0);
@@ -466,7 +466,7 @@ void PRTMaterialNode::setAttribute(MString &mShadingCmd, std::vector<double> vec
 	}
 }
 
-void PRTMaterialNode::setAttribute(MString &mShadingCmd, std::vector<double> vec, size_t elements, size_t offset, std::string target)
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, size_t offset, const std::string& target)
 {
 	if (vec.size()+offset >= elements) {
 		MString colString = MaterialInfo::toMString(vec, elements,offset);
@@ -474,20 +474,20 @@ void PRTMaterialNode::setAttribute(MString &mShadingCmd, std::vector<double> vec
 	}
 }
 
-void PRTMaterialNode::setAttribute(MString &mShadingCmd, double vec, std::string target)
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, double vec, const std::string& target)
 {
 	mShadingCmd += "setAttr ($shName+\"." + MString(target.c_str()) + "\") " + MString(std::to_string(vec).c_str()) + ";\n";
 }
 
-void PRTMaterialNode::setTexture(MString &mShadingCmd, std::string tex, std::string target)
+void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& tex, const std::string& target)
 {
 	if (tex.size() > 0) {
 		mShadingCmd += "$colormap = \"" + MString(tex.c_str()) + "\";\n";
 		mShadingCmd += "$nodeName = $sgName +\"" + MString(target.c_str()) + "\";\n";
 		mShadingCmd += "shadingNode - asTexture file - n $nodeName;\n";
-		mShadingCmd += "setAttr($nodeName + \".fileTextureName\") - type \"string\" $colormap ;\n";
+		mShadingCmd += R"foo(setAttr($nodeName + ".fileTextureName") - type "string" $colormap ;)foo" "\n";
 
-		mShadingCmd += "connectAttr -force ($nodeName + \".outColor\") ($shName + \".TEX_"+ MString(target.c_str()) +"\");\n";
+		mShadingCmd += R"foo(connectAttr -force ($nodeName + ".outColor") ($shName + ".TEX_)foo" + MString(target.c_str()) +"\");\n";
 		mShadingCmd += "setAttr ($shName+\".use_"+ MString(target.c_str())+"\") 1;\n";
 	}
 	else {

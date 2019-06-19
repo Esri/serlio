@@ -205,8 +205,7 @@ void MayaCallbacks::addMesh(
 
 	adsk::Data::Structure* fStructure;	  // Structure to use for creation
 	fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
-	if (fStructure == NULL && materials != nullptr && faceRangesSize > 1)
-	{
+	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
 		const prt::AttributeMap* mat = materials[0];
 
 		// Register our structure since it is not registered yet.

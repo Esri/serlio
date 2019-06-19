@@ -37,7 +37,8 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <wchar.h>
+#include <cwchar>
+#include <memory>
 
 
 namespace prtu {
@@ -140,7 +141,7 @@ namespace prtu {
 	MString toCleanId(const MString& name) {
 		const unsigned int len = name.numChars();
 		const wchar_t*     wname = name.asWChar();
-		wchar_t*           dst = new wchar_t[len + 1];
+		auto dst = std::make_unique<wchar_t[]>(len + 1);
 		for (unsigned int i = 0; i < len; i++) {
 			wchar_t c = wname[i];
 			if ((c >= '0' && c <= '9') ||
@@ -151,8 +152,7 @@ namespace prtu {
 				dst[i] = '_';
 		}
 		dst[len] = L'\0';
-		MString result(dst);
-		delete[] dst;
+		MString result(dst.get());
 		return result;
 	}
 
@@ -167,7 +167,7 @@ namespace prtu {
 	}
 
 
-	int32_t computeSeed(MFloatPointArray& vertices) {
+	int32_t computeSeed(const MFloatPointArray& vertices) {
 		MFloatPoint a(0.0, 0.0, 0.0);
 		for (unsigned int vi = 0; vi < vertices.length(); vi++) {
 			a += vertices[vi];
@@ -259,11 +259,11 @@ namespace prtu {
 	
 	}
 
-	void remove_all(std::wstring path)
-	{
+	void remove_all(const std::wstring& path) {
 #ifdef _WIN32
-		std::replace(path.begin(), path.end(), L'/', L'\\');
-		const wchar_t* lpszDir = path.c_str();
+		std::wstring pc = path;
+		std::replace(pc.begin(), pc.end(), L'/', L'\\');
+		const wchar_t* lpszDir = pc.c_str();
 
 		size_t len = wcslen(lpszDir);
 		wchar_t *pszFrom = new wchar_t[len + 2];
@@ -307,15 +307,15 @@ namespace prtu {
 #else
 
 		char const *folder = getenv("TMPDIR");
-		if (folder == 0) {
+		if (folder == nullptr) {
 			folder = getenv("TMP");
-			if (folder == 0)
+			if (folder == nullptr)
 			{
 				folder = getenv("TEMP");
-				if (folder == 0)
+				if (folder == nullptr)
 				{
 					folder = getenv("TEMPDIR");
-					if (folder == 0)
+					if (folder == nullptr)
 						folder = "/tmp";
 				}
 			}
