@@ -107,7 +107,7 @@ global proc prtColorChooserReplace(string $attr, string $varname){
 	}
 }
 
-global proc AEprtTemplate(string $node) {
+global proc AEserlioTemplate(string $node) {
 	editorTemplate -suppress "caching"; 
 	editorTemplate -suppress "nodeState";
 
