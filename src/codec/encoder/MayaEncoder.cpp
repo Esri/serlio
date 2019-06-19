@@ -400,6 +400,17 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 			const prtx::DoubleVector& norms = mesh->getVertexNormalsCoords();
 			sg.normals.insert(sg.normals.end(), norms.begin(), norms.end());
 
+			size_t indicesSizesBefore = sg.indices.size();
+			sg.counts.reserve(sg.counts.size() + mesh->getFaceCount());
+			for (uint32_t fi = 0, faceCount = mesh->getFaceCount(); fi < faceCount; ++fi) {
+				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
+				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
+				sg.counts.push_back(vtxCnt);
+				sg.indices.reserve(sg.indices.size() + vtxCnt);
+				for (uint32_t vi = 0; vi < vtxCnt; vi++)
+					sg.indices.push_back(vertexIndexBase + vtxIdx[vtxCnt - vi - 1]); // reverse winding
+			}
+
 			const uint32_t numUVSets = mesh->getUVSetsCount();
 			if (DBG) log_wdebug(L"mesh name: %1% (numUVSets %2%)") % mesh->getName() % numUVSets;
 			if (numUVSets > 0) {
@@ -412,15 +423,13 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 					tgt.insert(tgt.end(), src.begin(), src.end());
 				}
 			}
-
-			sg.counts.reserve(sg.counts.size() + mesh->getFaceCount());
-			for (uint32_t fi = 0, faceCount = mesh->getFaceCount(); fi < faceCount; ++fi) {
-				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
-				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
-				sg.counts.push_back(vtxCnt);
-				sg.indices.reserve(sg.indices.size() + vtxCnt);
-				for (uint32_t vi = 0; vi < vtxCnt; vi++)
-					sg.indices.push_back(vertexIndexBase + vtxIdx[vtxCnt - vi - 1]); // reverse winding
+			else {
+				//no uvs? fill with (0,0) so indices match
+				prtx::DoubleVector uv0s((sg.indices.size() - indicesSizesBefore) * 2);
+				for (uint32_t uvSet = 0; uvSet < sg.uvs.size(); uvSet++) {
+					auto& tgt = sg.uvs[uvSet];
+					tgt.insert(tgt.end(), uv0s.begin(), uv0s.end());
+				}
 			}
 
 			vertexIndexBase += (uint32_t)verts.size() / 3u;
