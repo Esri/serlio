@@ -402,6 +402,15 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 
 			size_t indicesSizesBefore = sg.indices.size();
 			sg.counts.reserve(sg.counts.size() + mesh->getFaceCount());
+
+			int newVtxCount = 0;
+			for (uint32_t fi = 0, faceCount = mesh->getFaceCount(); fi < faceCount; ++fi) {
+				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
+				newVtxCount += vtxCnt;
+			}
+
+			sg.indices.reserve(sg.indices.size() + newVtxCount);
+
 			for (uint32_t fi = 0, faceCount = mesh->getFaceCount(); fi < faceCount; ++fi) {
 				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
 				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
