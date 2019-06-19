@@ -110,7 +110,7 @@ namespace prtu {
 
 	//we don't want a boost or c++17 dependency for just 2 functions, therefore done ourselfs
 	std::wstring temp_directory_path();
-	void remove_all(std::wstring path);
+	void remove_all(const std::wstring& path);
 
 } // namespace prtu
 
