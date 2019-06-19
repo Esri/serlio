@@ -88,7 +88,7 @@ namespace prtu {
 	void toHex(wchar_t* color, double r, double g, double b);
 	MString toCleanId(const MString& name);
 
-	int32_t computeSeed(MFloatPointArray& vertices);
+	int32_t computeSeed(const MFloatPointArray& vertices);
 	int32_t computeSeed(const double* vertices, size_t count);
 
 	inline bool isnan(double d) {

@@ -167,7 +167,7 @@ namespace prtu {
 	}
 
 
-	int32_t computeSeed(MFloatPointArray& vertices) {
+	int32_t computeSeed(const MFloatPointArray& vertices) {
 		MFloatPoint a(0.0, 0.0, 0.0);
 		for (unsigned int vi = 0; vi < vertices.length(); vi++) {
 			a += vertices[vi];
