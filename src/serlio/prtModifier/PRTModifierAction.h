@@ -120,6 +120,7 @@ private:
 	static MStatus  addColorParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString& defaultValue);
 	static MString  longName(const MString & attrName);
 	static MString  briefName(const MString & attrName);
+	static MString  niceName(const MString & attrName);
 	template<typename T> static T getPlugValueAndRemoveAttr(MFnDependencyNode & node, const MString & briefName, const T & defaultValue);
 };
 
