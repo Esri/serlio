@@ -54,6 +54,8 @@ namespace {
 	const wchar_t* ANNOT_ORDER = L"@Order";
 	const wchar_t* ANNOT_GROUP = L"@Group";
 	const wchar_t* NULL_KEY = L"#NULL#";
+	const wchar_t* MIN_KEY = L"min";
+	const wchar_t* MAX_KEY = L"max";
 	const MString  PRT("PRT");
 	const wchar_t* RESTRICTED_KEY = L"restricted";
 
@@ -513,9 +515,15 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 			for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
 				const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
 				if (!(std::wcscmp(an->getName(), ANNOT_RANGE))) {
-					if (an->getNumArguments() == 2 && an->getArgument(0)->getType() == prt::AAT_FLOAT && an->getArgument(1)->getType() == prt::AAT_FLOAT) {
-						min = an->getArgument(0)->getFloat();
-						max = an->getArgument(1)->getFloat();
+					for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
+						const prt::AnnotationArgument* arg = an->getArgument(argIdx);
+						const wchar_t* key = arg->getKey();
+						if (std::wcscmp(key, MIN_KEY) == 0) {
+							min = arg->getFloat();
+						}
+						else if (std::wcscmp(key, MAX_KEY) == 0) {
+							max = arg->getFloat();
+						}
 					}
 				}
 			}
