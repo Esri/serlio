@@ -306,15 +306,15 @@ namespace prtu {
 #else
 
 		char const *folder = getenv("TMPDIR");
-		if (folder == 0) {
+		if (folder == nullptr) {
 			folder = getenv("TMP");
-			if (folder == 0)
+			if (folder == nullptr)
 			{
 				folder = getenv("TEMP");
-				if (folder == 0)
+				if (folder == nullptr)
 				{
 					folder = getenv("TEMPDIR");
-					if (folder == 0)
+					if (folder == nullptr)
 						folder = "/tmp";
 				}
 			}
