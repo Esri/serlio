@@ -93,7 +93,7 @@ public:
 	static  MStatus     initialize();
 	static  const char* nodeName();
 
-	virtual MStatus compute(const MPlug& plug, MDataBlock& data) override;
+	MStatus compute(const MPlug& plug, MDataBlock& data) override;
 
 	static MTypeId  id;
 	static  MObject aInMesh;

@@ -33,7 +33,7 @@ public:
 	PRTModifierNode() = default;
 
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
-	virtual MStatus setDependentsDirty(const MPlug &plugBeingDirtied, MPlugArray &affectedPlugs) override;
+	MStatus setDependentsDirty(const MPlug &plugBeingDirtied, MPlugArray &affectedPlugs) override;
 
 	static  void*   creator();
 	static  MStatus initialize();
