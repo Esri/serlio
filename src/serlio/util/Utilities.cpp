@@ -39,7 +39,6 @@
 #include <sys/types.h>
 #include <cwchar>
 #include <memory>
-#include <numeric>
 
 
 namespace prtu {
@@ -168,8 +167,11 @@ namespace prtu {
 	}
 
 
-	int32_t computeSeed(const MFloatPointArray& vertices) {
-		MFloatPoint a = std::accumulate(vertices.begin(), vertices.end(), MFloatPoint{0.0, 0.0, 0.0});
+	int32_t computeSeed(MFloatPointArray& vertices) {
+		MFloatPoint a(0.0, 0.0, 0.0);
+		for (unsigned int vi = 0; vi < vertices.length(); vi++) {
+			a += vertices[vi];
+		}
 		a = a / static_cast<float>(vertices.length());
 		return computeSeed(a);
 	}
