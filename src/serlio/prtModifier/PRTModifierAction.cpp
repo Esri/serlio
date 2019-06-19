@@ -543,7 +543,6 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 			MString exts;
 			bool    asFile = false;
 			bool    asColor = false;
-			const prt::Annotation* enumAnnotation = nullptr;
 			for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
 				const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
 				const wchar_t* anName = an->getName();
@@ -572,9 +571,9 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 			if (!(asColor) && mvalue.length() == 7 && value[0] == L'#')
 				asColor = true;
 
-			if (enumAnnotation) {
+			if (p.enumAnnotation) {
 				mEnums.emplace_front();
-				MCHECK(addEnumParameter(enumAnnotation, node, attr, name, mvalue, mEnums.front()));
+				MCHECK(addEnumParameter(p.enumAnnotation, node, attr, name, mvalue, mEnums.front()));
 			}
 			else if (asFile) {
 				MCHECK(addFileParameter(node, attr, name, mvalue, exts));
