@@ -37,7 +37,7 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <wchar.h>
+#include <cwchar>
 
 
 namespace prtu {
