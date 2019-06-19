@@ -17,11 +17,11 @@ proc string prtPlug(string $attr) {
 proc string prtControlName(string $attr) {
 	return substituteAllString(`prtPlug($attr)`, ".", "_");
 }
-  
-proc string prtAttrName(string $attr) {
-	return `substitute "^[^.]*\\." $attr ""`;
-}  
 
+proc string niceName(string $longName) {
+	return `attributeName -nice $longName`;
+}
+  
 global proc prtReloadRPK(string $attr) {
 	$node = prtNode($attr);
 	$attrCurrentRule = $node + ".currentRule_Package";
@@ -63,7 +63,7 @@ global proc prtFileBrowse(string $attr, string $varname){
 	$varname = prtPlug($varname);
 	setUITemplate -pst attributeEditorTemplate;
 	rowLayout -nc 4;  
-	text -label `prtAttrName($attr)`;
+	text -label `niceName($attr)`;
 	string $control = prtControlName($attr);
 	textField -fileName `getAttr $attr` $control;  	
 	connectControl -fileName $control $attr;
@@ -94,7 +94,7 @@ global proc prtFileBrowseReplaceRPK(string $attr, string $varname){
 global proc prtColorChooser(string $attr, string $varname) {
 	setUITemplate -pst attributeEditorTemplate;
 	string $control = prtControlName($attr);
-	colorSliderGrp -label `prtAttrName($attr)` $control;
+	colorSliderGrp -label `niceName($attr)` $control;
 	connectControl $control $attr;
 	setParent ..;
 	setUITemplate -ppt; 
@@ -118,8 +118,8 @@ global proc AEserlioTemplate(string $node) {
 	eval ("global string $" + $varname + "=\"" + `getAttr ($node + ".Rule_Package")` + "\"");
 	editorTemplate -callCustom "prtFileBrowse" "prtFileBrowseReplaceRPK" "Rule_Package" $varname;
 
-	editorTemplate -l "Random_Seed" -adc "Random_Seed";
-	
+	editorTemplate -l `niceName($node+".Random_Seed")` -adc "Random_Seed";
+
 	editorTemplate -endLayout;
 		
 	string $attrs[] = `listAttr -ud $node`;
@@ -171,7 +171,7 @@ global proc AEserlioTemplate(string $node) {
 			editorTemplate -callCustom "prtColorChooser" "prtColorChooserReplace" $attr $varname;
 			$skip = 3;
 		} else {
-			editorTemplate -l $attr -adc $attr;
+			editorTemplate  -l `niceName($longNameWithNode)` -adc $attr;
 		}
 	}
 		

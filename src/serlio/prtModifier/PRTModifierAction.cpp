@@ -708,11 +708,15 @@ template<typename T> T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependenc
 }
 
 MString PRTModifierAction::longName(const MString& attrName) {
-	return prtu::toCleanId(attrName.substring(attrName.index('$') + 1, attrName.length()));
+	return PRT + prtu::toCleanId(attrName);
 }
 
 MString PRTModifierAction::briefName(const MString & attrName) {
-	return PRT+prtu::toCleanId(attrName);
+	return prtu::toCleanId(attrName.substring(attrName.indexW(L'$') + 1, attrName.length())); //remove style
+}
+
+MString PRTModifierAction::niceName(const MString & attrName) { //remove style and import rule name
+	return prtu::toCleanId(attrName.substring(std::max(attrName.indexW(L'$'), attrName.rindexW(L'.')) + 1, attrName.length()));
 }
 
 MStatus PRTModifierAction::addParameter(MFnDependencyNode & node, MObject & attr, MFnAttribute& tAttr) {
@@ -731,6 +735,7 @@ MStatus PRTModifierAction::addBoolParameter(MFnDependencyNode & node, MObject & 
 
 	bool plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
 	attr = nAttr.create(longName(name), briefName(name), MFnNumericData::kBoolean, defaultValue, &stat);
+	nAttr.setNiceNameOverride(niceName(name));
 	if (stat != MS::kSuccess) throw stat;
 
 	MCHECK(addParameter(node, attr, nAttr));
@@ -747,6 +752,7 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode & node, MObject &
 
 	double plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
 	attr = nAttr.create(longName(name), briefName(name), MFnNumericData::kDouble, defaultValue, &stat);
+	nAttr.setNiceNameOverride(niceName(name));
 	if (stat != MS::kSuccess)
 		throw stat;
 
@@ -807,6 +813,7 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 
 	short plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
 	attr = e.mAttr.create(longName(name), briefName(name), defaultValue, &stat);
+	e.mAttr.setNiceNameOverride(niceName(name));
 	MCHECK(stat);
 
 	MCHECK(e.fill(annot));
@@ -827,11 +834,11 @@ MStatus PRTModifierAction::addFileParameter(MFnDependencyNode & node, MObject & 
 
 	MString plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
 	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, stringData.create("", &stat2), &stat);
+	MCHECK(sAttr.setNiceNameOverride(niceName(name)));
 	MCHECK(stat2);
 	MCHECK(stat);
 	MCHECK(sAttr.setUsedAsFilename(true));
 	MCHECK(addParameter(node, attr, sAttr));
-	MCHECK(sAttr.setNiceNameOverride(exts));
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
@@ -861,6 +868,7 @@ MStatus PRTModifierAction::addColorParameter(MFnDependencyNode & node, MObject &
 
 	MObject plugValue = getPlugValueAndRemoveAttr(node, briefName(name), rgb);
 	attr = nAttr.createColor(longName(name), briefName(name), &stat);
+	nAttr.setNiceNameOverride(niceName(name));
 	nAttr.setDefault(r, g, b);
 
 	MCHECK(stat);
@@ -880,6 +888,7 @@ MStatus PRTModifierAction::addStrParameter(MFnDependencyNode & node, MObject & a
 
 	MString plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
 	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, stringData.create(defaultValue, &stat2), &stat);
+	sAttr.setNiceNameOverride(niceName(name));
 	MCHECK(stat2);
 	MCHECK(stat);
 	MCHECK(addParameter(node, attr, sAttr));
