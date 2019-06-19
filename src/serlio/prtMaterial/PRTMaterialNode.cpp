@@ -404,8 +404,8 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					mShadingCmd += "sets -empty -renderable true -noSurfaceShader true -name $sgName;\n";
 					mShadingCmd += "setAttr ($shName+\".initgraph\") true;\n";
 					mShadingCmd += "connectAttr -force ($shName + \".outColor\") ($sgName + \".surfaceShader\");\n";
-					
-					MString blendMode = (matInfo.opacityMap.size() == 0 && matInfo.opacity >= 1.0) ? "0": "1";
+
+					MString blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? "0": "1";
 					mShadingCmd += "$shadingNodeIndex = `shaderfx -sfxnode $shName -getNodeIDByName \"Standard_Base\"`;\n";
 					mShadingCmd += "shaderfx - sfxnode $shName - edit_stringlist $shadingNodeIndex blendmode "+ blendMode +";\n";
 
