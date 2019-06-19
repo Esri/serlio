@@ -326,8 +326,8 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					{
 						MObject obj = it.thisNode();
 						MFnDependencyNode n(obj);
-						
-						for (auto kv : existinMaterialInfos) {
+
+						for (const auto& kv : existinMaterialInfos) {
 							if (matInfo.equals(kv.second)) {
 								matchingMaterial = kv.first;
 								break;
