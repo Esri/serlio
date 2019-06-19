@@ -79,9 +79,9 @@ public:
 	static MString toMString(const std::vector<double> &d, size_t size, size_t offset);
 
 private:
-	std::string getTexture(adsk::Data::Handle sHandle, const std::string& texName);
-	std::vector<double>  getDoubleVector(adsk::Data::Handle sHandle,const std::string& name, size_t numElements);
-	double getDouble(adsk::Data::Handle sHandle, const std::string& name);
+	static std::string getTexture(adsk::Data::Handle sHandle, const std::string& texName);
+	static std::vector<double>  getDoubleVector(adsk::Data::Handle sHandle,const std::string& name, size_t numElements);
+	static double getDouble(adsk::Data::Handle sHandle, const std::string& name);
 };
 
 class PRTMaterialNode : public MPxNode {
