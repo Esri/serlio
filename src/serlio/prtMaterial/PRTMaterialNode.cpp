@@ -36,6 +36,7 @@
 #include <sstream>
 #include <set>
 #include <algorithm>
+#include <array>
 
 #ifdef _WIN32
 #	include <Windows.h>
@@ -307,7 +308,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 				mShadingCmd += "string $nodeName;\n";
 				mShadingCmd += "int $shadingNodeIndex;\n";
 
-				wchar_t* buf = new wchar_t[512];
+				std::array<wchar_t, 512> buf;
 
 				for (unsigned int i = 0; i < stream->elementCount(); ++i)
 				{
@@ -350,8 +351,8 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 						size_t idx = matName.find_last_of(L"Sh");
 						if (idx != std::wstring::npos)
 							matName[idx] = L'g';
-						swprintf(buf, 511, L"sets -forceElement %ls %ls.f[%d:%d];\n", matName.c_str(), MString(meshName).asWChar(), faceStart, faceEnd);
-						mShadingCmd += buf;
+						swprintf(buf.data(), buf.size()-1, L"sets -forceElement %ls %ls.f[%d:%d];\n", matName.c_str(), MString(meshName).asWChar(), faceStart, faceEnd);
+						mShadingCmd += buf.data();
 						continue;
 					}
 
@@ -442,11 +443,10 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					setTexture(mShadingCmd, matInfo.roughnessMap, "roughness_map");
 					setTexture(mShadingCmd, matInfo.opacityMap, "opacity_map");
 
-					swprintf(buf, 511, L"sets -forceElement $sgName %ls.f[%d:%d];\n", MString(meshName).asWChar(), faceStart, faceEnd);
-					mShadingCmd += buf;
+					swprintf(buf.data(), buf.size()-1, L"sets -forceElement $sgName %ls.f[%d:%d];\n", MString(meshName).asWChar(), faceStart, faceEnd);
+					mShadingCmd += buf.data();
 				}
 
-				delete[] buf;
 				MCHECK(MGlobal::executeCommandOnIdle(mShadingCmd, DO_DBG));
 
 			}
