@@ -38,6 +38,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <cwchar>
+#include <memory>
 
 
 namespace prtu {
@@ -140,7 +141,7 @@ namespace prtu {
 	MString toCleanId(const MString& name) {
 		const unsigned int len = name.numChars();
 		const wchar_t*     wname = name.asWChar();
-		wchar_t*           dst = new wchar_t[len + 1];
+		auto dst = std::make_unique<wchar_t[]>(len + 1);
 		for (unsigned int i = 0; i < len; i++) {
 			wchar_t c = wname[i];
 			if ((c >= '0' && c <= '9') ||
@@ -151,8 +152,7 @@ namespace prtu {
 				dst[i] = '_';
 		}
 		dst[len] = L'\0';
-		MString result(dst);
-		delete[] dst;
+		MString result(dst.get());
 		return result;
 	}
 
