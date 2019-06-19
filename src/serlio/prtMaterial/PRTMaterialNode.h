@@ -42,7 +42,7 @@ const std::string gPRTMatMemberFaceEnd = "faceIndexEnd";
 
 class MaterialInfo {
 public:
-	MaterialInfo(adsk::Data::Handle sHandle);
+	explicit MaterialInfo(adsk::Data::Handle sHandle);
 
 	std::string bumpMap;
 	std::string colormap;
