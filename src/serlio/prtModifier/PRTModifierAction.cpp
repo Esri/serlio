@@ -51,9 +51,27 @@ namespace {
 	const wchar_t* ANNOT_COLOR = L"@Color";
 	const wchar_t* ANNOT_DIR = L"@Directory";
 	const wchar_t* ANNOT_FILE = L"@File";
+	const wchar_t* ANNOT_ORDER = L"@Order";
+	const wchar_t* ANNOT_GROUP = L"@Group";
 	const wchar_t* NULL_KEY = L"#NULL#";
 	const MString  PRT("PRT");
 	const wchar_t* RESTRICTED_KEY = L"restricted";
+
+	struct AttributeProperties {
+		int order = std::numeric_limits<int>::max();
+		int groupOrder = std::numeric_limits<int>::max();
+		size_t index;
+		std::wstring name;
+		std::wstring ruleFile;
+		std::wstring groups;
+		const prt::Annotation* enumAnnotation = nullptr;
+	};
+
+	bool lowerCaseOrdering(std::wstring a, std::wstring b) {
+		std::transform(a.begin(), a.end(), a.begin(), ::tolower);
+		std::transform(b.begin(), b.end(), b.begin(), ::tolower);
+		return a < b;
+	}
 } // namespace
 
 PRTModifierAction::PRTModifierAction()
@@ -374,34 +392,115 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 
 	mBriefName2prtAttr[NAME_GENERATE.asWChar()] = NAME_GENERATE.asWChar();
 
-	for (size_t i = 0; i < info->getNumAttributes(); i++) {
+	std::vector<AttributeProperties> sortedAttributes;
 
-		const MString name = MString(info->getAttribute(i)->getName());
-		MObject attr;
+	std::wstring mainCgaRuleName = prtu::filename(ruleFile);
+	size_t idxExtension = mainCgaRuleName.find(L".cgb");
+	if (idxExtension != std::wstring::npos)
+		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
+	std::map<std::wstring, int> groupOrders;
+
+	for (size_t i = 0; i < info->getNumAttributes(); i++) {
 
 		if (info->getAttribute(i)->getNumParameters() != 0) continue;
 
-		mBriefName2prtAttr[briefName(name).asWChar()] = name.asWChar();
+		AttributeProperties p;
+		p.index = i;
+				
+		p.name = info->getAttribute(i)->getName();
 
-			const prt::Annotation* enumAnnotation = nullptr;
+		std::wstring ruleName = p.name;
+		size_t idxStyle = ruleName.find(L"$");
+		if (idxStyle != std::wstring::npos)
+			ruleName = ruleName.substr(idxStyle + 1);
+		size_t idxDot = ruleName.find_last_of(L".");
+		if (idxDot != std::wstring::npos) {
+			p.ruleFile = ruleName.substr(0, idxDot);
+		}
+		else
+			p.ruleFile = mainCgaRuleName;
+
 		bool hidden = false;
-			for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
-				const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
+		for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
+			const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
 			const wchar_t* anName = an->getName();
 			if (!(std::wcscmp(anName, ANNOT_ENUM)))
-					enumAnnotation = an;
-			if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
+				p.enumAnnotation = an;
+			else if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
 				hidden = true;
+			else if (!(std::wcscmp(anName, ANNOT_ORDER)))
+			{
+				if (an->getNumArguments() >= 1 && an->getArgument(0)->getType() == prt::AAT_FLOAT) {
+					p.order = static_cast<int>(an->getArgument(0)->getFloat());
+				}
 			}
+			else if (!(std::wcscmp(anName, ANNOT_GROUP)))
+			{
+				for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
+					if (an->getArgument(argIdx)->getType() == prt::AAT_STR) {
+						p.groups += an->getArgument(argIdx)->getStr();
+						p.groups += L" ";
+					}
+					else if (argIdx == an->getNumArguments() - 1 && an->getArgument(argIdx)->getType() == prt::AAT_FLOAT) {
+						p.groupOrder = static_cast<int>(an->getArgument(argIdx)->getFloat());
+						groupOrders[p.groups] = p.groupOrder;
+					}
+				}
+			}
+		}
 		if (hidden)
 			continue;
+
+		if (p.groups.length() == 0)
+			p.groupOrder = std::numeric_limits<int>::min(); //no group? put to front
+		sortedAttributes.push_back(p);
+	}
+
+	//heuristic: undefined grouporder? try to use grouporder from other attribute
+	for (AttributeProperties &p : sortedAttributes) {
+		if (p.groupOrder == std::numeric_limits<int>::max() && groupOrders.count(p.groups)>0) {
+			p.groupOrder = groupOrders[p.groups];
+		}
+	}
+
+	std::sort(sortedAttributes.begin(), sortedAttributes.end(), 
+		[&mainCgaRuleName](const AttributeProperties & a, const AttributeProperties & b)
+	{
+		if (a.ruleFile != b.ruleFile) {
+			if (a.ruleFile == mainCgaRuleName)
+				return true; //force main rule to be first
+			else if (b.ruleFile == mainCgaRuleName)
+				return false;
+			return lowerCaseOrdering(a.ruleFile, b.ruleFile);
+		}
+		else if (a.groups != b.groups) {
+			if (a.groupOrder == std::numeric_limits<int>::max() && b.groupOrder == std::numeric_limits<int>::max())
+				return lowerCaseOrdering(a.groups, b.groups);
+			return a.groupOrder < b.groupOrder;
+		}
+		else {
+			if (a.order == std::numeric_limits<int>::max() && b.order == std::numeric_limits<int>::max())
+				return lowerCaseOrdering(a.name, b.name);
+			return a.order < b.order;
+		}
+	});
+
+
+	for (AttributeProperties p: sortedAttributes) {
+
+		size_t i = p.index;
+
+		const MString name = MString(p.name.c_str());
+		MObject attr;
+
+		mBriefName2prtAttr[briefName(name).asWChar()] = name.asWChar();
 
 		switch (info->getAttribute(i)->getReturnType()) {
 		case prt::AAT_BOOL: {
 			const bool value = evalAttrs.find(name.asWChar())->second.mBool;
-			if (enumAnnotation) {
+			if (p.enumAnnotation) {
 				mEnums.emplace_front();
-				MCHECK(addEnumParameter(enumAnnotation, node, attr, name, value, mEnums.front()));
+				MCHECK(addEnumParameter(p.enumAnnotation, node, attr, name, value, mEnums.front()));
 			}
 			else {
 				MCHECK(addBoolParameter(node, attr, name, value));
@@ -423,9 +522,9 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 
 			const double value = evalAttrs.find(name.asWChar())->second.mFloat;
 
-			if (enumAnnotation) {
+			if (p.enumAnnotation) {
 				mEnums.emplace_front();
-				MCHECK(addEnumParameter(enumAnnotation, node, attr, name, value, mEnums.front()));
+				MCHECK(addEnumParameter(p.enumAnnotation, node, attr, name, value, mEnums.front()));
 			}
 			else {
 				MCHECK(addFloatParameter(node, attr, name, value, min, max));
@@ -482,6 +581,13 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		}
 		default:
 			break;
+		}
+
+		MStatus stat;
+		MFnAttribute fnAttr(attr, &stat);
+		if (stat == MS::kSuccess) {
+			fnAttr.addToCategory(MString(p.ruleFile.c_str()));
+			fnAttr.addToCategory(MString(p.groups.c_str()));
 		}
 	}
 
