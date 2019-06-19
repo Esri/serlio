@@ -485,9 +485,9 @@ void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& tex, c
 		mShadingCmd += "$colormap = \"" + MString(tex.c_str()) + "\";\n";
 		mShadingCmd += "$nodeName = $sgName +\"" + MString(target.c_str()) + "\";\n";
 		mShadingCmd += "shadingNode - asTexture file - n $nodeName;\n";
-		mShadingCmd += "setAttr($nodeName + \".fileTextureName\") - type \"string\" $colormap ;\n";
+		mShadingCmd += R"foo(setAttr($nodeName + ".fileTextureName") - type "string" $colormap ;)foo" "\n";
 
-		mShadingCmd += "connectAttr -force ($nodeName + \".outColor\") ($shName + \".TEX_"+ MString(target.c_str()) +"\");\n";
+		mShadingCmd += R"foo(connectAttr -force ($nodeName + ".outColor") ($shName + ".TEX_)foo" + MString(target.c_str()) +"\");\n";
 		mShadingCmd += "setAttr ($shName+\".use_"+ MString(target.c_str())+"\") 1;\n";
 	}
 	else {
