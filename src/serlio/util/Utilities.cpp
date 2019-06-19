@@ -259,8 +259,9 @@ namespace prtu {
 
 	void remove_all(const std::wstring& path) {
 #ifdef _WIN32
-		std::replace(path.begin(), path.end(), L'/', L'\\');
-		const wchar_t* lpszDir = path.c_str();
+		std::wstring pc = path;
+		std::replace(pc.begin(), pc.end(), L'/', L'\\');
+		const wchar_t* lpszDir = pc.c_str();
 
 		size_t len = wcslen(lpszDir);
 		wchar_t *pszFrom = new wchar_t[len + 2];
