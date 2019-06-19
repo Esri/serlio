@@ -458,7 +458,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 	return status;
 }
 
-void PRTMaterialNode::setAttribute(MString &mShadingCmd, std::vector<double> vec, size_t elements, std::string target)
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, const std::string& target)
 {
 	if (vec.size() >= elements) {
 		MString colString = MaterialInfo::toMString(vec, elements, 0);
@@ -466,7 +466,7 @@ void PRTMaterialNode::setAttribute(MString &mShadingCmd, std::vector<double> vec
 	}
 }
 
-void PRTMaterialNode::setAttribute(MString &mShadingCmd, std::vector<double> vec, size_t elements, size_t offset, std::string target)
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, size_t offset, const std::string& target)
 {
 	if (vec.size()+offset >= elements) {
 		MString colString = MaterialInfo::toMString(vec, elements,offset);
@@ -474,12 +474,12 @@ void PRTMaterialNode::setAttribute(MString &mShadingCmd, std::vector<double> vec
 	}
 }
 
-void PRTMaterialNode::setAttribute(MString &mShadingCmd, double vec, std::string target)
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, double vec, const std::string& target)
 {
 	mShadingCmd += "setAttr ($shName+\"." + MString(target.c_str()) + "\") " + MString(std::to_string(vec).c_str()) + ";\n";
 }
 
-void PRTMaterialNode::setTexture(MString &mShadingCmd, std::string tex, std::string target)
+void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& tex, const std::string& target)
 {
 	if (tex.size() > 0) {
 		mShadingCmd += "$colormap = \"" + MString(tex.c_str()) + "\";\n";

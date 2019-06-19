@@ -100,10 +100,10 @@ public:
 	static  MObject aOutMesh;
 
 private:
-	static void setAttribute(MString &mShadingCmd, std::vector<double> vec, size_t elements, std::string target);
-	static void setAttribute(MString &mShadingCmd, std::vector<double> vec, size_t elements, size_t offset, std::string target);
-	static void setTexture(MString &mShadingCmd, std::string tex, std::string target);
-	static void setAttribute(MString &mShadingCmd, double vec, std::string target);
+	static void setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, const std::string& target);
+	static void setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, size_t offset, const std::string& target);
+	static void setTexture(MString& mShadingCmd, const std::string& tex, const std::string& target);
+	static void setAttribute(MString& mShadingCmd, double vec, const std::string& target);
 	static MString sfxFile;
 }; // class PRTMaterialNode
 
