@@ -415,7 +415,6 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
 				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
 				sg.counts.push_back(vtxCnt);
-				sg.indices.reserve(sg.indices.size() + vtxCnt);
 				for (uint32_t vi = 0; vi < vtxCnt; vi++)
 					sg.indices.push_back(vertexIndexBase + vtxIdx[vtxCnt - vi - 1]); // reverse winding
 			}
