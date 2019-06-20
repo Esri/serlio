@@ -103,10 +103,6 @@ void MayaCallbacks::addMesh(
 	for (size_t i = 0; i < vtxSize; i += 3)
 		mVertices.append(static_cast<float>(vtx[i]), static_cast<float>(vtx[i + 1]), static_cast<float>(vtx[i + 2]));
 
-	MFloatVectorArray mNormals;
-	for (size_t i = 0; i < nrmSize; i += 3)
-		mNormals.append(MVector(nrm[i], nrm[i + 1], nrm[i + 2]));
-
 	MIntArray mVerticesCounts;
 	for (size_t i = 0; i < numFaces; ++i)
 		mVerticesCounts.append(faceSizes[i]);
@@ -130,13 +126,11 @@ void MayaCallbacks::addMesh(
 	prtu::dbg("    mVertices.length         = %d", mVertices.length());
 	prtu::dbg("    mVerticesCounts.length   = %d", mVerticesCounts.length());
 	prtu::dbg("    mVerticesConnects.length = %d", mVerticesIndices.length());
-	prtu::dbg("    mNormals.length          = %d", mNormals.length());
 
 	MFnMesh mFnMesh1;
 	MObject oMesh = mFnMesh1.create(mVertices.length(), mVerticesCounts.length(), mVertices, mVerticesCounts, mVerticesIndices, newOutputData, &stat);
 	MCHECK(stat);
 	MFnMesh mFnMesh(oMesh);
-
 
 
 	mFnMesh.clearUVs();
@@ -183,16 +177,26 @@ void MayaCallbacks::addMesh(
 		}
 	}
 
-	if (mNormals.length() > 0) {
-		prtu::dbg("    mNormals.length        = %d", mNormals.length());
+	if (nrmSize > 0) {
 
+		//convert to native maya normal layout
 		// NOTE: this assumes that vertices and vertex normals use the same index domain (-> maya encoder)
-		MVectorArray expandedNormals(mVerticesIndices.length());
-		for (unsigned int i = 0; i < mVerticesIndices.length(); i++)
-			expandedNormals[i] = mNormals[mVerticesIndices[i]];
+		MVectorArray expandedNormals(indicesSize);
+		MIntArray faceList(indicesSize);
+		
+		int indexCount = 0;
+		for (int i = 0; i < numFaces; i++) {
+			int faceLength = mVerticesCounts[i];
 
-		prtu::dbg("    expandedNormals.length = %d", expandedNormals.length());
-		MCHECK(mFnMesh.setVertexNormals(expandedNormals, mVerticesIndices));
+			for (int j = 0; j < faceLength; j++) {
+				faceList[indexCount] = i;
+				int idx = mVerticesIndices[indexCount];
+				expandedNormals.set(&nrm[idx*3], indexCount);
+				indexCount++;
+			}
+		}
+
+		MCHECK(mFnMesh.setFaceVertexNormals(expandedNormals, faceList, mVerticesIndices));
 	}
 
 	MFnMesh outputMesh(outMeshObj);
