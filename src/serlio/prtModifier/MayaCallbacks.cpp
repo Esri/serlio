@@ -157,15 +157,8 @@ void MayaCallbacks::addMesh(
 
 			MCHECK(mFnMesh.setUVs(mU, mV, &uvSetName));
 
-			MIntArray mUVCounts;
-			for (size_t i = 0; i < numFaces; ++i)
-				mUVCounts.append(faceSizes[i]);
-
-			MIntArray  mUVIndices;
-			for (size_t i = 0; i < indicesSize; ++i)
-				mUVIndices.append(indices[i]);
-
-			MCHECK(mFnMesh.assignUVs(mUVCounts, mUVIndices, &uvSetName));
+			//asume vertices and uvs use same indices  (-> maya encoder)
+			MCHECK(mFnMesh.assignUVs(mVerticesCounts, mVerticesIndices, &uvSetName));
 
 		}
 		else {
@@ -181,8 +174,8 @@ void MayaCallbacks::addMesh(
 
 		//convert to native maya normal layout
 		// NOTE: this assumes that vertices and vertex normals use the same index domain (-> maya encoder)
-		MVectorArray expandedNormals(indicesSize);
-		MIntArray faceList(indicesSize);
+		MVectorArray expandedNormals((unsigned int)indicesSize);
+		MIntArray faceList((unsigned int)indicesSize);
 		
 		int indexCount = 0;
 		for (int i = 0; i < numFaces; i++) {
