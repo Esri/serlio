@@ -58,7 +58,14 @@ namespace {
 		}
 	}
 
-}
+	MIntArray toMayaIntArray(uint32_t const* a, size_t s) {
+		MIntArray mia(s, 0);
+		for (size_t i = 0; i < s; ++i)
+			mia.set(a[i], i);
+		return mia;
+	}
+
+} // namespace
 
 struct TextureUVOrder {
 	MString      mayaUvSetName;
@@ -91,7 +98,10 @@ void MayaCallbacks::addMesh(
 		const double* nrm, size_t nrmSize,
 		const uint32_t* faceSizes, size_t numFaces,
 		const uint32_t* indices, size_t indicesSize,
-		double const* const* uvs, size_t const* uvsSizes, size_t uvSetsCount,
+		double const* const* uvs, size_t const* uvsSizes,
+		uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
+		uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
+		uint32_t uvSetsCount,
 		const uint32_t* faceRanges, size_t faceRangesSize,
 		const prt::AttributeMap** materials,
 		const prt::AttributeMap** reports,
@@ -157,8 +167,9 @@ void MayaCallbacks::addMesh(
 
 			MCHECK(mFnMesh.setUVs(mU, mV, &uvSetName));
 
-			//asume vertices and uvs use same indices  (-> maya encoder)
-			MCHECK(mFnMesh.assignUVs(mVerticesCounts, mVerticesIndices, &uvSetName));
+			MIntArray mUVCounts = toMayaIntArray(uvCounts[uvSet], uvCountsSizes[uvSet]);
+			MIntArray mUVIndices = toMayaIntArray(uvIndices[uvSet], uvIndicesSizes[uvSet]);
+			MCHECK(mFnMesh.assignUVs(mUVCounts, mUVIndices, &uvSetName));
 
 		}
 		else {
