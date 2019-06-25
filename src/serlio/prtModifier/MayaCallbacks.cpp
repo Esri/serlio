@@ -33,43 +33,55 @@
 #include "maya/MFnMesh.h"
 #include "maya/MFnMeshData.h"
 #include "maya/adskDataStream.h"
-//#include <maya/adskDataChannel.h>
 #include "maya/adskDataAssociations.h"
-//#include <maya/adskDataAccessorMaya.h>
 
 #include <sstream>
+#include <cassert>
+
 
 namespace {
 
-	const bool TRACE = false;
-	void prtTrace(const std::wstring& arg1, std::size_t arg2) {
-		if (TRACE) {
-			std::wostringstream wostr;
-			wostr << L"[MOH] " << arg1 << arg2;
-			prt::log(wostr.str().c_str(), prt::LOG_TRACE);
-		}
-	}
+constexpr bool TRACE = false;
 
-	void checkStringLength(const wchar_t* string, const size_t &maxStringLength)
-	{
-		if (wcslen(string) >= maxStringLength) {
-			const std::wstring msg = L"Maximum texture path size is " + std::to_wstring(maxStringLength);
-			prt::log(msg.c_str(), prt::LOG_ERROR);
-		}
+void prtTrace(const std::wstring &arg1, std::size_t arg2) {
+	if (TRACE) {
+		std::wostringstream wostr;
+		wostr << L"[MOH] " << arg1 << arg2;
+		prt::log(wostr.str().c_str(), prt::LOG_TRACE);
 	}
+}
 
-	MIntArray toMayaIntArray(uint32_t const* a, size_t s) {
-		MIntArray mia(s, 0);
-		for (size_t i = 0; i < s; ++i)
-			mia.set(a[i], i);
-		return mia;
+void checkStringLength(const wchar_t *string, const size_t &maxStringLength) {
+	if (wcslen(string) >= maxStringLength) {
+		const std::wstring msg = L"Maximum texture path size is " + std::to_wstring(maxStringLength);
+		prt::log(msg.c_str(), prt::LOG_ERROR);
 	}
+}
+
+MIntArray toMayaIntArray(uint32_t const *a, size_t s) {
+	MIntArray mia(s, 0);
+	for (size_t i = 0; i < s; ++i)
+		mia.set(a[i], i);
+	return mia;
+}
+
+MFloatPointArray toMayaFloatPointArray(double const *a, size_t s) {
+	assert(s % 3 == 0);
+	const size_t numPoints = s/3;
+	MFloatPointArray mfpa(numPoints);
+	for (size_t i = 0; i < numPoints; ++i) {
+		mfpa.set(MFloatPoint(static_cast<float>(a[i * 3 + 0]),
+							 static_cast<float>(a[i * 3 + 1]),
+							 static_cast<float>(a[i * 3 + 2])), i);
+	}
+	return mfpa;
+}
 
 } // namespace
 
 struct TextureUVOrder {
 	MString      mayaUvSetName;
-	uint8_t       mayaUvSetIndex;
+	uint8_t      mayaUvSetIndex;
 	uint8_t      prtUvSetIndex;
 };
 
@@ -107,20 +119,11 @@ void MayaCallbacks::addMesh(
 		const prt::AttributeMap** reports,
 		const int32_t*)
 {
+	MFloatPointArray mVertices = toMayaFloatPointArray(vtx, vtxSize);
+	MIntArray mVerticesCounts = toMayaIntArray(faceSizes, numFaces);
+	MIntArray mVerticesIndices = toMayaIntArray(indices, indicesSize);
 
-
-	MFloatPointArray mVertices;
-	for (size_t i = 0; i < vtxSize; i += 3)
-		mVertices.append(static_cast<float>(vtx[i]), static_cast<float>(vtx[i + 1]), static_cast<float>(vtx[i + 2]));
-
-	MIntArray mVerticesCounts;
-	for (size_t i = 0; i < numFaces; ++i)
-		mVerticesCounts.append(faceSizes[i]);
 	prtTrace(L"countsSize = ", numFaces);
-
-	MIntArray mVerticesIndices;
-	for (size_t i = 0; i < indicesSize; ++i)
-		mVerticesIndices.append(indices[i]);
 	prtTrace(L"indicesSize = ", indicesSize);
 
 	MStatus stat;
@@ -187,7 +190,7 @@ void MayaCallbacks::addMesh(
 		// NOTE: this assumes that vertices and vertex normals use the same index domain (-> maya encoder)
 		MVectorArray expandedNormals((unsigned int)indicesSize);
 		MIntArray faceList((unsigned int)indicesSize);
-		
+
 		int indexCount = 0;
 		for (int i = 0; i < numFaces; i++) {
 			int faceLength = mVerticesCounts[i];
