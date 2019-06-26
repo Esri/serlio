@@ -19,11 +19,13 @@
 
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/PRTModifierNode.h"
+#include "util/MayaUtilities.h"
 
 #include "maya/MItSelectionList.h"
 #include "maya/MGlobal.h"
 #include "maya/MArgList.h"
 #include "maya/MFnMesh.h"
+#include "maya/MFloatPointArray.h"
 
 
 void* PRTModifierCommand::creator()
@@ -103,7 +105,7 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList)
 
 		MFloatPointArray vertices;
 		MCHECK(meshFn.getPoints(vertices, MSpace::kWorld));
-		mInitialSeed = prtu::computeSeed(vertices);
+		mInitialSeed = mu::computeSeed(vertices);
 
 		// Now, pass control over to the polyModifierCmd::doModifyPoly() method
 		// to handle the operation.

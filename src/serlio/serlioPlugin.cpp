@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+#include "serlioPlugin.h"
+
 #include "prtModifier/PRTModifierAction.h"
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/PRTModifierNode.h"

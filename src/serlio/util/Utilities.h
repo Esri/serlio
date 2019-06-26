@@ -19,8 +19,7 @@
 
 #pragma once
 
-#include "maya/MStatus.h"
-#include "maya/MFloatPointArray.h"
+#include "serlioPlugin.h"
 
 #include "prt/Object.h"
 #include "prt/AttributeMap.h"
@@ -86,10 +85,6 @@ namespace prtu {
 	int fromHex(wchar_t c);
 	wchar_t toHex(int i);
 	void toHex(wchar_t* color, double r, double g, double b);
-	MString toCleanId(const MString& name);
-
-	int32_t computeSeed(const MFloatPointArray& vertices);
-	int32_t computeSeed(const double* vertices, size_t count);
 
 	inline bool isnan(double d) {
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
@@ -99,9 +94,9 @@ namespace prtu {
 #endif
 	}
 
-	std::string toOSNarrowFromUTF16(const std::wstring& osWString);
-	std::wstring toUTF16FromOSNarrow(const std::string& osString);
-	std::string toUTF8FromOSNarrow(const std::string& osString);
+	SRL_TEST_EXPORTS_API std::string toOSNarrowFromUTF16(const std::wstring& osWString);
+	SRL_TEST_EXPORTS_API std::wstring toUTF16FromOSNarrow(const std::string& osString);
+	SRL_TEST_EXPORTS_API std::string toUTF8FromOSNarrow(const std::string& osString);
 
 	std::wstring toFileURI(const std::wstring& p);
 	std::wstring percentEncode(const std::string& utf8String);

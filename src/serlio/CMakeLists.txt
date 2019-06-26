@@ -15,7 +15,8 @@ add_library(${SERLIO_TARGET} SHARED
 		prtModifier/polyModifier/polyModifierNode.cpp
 		prtMaterial/PRTMaterialNode.cpp
 		util/Utilities.cpp
-		util/ResolveMapCache.cpp)
+		util/ResolveMapCache.cpp
+		util/MayaUtilities.cpp)
 
 set_target_properties(${SERLIO_TARGET} PROPERTIES
 	INSTALL_RPATH_USE_LINK_PATH FALSE

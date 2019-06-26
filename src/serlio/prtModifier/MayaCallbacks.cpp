@@ -30,6 +30,7 @@
 
 #include "maya/MFloatArray.h"
 #include "maya/MFloatVectorArray.h"
+#include "maya/MFloatPointArray.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnMeshData.h"
 #include "maya/adskDataStream.h"

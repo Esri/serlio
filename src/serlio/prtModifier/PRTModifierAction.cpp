@@ -23,10 +23,12 @@
 #include "prtModifier/AttributeProperties.h"
 
 #include "util/Utilities.h"
+#include "util/MayaUtilities.h"
 #include "util/LogHandler.h"
 
 #include "prt/StringUtils.h"
 
+#include "maya/MFloatPointArray.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnNumericAttribute.h"
 #include "maya/MFnTypedAttribute.h"
@@ -337,7 +339,7 @@ namespace UnitQuad {
 	const size_t   indexCount = 4;
 	const uint32_t faceCounts[] = { 4 };
 	const size_t   faceCountsCount = 1;
-	const int32_t  seed = prtu::computeSeed(vertices, vertexCount);
+	const int32_t  seed = mu::computeSeed(vertices, vertexCount);
 }
 
 MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wstring & ruleFile, const std::wstring & startRule, prt::AttributeMapBuilder* aBuilder, const prt::RuleFileInfo* info) {
@@ -684,15 +686,15 @@ template<typename T> T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependenc
 }
 
 MString PRTModifierAction::longName(const MString& attrName) {
-	return PRT + prtu::toCleanId(attrName);
+	return PRT + mu::toCleanId(attrName);
 }
 
 MString PRTModifierAction::briefName(const MString & attrName) {
-	return prtu::toCleanId(attrName.substring(attrName.indexW(L'$') + 1, attrName.length())); //remove style
+	return mu::toCleanId(attrName.substring(attrName.indexW(L'$') + 1, attrName.length())); //remove style
 }
 
 MString PRTModifierAction::niceName(const MString & attrName) { //remove style and import rule name
-	return prtu::toCleanId(attrName.substring(std::max(attrName.indexW(L'$'), attrName.rindexW(L'.')) + 1, attrName.length()));
+	return mu::toCleanId(attrName.substring(std::max(attrName.indexW(L'$'), attrName.rindexW(L'.')) + 1, attrName.length()));
 }
 
 MStatus PRTModifierAction::addParameter(MFnDependencyNode & node, MObject & attr, MFnAttribute& tAttr) {
