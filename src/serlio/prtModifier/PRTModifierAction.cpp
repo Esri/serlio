@@ -20,6 +20,7 @@
 #include "prtModifier/PRTModifierAction.h"
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/MayaCallbacks.h"
+#include "prtModifier/AttributeProperties.h"
 
 #include "util/Utilities.h"
 #include "util/LogHandler.h"
@@ -31,7 +32,6 @@
 #include "maya/MFnTypedAttribute.h"
 #include "maya/MFnStringData.h"
 
-#include <limits>
 #ifdef _WIN32
 #	include <Windows.h>
 #else
@@ -60,26 +60,6 @@ namespace {
 	const MString  PRT("PRT");
 	const wchar_t* RESTRICTED_KEY = L"restricted";
 
-	struct AttributeProperties {
-		int order = std::numeric_limits<int>::max();
-		int groupOrder = std::numeric_limits<int>::max();
-		size_t index;
-		std::wstring name;
-		std::wstring ruleFile;
-		std::wstring groups;
-		const prt::Annotation* enumAnnotation = nullptr;
-	};
-
-	std::wostream& operator<<(std::wostream& ostr, const AttributeProperties& ap) {
-		ostr << "AttributeProperties '" << ap.name << "': groups = '" << ap.groups << "'";
-		return ostr;
-	}
-
-	bool lowerCaseOrdering(std::wstring a, std::wstring b) {
-		std::transform(a.begin(), a.end(), a.begin(), ::tolower);
-		std::transform(b.begin(), b.end(), b.begin(), ::tolower);
-		return a < b;
-	}
 } // namespace
 
 PRTModifierAction::PRTModifierAction()
@@ -473,27 +453,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		}
 	}
 
-	std::sort(sortedAttributes.begin(), sortedAttributes.end(), 
-		[&mainCgaRuleName](const AttributeProperties & a, const AttributeProperties & b)
-	{
-		if (a.ruleFile != b.ruleFile) {
-			if (a.ruleFile == mainCgaRuleName)
-				return true; //force main rule to be first
-			else if (b.ruleFile == mainCgaRuleName)
-				return false;
-			return lowerCaseOrdering(a.ruleFile, b.ruleFile);
-		}
-		else if (a.groups != b.groups) {
-			if (a.groupOrder == std::numeric_limits<int>::max() && b.groupOrder == std::numeric_limits<int>::max())
-				return lowerCaseOrdering(a.groups, b.groups);
-			return a.groupOrder < b.groupOrder;
-		}
-		else {
-			if (a.order == std::numeric_limits<int>::max() && b.order == std::numeric_limits<int>::max())
-				return lowerCaseOrdering(a.name, b.name);
-			return a.order < b.order;
-		}
-	});
+	sortRuleAttributes(sortedAttributes, mainCgaRuleName);
 
 	LOG_DBG << "Processing sorted Attributes:";
 	for (AttributeProperties p: sortedAttributes) {
