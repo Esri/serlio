@@ -72,11 +72,19 @@ find_path(maya_INCLUDE_PATH NAMES "maya/MApiVersion.h" PATHS "${maya_DIR}/includ
 
 # TODO: use cmake scripts provided by maya devkit
 set(MAYA_LIB_DIR "${maya_DIR}/lib")
-find_library(maya_LINK_LIB_FOUNDATION NAMES "Foundation" PATHS "${MAYA_LIB_DIR}")
-find_library(maya_LINK_LIB_OPENMAYA   NAMES "OpenMaya"   PATHS "${MAYA_LIB_DIR}")
-find_library(maya_LINK_LIB_OPENMAYAUI NAMES "OpenMayaUI" PATHS "${MAYA_LIB_DIR}")
-find_library(maya_LINK_LIB_METADATA NAMES "MetaData" PATHS "${MAYA_LIB_DIR}")
+find_library(maya_LINK_LIB_FOUNDATION NAMES "Foundation"  PATHS "${MAYA_LIB_DIR}")
+find_library(maya_LINK_LIB_OPENMAYA   NAMES "OpenMaya"    PATHS "${MAYA_LIB_DIR}")
+find_library(maya_LINK_LIB_OPENMAYAUI NAMES "OpenMayaUI"  PATHS "${MAYA_LIB_DIR}")
+find_library(maya_LINK_LIB_METADATA   NAMES "MetaData"    PATHS "${MAYA_LIB_DIR}")
 list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_FOUNDATION} ${maya_LINK_LIB_OPENMAYA} ${maya_LINK_LIB_OPENMAYAUI} ${maya_LINK_LIB_METADATA})
+
+# FIXME: quirk for unit test executable on linux
+if(SRL_LINUX)
+	find_library(maya_LINK_LIB_TBBPREVIEW NAMES "tbb_preview" PATHS "${MAYA_LIB_DIR}")
+	if (maya_LINK_LIB_TBBPREVIEW)
+		list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_TBBPREVIEW})
+	endif()
+endif()
 
 # temporary heuristic to detect maya version number
 if(maya_DIR MATCHES "maya2018")

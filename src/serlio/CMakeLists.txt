@@ -36,11 +36,11 @@ set_target_properties(${CLIENT_TARGET} PROPERTIES
 target_compile_definitions(${SERLIO_TARGET} PRIVATE
 	-DSRL_VERSION=\"${SRL_VERSION}\") # quoted to use it as string literal
 
-target_include_directories(${SERLIO_TARGET} PRIVATE
-		$<TARGET_PROPERTY:${CODEC_TARGET},INTERFACE_INCLUDE_DIRECTORIES> # for IMayaCallbacks.h
-		${CMAKE_CURRENT_SOURCE_DIR}
-		${PRT_INCLUDE_PATH}
-		${maya_INCLUDE_PATH})
+target_include_directories(${SERLIO_TARGET}
+		PRIVATE $<TARGET_PROPERTY:${CODEC_TARGET},INTERFACE_INCLUDE_DIRECTORIES> # for IMayaCallbacks.h
+		PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+		PRIVATE ${PRT_INCLUDE_PATH}
+		PRIVATE ${maya_INCLUDE_PATH})
 
 target_link_libraries(${SERLIO_TARGET} PRIVATE
 		${maya_LINK_LIBRARIES}
