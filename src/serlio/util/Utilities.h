@@ -33,6 +33,8 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <ostream>
+#include <iterator>
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 #   include <cfloat>
@@ -125,4 +127,18 @@ inline bool startsWithAnyOf(const std::string& s, const std::vector<std::string>
             return true;
     }
     return false;
+}
+
+template<typename C, typename Container, typename ElementType = typename Container::value_type>
+std::basic_string<C> join(Container const &container, const std::basic_string<C>& delimiter = {}) {
+	std::basic_ostringstream<C> os;
+	auto b = std::begin(container), e = std::end(container);
+	if (b != e) {
+		std::copy(b, std::prev(e), std::ostream_iterator<ElementType, C>(os, delimiter.c_str()));
+		b = prev(e);
+	}
+	if (b != e) {
+		os << *b;
+	}
+	return os.str();
 }

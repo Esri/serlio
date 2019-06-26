@@ -388,7 +388,6 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 	size_t idxExtension = mainCgaRuleName.find(L".cgb");
 	if (idxExtension != std::wstring::npos)
 		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
-	std::map<std::wstring, int> groupOrders;
 
 	for (size_t i = 0; i < info->getNumAttributes(); i++) {
 
@@ -428,12 +427,10 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 			{
 				for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
 					if (an->getArgument(argIdx)->getType() == prt::AAT_STR) {
-						p.groups += an->getArgument(argIdx)->getStr();
-						p.groups += L" ";
+						p.groups.push_back(an->getArgument(argIdx)->getStr());
 					}
 					else if (argIdx == an->getNumArguments() - 1 && an->getArgument(argIdx)->getType() == prt::AAT_FLOAT) {
 						p.groupOrder = static_cast<int>(an->getArgument(argIdx)->getFloat());
-						groupOrders[p.groups] = p.groupOrder;
 					}
 				}
 			}
@@ -441,18 +438,12 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		if (hidden)
 			continue;
 
-		if (p.groups.length() == 0)
-			p.groupOrder = std::numeric_limits<int>::min(); //no group? put to front
+		// no group? put to front
+		if (p.groups.empty())
+			p.groupOrder = ORDER_FIRST;
+
 		sortedAttributes.push_back(p);
-
 		LOG_DBG << p;
-	}
-
-	//heuristic: undefined grouporder? try to use grouporder from other attribute
-	for (AttributeProperties &p : sortedAttributes) {
-		if (p.groupOrder == std::numeric_limits<int>::max() && groupOrders.count(p.groups)>0) {
-			p.groupOrder = groupOrders[p.groups];
-		}
 	}
 
 	sortRuleAttributes(sortedAttributes, mainCgaRuleName);
@@ -565,7 +556,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		MFnAttribute fnAttr(attr, &stat);
 		if (stat == MS::kSuccess) {
 			fnAttr.addToCategory(MString(p.ruleFile.c_str()));
-			fnAttr.addToCategory(MString(p.groups.c_str()));
+			fnAttr.addToCategory(MString(join<wchar_t>(p.groups, L" ").c_str()));
 		}
 	}
 
