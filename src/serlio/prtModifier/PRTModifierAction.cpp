@@ -22,6 +22,7 @@
 #include "prtModifier/MayaCallbacks.h"
 
 #include "util/Utilities.h"
+#include "util/LogHandler.h"
 
 #include "prt/StringUtils.h"
 
@@ -68,6 +69,11 @@ namespace {
 		std::wstring groups;
 		const prt::Annotation* enumAnnotation = nullptr;
 	};
+
+	std::wostream& operator<<(std::wostream& ostr, const AttributeProperties& ap) {
+		ostr << "AttributeProperties '" << ap.name << "': groups = '" << ap.groups << "'";
+		return ostr;
+	}
 
 	bool lowerCaseOrdering(std::wstring a, std::wstring b) {
 		std::transform(a.begin(), a.end(), a.begin(), ::tolower);
@@ -456,6 +462,8 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		if (p.groups.length() == 0)
 			p.groupOrder = std::numeric_limits<int>::min(); //no group? put to front
 		sortedAttributes.push_back(p);
+
+		LOG_DBG << p;
 	}
 
 	//heuristic: undefined grouporder? try to use grouporder from other attribute
@@ -487,8 +495,9 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		}
 	});
 
-
+	LOG_DBG << "Processing sorted Attributes:";
 	for (AttributeProperties p: sortedAttributes) {
+		LOG_DBG << p;
 
 		size_t i = p.index;
 
