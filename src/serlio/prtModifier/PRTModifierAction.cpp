@@ -20,7 +20,7 @@
 #include "prtModifier/PRTModifierAction.h"
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/MayaCallbacks.h"
-#include "prtModifier/AttributeProperties.h"
+#include "prtModifier/RuleAttributes.h"
 
 #include "util/Utilities.h"
 #include "util/MayaUtilities.h"
@@ -47,15 +47,6 @@ namespace {
 	const wchar_t* ENC_ATTR = L"com.esri.prt.core.AttributeEvalEncoder";
 	const MString  NAME_GENERATE = "Generate_Model";
 
-	const wchar_t* ANNOT_START_RULE = L"@StartRule";
-	const wchar_t* ANNOT_RANGE = L"@Range";
-	const wchar_t* ANNOT_ENUM = L"@Enum";
-	const wchar_t* ANNOT_HIDDEN = L"@Hidden";
-	const wchar_t* ANNOT_COLOR = L"@Color";
-	const wchar_t* ANNOT_DIR = L"@Directory";
-	const wchar_t* ANNOT_FILE = L"@File";
-	const wchar_t* ANNOT_ORDER = L"@Order";
-	const wchar_t* ANNOT_GROUP = L"@Group";
 	const wchar_t* NULL_KEY = L"#NULL#";
 	const wchar_t* MIN_KEY = L"min";
 	const wchar_t* MAX_KEY = L"max";
@@ -382,71 +373,8 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 
 	mBriefName2prtAttr[NAME_GENERATE.asWChar()] = NAME_GENERATE.asWChar();
 
-	std::vector<AttributeProperties> sortedAttributes;
-
-	std::wstring mainCgaRuleName = prtu::filename(ruleFile);
-	size_t idxExtension = mainCgaRuleName.find(L".cgb");
-	if (idxExtension != std::wstring::npos)
-		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
-
-	for (size_t i = 0; i < info->getNumAttributes(); i++) {
-
-		if (info->getAttribute(i)->getNumParameters() != 0) continue;
-
-		AttributeProperties p;
-		p.index = i;
-				
-		p.name = info->getAttribute(i)->getName();
-
-		std::wstring ruleName = p.name;
-		size_t idxStyle = ruleName.find(L"$");
-		if (idxStyle != std::wstring::npos)
-			ruleName = ruleName.substr(idxStyle + 1);
-		size_t idxDot = ruleName.find_last_of(L".");
-		if (idxDot != std::wstring::npos) {
-			p.ruleFile = ruleName.substr(0, idxDot);
-		}
-		else
-			p.ruleFile = mainCgaRuleName;
-
-		bool hidden = false;
-		for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
-			const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
-			const wchar_t* anName = an->getName();
-			if (!(std::wcscmp(anName, ANNOT_ENUM)))
-				p.enumAnnotation = an;
-			else if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
-				hidden = true;
-			else if (!(std::wcscmp(anName, ANNOT_ORDER)))
-			{
-				if (an->getNumArguments() >= 1 && an->getArgument(0)->getType() == prt::AAT_FLOAT) {
-					p.order = static_cast<int>(an->getArgument(0)->getFloat());
-				}
-			}
-			else if (!(std::wcscmp(anName, ANNOT_GROUP)))
-			{
-				for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
-					if (an->getArgument(argIdx)->getType() == prt::AAT_STR) {
-						p.groups.push_back(an->getArgument(argIdx)->getStr());
-					}
-					else if (argIdx == an->getNumArguments() - 1 && an->getArgument(argIdx)->getType() == prt::AAT_FLOAT) {
-						p.groupOrder = static_cast<int>(an->getArgument(argIdx)->getFloat());
-					}
-				}
-			}
-		}
-		if (hidden)
-			continue;
-
-		// no group? put to front
-		if (p.groups.empty())
-			p.groupOrder = ORDER_FIRST;
-
-		sortedAttributes.push_back(p);
-		LOG_DBG << p;
-	}
-
-	sortRuleAttributes(sortedAttributes, mainCgaRuleName);
+	RuleAttributes sortedAttributes = getRuleAttributes(ruleFile, info);
+	sortRuleAttributes(sortedAttributes);
 
 	LOG_DBG << "Processing sorted Attributes:";
 	for (AttributeProperties p: sortedAttributes) {

@@ -1,4 +1,4 @@
-#include "prtModifier/AttributeProperties.h"
+#include "prtModifier/RuleAttributes.h"
 #include "util/Utilities.h"
 
 #define CATCH_CONFIG_RUNNER
@@ -15,7 +15,8 @@ namespace std {
 			&& (a.name == b.name)
 			&& (a.ruleFile == b.ruleFile)
 			&& (a.groups == b.groups)
-			&& (a.enumAnnotation == b.enumAnnotation);
+			&& (a.enumAnnotation == b.enumAnnotation)
+			&& (a.memberOfStartRuleFile == b.memberOfStartRuleFile);
 	}
 } // namespace std
 
@@ -24,130 +25,130 @@ TEST_CASE("rule attribute sorting") {
 
 	SECTION("rule file 1") {
 		RuleAttributes inp = {
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { } },
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"bar", { } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, nullptr, false },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, nullptr, true },
 		};
 
 		RuleAttributes exp = {
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"bar", { } },
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, nullptr, false },
 		};
 
-		sortRuleAttributes(inp, L"bar");
+		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("rule file 2") {
 		RuleAttributes inp = {
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { } },
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"bar", { } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, nullptr, false },
 		};
 
 		RuleAttributes exp = {
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { } },
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"bar", { } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, nullptr, false },
 		};
 
-		sortRuleAttributes(inp, L"foo");
+		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("group order") {
 		RuleAttributes inp = {
-			{ NO_ORDER, 1, 0, L"B", L"foo", { L"foo" } },
-			{ NO_ORDER, 0, 0, L"A", L"foo", { L"foo" } },
+			{ ORDER_NONE, 1, 0, L"B", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, 0, 0, L"A", L"foo", { L"foo" }, nullptr, true },
 		};
 
 		RuleAttributes exp = {
-			{ NO_ORDER, 0, 0, L"A", L"foo", { L"foo" } },
-			{ NO_ORDER, 1, 0, L"B", L"foo", { L"foo" } },
+			{ ORDER_NONE, 0, 0, L"A", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, 1, 0, L"B", L"foo", { L"foo" }, nullptr, true },
 		};
 
-		sortRuleAttributes(inp, L"foo");
+		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups") {
 		RuleAttributes inp = {
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"foo", { L"foo", L"bar" } },
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { L"foo" } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
 		};
 
 		RuleAttributes exp = {
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { L"foo" } },
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"foo", { L"foo", L"bar" } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
 		};
 
-		sortRuleAttributes(inp, L"foo");
+		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups disjunct") {
 		RuleAttributes inp = {
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"foo", { L"foo1", L"bar" } },
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { L"foo" } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo1", L"bar" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
 		};
 
 		RuleAttributes exp = {
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { L"foo" } },
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"foo", { L"foo1", L"bar" } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo1", L"bar" }, nullptr, true },
 		};
 
-		sortRuleAttributes(inp, L"foo");
+		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups on same level") {
 		RuleAttributes inp = {
-			{ NO_ORDER, NO_ORDER, 0, L"C", L"foo", { L"foo", L"baz" } },
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"foo", { L"foo", L"bar" } },
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { L"foo" } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"C", L"foo", { L"foo", L"baz" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
 		};
 
 		RuleAttributes exp = {
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { L"foo" } },
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"foo", { L"foo", L"bar" } },
-			{ NO_ORDER, NO_ORDER, 0, L"C", L"foo", { L"foo", L"baz" } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"C", L"foo", { L"foo", L"baz" }, nullptr, true },
 		};
 
-		sortRuleAttributes(inp, L"foo");
+		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups with group order") {
 		RuleAttributes inp = {
-			{ NO_ORDER, 0, 0, L"C", L"foo", { L"foo", L"baz" } },
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"foo", { L"foo", L"bar" } },
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { L"foo" } },
+			{ ORDER_NONE, 0,          0, L"C", L"foo", { L"foo", L"baz" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
 		};
 
 		RuleAttributes exp = {
-			{ NO_ORDER, NO_ORDER, 0, L"B", L"foo", { L"foo" } },
-			{ NO_ORDER, 0, 0, L"C", L"foo", { L"foo", L"baz" } },
-			{ NO_ORDER, NO_ORDER, 0, L"A", L"foo", { L"foo", L"bar" } },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, 0,          0, L"C", L"foo", { L"foo", L"baz" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
 		};
 
-		sortRuleAttributes(inp, L"foo");
+		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("all properties") {
 		RuleAttributes inp = {
-				{ NO_ORDER, 3, 0, L"B", L"foo", { L"First" } },
-				{ NO_ORDER, 0, 0, L"A", L"foo", { L"First1", L"Second1", L"Third1" } },
-				{0, 2, 0, L"C", L"foo", { L"First", L"Second" } },
-				{ 1, 2, 0, L"D", L"foo", { L"First", L"Second" } },
-				{ NO_ORDER, 1, 0, L"E", L"foo", { L"First", L"Second", L"Third" } }
+				{ ORDER_NONE, 3, 0, L"B", L"foo", { L"First" }, nullptr, true },
+				{ ORDER_NONE, 0, 0, L"A", L"foo", { L"First1", L"Second1", L"Third1" }, nullptr, true },
+				{ 0,          2, 0, L"C", L"foo", { L"First",  L"Second" }, nullptr, true },
+				{ 1,          2, 0, L"D", L"foo", { L"First",  L"Second" }, nullptr, true },
+				{ ORDER_NONE, 1, 0, L"E", L"foo", { L"First",  L"Second",  L"Third" }, nullptr, true }
 		};
 		const RuleAttributes exp = {
-				{ NO_ORDER, 0, 0, L"A", L"foo", { L"First1", L"Second1", L"Third1" } },
-				{ NO_ORDER, 3, 0, L"B", L"foo", { L"First" } },
-				{0, 2, 0, L"C", L"foo", { L"First", L"Second" } },
-				{ 1, 2, 0, L"D", L"foo", { L"First", L"Second" } },
-				{ NO_ORDER, 1, 0, L"E", L"foo", { L"First", L"Second", L"Third" } }
+				{ ORDER_NONE, 0, 0, L"A", L"foo", { L"First1", L"Second1", L"Third1" }, nullptr, true },
+				{ ORDER_NONE, 3, 0, L"B", L"foo", { L"First" }, nullptr, true },
+				{ 0,          2, 0, L"C", L"foo", { L"First",  L"Second" }, nullptr, true },
+				{ 1,          2, 0, L"D", L"foo", { L"First",  L"Second" }, nullptr, true },
+				{ ORDER_NONE, 1, 0, L"E", L"foo", { L"First",  L"Second",  L"Third" }, nullptr, true }
 		};
 
-		sortRuleAttributes(inp, L"foo");
+		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 }

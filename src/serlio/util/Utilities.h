@@ -75,7 +75,7 @@ namespace prtu {
 		return pv;
 	}
 
-	const std::wstring filename(const std::wstring& path);
+	SRL_TEST_EXPORTS_API const std::wstring filename(const std::wstring& path);
 
 	void dbg(const char* fmt, ...);
 	void wdbg(const wchar_t* fmt, ...);
