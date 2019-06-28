@@ -86,7 +86,7 @@ namespace prtu {
 
 	int fromHex(wchar_t c);
 	wchar_t toHex(int i);
-	void toHex(wchar_t* color, double r, double g, double b);
+	std::wstring toHex(double r, double g, double b);
 
 	inline bool isnan(double d) {
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)

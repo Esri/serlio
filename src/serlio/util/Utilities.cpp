@@ -35,8 +35,7 @@ struct IUnknown;
 #include <sys/types.h>
 #include <cwchar>
 #include <memory>
-#include <cstdio>
-#include <cstdarg>
+#include <sstream>
 #include <string>
 
 
@@ -127,13 +126,15 @@ namespace prtu {
 		return HEXTAB[i & 0xF];
 	}
 
-	void toHex(wchar_t* color, double r, double g, double b) {
-		color[1] = toHex(((int)(r * 255)) >> 4);
-		color[2] = toHex((int)(r * 255));
-		color[3] = toHex(((int)(g * 255)) >> 4);
-		color[4] = toHex((int)(g * 255));
-		color[5] = toHex(((int)(b * 255)) >> 4);
-		color[6] = toHex((int)(b * 255));
+	std:: wstring toHex(double r, double g, double b) {
+		std::wstringstream color;
+		color << toHex(((int)(r * 255)) >> 4);
+		color << toHex((int)(r * 255));
+		color << toHex(((int)(g * 255)) >> 4);
+		color << toHex((int)(g * 255));
+		color << toHex(((int)(b * 255)) >> 4);
+		color << toHex((int)(b * 255));
+		return color.str();
 	}
 
 
