@@ -56,6 +56,11 @@ find_package(prt CONFIG REQUIRED)
 set(CESDK_VERSION "cesdk_${PRT_VERSION_MAJOR}_${PRT_VERSION_MINOR}_${PRT_VERSION_MICRO}")
 message(STATUS "Using prt_DIR = ${prt_DIR} with version ${PRT_VERSION_MAJOR}.${PRT_VERSION_MINOR}.${PRT_VERSION_MICRO}")
 
+function(srl_add_dependency_prt TGT)
+	target_include_directories(${TGT} PRIVATE ${PRT_INCLUDE_PATH})
+	target_link_libraries(${TGT} PRIVATE ${PRT_LINK_LIBRARIES})
+endfunction()
+
 
 ### autodesk maya installation location
 
@@ -70,20 +75,22 @@ message(STATUS "Using maya_DIR = ${maya_DIR} (use '-Dmaya_DIR=xxx' to override)"
 
 find_path(maya_INCLUDE_PATH NAMES "maya/MApiVersion.h" PATHS "${maya_DIR}/include" NO_DEFAULT_PATH)
 
-# TODO: use cmake scripts provided by maya devkit
 set(MAYA_LIB_DIR "${maya_DIR}/lib")
 find_library(maya_LINK_LIB_FOUNDATION NAMES "Foundation"  PATHS "${MAYA_LIB_DIR}")
+if (maya_LINK_LIB_FOUNDATION)
+	list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_FOUNDATION})
+endif()
 find_library(maya_LINK_LIB_OPENMAYA   NAMES "OpenMaya"    PATHS "${MAYA_LIB_DIR}")
+if (maya_LINK_LIB_OPENMAYA)
+	list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_OPENMAYA})
+endif()
 find_library(maya_LINK_LIB_OPENMAYAUI NAMES "OpenMayaUI"  PATHS "${MAYA_LIB_DIR}")
+if (maya_LINK_LIB_OPENMAYAUI)
+	list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_OPENMAYAUI})
+endif()
 find_library(maya_LINK_LIB_METADATA   NAMES "MetaData"    PATHS "${MAYA_LIB_DIR}")
-list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_FOUNDATION} ${maya_LINK_LIB_OPENMAYA} ${maya_LINK_LIB_OPENMAYAUI} ${maya_LINK_LIB_METADATA})
-
-# FIXME: quirk for unit test executable on linux
-if(SRL_LINUX)
-	find_library(maya_LINK_LIB_TBBPREVIEW NAMES "tbb_preview" PATHS "${MAYA_LIB_DIR}")
-	if (maya_LINK_LIB_TBBPREVIEW)
-		list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_TBBPREVIEW})
-	endif()
+if (maya_LINK_LIB_METADATA)
+	list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_METADATA})
 endif()
 
 # temporary heuristic to detect maya version number
@@ -92,6 +99,13 @@ if(maya_DIR MATCHES "maya2018")
 elseif(maya_DIR MATCHES "maya2019")
 	set(maya_VERSION_MAJOR "2019")
 endif()
+
+function(srl_add_dependency_maya TGT)
+	if (maya_INCLUDE_PATH)
+		target_include_directories(${TGT} PRIVATE ${maya_INCLUDE_PATH})
+	endif()
+	target_link_libraries(${TGT} PRIVATE ${maya_LINK_LIBRARIES})
+endfunction()
 
 
 ### targets installation location

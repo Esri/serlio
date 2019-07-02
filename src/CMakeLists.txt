@@ -29,10 +29,10 @@ set(TEST_TARGET serlio_test)
 
 add_subdirectory(codec)
 add_subdirectory(serlio)
-add_subdirectory(test EXCLUDE_FROM_ALL)
-
 add_dependencies(${SERLIO_TARGET} ${CODEC_TARGET})
-add_dependencies(${TEST_TARGET} ${SERLIO_TARGET})
+
+enable_testing()
+add_subdirectory(test EXCLUDE_FROM_ALL)
 
 
 ### setup packaging
