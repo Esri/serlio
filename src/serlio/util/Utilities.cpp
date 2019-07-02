@@ -21,8 +21,6 @@
 
 #include "prt/StringUtils.h"
 
-#include "maya/MString.h"
-
 #include <cstdio>
 #include <cstdarg>
 #include <string>
