@@ -21,22 +21,23 @@
 
 #include "prt/StringUtils.h"
 
-#include <cstdio>
-#include <cstdarg>
-#include <string>
-
 #ifdef _WIN32
-#include <windows.h>
-#include <tchar.h>
-#include <shellapi.h>
+// workaround for  "combaseapi.h(229): error C2187: syntax error: 'identifier' was unexpected here" when using /permissive-
+struct IUnknown;
+#   include <windows.h>
+//#   include <tchar.h>
+//#   include <shellapi.h>
 #else
-#include <ftw.h>
+#   include <ftw.h>
 #endif
 
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <cwchar>
 #include <memory>
+#include <cstdio>
+#include <cstdarg>
+#include <string>
 
 
 namespace prtu {
