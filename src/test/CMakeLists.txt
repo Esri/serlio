@@ -23,11 +23,11 @@ target_include_directories(${TEST_TARGET} PRIVATE
 srl_add_dependency_prt(${TEST_TARGET})
 
 # copy libraries next to test excutable so they can be found
+# TODO: do a proper install of the test executable alongside its dependencies
 add_custom_command(TARGET ${TEST_TARGET} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} ARGS -E make_directory ${CMAKE_BINARY_DIR}/bin
-	COMMAND ${CMAKE_COMMAND} ARGS -E copy ${PRT_LIBRARIES} ${CMAKE_BINARY_DIR}/bin
-	COMMAND ${CMAKE_COMMAND} ARGS -E make_directory ${CMAKE_BINARY_DIR}/lib
-	COMMAND ${CMAKE_COMMAND} ARGS -E copy ${PRT_EXT_LIBRARIES} ${CMAKE_BINARY_DIR}/lib)
+	COMMAND ${CMAKE_COMMAND} ARGS -E copy ${PRT_LIBRARIES} ${CMAKE_CURRENT_BINARY_DIR}
+	COMMAND ${CMAKE_COMMAND} ARGS -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/lib
+	COMMAND ${CMAKE_COMMAND} ARGS -E copy ${PRT_EXT_LIBRARIES} ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
 # integrate with ctest so we can use "make test" to run the tests
 add_test(NAME ${TEST_TARGET} COMMAND ${TEST_TARGET} -r junit -o ${TEST_TARGET}_report.xml)
@@ -40,6 +40,6 @@ add_custom_target(build_and_run_tests
 	COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${TEST_TARGET}
 	# then we run the ctest syntetic 'test' target which runs the tests
 	COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target test
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 	COMMENT "Build and run the tests"
 	VERBATIM)
