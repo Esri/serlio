@@ -12,7 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <cassert>
-#include <unordered_map>
+#include <map>
 
 
 constexpr const wchar_t* ANNOT_START_RULE = L"@StartRule";
@@ -28,13 +28,16 @@ constexpr const wchar_t* ANNOT_GROUP = L"@Group";
 constexpr int ORDER_FIRST = std::numeric_limits<int>::min();
 constexpr int ORDER_NONE = std::numeric_limits<int>::max();
 
+using AttributeGroup = std::vector<std::wstring>;
+using AttributeGroupOrder = std::map<AttributeGroup,int>;
+
 struct AttributeProperties {
 	int order = ORDER_NONE;
 	int groupOrder = ORDER_NONE;
 	size_t index;
 	std::wstring name;
 	std::wstring ruleFile;
-	std::vector<std::wstring> groups; // groups can be nested
+	AttributeGroup groups; // groups can be nested
 	const prt::Annotation* enumAnnotation = nullptr; // TODO: avoid this, leads to lifetime issues
 	bool memberOfStartRuleFile = false;
 };
@@ -110,6 +113,19 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 	return ra;
 }
 
+AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ra) {
+	AttributeGroupOrder ago;
+	for (const auto& ap: ra) {
+		for (auto it = std::rbegin(ap.groups); it != std::rend(ap.groups); ++it) {
+			std::vector<std::wstring> g(it, std::rend(ap.groups));
+			std::reverse(g.begin(), g.end());
+			auto ggoIt = ago.emplace(g, ORDER_NONE).first;
+			ggoIt->second = std::min(ap.groupOrder, ggoIt->second);
+		}
+	}
+	return ago;
+}
+
 void sortRuleAttributes(RuleAttributes& ra) {
 	auto lowerCaseOrdering = [](std::wstring a, std::wstring b) {
 		std::transform(a.begin(), a.end(), a.begin(), ::tolower);
@@ -144,6 +160,21 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return true;
 	};
 
+	auto firstDifferentGroupInA = [](const AttributeProperties& a, const AttributeProperties& b) {
+		assert(a.groups.size() == b.groups.size());
+		size_t i = 0;
+		while ((i < a.groups.size()) && (a.groups[i] == b.groups[i])) { i++; }
+		return a.groups[i];
+	};
+
+	const AttributeGroupOrder globalGroupOrder = getGlobalGroupOrder(ra);
+	LOG_DBG << "globalGroupOrder:\n" << globalGroupOrder;
+
+	auto getGroupOrder = [&globalGroupOrder](const AttributeProperties& ap){
+		const auto it = globalGroupOrder.find(ap.groups);
+		return (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
+	};
+
 	auto compareGroups = [&](const AttributeProperties& a, const AttributeProperties& b) {
 		if (isChildOf(a, b))
 			return false; // child a should be sorted after parent b
@@ -151,18 +182,16 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		if (isChildOf(b, a))
 			return true; // child b should be sorted after parent a
 
-		// we're on the same level, check group order property
-		if (a.groupOrder == ORDER_NONE && b.groupOrder == ORDER_NONE) {
+		const auto globalOrderA = getGroupOrder(a);
+		const auto globalOrderB = getGroupOrder(b);
+		if (globalOrderA != globalOrderB)
+			return (globalOrderA < globalOrderB);
 
-			if (a.groups.size() != b.groups.size())
-				return (a.groups.size() < b.groups.size()); // sort higher level before lower level
+		// sort higher level before lower level
+		if (a.groups.size() != b.groups.size())
+			return (a.groups.size() < b.groups.size());
 
-			assert(a.groups.size() == b.groups.size());
-			size_t i = 0;
-			while ((i < a.groups.size()) && (a.groups[i] == b.groups[i])) { i++; }
-			return lowerCaseOrdering(a.groups[i], b.groups[i]);
-		}
-		return a.groupOrder < b.groupOrder;
+		return lowerCaseOrdering(firstDifferentGroupInA(a, b), firstDifferentGroupInA(b, a));
 	};
 
 	auto compareAttributeOrder = [&](const AttributeProperties& a, const AttributeProperties& b) {
@@ -207,4 +236,11 @@ std::ostream& operator<<(std::ostream& ostr, const AttributeProperties& ap) {
 	wostr << ap;
 	ostr << prtu::toOSNarrowFromUTF16(wostr.str());
 	return ostr;
+}
+
+std::wostream& operator<<(std::wostream& wostr, const AttributeGroupOrder& ago) {
+	for (const auto& i: ago) {
+		wostr << L"[ " << join<wchar_t>(i.first, L" ") << L"] = " << i.second << L"\n";
+	}
+	return wostr;
 }
