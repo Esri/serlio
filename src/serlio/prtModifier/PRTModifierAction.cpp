@@ -20,17 +20,21 @@
 #include "prtModifier/PRTModifierAction.h"
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/MayaCallbacks.h"
+#include "prtModifier/RuleAttributes.h"
 
 #include "util/Utilities.h"
+#include "util/MayaUtilities.h"
+#include "util/LogHandler.h"
 
 #include "prt/StringUtils.h"
 
+#include "maya/MFloatPointArray.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnNumericAttribute.h"
 #include "maya/MFnTypedAttribute.h"
 #include "maya/MFnStringData.h"
+#include "maya/MFnCompoundAttribute.h"
 
-#include <limits>
 #ifdef _WIN32
 #	include <Windows.h>
 #else
@@ -44,36 +48,12 @@ namespace {
 	const wchar_t* ENC_ATTR = L"com.esri.prt.core.AttributeEvalEncoder";
 	const MString  NAME_GENERATE = "Generate_Model";
 
-	const wchar_t* ANNOT_START_RULE = L"@StartRule";
-	const wchar_t* ANNOT_RANGE = L"@Range";
-	const wchar_t* ANNOT_ENUM = L"@Enum";
-	const wchar_t* ANNOT_HIDDEN = L"@Hidden";
-	const wchar_t* ANNOT_COLOR = L"@Color";
-	const wchar_t* ANNOT_DIR = L"@Directory";
-	const wchar_t* ANNOT_FILE = L"@File";
-	const wchar_t* ANNOT_ORDER = L"@Order";
-	const wchar_t* ANNOT_GROUP = L"@Group";
 	const wchar_t* NULL_KEY = L"#NULL#";
 	const wchar_t* MIN_KEY = L"min";
 	const wchar_t* MAX_KEY = L"max";
 	const MString  PRT("PRT");
 	const wchar_t* RESTRICTED_KEY = L"restricted";
 
-	struct AttributeProperties {
-		int order = std::numeric_limits<int>::max();
-		int groupOrder = std::numeric_limits<int>::max();
-		size_t index;
-		std::wstring name;
-		std::wstring ruleFile;
-		std::wstring groups;
-		const prt::Annotation* enumAnnotation = nullptr;
-	};
-
-	bool lowerCaseOrdering(std::wstring a, std::wstring b) {
-		std::transform(a.begin(), a.end(), a.begin(), ::tolower);
-		std::transform(b.begin(), b.end(), b.begin(), ::tolower);
-		return a < b;
-	}
 } // namespace
 
 PRTModifierAction::PRTModifierAction()
@@ -351,7 +331,7 @@ namespace UnitQuad {
 	const size_t   indexCount = 4;
 	const uint32_t faceCounts[] = { 4 };
 	const size_t   faceCountsCount = 1;
-	const int32_t  seed = prtu::computeSeed(vertices, vertexCount);
+	const int32_t  seed = mu::computeSeed(vertices, vertexCount);
 }
 
 MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wstring & ruleFile, const std::wstring & startRule, prt::AttributeMapBuilder* aBuilder, const prt::RuleFileInfo* info) {
@@ -394,101 +374,12 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 
 	mBriefName2prtAttr[NAME_GENERATE.asWChar()] = NAME_GENERATE.asWChar();
 
-	std::vector<AttributeProperties> sortedAttributes;
+	RuleAttributes sortedAttributes = getRuleAttributes(ruleFile, info);
+	sortRuleAttributes(sortedAttributes);
 
-	std::wstring mainCgaRuleName = prtu::filename(ruleFile);
-	size_t idxExtension = mainCgaRuleName.find(L".cgb");
-	if (idxExtension != std::wstring::npos)
-		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
-	std::map<std::wstring, int> groupOrders;
-
-	for (size_t i = 0; i < info->getNumAttributes(); i++) {
-
-		if (info->getAttribute(i)->getNumParameters() != 0) continue;
-
-		AttributeProperties p;
-		p.index = i;
-				
-		p.name = info->getAttribute(i)->getName();
-
-		std::wstring ruleName = p.name;
-		size_t idxStyle = ruleName.find(L"$");
-		if (idxStyle != std::wstring::npos)
-			ruleName = ruleName.substr(idxStyle + 1);
-		size_t idxDot = ruleName.find_last_of(L".");
-		if (idxDot != std::wstring::npos) {
-			p.ruleFile = ruleName.substr(0, idxDot);
-		}
-		else
-			p.ruleFile = mainCgaRuleName;
-
-		bool hidden = false;
-		for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
-			const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
-			const wchar_t* anName = an->getName();
-			if (!(std::wcscmp(anName, ANNOT_ENUM)))
-				p.enumAnnotation = an;
-			else if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
-				hidden = true;
-			else if (!(std::wcscmp(anName, ANNOT_ORDER)))
-			{
-				if (an->getNumArguments() >= 1 && an->getArgument(0)->getType() == prt::AAT_FLOAT) {
-					p.order = static_cast<int>(an->getArgument(0)->getFloat());
-				}
-			}
-			else if (!(std::wcscmp(anName, ANNOT_GROUP)))
-			{
-				for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
-					if (an->getArgument(argIdx)->getType() == prt::AAT_STR) {
-						p.groups += an->getArgument(argIdx)->getStr();
-						p.groups += L" ";
-					}
-					else if (argIdx == an->getNumArguments() - 1 && an->getArgument(argIdx)->getType() == prt::AAT_FLOAT) {
-						p.groupOrder = static_cast<int>(an->getArgument(argIdx)->getFloat());
-						groupOrders[p.groups] = p.groupOrder;
-					}
-				}
-			}
-		}
-		if (hidden)
-			continue;
-
-		if (p.groups.length() == 0)
-			p.groupOrder = std::numeric_limits<int>::min(); //no group? put to front
-		sortedAttributes.push_back(p);
-	}
-
-	//heuristic: undefined grouporder? try to use grouporder from other attribute
-	for (AttributeProperties &p : sortedAttributes) {
-		if (p.groupOrder == std::numeric_limits<int>::max() && groupOrders.count(p.groups)>0) {
-			p.groupOrder = groupOrders[p.groups];
-		}
-	}
-
-	std::sort(sortedAttributes.begin(), sortedAttributes.end(), 
-		[&mainCgaRuleName](const AttributeProperties & a, const AttributeProperties & b)
-	{
-		if (a.ruleFile != b.ruleFile) {
-			if (a.ruleFile == mainCgaRuleName)
-				return true; //force main rule to be first
-			else if (b.ruleFile == mainCgaRuleName)
-				return false;
-			return lowerCaseOrdering(a.ruleFile, b.ruleFile);
-		}
-		else if (a.groups != b.groups) {
-			if (a.groupOrder == std::numeric_limits<int>::max() && b.groupOrder == std::numeric_limits<int>::max())
-				return lowerCaseOrdering(a.groups, b.groups);
-			return a.groupOrder < b.groupOrder;
-		}
-		else {
-			if (a.order == std::numeric_limits<int>::max() && b.order == std::numeric_limits<int>::max())
-				return lowerCaseOrdering(a.name, b.name);
-			return a.order < b.order;
-		}
-	});
-
-
+	LOG_DBG << "Processing sorted Attributes:";
 	for (AttributeProperties p: sortedAttributes) {
+		LOG_DBG << p;
 
 		size_t i = p.index;
 
@@ -594,7 +485,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		MFnAttribute fnAttr(attr, &stat);
 		if (stat == MS::kSuccess) {
 			fnAttr.addToCategory(MString(p.ruleFile.c_str()));
-			fnAttr.addToCategory(MString(p.groups.c_str()));
+			fnAttr.addToCategory(MString(join<wchar_t>(p.groups, L" ").c_str()));
 		}
 	}
 
@@ -603,49 +494,43 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 	return MS::kSuccess;
 }
 
-void PRTModifierAction::removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDependencyNode &node)
-{
-	std::list<MString> attrToRemove;
-	std::list<MString> isUsedAsColor;
-
-	for (unsigned int i = 0; i < node.attributeCount(); i++) {
-		MObject attr = node.attribute(i);
-		MFnAttribute mfn(attr);
-		MString attrName = mfn.shortName();
-
-		if (mfn.isUsedAsColor())
-			isUsedAsColor.push_back(mfn.name());
-
-		if (attrName.indexW("PRT") == 0)
-		{
-			bool found = false;
-			for (size_t j = 0; j < info->getNumAttributes(); j++) {
-				const MString name = briefName(MString(info->getAttribute(j)->getName()));
-				if (name == attrName)
-				{
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				attrToRemove.push_back(mfn.name());
-			}
+void PRTModifierAction::removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDependencyNode &node) {
+	auto isInUse = [&info](const MString& attrName) {
+		for (size_t j = 0; j < info->getNumAttributes(); j++) {
+			const MString name = longName(info->getAttribute(j)->getName());
+			if (name == attrName)
+				return true;
 		}
+		return false;
+	};
+
+	std::list<MObject> attrToRemove;
+	std::list<MObject> ignoreList;
+
+	for (size_t i = 0; i < node.attributeCount(); i++) {
+		const MObject attrObj = node.attribute(i);
+		const MFnAttribute attr(attrObj);
+		const MString attrName = attr.name();
+
+		// all dynamic attributes of this node are CGA rule attributes per design
+		if (!attr.isDynamic())
+			continue;
+
+		if (attr.isUsedAsColor()) {
+			MFnCompoundAttribute compAttr(attrObj);
+			for (size_t ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
+				ignoreList.emplace_back(compAttr.child(ci));
+		}
+
+		if (isInUse(attrName))
+			continue;
+
+		attrToRemove.push_back(attrObj);
 	}
 
-	for (MString attrName : attrToRemove) {
-		bool isColorChannel = false;
-		for (MString colName : isUsedAsColor) {
-			if (attrName.length() == (colName.length() + 1) &&
-				attrName.indexW(colName) == 0)
-			{
-				isColorChannel = true;
-				break;
-			}
-		}
-		if (isColorChannel)
-			continue; //don't delete channels individually, this causes a crash
-		MObject attr = node.attribute(attrName);
+	for (auto& attr : attrToRemove) {
+		if (std::count(std::begin(ignoreList), std::end(ignoreList), attr) > 0)
+			continue;
 		node.removeAttribute(attr);
 	}
 }
@@ -715,15 +600,15 @@ template<typename T> T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependenc
 }
 
 MString PRTModifierAction::longName(const MString& attrName) {
-	return PRT + prtu::toCleanId(attrName);
+	return PRT + mu::toCleanId(attrName);
 }
 
 MString PRTModifierAction::briefName(const MString & attrName) {
-	return prtu::toCleanId(attrName.substring(attrName.indexW(L'$') + 1, attrName.length())); //remove style
+	return mu::toCleanId(attrName.substring(attrName.indexW(L'$') + 1, attrName.length())); //remove style
 }
 
 MString PRTModifierAction::niceName(const MString & attrName) { //remove style and import rule name
-	return prtu::toCleanId(attrName.substring(std::max(attrName.indexW(L'$'), attrName.rindexW(L'.')) + 1, attrName.length()));
+	return mu::toCleanId(attrName.substring(std::max(attrName.indexW(L'$'), attrName.rindexW(L'.')) + 1, attrName.length()));
 }
 
 MStatus PRTModifierAction::addParameter(MFnDependencyNode & node, MObject & attr, MFnAttribute& tAttr) {

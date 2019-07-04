@@ -1,6 +1,6 @@
 /src/cmake-*
 /build*
 /install
-/src/.idea
+/**/.idea
 /src/CMakeSettings.json
 /.vs

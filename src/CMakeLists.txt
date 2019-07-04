@@ -25,11 +25,14 @@ message(STATUS "Using SRL_VERSION = ${SRL_VERSION}")
 
 set(CODEC_TARGET serlio_codec)
 set(SERLIO_TARGET serlio)
+set(TEST_TARGET serlio_test)
 
 add_subdirectory(codec)
 add_subdirectory(serlio)
-
 add_dependencies(${SERLIO_TARGET} ${CODEC_TARGET})
+
+enable_testing()
+add_subdirectory(test EXCLUDE_FROM_ALL)
 
 
 ### setup packaging

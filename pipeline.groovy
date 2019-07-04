@@ -26,6 +26,12 @@ import com.esri.zrh.jenkins.ce.PrtAppPipelineLibrary
 	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC141, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2019', maya: PrtAppPipelineLibrary.Dependencies.MAYA2019 ],
 ]
 
+@Field final List TEST_CONFIGS = [
+	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC63, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64 ],
+	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC141, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64 ],
+]
+
+
 // -- PIPELINE
 
 @Field String myBranch = env.BRANCH_NAME
@@ -41,6 +47,7 @@ Map getTasks(String branchName = null) {
 
 	Map tasks = [:]
 	tasks << taskGenSerlio()
+	tasks << taskGenSerlioTests()
 	return tasks
 }
 
@@ -49,6 +56,10 @@ Map getTasks(String branchName = null) {
 
 Map taskGenSerlio() {
 	return cepl.generateTasks('serlio', this.&taskBuildSerlio, CONFIGS)
+}
+
+Map taskGenSerlioTests() {
+	return cepl.generateTasks('serlio-test', this.&taskBuildSerlioTests, TEST_CONFIGS)
 }
 
 
@@ -63,8 +74,7 @@ def taskBuildSerlio(cfg) {
 		[ key: 'SRL_VERSION_BUILD', val: env.BUILD_NUMBER ]
 	]
 	papl.buildConfig(REPO, myBranch, SOURCES, BUILD_TARGET, cfg, DEPS, defs, REPO_CREDS)
-	// note: source path will change once we move serlio into a separate repo
-	
+
 	def buildProps = papl.jpe.readProperties(file: 'build/deployment.properties')
 	final String artifactPattern = "${buildProps.package_file}.*"
 	final def artifactVersion = { p -> buildProps.package_version_base }
@@ -76,6 +86,17 @@ def taskBuildSerlio(cfg) {
 	papl.publish(appName, myBranch, artifactPattern, artifactVersion, cfg, classifierExtractor)
 }
 
+def taskBuildSerlioTests(cfg) {
+	final String appName = 'serlio-test'
+	final List DEPS = [ PrtAppPipelineLibrary.Dependencies.CESDK ]
+	List defs = [
+		[ key: 'prt_DIR',           val: PrtAppPipelineLibrary.Dependencies.CESDK.p ],
+		[ key: 'SRL_VERSION_BUILD', val: env.BUILD_NUMBER ]
+	]
+
+	papl.buildConfig(REPO, myBranch, SOURCES, 'build_and_run_tests', cfg, DEPS, defs, REPO_CREDS)
+	papl.jpe.junit('build/test/serlio_test_report.xml')
+}
 
 // -- make embeddable
 

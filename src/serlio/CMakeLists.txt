@@ -15,7 +15,8 @@ add_library(${SERLIO_TARGET} SHARED
 		prtModifier/polyModifier/polyModifierNode.cpp
 		prtMaterial/PRTMaterialNode.cpp
 		util/Utilities.cpp
-		util/ResolveMapCache.cpp)
+		util/ResolveMapCache.cpp
+		util/MayaUtilities.cpp)
 
 set_target_properties(${SERLIO_TARGET} PROPERTIES
 	INSTALL_RPATH_USE_LINK_PATH FALSE
@@ -36,15 +37,9 @@ set_target_properties(${CLIENT_TARGET} PROPERTIES
 target_compile_definitions(${SERLIO_TARGET} PRIVATE
 	-DSRL_VERSION=\"${SRL_VERSION}\") # quoted to use it as string literal
 
-target_include_directories(${SERLIO_TARGET} PRIVATE
-		$<TARGET_PROPERTY:${CODEC_TARGET},INTERFACE_INCLUDE_DIRECTORIES> # for IMayaCallbacks.h
-		${CMAKE_CURRENT_SOURCE_DIR}
-		${PRT_INCLUDE_PATH}
-		${maya_INCLUDE_PATH})
-
-target_link_libraries(${SERLIO_TARGET} PRIVATE
-		${maya_LINK_LIBRARIES}
-		${PRT_LINK_LIBRARIES})
+target_include_directories(${SERLIO_TARGET}
+		PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+		PRIVATE $<TARGET_PROPERTY:${CODEC_TARGET},INTERFACE_INCLUDE_DIRECTORIES>) # for IMayaCallbacks.h
 
 if(WIN32)
 	target_compile_options(${SERLIO_TARGET} PRIVATE
@@ -74,6 +69,12 @@ else()
 	target_compile_definitions(${SERLIO_TARGET} PRIVATE
 			-DBits64_ -DUNIX -D_BOOL -DLINUX -DFUNCPROTO -D_GNU_SOURCE -DLINUX_64 -DREQUIRE_IOSTREAM)
 endif()
+
+
+### setup dependencies
+
+srl_add_dependency_prt(${SERLIO_TARGET})
+srl_add_dependency_maya(${SERLIO_TARGET})
 
 
 ### setup install target

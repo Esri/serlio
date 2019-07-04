@@ -19,8 +19,7 @@
 
 #pragma once
 
-#include "maya/MStatus.h"
-#include "maya/MFloatPointArray.h"
+#include "serlioPlugin.h"
 
 #include "prt/Object.h"
 #include "prt/AttributeMap.h"
@@ -34,6 +33,8 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <ostream>
+#include <iterator>
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 #   include <cfloat>
@@ -74,7 +75,7 @@ namespace prtu {
 		return pv;
 	}
 
-	const std::wstring filename(const std::wstring& path);
+	SRL_TEST_EXPORTS_API const std::wstring filename(const std::wstring& path);
 
 	void dbg(const char* fmt, ...);
 	void wdbg(const wchar_t* fmt, ...);
@@ -86,10 +87,6 @@ namespace prtu {
 	int fromHex(wchar_t c);
 	wchar_t toHex(int i);
 	void toHex(wchar_t* color, double r, double g, double b);
-	MString toCleanId(const MString& name);
-
-	int32_t computeSeed(const MFloatPointArray& vertices);
-	int32_t computeSeed(const double* vertices, size_t count);
 
 	inline bool isnan(double d) {
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
@@ -99,9 +96,9 @@ namespace prtu {
 #endif
 	}
 
-	std::string toOSNarrowFromUTF16(const std::wstring& osWString);
-	std::wstring toUTF16FromOSNarrow(const std::string& osString);
-	std::string toUTF8FromOSNarrow(const std::string& osString);
+	SRL_TEST_EXPORTS_API std::string toOSNarrowFromUTF16(const std::wstring& osWString);
+	SRL_TEST_EXPORTS_API std::wstring toUTF16FromOSNarrow(const std::string& osString);
+	SRL_TEST_EXPORTS_API std::string toUTF8FromOSNarrow(const std::string& osString);
 
 	std::wstring toFileURI(const std::wstring& p);
 	std::wstring percentEncode(const std::string& utf8String);
@@ -130,4 +127,18 @@ inline bool startsWithAnyOf(const std::string& s, const std::vector<std::string>
             return true;
     }
     return false;
+}
+
+template<typename C, typename Container, typename ElementType = typename Container::value_type>
+std::basic_string<C> join(Container const &container, const std::basic_string<C>& delimiter = {}) {
+	std::basic_ostringstream<C> os;
+	auto b = std::begin(container), e = std::end(container);
+	if (b != e) {
+		std::copy(b, std::prev(e), std::ostream_iterator<ElementType, C>(os, delimiter.c_str()));
+		b = prev(e);
+	}
+	if (b != e) {
+		os << *b;
+	}
+	return os.str();
 }
