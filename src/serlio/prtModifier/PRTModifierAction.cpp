@@ -33,6 +33,7 @@
 #include "maya/MFnNumericAttribute.h"
 #include "maya/MFnTypedAttribute.h"
 #include "maya/MFnStringData.h"
+#include "maya/MFnCompoundAttribute.h"
 
 #ifdef _WIN32
 #	include <Windows.h>
@@ -493,49 +494,43 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 	return MS::kSuccess;
 }
 
-void PRTModifierAction::removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDependencyNode &node)
-{
-	std::list<MString> attrToRemove;
-	std::list<MString> isUsedAsColor;
-
-	for (unsigned int i = 0; i < node.attributeCount(); i++) {
-		MObject attr = node.attribute(i);
-		MFnAttribute mfn(attr);
-		MString attrName = mfn.name();
-
-		if (mfn.isUsedAsColor())
-			isUsedAsColor.push_back(mfn.name());
-
-		if (attrName.indexW("PRT") == 0)
-		{
-			bool found = false;
-			for (size_t j = 0; j < info->getNumAttributes(); j++) {
-				const MString name = longName(info->getAttribute(j)->getName());
-				if (name == attrName)
-				{
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				attrToRemove.push_back(mfn.name());
-			}
+void PRTModifierAction::removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDependencyNode &node) {
+	auto isInUse = [&info](const MString& attrName) {
+		for (size_t j = 0; j < info->getNumAttributes(); j++) {
+			const MString name = longName(info->getAttribute(j)->getName());
+			if (name == attrName)
+				return true;
 		}
+		return false;
+	};
+
+	std::list<MObject> attrToRemove;
+	std::list<MObject> ignoreList;
+
+	for (size_t i = 0; i < node.attributeCount(); i++) {
+		const MObject attrObj = node.attribute(i);
+		const MFnAttribute attr(attrObj);
+		const MString attrName = attr.name();
+
+		// all dynamic attributes of this node are CGA rule attributes per design
+		if (!attr.isDynamic())
+			continue;
+
+		if (attr.isUsedAsColor()) {
+			MFnCompoundAttribute compAttr(attrObj);
+			for (size_t ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
+				ignoreList.emplace_back(compAttr.child(ci));
+		}
+
+		if (isInUse(attrName))
+			continue;
+
+		attrToRemove.push_back(attrObj);
 	}
 
-	for (MString attrName : attrToRemove) {
-		bool isColorChannel = false;
-		for (MString colName : isUsedAsColor) {
-			if (attrName.length() == (colName.length() + 1) &&
-				attrName.indexW(colName) == 0)
-			{
-				isColorChannel = true;
-				break;
-			}
-		}
-		if (isColorChannel)
-			continue; //don't delete channels individually, this causes a crash
-		MObject attr = node.attribute(attrName);
+	for (auto& attr : attrToRemove) {
+		if (std::count(std::begin(ignoreList), std::end(ignoreList), attr) > 0)
+			continue;
 		node.removeAttribute(attr);
 	}
 }
