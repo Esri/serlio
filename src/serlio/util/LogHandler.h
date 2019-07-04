@@ -56,7 +56,7 @@ template<prt::LogLevel L> struct PRTLogger : Logger {
 	virtual ~PRTLogger() { prt::log(wstr.str().c_str(), L); }
 	PRTLogger<L>& operator<<(std::wostream&(*x)(std::wostream&)) { wstr << x;  return *this; }
 	PRTLogger<L>& operator<<(const std::string& x) {
-		std::copy(x.begin(), x.end(), std::ostream_iterator<char, wchar_t>(wstr));
+		wstr << prtu::toUTF16FromOSNarrow(x);
 		return *this;
 	}
 	template<typename T> PRTLogger<L>& operator<<(const std::vector<T>& v) {

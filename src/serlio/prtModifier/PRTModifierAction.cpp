@@ -108,25 +108,20 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 					aBuilder->setFloat(name.c_str(), d);
 			}
 			else if (nAttr.isUsedAsColor()) {
-				float r;
-				float g;
-				float b;
-
+				float r, g, b;
 				nAttr.getDefault(r, g, b);
-				wchar_t dcolor[] = L"#000000";
-				prtu::toHex(dcolor, r, g, b);
+				const std::wstring dcolor = prtu::toHex(r, g, b);
 
 				MObject rgb;
 				MCHECK(plug.getValue(rgb));
-
 				MFnNumericData fRGB(rgb);
 				MCHECK(fRGB.getData(r, g, b));
+				const std::wstring color = prtu::toHex(r, g, b);
 
-				wchar_t color[] = L"#000000";
-				prtu::toHex(color, r, g, b);
-
-				if (std::wcscmp(dcolor, color))
-					aBuilder->setString(name.c_str(), color);
+				if (dcolor != color) {
+					LOG_DBG << name << " -> " << color;
+					aBuilder->setString(name.c_str(), color.c_str());
+				}
 			}
 
 		}

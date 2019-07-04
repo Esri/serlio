@@ -210,6 +210,21 @@ TEST_CASE("join") {
 	CHECK(join<wchar_t>(input3, L" ") == L"");
 }
 
+TEST_CASE("toFileURI") {
+#if _WIN32
+	SECTION("windows") {
+		const std::wstring path = L"c:/tmp/foo.bar";
+		const std::wstring expected = L"file:/c:/tmp/foo.bar";
+		CHECK(prtu::toFileURI(path) == expected);
+	}
+#else
+	SECTION("posix") {
+		const std::wstring path = L"/tmp/foo.bar";
+		CHECK(prtu::toFileURI(path) == L"file:/tmp/foo.bar");
+	}
+#endif
+}
+
 int main( int argc, char* argv[] ) {
 	int result = Catch::Session().run( argc, argv );
 	return result;

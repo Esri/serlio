@@ -61,11 +61,6 @@ namespace {
     }
 } // namespace
 
-static void mayaExiting(void*)
-{
-	uninitializePlugin(MObject::kNullObj);
-}
-
 // called when the plug-in is loaded into Maya.
 MStatus initializePlugin(MObject obj)
 {
@@ -116,7 +111,8 @@ MStatus initializePlugin(MObject obj)
 	MCHECK(plugin.registerUI("serlioCreateUI", "serlioDeleteUI"));
 
 	MStatus mayaStatus = MStatus::kFailure; //maya exit does not call uninitializePlugin, therefore addCallback
-	MSceneMessage::addCallback(MSceneMessage::kMayaExiting, mayaExiting, NULL, &mayaStatus);
+	auto mayaExitCallback = [](void*) { uninitializePlugin(MObject::kNullObj); };
+	MSceneMessage::addCallback(MSceneMessage::kMayaExiting, mayaExitCallback, nullptr, &mayaStatus);
 	MCHECK(mayaStatus);
 
 	return MStatus::kSuccess;

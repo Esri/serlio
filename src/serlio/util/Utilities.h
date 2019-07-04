@@ -35,6 +35,7 @@
 #include <algorithm>
 #include <ostream>
 #include <iterator>
+#include <string>
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 #   include <cfloat>
@@ -86,7 +87,7 @@ namespace prtu {
 
 	int fromHex(wchar_t c);
 	wchar_t toHex(int i);
-	void toHex(wchar_t* color, double r, double g, double b);
+	std::wstring toHex(double r, double g, double b);
 
 	inline bool isnan(double d) {
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
@@ -96,12 +97,13 @@ namespace prtu {
 #endif
 	}
 
-	SRL_TEST_EXPORTS_API std::string toOSNarrowFromUTF16(const std::wstring& osWString);
+	SRL_TEST_EXPORTS_API std::string toOSNarrowFromUTF16(const std::wstring& u16String);
 	SRL_TEST_EXPORTS_API std::wstring toUTF16FromOSNarrow(const std::string& osString);
-	SRL_TEST_EXPORTS_API std::string toUTF8FromOSNarrow(const std::string& osString);
+	SRL_TEST_EXPORTS_API std::wstring toUTF16FromUTF8(const std::string& u8String);
+	SRL_TEST_EXPORTS_API std::string toUTF8FromUTF16(const std::wstring& u16String);
 
-	std::wstring toFileURI(const std::wstring& p);
-	std::wstring percentEncode(const std::string& utf8String);
+	SRL_TEST_EXPORTS_API std::wstring toFileURI(const std::wstring& p);
+	std::string percentEncode(const std::string& utf8String);
 	
 	time_t getFileModificationTime(const std::wstring& p);
 

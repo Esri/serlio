@@ -20,6 +20,7 @@
 #include "util/Utilities.h"
 
 #include "prt/StringUtils.h"
+#include "prt/API.h"
 
 #ifdef _WIN32
 // workaround for  "combaseapi.h(229): error C2187: syntax error: 'identifier' was unexpected here" when using /permissive-
@@ -35,9 +36,9 @@ struct IUnknown;
 #include <sys/types.h>
 #include <cwchar>
 #include <memory>
-#include <cstdio>
-#include <cstdarg>
+#include <sstream>
 #include <string>
+#include <stdexcept>
 
 
 namespace prtu {
@@ -127,74 +128,52 @@ namespace prtu {
 		return HEXTAB[i & 0xF];
 	}
 
-	void toHex(wchar_t* color, double r, double g, double b) {
-		color[1] = toHex(((int)(r * 255)) >> 4);
-		color[2] = toHex((int)(r * 255));
-		color[3] = toHex(((int)(g * 255)) >> 4);
-		color[4] = toHex((int)(g * 255));
-		color[5] = toHex(((int)(b * 255)) >> 4);
-		color[6] = toHex((int)(b * 255));
+	std:: wstring toHex(double r, double g, double b) {
+		std::wstringstream color;
+		color << toHex(((int)(r * 255)) >> 4);
+		color << toHex((int)(r * 255));
+		color << toHex(((int)(g * 255)) >> 4);
+		color << toHex((int)(g * 255));
+		color << toHex(((int)(b * 255)) >> 4);
+		color << toHex((int)(b * 255));
+		return color.str();
 	}
 
-
-
-	std::string toOSNarrowFromUTF16(const std::wstring& osWString) {
-		std::vector<char> temp(osWString.size());
+	template<typename CO, typename CI, typename AF>
+	std::basic_string<CO> stringConversionWrapper(AF apiFunc, const std::basic_string<CI>& inputString) {
+		std::vector<CO> temp(2 * inputString.size(), 0);
 		size_t size = temp.size();
 		prt::Status status = prt::STATUS_OK;
-		prt::StringUtils::toOSNarrowFromUTF16(osWString.c_str(), temp.data(), &size, &status);
+		apiFunc(inputString.c_str(), temp.data(), &size, &status);
+		if (status != prt::STATUS_OK)
+			throw std::runtime_error(prt::getStatusDescription(status));
 		if (size > temp.size()) {
 			temp.resize(size);
-			prt::StringUtils::toOSNarrowFromUTF16(osWString.c_str(), temp.data(), &size, &status);
+			apiFunc(inputString.c_str(), temp.data(), &size, &status);
+			if (status != prt::STATUS_OK)
+				throw std::runtime_error(prt::getStatusDescription(status));
 		}
-		return std::string(temp.data());
+		return std::basic_string<CO>(temp.data());
+	}
+
+	std::string toOSNarrowFromUTF16(const std::wstring& u16String) {
+		return stringConversionWrapper<char, wchar_t>(prt::StringUtils::toOSNarrowFromUTF16, u16String);
 	}
 
 	std::wstring toUTF16FromOSNarrow(const std::string& osString) {
-		std::vector<wchar_t> temp(osString.size());
-		size_t size = temp.size();
-		prt::Status status = prt::STATUS_OK;
-		prt::StringUtils::toUTF16FromOSNarrow(osString.c_str(), temp.data(), &size, &status);
-		if (size > temp.size()) {
-			temp.resize(size);
-			prt::StringUtils::toUTF16FromOSNarrow(osString.c_str(), temp.data(), &size, &status);
-		}
-		return std::wstring(temp.data());
+		return stringConversionWrapper<wchar_t, char>(prt::StringUtils::toUTF16FromOSNarrow, osString);
 	}
 
-	std::string toUTF8FromOSNarrow(const std::string& osString) {
-		std::wstring utf16String = toUTF16FromOSNarrow(osString);
-		std::vector<char> temp(utf16String.size());
-		size_t size = temp.size();
-		prt::Status status = prt::STATUS_OK;
-		prt::StringUtils::toUTF8FromUTF16(utf16String.c_str(), temp.data(), &size, &status);
-		if (size > temp.size()) {
-			temp.resize(size);
-			prt::StringUtils::toUTF8FromUTF16(utf16String.c_str(), temp.data(), &size, &status);
-		}
-		return std::string(temp.data());
+	std::wstring toUTF16FromUTF8(const std::string& u8String) {
+		return stringConversionWrapper<wchar_t, char>(prt::StringUtils::toUTF16FromUTF8, u8String);
 	}
 
+	std::string toUTF8FromUTF16(const std::wstring& u16String) {
+		return stringConversionWrapper<char, wchar_t>(prt::StringUtils::toUTF8FromUTF16, u16String);
+	}
 
-	std::wstring percentEncode(const std::string& utf8String) {
-		std::vector<char> temp(2 * utf8String.size());
-		size_t size = temp.size();
-		prt::Status status = prt::STATUS_OK;
-		prt::StringUtils::percentEncode(utf8String.c_str(), temp.data(), &size, &status);
-		if (size > temp.size()) {
-			temp.resize(size);
-			prt::StringUtils::percentEncode(utf8String.c_str(), temp.data(), &size, &status);
-		}
-
-		std::vector<wchar_t> u16temp(temp.size());
-		size = u16temp.size();
-		prt::StringUtils::toUTF16FromUTF8(temp.data(), u16temp.data(), &size, &status);
-		if (size > u16temp.size()) {
-			u16temp.resize(size);
-			prt::StringUtils::toUTF16FromUTF8(temp.data(), u16temp.data(), &size, &status);
-		}
-
-		return std::wstring(u16temp.data());
+	std::string percentEncode(const std::string& utf8String) {
+		return stringConversionWrapper<char, char>(prt::StringUtils::percentEncode, utf8String);
 	}
 
 	std::wstring toFileURI(const std::wstring& p) {
@@ -203,10 +182,10 @@ namespace prtu {
 #else
 		static const std::wstring schema = L"file:";
 #endif
-		std::string utf8Path = toUTF8FromOSNarrow(toOSNarrowFromUTF16(p));
-		std::wstring pecString = percentEncode(utf8Path);
-		return schema + pecString;
-	
+		std::string utf8Path = prtu::toUTF8FromUTF16(p);
+		std::string pecString = percentEncode(utf8Path);
+		std::wstring u16String = toUTF16FromUTF8(pecString);
+		return schema + u16String;
 	}
 
 	void remove_all(const std::wstring& path) {
