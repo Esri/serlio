@@ -501,7 +501,7 @@ void PRTModifierAction::removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDe
 	for (unsigned int i = 0; i < node.attributeCount(); i++) {
 		MObject attr = node.attribute(i);
 		MFnAttribute mfn(attr);
-		MString attrName = mfn.shortName();
+		MString attrName = mfn.name();
 
 		if (mfn.isUsedAsColor())
 			isUsedAsColor.push_back(mfn.name());
@@ -510,7 +510,7 @@ void PRTModifierAction::removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDe
 		{
 			bool found = false;
 			for (size_t j = 0; j < info->getNumAttributes(); j++) {
-				const MString name = briefName(MString(info->getAttribute(j)->getName()));
+				const MString name = longName(info->getAttribute(j)->getName());
 				if (name == attrName)
 				{
 					found = true;
