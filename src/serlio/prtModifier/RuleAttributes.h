@@ -113,17 +113,17 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 	return ra;
 }
 
-AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ra) {
-	AttributeGroupOrder ago;
-	for (const auto& ap: ra) {
-		for (auto it = std::rbegin(ap.groups); it != std::rend(ap.groups); ++it) {
-			std::vector<std::wstring> g(it, std::rend(ap.groups));
+AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes) {
+	AttributeGroupOrder globalGroupOrder;
+	for (const auto& attribute: ruleAttributes) {
+		for (auto it = std::rbegin(attribute.groups); it != std::rend(attribute.groups); ++it) {
+			std::vector<std::wstring> g(it, std::rend(attribute.groups));
 			std::reverse(g.begin(), g.end());
-			auto ggoIt = ago.emplace(g, ORDER_NONE).first;
-			ggoIt->second = std::min(ap.groupOrder, ggoIt->second);
+			auto ggoIt = globalGroupOrder.emplace(g, ORDER_NONE).first;
+			ggoIt->second = std::min(attribute.groupOrder, ggoIt->second);
 		}
 	}
-	return ago;
+	return globalGroupOrder;
 }
 
 void sortRuleAttributes(RuleAttributes& ra) {
