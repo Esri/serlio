@@ -95,7 +95,7 @@ def taskBuildSerlioTests(cfg) {
 	]
 
 	papl.buildConfig(REPO, myBranch, SOURCES, 'build_and_run_tests', cfg, DEPS, defs, REPO_CREDS)
-    papl.jpe.junit('build/test/serlio_test_report.xml')
+	papl.jpe.junit('build/test/serlio_test_report.xml')
 }
 
 // -- make embeddable
