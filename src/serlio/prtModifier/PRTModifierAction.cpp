@@ -320,8 +320,8 @@ MStatus PRTModifierAction::doIt()
 
 	std::unique_ptr <const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
 
-	const std::vector<const wchar_t*> encIDs = { ENC_ID_MAYA };
-	const AttributeMapNOPtrVector encOpts = { mMayaEncOpts.get() };
+	const std::vector<const wchar_t*> encIDs = { ENC_ID_MAYA, ENC_ID_CGA_ERROR, ENC_ID_CGA_PRINT };
+	const AttributeMapNOPtrVector encOpts = { mMayaEncOpts.get(), mCGAErrorOptions.get(), mCGAPrintOptions.get() };
 	assert(encIDs.size() == encOpts.size());
 
 	InitialShapeNOPtrVector shapes = { shape.get() };
