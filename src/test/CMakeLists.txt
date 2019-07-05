@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.13)
 
 add_executable(${TEST_TARGET}
 		tests.cpp
-		../serlio/util/Utilities.cpp)
+		../serlio/util/Utilities.cpp
+		../serlio/prtModifier/RuleAttributes.cpp)
 
 set_target_properties(${TEST_TARGET} PROPERTIES CXX_STANDARD 14)
 

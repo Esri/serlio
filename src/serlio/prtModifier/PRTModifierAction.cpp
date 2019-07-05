@@ -372,9 +372,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 	RuleAttributes sortedAttributes = getRuleAttributes(ruleFile, info);
 	sortRuleAttributes(sortedAttributes);
 
-	LOG_DBG << "Processing sorted Attributes:";
 	for (AttributeProperties p: sortedAttributes) {
-		LOG_DBG << p;
 
 		size_t i = p.index;
 
