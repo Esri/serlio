@@ -44,15 +44,17 @@
 
 #define CHECK_STATUS(st) if ((st) != MS::kSuccess) { break; }
 namespace {
-	const wchar_t* ENC_MAYA = L"MayaEncoder";
-	const wchar_t* ENC_ATTR = L"com.esri.prt.core.AttributeEvalEncoder";
+	constexpr bool DBG = false;
+
+	constexpr const wchar_t* ENC_MAYA = L"MayaEncoder";
+	constexpr const wchar_t* ENC_ATTR = L"com.esri.prt.core.AttributeEvalEncoder";
 	const MString  NAME_GENERATE = "Generate_Model";
 
-	const wchar_t* NULL_KEY = L"#NULL#";
-	const wchar_t* MIN_KEY = L"min";
-	const wchar_t* MAX_KEY = L"max";
+	constexpr const wchar_t* NULL_KEY = L"#NULL#";
+	constexpr const wchar_t* MIN_KEY = L"min";
+	constexpr const wchar_t* MAX_KEY = L"max";
 	const MString  PRT("PRT");
-	const wchar_t* RESTRICTED_KEY = L"restricted";
+	constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
 
 } // namespace
 
@@ -579,6 +581,16 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 
 template<typename T> T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependencyNode & node, const MString & briefName, const T& defaultValue) {
 	T plugValue = defaultValue;
+
+	if (DBG) {
+		LOG_DBG << "node attrs:";
+		mu::forAllAttributes(node, [&node](const MFnAttribute &a) {
+			MString val;
+			node.findPlug(a.object()).getValue(val);
+			LOG_DBG << a.name().asWChar() << " = " << val.asWChar();
+		});
+	}
+
 	if (node.hasAttribute(briefName)) {
 		const MPlug plug = node.findPlug(briefName, true);
 		if (plug.isDynamic())
@@ -782,6 +794,8 @@ MStatus PRTModifierAction::addStrParameter(MFnDependencyNode & node, MObject & a
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
+
+	LOG_DBG << sAttr.name().asWChar() << " = " << plugValue.asWChar();
 
 	return MS::kSuccess;
 }
