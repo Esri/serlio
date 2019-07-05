@@ -105,6 +105,10 @@ namespace prtu {
 	std::wstring temp_directory_path();
 	void remove_all(const std::wstring& path);
 
+	std::string objectToXML(prt::Object const* obj);
+	template<typename T> std::string objectToXML(const std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }
+	template<typename T> std::string objectToXML(std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }
+
 } // namespace prtu
 
 inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {

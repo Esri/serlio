@@ -248,4 +248,18 @@ namespace prtu {
 		}
 		return -1;
 	}
+
+	std::string objectToXML(prt::Object const* obj) {
+		if (obj == nullptr)
+			throw std::invalid_argument("object pointer is not valid");
+		constexpr size_t SIZE = 4096;
+		size_t actualSize = SIZE;
+		std::vector<char> buffer(SIZE, ' ');
+		obj->toXML(buffer.data(), &actualSize);
+		buffer.resize(actualSize);
+		if(actualSize > SIZE)
+			obj->toXML(buffer.data(), &actualSize);
+		return std::string(buffer.data());
+	}
+
 } // namespace prtu
