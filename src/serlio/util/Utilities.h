@@ -27,6 +27,7 @@
 #include "prt/RuleFileInfo.h"
 #include "prt/EncoderInfo.h"
 #include "prt/OcclusionSet.h"
+#include "prt/API.h"
 
 #include <memory>
 #include <cstdint>
@@ -108,6 +109,8 @@ namespace prtu {
 	std::string objectToXML(prt::Object const* obj);
 	template<typename T> std::string objectToXML(const std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }
 	template<typename T> std::string objectToXML(std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }
+
+	const prt::AttributeMap* createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions = nullptr);
 
 } // namespace prtu
 

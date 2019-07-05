@@ -35,6 +35,7 @@
 #include "maya/MFnStringData.h"
 #include "maya/MFnCompoundAttribute.h"
 
+#include <cassert>
 #ifdef _WIN32
 #	include <Windows.h>
 #else
@@ -46,8 +47,13 @@
 namespace {
 	constexpr bool DBG = false;
 
-	constexpr const wchar_t* ENC_MAYA = L"MayaEncoder";
-	constexpr const wchar_t* ENC_ATTR = L"com.esri.prt.core.AttributeEvalEncoder";
+	constexpr const wchar_t* ENC_ID_MAYA      = L"MayaEncoder";
+	constexpr const wchar_t* ENC_ID_ATTR_EVAL = L"com.esri.prt.core.AttributeEvalEncoder";
+	constexpr const wchar_t* ENC_ID_CGA_ERROR = L"com.esri.prt.core.CGAErrorEncoder";
+	constexpr const wchar_t* ENC_ID_CGA_PRINT = L"com.esri.prt.core.CGAPrintEncoder";
+	constexpr const wchar_t* FILE_CGA_ERROR   = L"CGAErrors.txt";
+	constexpr const wchar_t* FILE_CGA_PRINT   = L"CGAPrint.txt";
+
 	const MString  NAME_GENERATE = "Generate_Model";
 
 	constexpr const wchar_t* NULL_KEY = L"#NULL#";
@@ -58,18 +64,19 @@ namespace {
 
 } // namespace
 
-PRTModifierAction::PRTModifierAction()
-{
+PRTModifierAction::PRTModifierAction() {
+	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
 
-	EncoderInfoUPtr encInfo(prt::createEncoderInfo(ENC_MAYA));
-	const prt::AttributeMap* am;
-	encInfo->createValidatedOptionsAndStates(nullptr, &am, nullptr);
-	mMayaEncOpts.emplace_back(AttributeMapUPtr(am));
+	mMayaEncOpts.reset(prtu::createValidatedOptions(ENC_ID_MAYA));
+	mAttrEncOpts.reset(prtu::createValidatedOptions(ENC_ID_ATTR_EVAL));
 
-	const prt::AttributeMap* am2;
-	EncoderInfoUPtr encInfoAttr(prt::createEncoderInfo(ENC_ATTR));
-	encInfoAttr->createValidatedOptionsAndStates(nullptr, &am2, nullptr);
-	mAttrEncOpts.emplace_back(AttributeMapUPtr(am2));
+	optionsBuilder->setString(L"name", FILE_CGA_ERROR);
+	const AttributeMapUPtr errOptions(optionsBuilder->createAttributeMapAndReset());
+	mCGAErrorOptions.reset(prtu::createValidatedOptions(ENC_ID_CGA_ERROR, errOptions.get()));
+
+	optionsBuilder->setString(L"name", FILE_CGA_PRINT);
+	const AttributeMapUPtr printOptions(optionsBuilder->createAttributeMapAndReset());
+	mCGAPrintOptions.reset(prtu::createValidatedOptions(ENC_ID_CGA_PRINT, printOptions.get()));
 }
 
 void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
@@ -312,9 +319,13 @@ MStatus PRTModifierAction::doIt()
 	);
 
 	std::unique_ptr <const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
-	AttributeMapNOPtrVector encOpts = prtu::toPtrVec(mMayaEncOpts);
+
+	const std::vector<const wchar_t*> encIDs = { ENC_ID_MAYA };
+	const AttributeMapNOPtrVector encOpts = { mMayaEncOpts.get() };
+	assert(encIDs.size() == encOpts.size());
+
 	InitialShapeNOPtrVector shapes = { shape.get() };
-	const prt::Status        generateStatus = prt::generate(shapes.data(), shapes.size(), 0, &ENC_MAYA, encOpts.size(), encOpts.data(), outputHandler.get(), PRTModifierAction::theCache, 0);
+	const prt::Status        generateStatus = prt::generate(shapes.data(), shapes.size(), 0, encIDs.data(), encIDs.size(), encOpts.data(), outputHandler.get(), PRTModifierAction::theCache, 0);
 	if (generateStatus != prt::STATUS_OK)
 		std::cerr << "prt generate failed: " << prt::getStatusDescription(generateStatus) << std::endl;
 
@@ -364,8 +375,12 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 	);
 	std::unique_ptr<const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
 	InitialShapeNOPtrVector shapes = { shape.get() };
-	AttributeMapNOPtrVector encOpts = prtu::toPtrVec(mAttrEncOpts);
-	prt::generate(shapes.data(), shapes.size(), nullptr, &ENC_ATTR, encOpts.size(), encOpts.data(), outputHandler.get(), theCache, nullptr);
+
+	const std::vector<const wchar_t*> encIDs = { ENC_ID_ATTR_EVAL };
+	const AttributeMapNOPtrVector encOpts = { mAttrEncOpts.get() };
+	assert(encIDs.size() == encOpts.size());
+
+	prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(), outputHandler.get(), theCache, nullptr);
 
 	const std::map<std::wstring, MayaCallbacks::AttributeHolder>& evalAttrs = outputHandler->getAttrs();
 
