@@ -480,7 +480,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		MFnAttribute fnAttr(attr, &stat);
 		if (stat == MS::kSuccess) {
 			fnAttr.addToCategory(MString(p.ruleFile.c_str()));
-			fnAttr.addToCategory(MString(join<wchar_t>(p.groups, L" ").c_str()));
+			fnAttr.addToCategory(MString(join<wchar_t>(p.groups, L" > ").c_str()));
 		}
 	}
 
