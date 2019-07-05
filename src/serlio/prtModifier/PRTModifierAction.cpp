@@ -713,14 +713,15 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 
 MStatus PRTModifierAction::addFileParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue, const MString & /*exts*/) {
 	MStatus           stat;
-	MStatus           stat2;
-	MFnStringData     stringData;
 	MFnTypedAttribute sAttr;
 
 	MString plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
-	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, stringData.create("", &stat2), &stat);
+
+	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, MObject::kNullObj, &stat);
+	// NOTE: we must not set the default string above, otherwise the value will not be stored, relying on setValue below
+	// see http://ewertb.mayasound.com/api/api.017.php
+
 	MCHECK(sAttr.setNiceNameOverride(niceName(name)));
-	MCHECK(stat2);
 	MCHECK(stat);
 	MCHECK(sAttr.setUsedAsFilename(true));
 	MCHECK(addParameter(node, attr, sAttr));
@@ -767,14 +768,15 @@ MStatus PRTModifierAction::addColorParameter(MFnDependencyNode & node, MObject &
 
 MStatus PRTModifierAction::addStrParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue) {
 	MStatus           stat;
-	MStatus           stat2;
-	MFnStringData     stringData;
 	MFnTypedAttribute sAttr;
 
 	MString plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
-	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, stringData.create(defaultValue, &stat2), &stat);
+
+	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, MObject::kNullObj, &stat);
+	// NOTE: we must not set the default string above, otherwise the value will not be stored, relying on setValue below
+	// see http://ewertb.mayasound.com/api/api.017.php
+
 	sAttr.setNiceNameOverride(niceName(name));
-	MCHECK(stat2);
 	MCHECK(stat);
 	MCHECK(addParameter(node, attr, sAttr));
 
