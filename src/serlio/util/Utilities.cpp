@@ -80,33 +80,6 @@ namespace prtu {
 		return std::wstring(1, getDirSeparator<wchar_t>());
 	}
 
-#if DO_DBG == 1
-
-	void dbg(const char* fmt, ...) {
-		va_list args;
-
-		va_start(args, fmt);
-		vprintf(fmt, args);
-		va_end(args);
-		printf("\n");
-		fflush(0);
-	}
-
-	void wdbg(const wchar_t* fmt, ...) {
-		va_list args;
-
-		va_start(args, fmt);
-		vwprintf(fmt, args);
-		va_end(args);
-		wprintf(L"\n");
-		fflush(0);
-	}
-
-#else
-	void dbg(const char*, ...) { }
-	void wdbg(const wchar_t*, ...) { }
-#endif
-
 	int fromHex(wchar_t c) {
 		switch (c) {
 		case '0': return 0;	case '1': return 1;	case '2': return 2;	case '3': return 3;	case '4': return 4;

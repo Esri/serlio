@@ -42,9 +42,6 @@
 #endif
 
 
-#define DO_DBG 0
-#define MCHECK(_stat_) {if(MS::kSuccess != _stat_) { prtu::dbg("maya err at %s:%d: %s %d\n", __FILE__, __LINE__, _stat_.errorString().asChar(), _stat_.statusCode());}}
-
 struct PRTDestroyer {
 	void operator()(prt::Object const* p) {
 		if (p) p->destroy();
@@ -77,9 +74,6 @@ namespace prtu {
 	}
 
 	SRL_TEST_EXPORTS_API const std::wstring filename(const std::wstring& path);
-
-	void dbg(const char* fmt, ...);
-	void wdbg(const wchar_t* fmt, ...);
 
 	template<typename C> C getDirSeparator();
 	template<> char getDirSeparator();

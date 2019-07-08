@@ -52,4 +52,10 @@ int32_t computeSeed(const double* vertices, size_t count) {
 	return computeSeed(a);
 }
 
+void statusCheck(MStatus status, const char* file, int line) {
+	if (MS::kSuccess != status) {
+		LOG_ERR << "maya status error at " << file << ":" << line << ": " << status.errorString().asChar() << " (code " << status.statusCode() << ")";
+	}
+}
+
 } // namespace mu

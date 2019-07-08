@@ -24,6 +24,8 @@
 #include "prtMaterial/PRTMaterialNode.h"
 
 #include "util/Utilities.h"
+#include "util/MayaUtilities.h"
+#include "util/LogHandler.h"
 
 #include "prt/StringUtils.h"
 #include "prtx/Material.h"
@@ -42,15 +44,7 @@
 
 namespace {
 
-constexpr bool TRACE = false;
-
-void prtTrace(const std::wstring &arg1, std::size_t arg2) {
-	if (TRACE) {
-		std::wostringstream wostr;
-		wostr << L"[MOH] " << arg1 << arg2;
-		prt::log(wostr.str().c_str(), prt::LOG_TRACE);
-	}
-}
+constexpr bool DBG = false;
 
 void checkStringLength(const wchar_t *string, const size_t &maxStringLength) {
 	if (wcslen(string) >= maxStringLength) {
@@ -124,29 +118,27 @@ void MayaCallbacks::addMesh(
 	MIntArray mVerticesCounts = toMayaIntArray(faceSizes, numFaces);
 	MIntArray mVerticesIndices = toMayaIntArray(indices, indicesSize);
 
-	prtTrace(L"countsSize = ", numFaces);
-	prtTrace(L"indicesSize = ", indicesSize);
+	if (DBG) {
+		LOG_DBG << "-- MayaCallbacks::addMesh";
+		LOG_DBG << "   countsSize = " << numFaces;
+		LOG_DBG << "   indicesSize = " << indicesSize;
+		LOG_DBG << "   mVertices.length         = " << mVertices.length();
+		LOG_DBG << "   mVerticesCounts.length   = " << mVerticesCounts.length();
+		LOG_DBG << "   mVerticesConnects.length = " << mVerticesIndices.length();
+	}
 
 	MStatus stat;
-
-	prtu::dbg("--- MayaData::createMesh begin");
-
 	MCHECK(stat);
 
 	MFnMeshData dataCreator;
 	MObject newOutputData = dataCreator.create(&stat);
 	MCHECK(stat);
 
-	prtu::dbg("    mVertices.length         = %d", mVertices.length());
-	prtu::dbg("    mVerticesCounts.length   = %d", mVerticesCounts.length());
-	prtu::dbg("    mVerticesConnects.length = %d", mVerticesIndices.length());
-
 	MFnMesh mFnMesh1;
 	MObject oMesh = mFnMesh1.create(mVertices.length(), mVerticesCounts.length(), mVertices, mVerticesCounts, mVerticesIndices, newOutputData, &stat);
 	MCHECK(stat);
+
 	MFnMesh mFnMesh(oMesh);
-
-
 	mFnMesh.clearUVs();
 
 	// -- add texture coordinates

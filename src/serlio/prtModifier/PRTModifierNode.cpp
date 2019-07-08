@@ -20,6 +20,7 @@
 #include "prtModifier/PRTModifierNode.h"
 
 #include "util/Utilities.h"
+#include "util/MayaUtilities.h"
 
 #include "maya/MDataHandle.h"
 #include "maya/MFnTypedAttribute.h"

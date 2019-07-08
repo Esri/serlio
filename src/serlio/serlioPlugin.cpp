@@ -26,6 +26,8 @@
 #include "prtMaterial/PRTMaterialNode.h"
 
 #include "util/Utilities.h"
+#include "util/MayaUtilities.h"
+#include "util/LogHandler.h"
 
 #include "maya/MFnPlugin.h"
 #include "maya/MSceneMessage.h"
@@ -38,6 +40,8 @@
 
 
 namespace {
+	constexpr bool DBG = false;
+
 	constexpr const char* MODIFIER_NODE = "serlio";
 	constexpr const char* CMD_ASSIGN    = "serlioAssign";
 
@@ -59,6 +63,7 @@ namespace {
 #endif
         return { tp.append(n) };
     }
+
 } // namespace
 
 // called when the plug-in is loaded into Maya.
@@ -78,15 +83,14 @@ MStatus initializePlugin(MObject obj)
 		prt::addLogHandler(PRTModifierAction::theFileLogHandler);
 	}
 
-
-	prtu::dbg("initialized prt logger");
+	if (DBG) LOG_DBG << "initialized prt logger";
 
 	const std::string& pluginRoot = PRTModifierAction::getPluginRoot();
 	std::wstring wPluginRoot(pluginRoot.length(), L' ');
 	std::copy(pluginRoot.begin(), pluginRoot.end(), wPluginRoot.begin());
 
 	const std::wstring prtExtPath = wPluginRoot + PRT_EXT_SUBDIR;
-	prtu::wdbg(L"looking for prt extensions at %ls", prtExtPath.c_str());
+	if (DBG) LOG_DBG << "looking for prt extensions at " << prtExtPath;
 
 	prt::Status status = prt::STATUS_UNSPECIFIED_ERROR;
 	const wchar_t* prtExtPathPOD = prtExtPath.c_str();
