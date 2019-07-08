@@ -105,6 +105,7 @@ void MayaCallbacks::addMesh(
 		const double* nrm, size_t nrmSize,
 		const uint32_t* faceSizes, size_t numFaces,
 		const uint32_t* indices, size_t indicesSize,
+		const uint32_t* normalIndices, size_t normalIndicesSize,
 		double const* const* uvs, size_t const* uvsSizes,
 		uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
 		uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
@@ -190,7 +191,7 @@ void MayaCallbacks::addMesh(
 
 			for (int j = 0; j < faceLength; j++) {
 				faceList[indexCount] = i;
-				int idx = mVerticesIndices[indexCount];
+				int idx = normalIndices[indexCount];
 				expandedNormals.set(&nrm[idx*3], indexCount);
 				indexCount++;
 			}

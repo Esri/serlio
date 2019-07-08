@@ -54,9 +54,10 @@ constexpr const wchar_t* ENC_DESCRIPTION    = L"Encodes geometry into the Maya f
 
 struct SerializedGeometry {
 	prtx::DoubleVector              coords;
-	prtx::DoubleVector              normals; // uses same indexing as coords
+	prtx::DoubleVector              normals;
 	std::vector<uint32_t>           counts;
-	std::vector<uint32_t>           indices;
+	std::vector<uint32_t>           vertexIndices;
+	std::vector<uint32_t>           normalIndices;
 
 	std::vector<prtx::DoubleVector> uvs;
 	std::vector<prtx::IndexVector>  uvCounts;
@@ -74,7 +75,7 @@ const prtx::EncodePreparator::PreparationFlags PREP_FLAGS = prtx::EncodePreparat
 	.cleanupVertexNormals(true)
 	.cleanupUVs(true)
 	.processVertexNormals(prtx::VertexNormalProcessor::SET_MISSING_TO_FACE_NORMALS)
-	.indexSharing(prtx::EncodePreparator::PreparationFlags::INDICES_SAME_FOR_ALL_VERTEX_ATTRIBUTES);
+	.indexSharing(prtx::EncodePreparator::PreparationFlags::INDICES_SEPARATE_FOR_ALL_VERTEX_ATTRIBUTES);
 
 std::vector<const wchar_t*> toPtrVec(const prtx::WStringVector& wsv) {
 	std::vector<const wchar_t*> pw(wsv.size());
@@ -395,7 +396,8 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 	SerializedGeometry sg(maxNumUVSets);
 
 	// PASS 2: copy
-	uint32_t vertexIndexBase = 0;
+	uint32_t vertexIndexBase = 0u;
+	uint32_t normalIndexBase = 0u;
 	std::vector<uint32_t> uvIndexBases(maxNumUVSets, 0u);
 	for (const auto& geo: geometries) {
 		const prtx::MeshPtrVector& meshes = geo->getMeshes();
@@ -437,7 +439,7 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 					const uint32_t faceUVCnt = faceUVCounts[fi];
 					if (DBG) log_debug("      fi %1%: faceUVCnt = %2%, faceVtxCnt = %3%") % fi % faceUVCnt % mesh->getFaceVertexCount(fi);
 					for (uint32_t vi = 0; vi < faceUVCnt; vi++)
-						sg.uvIndices[uvSet].push_back(uvIndexBases[uvSet] + faceUVIdx[faceUVCnt - vi - 1]); // reverse winding
+						sg.uvIndices[uvSet].push_back(uvIndexBases[uvSet] + faceUVIdx[vi]);
 				}
 
 				uvIndexBases[uvSet] += src.size() / 2u;
@@ -446,15 +448,20 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 			// append counts and indices for vertices and vertex normals
 			sg.counts.reserve(sg.counts.size() + mesh->getFaceCount());
 			for (uint32_t fi = 0, faceCount = mesh->getFaceCount(); fi < faceCount; ++fi) {
-				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
 				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
 				sg.counts.push_back(vtxCnt);
-				sg.indices.reserve(sg.indices.size() + vtxCnt);
-				for (uint32_t vi = 0; vi < vtxCnt; vi++)
-					sg.indices.push_back(vertexIndexBase + vtxIdx[vtxCnt - vi - 1]); // reverse winding
+				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
+				const uint32_t* nrmIdx = mesh->getFaceVertexNormalIndices(fi);
+				sg.vertexIndices.reserve(sg.vertexIndices.size() + vtxCnt);
+				sg.normalIndices.reserve(sg.normalIndices.size() + vtxCnt);
+				for (uint32_t vi = 0; vi < vtxCnt; vi++) {
+					sg.vertexIndices.push_back(vertexIndexBase + vtxIdx[vi]);
+					sg.normalIndices.push_back(normalIndexBase + nrmIdx[vi]);
+				}
 			}
 
 			vertexIndexBase += (uint32_t)verts.size() / 3u;
+			normalIndexBase += (uint32_t)norms.size() / 3u;
 		} // for all meshes
 	} // for all geometries
 
@@ -585,7 +592,8 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 	        sg.coords.data(), sg.coords.size(),
 			sg.normals.data(), sg.normals.size(),
 			sg.counts.data(), sg.counts.size(),
-			sg.indices.data(), sg.indices.size(),
+			sg.vertexIndices.data(), sg.vertexIndices.size(),
+			sg.normalIndices.data(), sg.normalIndices.size(),
 
 			puvs.first.data(), puvs.second.data(),
 			puvCounts.first.data(), puvCounts.second.data(),

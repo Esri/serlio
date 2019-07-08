@@ -57,6 +57,7 @@ public:
 			const double* nrm, size_t nrmSize,
 			const uint32_t* faceSizes, size_t numFaces,
 			const uint32_t* indices, size_t indicesSize,
+			const uint32_t* normalIndices, size_t normalIndicesSize,
 
 			double const* const* uvs, size_t const* uvsSizes,
 			uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
