@@ -39,8 +39,8 @@ public:
 	 * @param length of vertex coordinate array
 	 * @param nrm vertex normal array
 	 * @param nrmSize length of vertex normal array
-	 * @param faceSizes polygon sizes array
-	 * @param numFaces number of faces
+	 * @param faceCounts vertex counts per face
+	 * @param faceCountsSize number of faces (= size of faceCounts)
 	 * @param indices vertex attribute index array (grouped by counts)
 	 * @param indicesSize vertex attribute index array
 	 * @param uvs array of texture coordinate arrays (same indexing as vertices per uv set)
@@ -55,8 +55,8 @@ public:
 			const wchar_t* name,
 			const double* vtx, size_t vtxSize,
 			const double* nrm, size_t nrmSize,
-			const uint32_t* faceSizes, size_t numFaces,
-			const uint32_t* indices, size_t indicesSize,
+			const uint32_t* faceCounts, size_t faceCountsSize,
+			const uint32_t* vertexIndices, size_t vertexIndicesSize,
 			const uint32_t* normalIndices, size_t normalIndicesSize,
 
 			double const* const* uvs, size_t const* uvsSizes,

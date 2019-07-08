@@ -103,9 +103,9 @@ void MayaCallbacks::addMesh(
 		const wchar_t*,
 		const double* vtx, size_t vtxSize,
 		const double* nrm, size_t nrmSize,
-		const uint32_t* faceSizes, size_t numFaces,
-		const uint32_t* indices, size_t indicesSize,
-		const uint32_t* normalIndices, size_t normalIndicesSize,
+		const uint32_t* faceCounts, size_t faceCountsSize,
+		const uint32_t* vertexIndices, size_t vertexIndicesSize,
+		const uint32_t* normalIndices, MAYBE_UNUSED size_t normalIndicesSize,
 		double const* const* uvs, size_t const* uvsSizes,
 		uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
 		uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
@@ -115,17 +115,17 @@ void MayaCallbacks::addMesh(
 		const prt::AttributeMap** reports,
 		const int32_t*)
 {
-	MFloatPointArray mVertices = toMayaFloatPointArray(vtx, vtxSize);
-	MIntArray mVerticesCounts = toMayaIntArray(faceSizes, numFaces);
-	MIntArray mVerticesIndices = toMayaIntArray(indices, indicesSize);
+	MFloatPointArray mayaVertices = toMayaFloatPointArray(vtx, vtxSize);
+	MIntArray mayaFaceCounts = toMayaIntArray(faceCounts, faceCountsSize);
+	MIntArray mayaVertexIndices = toMayaIntArray(vertexIndices, vertexIndicesSize);
 
 	if (DBG) {
 		LOG_DBG << "-- MayaCallbacks::addMesh";
-		LOG_DBG << "   countsSize = " << numFaces;
-		LOG_DBG << "   indicesSize = " << indicesSize;
-		LOG_DBG << "   mVertices.length         = " << mVertices.length();
-		LOG_DBG << "   mVerticesCounts.length   = " << mVerticesCounts.length();
-		LOG_DBG << "   mVerticesConnects.length = " << mVerticesIndices.length();
+		LOG_DBG << "   faceCountsSize = " << faceCountsSize;
+		LOG_DBG << "   vertexIndicesSize = " << vertexIndicesSize;
+		LOG_DBG << "   mayaVertices.length         = " << mayaVertices.length();
+		LOG_DBG << "   mayaFaceCounts.length   = " << mayaFaceCounts.length();
+		LOG_DBG << "   mayaVertexIndices.length = " << mayaVertexIndices.length();
 	}
 
 	MStatus stat;
@@ -136,7 +136,7 @@ void MayaCallbacks::addMesh(
 	MCHECK(stat);
 
 	MFnMesh mFnMesh1;
-	MObject oMesh = mFnMesh1.create(mVertices.length(), mVerticesCounts.length(), mVertices, mVerticesCounts, mVerticesIndices, newOutputData, &stat);
+	MObject oMesh = mFnMesh1.create(mayaVertices.length(), mayaFaceCounts.length(), mayaVertices, mayaFaceCounts, mayaVertexIndices, newOutputData, &stat);
 	MCHECK(stat);
 
 	MFnMesh mFnMesh(oMesh);
@@ -179,15 +179,16 @@ void MayaCallbacks::addMesh(
 	}
 
 	if (nrmSize > 0) {
+		assert(normalIndicesSize == vertexIndicesSize);
+		// guaranteed by MayaEncoder, see prtx::VertexNormalProcessor::SET_MISSING_TO_FACE_NORMALS
 
-		//convert to native maya normal layout
-		// NOTE: this assumes that vertices and vertex normals use the same index domain (-> maya encoder)
-		MVectorArray expandedNormals((unsigned int)indicesSize);
-		MIntArray faceList((unsigned int)indicesSize);
+		// convert to native maya normal layout
+		MVectorArray expandedNormals(vertexIndicesSize);
+		MIntArray faceList(vertexIndicesSize);
 
 		int indexCount = 0;
-		for (int i = 0; i < numFaces; i++) {
-			int faceLength = mVerticesCounts[i];
+		for (int i = 0; i < faceCountsSize; i++) {
+			int faceLength = mayaFaceCounts[i];
 
 			for (int j = 0; j < faceLength; j++) {
 				faceList[indexCount] = i;
@@ -197,7 +198,7 @@ void MayaCallbacks::addMesh(
 			}
 		}
 
-		MCHECK(mFnMesh.setFaceVertexNormals(expandedNormals, faceList, mVerticesIndices));
+		MCHECK(mFnMesh.setFaceVertexNormals(expandedNormals, faceList, mayaVertexIndices));
 	}
 
 	MFnMesh outputMesh(outMeshObj);

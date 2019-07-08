@@ -138,3 +138,11 @@ std::basic_string<C> join(Container const &container, const std::basic_string<C>
 	}
 	return os.str();
 }
+
+#if defined(__clang__)
+#	define MAYBE_UNUSED [[maybe_unused]]
+#elif defined(__GNUC__) || defined(__GNUG__)
+#	define MAYBE_UNUSED __attribute__ ((unused)) // [[maybe_unused]] not availble in GCC < 7
+#elif defined(_MSC_VER)
+#	define MAYBE_UNUSED // [[maybe_unused]] would require /std:c++latest i.e. C++17
+#endif
