@@ -35,6 +35,7 @@
 #include "maya/MFnStringData.h"
 #include "maya/MFnCompoundAttribute.h"
 
+#include <cassert>
 #ifdef _WIN32
 #	include <Windows.h>
 #else
@@ -44,30 +45,38 @@
 
 #define CHECK_STATUS(st) if ((st) != MS::kSuccess) { break; }
 namespace {
-	const wchar_t* ENC_MAYA = L"MayaEncoder";
-	const wchar_t* ENC_ATTR = L"com.esri.prt.core.AttributeEvalEncoder";
+	constexpr bool DBG = false;
+
+	constexpr const wchar_t* ENC_ID_MAYA      = L"MayaEncoder";
+	constexpr const wchar_t* ENC_ID_ATTR_EVAL = L"com.esri.prt.core.AttributeEvalEncoder";
+	constexpr const wchar_t* ENC_ID_CGA_ERROR = L"com.esri.prt.core.CGAErrorEncoder";
+	constexpr const wchar_t* ENC_ID_CGA_PRINT = L"com.esri.prt.core.CGAPrintEncoder";
+	constexpr const wchar_t* FILE_CGA_ERROR   = L"CGAErrors.txt";
+	constexpr const wchar_t* FILE_CGA_PRINT   = L"CGAPrint.txt";
+
 	const MString  NAME_GENERATE = "Generate_Model";
 
-	const wchar_t* NULL_KEY = L"#NULL#";
-	const wchar_t* MIN_KEY = L"min";
-	const wchar_t* MAX_KEY = L"max";
+	constexpr const wchar_t* NULL_KEY = L"#NULL#";
+	constexpr const wchar_t* MIN_KEY = L"min";
+	constexpr const wchar_t* MAX_KEY = L"max";
 	const MString  PRT("PRT");
-	const wchar_t* RESTRICTED_KEY = L"restricted";
+	constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
 
 } // namespace
 
-PRTModifierAction::PRTModifierAction()
-{
+PRTModifierAction::PRTModifierAction() {
+	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
 
-	EncoderInfoUPtr encInfo(prt::createEncoderInfo(ENC_MAYA));
-	const prt::AttributeMap* am;
-	encInfo->createValidatedOptionsAndStates(nullptr, &am, nullptr);
-	mMayaEncOpts.emplace_back(AttributeMapUPtr(am));
+	mMayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
+	mAttrEncOpts = prtu::createValidatedOptions(ENC_ID_ATTR_EVAL);
 
-	const prt::AttributeMap* am2;
-	EncoderInfoUPtr encInfoAttr(prt::createEncoderInfo(ENC_ATTR));
-	encInfoAttr->createValidatedOptionsAndStates(nullptr, &am2, nullptr);
-	mAttrEncOpts.emplace_back(AttributeMapUPtr(am2));
+	optionsBuilder->setString(L"name", FILE_CGA_ERROR);
+	const AttributeMapUPtr errOptions(optionsBuilder->createAttributeMapAndReset());
+	mCGAErrorOptions = prtu::createValidatedOptions(ENC_ID_CGA_ERROR, errOptions.get());
+
+	optionsBuilder->setString(L"name", FILE_CGA_PRINT);
+	const AttributeMapUPtr printOptions(optionsBuilder->createAttributeMapAndReset());
+	mCGAPrintOptions = prtu::createValidatedOptions(ENC_ID_CGA_PRINT, printOptions.get());
 }
 
 void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
@@ -310,9 +319,13 @@ MStatus PRTModifierAction::doIt()
 	);
 
 	std::unique_ptr <const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
-	AttributeMapNOPtrVector encOpts = prtu::toPtrVec(mMayaEncOpts);
+
+	const std::vector<const wchar_t*> encIDs = { ENC_ID_MAYA, ENC_ID_CGA_ERROR, ENC_ID_CGA_PRINT };
+	const AttributeMapNOPtrVector encOpts = { mMayaEncOpts.get(), mCGAErrorOptions.get(), mCGAPrintOptions.get() };
+	assert(encIDs.size() == encOpts.size());
+
 	InitialShapeNOPtrVector shapes = { shape.get() };
-	const prt::Status        generateStatus = prt::generate(shapes.data(), shapes.size(), 0, &ENC_MAYA, encOpts.size(), encOpts.data(), outputHandler.get(), PRTModifierAction::theCache, 0);
+	const prt::Status        generateStatus = prt::generate(shapes.data(), shapes.size(), 0, encIDs.data(), encIDs.size(), encOpts.data(), outputHandler.get(), PRTModifierAction::theCache, 0);
 	if (generateStatus != prt::STATUS_OK)
 		std::cerr << "prt generate failed: " << prt::getStatusDescription(generateStatus) << std::endl;
 
@@ -362,8 +375,12 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 	);
 	std::unique_ptr<const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
 	InitialShapeNOPtrVector shapes = { shape.get() };
-	AttributeMapNOPtrVector encOpts = prtu::toPtrVec(mAttrEncOpts);
-	prt::generate(shapes.data(), shapes.size(), nullptr, &ENC_ATTR, encOpts.size(), encOpts.data(), outputHandler.get(), theCache, nullptr);
+
+	const std::vector<const wchar_t*> encIDs = { ENC_ID_ATTR_EVAL };
+	const AttributeMapNOPtrVector encOpts = { mAttrEncOpts.get() };
+	assert(encIDs.size() == encOpts.size());
+
+	prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(), outputHandler.get(), theCache, nullptr);
 
 	const std::map<std::wstring, MayaCallbacks::AttributeHolder>& evalAttrs = outputHandler->getAttrs();
 
@@ -372,9 +389,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 	RuleAttributes sortedAttributes = getRuleAttributes(ruleFile, info);
 	sortRuleAttributes(sortedAttributes);
 
-	LOG_DBG << "Processing sorted Attributes:";
 	for (AttributeProperties p: sortedAttributes) {
-		LOG_DBG << p;
 
 		size_t i = p.index;
 
@@ -581,6 +596,16 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 
 template<typename T> T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependencyNode & node, const MString & briefName, const T& defaultValue) {
 	T plugValue = defaultValue;
+
+	if (DBG) {
+		LOG_DBG << "node attrs:";
+		mu::forAllAttributes(node, [&node](const MFnAttribute &a) {
+			MString val;
+			node.findPlug(a.object(), true).getValue(val);
+			LOG_DBG << a.name().asWChar() << " = " << val.asWChar();
+		});
+	}
+
 	if (node.hasAttribute(briefName)) {
 		const MPlug plug = node.findPlug(briefName, true);
 		if (plug.isDynamic())
@@ -715,14 +740,15 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 
 MStatus PRTModifierAction::addFileParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue, const MString & /*exts*/) {
 	MStatus           stat;
-	MStatus           stat2;
-	MFnStringData     stringData;
 	MFnTypedAttribute sAttr;
 
 	MString plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
-	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, stringData.create("", &stat2), &stat);
+
+	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, MObject::kNullObj, &stat);
+	// NOTE: we must not set the default string above, otherwise the value will not be stored, relying on setValue below
+	// see http://ewertb.mayasound.com/api/api.017.php
+
 	MCHECK(sAttr.setNiceNameOverride(niceName(name)));
-	MCHECK(stat2);
 	MCHECK(stat);
 	MCHECK(sAttr.setUsedAsFilename(true));
 	MCHECK(addParameter(node, attr, sAttr));
@@ -769,19 +795,22 @@ MStatus PRTModifierAction::addColorParameter(MFnDependencyNode & node, MObject &
 
 MStatus PRTModifierAction::addStrParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue) {
 	MStatus           stat;
-	MStatus           stat2;
-	MFnStringData     stringData;
 	MFnTypedAttribute sAttr;
 
 	MString plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
-	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, stringData.create(defaultValue, &stat2), &stat);
+
+	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, MObject::kNullObj, &stat);
+	// NOTE: we must not set the default string above, otherwise the value will not be stored, relying on setValue below
+	// see http://ewertb.mayasound.com/api/api.017.php
+
 	sAttr.setNiceNameOverride(niceName(name));
-	MCHECK(stat2);
 	MCHECK(stat);
 	MCHECK(addParameter(node, attr, sAttr));
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
+
+	LOG_DBG << sAttr.name().asWChar() << " = " << plugValue.asWChar();
 
 	return MS::kSuccess;
 }

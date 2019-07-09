@@ -22,8 +22,9 @@
 
 #include "encoder/IMayaCallbacks.h"
 
+#include "util/LogHandler.h"
+
 #include "prt/Cache.h"
-#include "prtx/Material.h"
 
 #include "maya/MObject.h"
 
@@ -53,18 +54,19 @@ public:
 
 	// prt::Callbacks interface
 	virtual prt::Status generateError(size_t /*isIndex*/, prt::Status /*status*/, const wchar_t* message) override {
-		std::wcout << "GENERATE ERROR: " << message << std::endl;
+		LOG_ERR << "GENERATE ERROR: " << message;
 		return prt::STATUS_OK;
 	}
 	virtual prt::Status assetError(size_t /*isIndex*/, prt::CGAErrorLevel /*level*/, const wchar_t* /*key*/, const wchar_t* /*uri*/, const wchar_t* message) override {
-		std::wcout << "ASSET ERROR: " << message << std::endl;
+		LOG_ERR << "ASSET ERROR: " << message;
 		return prt::STATUS_OK;
 	}
 	virtual prt::Status cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel /*level*/, int32_t /*methodId*/, int32_t /*pc*/, const wchar_t* message) override {
-		std::wcout << "CGA ERROR: " << message << std::endl;
+		LOG_ERR << "CGA ERROR: " << message;
 		return prt::STATUS_OK;
 	}
-	virtual prt::Status cgaPrint(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*txt*/) override {
+	virtual prt::Status cgaPrint(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* txt) override {
+		LOG_INF << "CGA PRINT: " << txt;
 		return prt::STATUS_OK;
 	}
 	virtual prt::Status cgaReportBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, bool /*value*/) override {

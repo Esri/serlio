@@ -27,6 +27,7 @@
 #include "prt/RuleFileInfo.h"
 #include "prt/EncoderInfo.h"
 #include "prt/OcclusionSet.h"
+#include "prt/API.h"
 
 #include <memory>
 #include <cstdint>
@@ -104,6 +105,12 @@ namespace prtu {
 	//we don't want a boost or c++17 dependency for just 2 functions, therefore done ourselfs
 	std::wstring temp_directory_path();
 	void remove_all(const std::wstring& path);
+
+	std::string objectToXML(prt::Object const* obj);
+	template<typename T> std::string objectToXML(const std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }
+	template<typename T> std::string objectToXML(std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }
+
+	AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions = nullptr);
 
 } // namespace prtu
 

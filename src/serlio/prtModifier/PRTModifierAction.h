@@ -85,8 +85,10 @@ public:
 private:
 
 	//init in PRTModifierAction::PRTModifierAction()
-	AttributeMapVector mMayaEncOpts;
-	AttributeMapVector mAttrEncOpts;
+	AttributeMapUPtr mMayaEncOpts;
+	AttributeMapUPtr mAttrEncOpts;
+	AttributeMapUPtr mCGAPrintOptions;
+	AttributeMapUPtr mCGAErrorOptions;
 
 	// Mesh Nodes: only used during doIt
 	MObject inMesh;

@@ -7,6 +7,7 @@ cmake_policy(SET CMP0015 NEW)
 add_library(${SERLIO_TARGET} SHARED
 		serlioPlugin.cpp
 		prtModifier/MayaCallbacks.cpp
+		prtModifier/RuleAttributes.cpp
         prtModifier/PRTModifierAction.cpp
         prtModifier/PRTModifierCommand.cpp
         prtModifier/PRTModifierNode.cpp

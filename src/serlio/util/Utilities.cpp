@@ -248,4 +248,30 @@ namespace prtu {
 		}
 		return -1;
 	}
+
+	std::string objectToXML(prt::Object const* obj) {
+		if (obj == nullptr)
+			throw std::invalid_argument("object pointer is not valid");
+		constexpr size_t SIZE = 4096;
+		size_t actualSize = SIZE;
+		std::vector<char> buffer(SIZE, ' ');
+		obj->toXML(buffer.data(), &actualSize);
+		buffer.resize(actualSize);
+		if(actualSize > SIZE)
+			obj->toXML(buffer.data(), &actualSize);
+		return std::string(buffer.data());
+	}
+
+	AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions) {
+		const EncoderInfoUPtr encInfo(prt::createEncoderInfo(encID));
+		const prt::AttributeMap* validatedOptions = nullptr;
+		const prt::AttributeMap* optionStates = nullptr;
+		const prt::Status s = encInfo->createValidatedOptionsAndStates(unvalidatedOptions, &validatedOptions, &optionStates);
+		if (optionStates != nullptr)
+			optionStates->destroy(); // we don't need that atm
+		if (s != prt::STATUS_OK)
+			return {};
+		return AttributeMapUPtr(validatedOptions);
+	}
+
 } // namespace prtu

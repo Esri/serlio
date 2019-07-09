@@ -28,7 +28,6 @@
 #include "util/LogHandler.h"
 
 #include "prt/StringUtils.h"
-#include "prtx/Material.h"
 
 #include "maya/MFloatArray.h"
 #include "maya/MFloatVectorArray.h"
