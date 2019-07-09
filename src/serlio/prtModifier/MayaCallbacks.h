@@ -25,7 +25,6 @@
 #include "util/LogHandler.h"
 
 #include "prt/Cache.h"
-#include "prtx/Material.h"
 
 #include "maya/MObject.h"
 
