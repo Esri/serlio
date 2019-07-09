@@ -21,6 +21,7 @@
 #include "prtModifier/PRTModifierAction.h"
 
 #include "util/Utilities.h"
+#include "util/MayaUtilities.h"
 
 #include "prt/StringUtils.h"
 
@@ -43,6 +44,13 @@
 #else
 #	include <dlfcn.h>
 #endif
+
+
+namespace {
+
+constexpr bool DBG = false;
+
+} // namespace
 
 MTypeId PRTMaterialNode::id(PRT_MATERIAL_TYPE_ID);
 
@@ -375,7 +383,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					shaderCmd += "shaderfx -sfxnode \"" + shaderNameMstr + "\" -loadGraph  \"" + sfxFile + "\";\n";
 
 					//create shadingnode and add metadata
-					MCHECK(MGlobal::executeCommand(shaderCmd, DO_DBG));
+					MCHECK(MGlobal::executeCommand(shaderCmd, DBG));
 					MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader);
 					while (!itHwShaders.isDone())
 					{
@@ -447,7 +455,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					mShadingCmd += buf.data();
 				}
 
-				MCHECK(MGlobal::executeCommandOnIdle(mShadingCmd, DO_DBG));
+				MCHECK(MGlobal::executeCommandOnIdle(mShadingCmd, DBG));
 
 			}
 		}

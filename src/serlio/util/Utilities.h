@@ -42,9 +42,6 @@
 #endif
 
 
-#define DO_DBG 0
-#define MCHECK(_stat_) {if(MS::kSuccess != _stat_) { prtu::dbg("maya err at %s:%d: %s %d\n", __FILE__, __LINE__, _stat_.errorString().asChar(), _stat_.statusCode());}}
-
 struct PRTDestroyer {
 	void operator()(prt::Object const* p) {
 		if (p) p->destroy();
@@ -77,9 +74,6 @@ namespace prtu {
 	}
 
 	SRL_TEST_EXPORTS_API const std::wstring filename(const std::wstring& path);
-
-	void dbg(const char* fmt, ...);
-	void wdbg(const wchar_t* fmt, ...);
 
 	template<typename C> C getDirSeparator();
 	template<> char getDirSeparator();
@@ -144,3 +138,11 @@ std::basic_string<C> join(Container const &container, const std::basic_string<C>
 	}
 	return os.str();
 }
+
+#if defined(__clang__)
+#	define MAYBE_UNUSED [[maybe_unused]]
+#elif defined(__GNUC__) || defined(__GNUG__)
+#	define MAYBE_UNUSED __attribute__ ((unused)) // [[maybe_unused]] not availble in GCC < 7
+#elif defined(_MSC_VER)
+#	define MAYBE_UNUSED // [[maybe_unused]] would require /std:c++latest i.e. C++17
+#endif
