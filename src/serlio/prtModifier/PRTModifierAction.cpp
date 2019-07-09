@@ -601,7 +601,7 @@ template<typename T> T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependenc
 		LOG_DBG << "node attrs:";
 		mu::forAllAttributes(node, [&node](const MFnAttribute &a) {
 			MString val;
-			node.findPlug(a.object()).getValue(val);
+			node.findPlug(a.object(), true).getValue(val);
 			LOG_DBG << a.name().asWChar() << " = " << val.asWChar();
 		});
 	}
