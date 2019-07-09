@@ -67,16 +67,16 @@ namespace {
 PRTModifierAction::PRTModifierAction() {
 	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
 
-	mMayaEncOpts.reset(prtu::createValidatedOptions(ENC_ID_MAYA));
-	mAttrEncOpts.reset(prtu::createValidatedOptions(ENC_ID_ATTR_EVAL));
+	mMayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
+	mAttrEncOpts = prtu::createValidatedOptions(ENC_ID_ATTR_EVAL);
 
 	optionsBuilder->setString(L"name", FILE_CGA_ERROR);
 	const AttributeMapUPtr errOptions(optionsBuilder->createAttributeMapAndReset());
-	mCGAErrorOptions.reset(prtu::createValidatedOptions(ENC_ID_CGA_ERROR, errOptions.get()));
+	mCGAErrorOptions = prtu::createValidatedOptions(ENC_ID_CGA_ERROR, errOptions.get());
 
 	optionsBuilder->setString(L"name", FILE_CGA_PRINT);
 	const AttributeMapUPtr printOptions(optionsBuilder->createAttributeMapAndReset());
-	mCGAPrintOptions.reset(prtu::createValidatedOptions(ENC_ID_CGA_PRINT, printOptions.get()));
+	mCGAPrintOptions = prtu::createValidatedOptions(ENC_ID_CGA_PRINT, printOptions.get());
 }
 
 void PRTModifierAction::fillAttributesFromNode(const MObject& node) {

@@ -110,7 +110,7 @@ namespace prtu {
 	template<typename T> std::string objectToXML(const std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }
 	template<typename T> std::string objectToXML(std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }
 
-	const prt::AttributeMap* createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions = nullptr);
+	AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions = nullptr);
 
 } // namespace prtu
 

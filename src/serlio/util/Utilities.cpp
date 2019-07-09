@@ -262,14 +262,16 @@ namespace prtu {
 		return std::string(buffer.data());
 	}
 
-	const prt::AttributeMap* createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions) {
+	AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions) {
 		const EncoderInfoUPtr encInfo(prt::createEncoderInfo(encID));
 		const prt::AttributeMap* validatedOptions = nullptr;
 		const prt::AttributeMap* optionStates = nullptr;
 		const prt::Status s = encInfo->createValidatedOptionsAndStates(unvalidatedOptions, &validatedOptions, &optionStates);
 		if (optionStates != nullptr)
-			optionStates->destroy();
-		return (s == prt::STATUS_OK) ? validatedOptions : nullptr;
+			optionStates->destroy(); // we don't need that atm
+		if (s != prt::STATUS_OK)
+			return {};
+		return AttributeMapUPtr(validatedOptions);
 	}
 
 } // namespace prtu
