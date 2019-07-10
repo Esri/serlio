@@ -49,6 +49,8 @@ public:
 	typedef std::map<std::wstring, AttributeHolder> NamedAttributeHolders;
 
 public:
+	MayaCallbacks() = delete;
+
 	MayaCallbacks(const MObject inMesh, const MObject outMesh)
 		: inMeshObj(inMesh), outMeshObj(outMesh) { }
 
@@ -103,10 +105,6 @@ public:
 
 public:
 	const NamedAttributeHolders& getAttrs() const { return mAttrs; }
-
-private:
-	// must not be called
-	MayaCallbacks() { }
 
 private:
 	MObject                 outMeshObj;
