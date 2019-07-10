@@ -84,6 +84,18 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 	const MFnDependencyNode fNode(node, &stat);
 	MCHECK(stat);
 
+	auto resolveMap = getResolveMap();
+	const RuleFileInfoUPtr info(prt::createRuleFileInfo(resolveMap->getString(mRuleFile.c_str())));
+	auto getRuleAttributeType = [&info](const std::wstring& name){
+		for (size_t ai = 0, numAttrs = info->getNumAttributes(); ai < numAttrs; ai++) {
+			const auto* a = info->getAttribute(ai);
+			if (std::wcscmp(a->getName(), name.c_str()) == 0) {
+				return a->getReturnType();
+			}
+		}
+		return prt::AAT_UNKNOWN;
+	};
+
 	const unsigned int count = fNode.attributeCount(&stat);
 	MCHECK(stat);
 
@@ -98,11 +110,14 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 
 		const MString       briefName = plug.partialName();
 		const std::wstring  name = mBriefName2prtAttr[briefName.asWChar()];
+		const auto ruleAttrType = getRuleAttributeType(name);
 
 		if (attr.hasFn(MFn::kNumericAttribute)) {
 			MFnNumericAttribute nAttr(attr);
 
 			if (nAttr.unitType() == MFnNumericData::kBoolean) {
+				assert(ruleAttrType == prt::AAT_BOOL);
+
 				bool b, db;
 				nAttr.getDefault(db);
 				MCHECK(plug.getValue(b));
@@ -110,6 +125,8 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 					aBuilder->setBool(name.c_str(), b);
 			}
 			else if (nAttr.unitType() == MFnNumericData::kDouble) {
+				assert(ruleAttrType == prt::AAT_FLOAT);
+
 				double d, dd;
 				nAttr.getDefault(dd);
 				MCHECK(plug.getValue(d));
@@ -135,6 +152,8 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 
 		}
 		else if (attr.hasFn(MFn::kTypedAttribute)) {
+			assert(ruleAttrType == prt::AAT_STR);
+
 			MFnTypedAttribute tAttr(attr);
 			MString       s;
 			MFnStringData dsd;
@@ -158,8 +177,21 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 			short i;
 			MCHECK(eAttr.getDefault(di));
 			MCHECK(plug.getValue(i));
-			if (i != di)
-				aBuilder->setString(name.c_str(), eAttr.fieldName(i).asWChar());
+			if (i != di) {
+				switch (ruleAttrType) {
+					case prt::AAT_STR:
+						aBuilder->setString(name.c_str(), eAttr.fieldName(i).asWChar());
+						break;
+					case prt::AAT_FLOAT:
+						aBuilder->setFloat(name.c_str(), eAttr.fieldName(i).asDouble());
+						break;
+					case prt::AAT_BOOL:
+						aBuilder->setBool(name.c_str(), eAttr.fieldName(i).asInt() != 0);
+						break;
+					default:
+						LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << name;
+				}
+			}
 		}
 	}
 
