@@ -45,22 +45,64 @@
 
 #define CHECK_STATUS(st) if ((st) != MS::kSuccess) { break; }
 namespace {
-	constexpr bool DBG = false;
 
-	constexpr const wchar_t* ENC_ID_MAYA      = L"MayaEncoder";
-	constexpr const wchar_t* ENC_ID_ATTR_EVAL = L"com.esri.prt.core.AttributeEvalEncoder";
-	constexpr const wchar_t* ENC_ID_CGA_ERROR = L"com.esri.prt.core.CGAErrorEncoder";
-	constexpr const wchar_t* ENC_ID_CGA_PRINT = L"com.esri.prt.core.CGAPrintEncoder";
-	constexpr const wchar_t* FILE_CGA_ERROR   = L"CGAErrors.txt";
-	constexpr const wchar_t* FILE_CGA_PRINT   = L"CGAPrint.txt";
+constexpr bool DBG = false;
 
-	const MString  NAME_GENERATE = "Generate_Model";
+constexpr const wchar_t* ENC_ID_MAYA      = L"MayaEncoder";
+constexpr const wchar_t* ENC_ID_ATTR_EVAL = L"com.esri.prt.core.AttributeEvalEncoder";
+constexpr const wchar_t* ENC_ID_CGA_ERROR = L"com.esri.prt.core.CGAErrorEncoder";
+constexpr const wchar_t* ENC_ID_CGA_PRINT = L"com.esri.prt.core.CGAPrintEncoder";
+constexpr const wchar_t* FILE_CGA_ERROR   = L"CGAErrors.txt";
+constexpr const wchar_t* FILE_CGA_PRINT   = L"CGAPrint.txt";
 
-	constexpr const wchar_t* NULL_KEY = L"#NULL#";
-	constexpr const wchar_t* MIN_KEY = L"min";
-	constexpr const wchar_t* MAX_KEY = L"max";
-	const MString  PRT("PRT");
-	constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
+const MString  NAME_GENERATE = "Generate_Model";
+
+constexpr const wchar_t* NULL_KEY = L"#NULL#";
+constexpr const wchar_t* MIN_KEY = L"min";
+constexpr const wchar_t* MAX_KEY = L"max";
+const MString  PRT("PRT");
+constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
+
+namespace UnitQuad {
+	const double   vertices[] = { 0, 0, 0,  0, 0, 1,  1, 0, 1,  1, 0, 0 };
+	const size_t   vertexCount = 12;
+	const uint32_t indices[] = { 0, 1, 2, 3 };
+	const size_t   indexCount = 4;
+	const uint32_t faceCounts[] = { 4 };
+	const size_t   faceCountsCount = 1;
+	const int32_t  seed = mu::computeSeed(vertices, vertexCount);
+}
+
+AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, ResolveMapSPtr resolveMap, CacheObjectUPtr& cache) {
+	AttributeMapBuilderUPtr amb(prt::AttributeMapBuilder::create());
+	AttributeMapUPtr attrs(amb->createAttributeMapAndReset());
+	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, amb);
+
+	InitialShapeBuilderUPtr isb(prt::InitialShapeBuilder::create());
+
+	isb->setGeometry(
+		UnitQuad::vertices,
+		UnitQuad::vertexCount,
+		UnitQuad::indices,
+		UnitQuad::indexCount,
+		UnitQuad::faceCounts,
+		UnitQuad::faceCountsCount
+	);
+
+	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), UnitQuad::seed,L"", attrs.get(), resolveMap.get());
+
+	InitialShapeUPtr shape(isb->createInitialShapeAndReset());
+	InitialShapeNOPtrVector shapes = { shape.get() };
+
+	const std::vector<const wchar_t*> encIDs = { ENC_ID_ATTR_EVAL };
+	AttributeMapUPtr attrEncOpts = prtu::createValidatedOptions(ENC_ID_ATTR_EVAL);
+	const AttributeMapNOPtrVector encOpts = { attrEncOpts.get() };
+	assert(encIDs.size() == encOpts.size());
+
+	prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(), &mayaCallbacks, cache.get(), nullptr);
+
+	return AttributeMapUPtr(amb->createAttributeMap());
+}
 
 } // namespace
 
@@ -95,6 +137,8 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 		return prt::AAT_UNKNOWN;
 	};
 
+	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), theCache);
+
 	const unsigned int count = fNode.attributeCount(&stat);
 	MCHECK(stat);
 
@@ -117,24 +161,26 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 			if (nAttr.unitType() == MFnNumericData::kBoolean) {
 				assert(ruleAttrType == prt::AAT_BOOL);
 
-				bool b, db;
-				nAttr.getDefault(db);
-				MCHECK(plug.getValue(b));
-				if (b != db)
-					aBuilder->setBool(name.c_str(), b);
+				bool val;
+				MCHECK(plug.getValue(val));
+
+				const auto defVal = defaultAttributeValues->getBool(name.c_str());
+				if (val != defVal)
+					aBuilder->setBool(name.c_str(), val);
 			}
 			else if (nAttr.unitType() == MFnNumericData::kDouble) {
 				assert(ruleAttrType == prt::AAT_FLOAT);
 
-				double d, dd;
-				nAttr.getDefault(dd);
-				MCHECK(plug.getValue(d));
-				if (d != dd)
-					aBuilder->setFloat(name.c_str(), d);
+				double val;
+				MCHECK(plug.getValue(val));
+
+				const auto defVal = defaultAttributeValues->getFloat(name.c_str());
+				if (val != defVal)
+					aBuilder->setFloat(name.c_str(), val);
 			}
 			else if (nAttr.isUsedAsColor()) {
 				float r, g, b;
-				nAttr.getDefault(r, g, b);
+				nAttr.getDefault(r, g, b); // TODO: should also use prt def values
 				const std::wstring dcolor = prtu::toHex(r, g, b);
 
 				MObject rgb;
@@ -148,26 +194,16 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 					aBuilder->setString(name.c_str(), color.c_str());
 				}
 			}
-
 		}
 		else if (attr.hasFn(MFn::kTypedAttribute)) {
 			assert(ruleAttrType == prt::AAT_STR);
 
-			MFnTypedAttribute tAttr(attr);
-			MString       s;
-			MFnStringData dsd;
-			MObject       dso = dsd.create(&stat);
-			MCHECK(stat);
-			MCHECK(tAttr.getDefault(dso));
+			MString val;
+			MCHECK(plug.getValue(val));
 
-			MFnStringData fDs(dso, &stat);
-			MCHECK(stat);
-
-			MCHECK(plug.getValue(s));
-			if (s != fDs.string(&stat)) {
-				MCHECK(stat);
-				aBuilder->setString(name.c_str(), s.asWChar());
-			}
+			const auto defVal = defaultAttributeValues->getString(name.c_str());
+			if (std::wcscmp(val.asWChar(), defVal) != 0)
+				aBuilder->setString(name.c_str(), val.asWChar());
 		}
 		else if (attr.hasFn(MFn::kEnumAttribute)) {
 			MFnEnumAttribute eAttr(attr);
@@ -361,52 +397,6 @@ MStatus PRTModifierAction::doIt()
 
 	return status;
 }
-
-
-namespace {
-
-namespace UnitQuad {
-	const double   vertices[] = { 0, 0, 0,  0, 0, 1,  1, 0, 1,  1, 0, 0 };
-	const size_t   vertexCount = 12;
-	const uint32_t indices[] = { 0, 1, 2, 3 };
-	const size_t   indexCount = 4;
-	const uint32_t faceCounts[] = { 4 };
-	const size_t   faceCountsCount = 1;
-	const int32_t  seed = mu::computeSeed(vertices, vertexCount);
-}
-
-AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, ResolveMapSPtr resolveMap, CacheObjectUPtr& cache) {
-	AttributeMapBuilderUPtr amb(prt::AttributeMapBuilder::create());
-	AttributeMapUPtr attrs(amb->createAttributeMapAndReset());
-	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, amb);
-
-	InitialShapeBuilderUPtr isb(prt::InitialShapeBuilder::create());
-
-	isb->setGeometry(
-		UnitQuad::vertices,
-		UnitQuad::vertexCount,
-		UnitQuad::indices,
-		UnitQuad::indexCount,
-		UnitQuad::faceCounts,
-		UnitQuad::faceCountsCount
-	);
-
-	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), UnitQuad::seed,L"", attrs.get(), resolveMap.get());
-
-	InitialShapeUPtr shape(isb->createInitialShapeAndReset());
-	InitialShapeNOPtrVector shapes = { shape.get() };
-
-	const std::vector<const wchar_t*> encIDs = { ENC_ID_ATTR_EVAL };
-	AttributeMapUPtr attrEncOpts = prtu::createValidatedOptions(ENC_ID_ATTR_EVAL);
-	const AttributeMapNOPtrVector encOpts = { attrEncOpts.get() };
-	assert(encIDs.size() == encOpts.size());
-
-	prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(), &mayaCallbacks, cache.get(), nullptr);
-
-	return AttributeMapUPtr(amb->createAttributeMap());
-}
-
-} // namespace
 
 
 MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wstring & ruleFile, const std::wstring & startRule, const prt::RuleFileInfo* info) {
