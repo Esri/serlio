@@ -400,16 +400,16 @@ void MayaCallbacks::addMesh(
 }
 
 prt::Status MayaCallbacks::attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, bool value) {
-	mAttrs[key].mBool = value;
+	mAttributeMapBuilder->setBool(key, value);
 	return prt::STATUS_OK;
 }
 
 prt::Status MayaCallbacks::attrFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, double value) {
-	mAttrs[key].mFloat = value;
+	mAttributeMapBuilder->setFloat(key, value);
 	return prt::STATUS_OK;
 }
 
 prt::Status MayaCallbacks::attrString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, const wchar_t* value) {
-	mAttrs[key].mString = value;
+	mAttributeMapBuilder->setString(key, value);
 	return prt::STATUS_OK;
 }

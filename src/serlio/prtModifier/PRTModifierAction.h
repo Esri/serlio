@@ -76,7 +76,7 @@ public:
 
 	//init in PRTModifierPlugin::initializePlugin, destroyed in PRTModifierPlugin::uninitializePlugin
 	static const prt::Object*       thePRT;
-	static prt::CacheObject*        theCache;
+	static CacheObjectUPtr          theCache;
 	static prt::ConsoleLogHandler*  theLogHandler;
 	static prt::FileLogHandler*     theFileLogHandler;
 	static const std::string&       getPluginRoot();
@@ -86,7 +86,6 @@ private:
 
 	//init in PRTModifierAction::PRTModifierAction()
 	AttributeMapUPtr mMayaEncOpts;
-	AttributeMapUPtr mAttrEncOpts;
 	AttributeMapUPtr mCGAPrintOptions;
 	AttributeMapUPtr mCGAErrorOptions;
 
@@ -107,7 +106,7 @@ private:
 
 	std::list<PRTModifierEnum> mEnums;
 	std::map<std::wstring, std::wstring> mBriefName2prtAttr;
-	MStatus createNodeAttributes(MObject& node, const std::wstring & ruleFile, const std::wstring & startRule, prt::AttributeMapBuilder* aBuilder, const prt::RuleFileInfo* info);
+	MStatus createNodeAttributes(MObject& node, const std::wstring & ruleFile, const std::wstring & startRule, const prt::RuleFileInfo* info);
 	void removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDependencyNode &node);
 
 	static MStatus  addParameter(MFnDependencyNode & node, MObject & attr, MFnAttribute& tAttr);
