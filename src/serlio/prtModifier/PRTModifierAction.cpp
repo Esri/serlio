@@ -180,20 +180,19 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 					aBuilder->setFloat(name.c_str(), val);
 			}
 			else if (nAttr.isUsedAsColor()) {
-				float r, g, b;
-				nAttr.getDefault(r, g, b); // TODO: should also use prt def values
-				const std::wstring dcolor = prtu::toHex(r, g, b);
+				assert(ruleAttrType == prt::AAT_STR);
+				const wchar_t* defColStr = defaultAttributeValues->getString(name.c_str());
 
 				MObject rgb;
 				MCHECK(plug.getValue(rgb));
 				MFnNumericData fRGB(rgb);
-				MCHECK(fRGB.getData(r, g, b));
-				const std::wstring color = prtu::toHex(r, g, b);
 
-				if (dcolor != color) {
-					LOG_DBG << name << " -> " << color;
-					aBuilder->setString(name.c_str(), color.c_str());
-				}
+				prtu::Color col;
+				MCHECK(fRGB.getData(col[0], col[1], col[2]));
+				const std::wstring colStr = prtu::getColorString(col);
+
+				if (std::wcscmp(colStr.c_str(), defColStr) != 0)
+					aBuilder->setString(name.c_str(), colStr.c_str());
 			}
 		}
 		else if (attr.hasFn(MFn::kTypedAttribute)) {
@@ -794,25 +793,17 @@ MStatus PRTModifierAction::addColorParameter(MFnDependencyNode & node, MObject &
 	MFnNumericAttribute nAttr;
 
 	const wchar_t* s = defaultValue.asWChar();
-	double r = 0.0;
-	double g = 0.0;
-	double b = 0.0;
-
-	if (s[0] == '#' && wcslen(s) >= 7) {
-		r = static_cast<double>((prtu::fromHex(s[1]) << 4) + prtu::fromHex(s[2])) / 255.0;
-		g = static_cast<double>((prtu::fromHex(s[3]) << 4) + prtu::fromHex(s[4])) / 255.0;
-		b = static_cast<double>((prtu::fromHex(s[5]) << 4) + prtu::fromHex(s[6])) / 255.0;
-	}
+	const prtu::Color color = prtu::parseColor(s);
 
 	MFnNumericData fnData;
 	MObject        rgb = fnData.create(MFnNumericData::k3Double, &stat);
 	MCHECK(stat);
-	fnData.setData(r, g, b);
+	fnData.setData(color[0], color[1], color[2]);
 
 	MObject plugValue = getPlugValueAndRemoveAttr(node, briefName(name), rgb);
 	attr = nAttr.createColor(longName(name), briefName(name), &stat);
 	nAttr.setNiceNameOverride(niceName(name));
-	nAttr.setDefault(r, g, b);
+	nAttr.setDefault(color[0], color[1], color[2]);
 
 	MCHECK(stat);
 	MCHECK(addParameter(node, attr, nAttr));

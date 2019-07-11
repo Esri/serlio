@@ -37,6 +37,7 @@
 #include <ostream>
 #include <iterator>
 #include <string>
+#include <array>
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 #   include <cfloat>
@@ -83,7 +84,6 @@ namespace prtu {
 
 	int fromHex(wchar_t c);
 	wchar_t toHex(int i);
-	std::wstring toHex(double r, double g, double b);
 
 	inline bool isnan(double d) {
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
@@ -92,6 +92,10 @@ namespace prtu {
 		return (std::isnan(d) != 0);
 #endif
 	}
+
+	using Color = std::array<double,3>;
+	Color parseColor(const wchar_t* colorString);
+	std:: wstring getColorString(const Color& c);
 
 	SRL_TEST_EXPORTS_API std::string toOSNarrowFromUTF16(const std::wstring& u16String);
 	SRL_TEST_EXPORTS_API std::wstring toUTF16FromOSNarrow(const std::string& osString);

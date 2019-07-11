@@ -101,15 +101,26 @@ namespace prtu {
 		return HEXTAB[i & 0xF];
 	}
 
-	std:: wstring toHex(double r, double g, double b) {
-		std::wstringstream color;
-		color << toHex(((int)(r * 255)) >> 4);
-		color << toHex((int)(r * 255));
-		color << toHex(((int)(g * 255)) >> 4);
-		color << toHex((int)(g * 255));
-		color << toHex(((int)(b * 255)) >> 4);
-		color << toHex((int)(b * 255));
-		return color.str();
+	Color parseColor(const wchar_t* colorString) {
+		Color c{0.0, 0.0, 0.0};
+		if (std::wcslen(colorString) >= 7 && colorString[0] == '#') {
+			c[0] = static_cast<double>((prtu::fromHex(colorString[1]) << 4) + prtu::fromHex(colorString[2])) / 255.0;
+			c[1] = static_cast<double>((prtu::fromHex(colorString[3]) << 4) + prtu::fromHex(colorString[4])) / 255.0;
+			c[2] = static_cast<double>((prtu::fromHex(colorString[5]) << 4) + prtu::fromHex(colorString[6])) / 255.0;
+		}
+		return c;
+	}
+
+	std:: wstring getColorString(const Color& c) {
+		std::wstringstream colStr;
+		colStr << L'#';
+		colStr << toHex(((int)(c[0] * 255)) >> 4);
+		colStr << toHex((int)(c[0] * 255));
+		colStr << toHex(((int)(c[1] * 255)) >> 4);
+		colStr << toHex((int)(c[1] * 255));
+		colStr << toHex(((int)(c[2] * 255)) >> 4);
+		colStr << toHex((int)(c[2] * 255));
+		return colStr.str();
 	}
 
 	template<typename CO, typename CI, typename AF>
