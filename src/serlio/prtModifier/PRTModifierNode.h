@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "PRTContext.h"
+
 #include "polyModifier/polyModifierNode.h"
 #include "prtModifier/PRTModifierAction.h"
 
@@ -30,22 +32,21 @@
 class PRTModifierNode : public polyModifierNode
 {
 public:
-	PRTModifierNode() = default;
+	PRTModifierNode(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx), fPRTModifierAction(prtCtx) { }
 
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
 	MStatus setDependentsDirty(const MPlug &plugBeingDirtied, MPlugArray &affectedPlugs) override;
 
-	static  void*   creator();
 	static  MStatus initialize();
 
 public:
+	// non-dynamic node attributes
+	static MObject rulePkg;
+	static MObject currentRulePkg;
+	static MTypeId id;
+	static MObject mRandomSeed;
 
-	static MObject      rulePkg;
-	static MObject      currentRulePkg;
-	static MTypeId      id;
-	static MObject      mRandomSeed;
-
-	PRTModifierAction   fPRTModifierAction;
-
+	PRTContextUPtr& mPRTCtx;
+	PRTModifierAction fPRTModifierAction;
 };
 

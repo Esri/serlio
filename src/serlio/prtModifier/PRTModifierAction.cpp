@@ -36,11 +36,6 @@
 #include "maya/MFnCompoundAttribute.h"
 
 #include <cassert>
-#ifdef _WIN32
-#	include <Windows.h>
-#else
-#	include <dlfcn.h>
-#endif
 
 
 #define CHECK_STATUS(st) if ((st) != MS::kSuccess) { break; }
@@ -54,8 +49,6 @@ constexpr const wchar_t* ENC_ID_CGA_ERROR = L"com.esri.prt.core.CGAErrorEncoder"
 constexpr const wchar_t* ENC_ID_CGA_PRINT = L"com.esri.prt.core.CGAPrintEncoder";
 constexpr const wchar_t* FILE_CGA_ERROR   = L"CGAErrors.txt";
 constexpr const wchar_t* FILE_CGA_PRINT   = L"CGAPrint.txt";
-
-const MString  NAME_GENERATE = "Generate_Model";
 
 constexpr const wchar_t* NULL_KEY = L"#NULL#";
 constexpr const wchar_t* MIN_KEY = L"min";
@@ -107,7 +100,7 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 
 } // namespace
 
-PRTModifierAction::PRTModifierAction() {
+PRTModifierAction::PRTModifierAction(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) {
 	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
 
 	mMayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
@@ -138,7 +131,7 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 		return prt::AAT_UNKNOWN;
 	};
 
-	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), theCache);
+	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), mPRTCtx->theCache);
 
 	const unsigned int count = fNode.attributeCount(&stat);
 	MCHECK(stat);
@@ -240,41 +233,8 @@ void PRTModifierAction::setMesh(MObject& _inMesh, MObject& _outMesh)
 	outMesh = _outMesh;
 }
 
-// plugin root = location of serlio shared library
-const std::string& PRTModifierAction::getPluginRoot() {
-	static std::string* rootPath = nullptr;
-	if (rootPath == nullptr) {
-#ifdef _WIN32
-		char dllPath[_MAX_PATH];
-		char drive[8];
-		char dir[_MAX_PATH];
-		HMODULE hModule = 0;
-
-		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)PRTModifierCommand::creator, &hModule);
-		const DWORD res = ::GetModuleFileName(hModule, dllPath, _MAX_PATH);
-		if (res == 0) {
-			// TODO DWORD e = ::GetLastError();
-			throw std::runtime_error("failed to get plugin location");
-		}
-
-		_splitpath_s(dllPath, drive, 8, dir, _MAX_PATH, 0, 0, 0, 0);
-		rootPath = new std::string(drive);
-		rootPath->append(dir);
-#else
-		Dl_info dl_info;
-		dladdr((void *)getPluginRoot, &dl_info);
-		const std::string tmp(dl_info.dli_fname);
-		rootPath = new std::string(tmp.substr(0, tmp.find_last_of(prtu::getDirSeparator<char>()))); // accepted mem leak
-#endif
-		if (*rootPath->rbegin() != prtu::getDirSeparator<char>())
-			rootPath->append(1, prtu::getDirSeparator<char>());
-	}
-	return *rootPath;
-}
-
-
 ResolveMapSPtr PRTModifierAction::getResolveMap() {
-	ResolveMapCache::LookupResult lookupResult = mResolveMapCache->get(std::wstring(mRulePkg.asWChar()));
+	ResolveMapCache::LookupResult lookupResult = mPRTCtx->mResolveMapCache->get(std::wstring(mRulePkg.asWChar()));
 	ResolveMapSPtr resolveMap = lookupResult.first;
 	return resolveMap;
 }
@@ -391,7 +351,7 @@ MStatus PRTModifierAction::doIt()
 	assert(encIDs.size() == encOpts.size());
 
 	InitialShapeNOPtrVector shapes = { shape.get() };
-	const prt::Status        generateStatus = prt::generate(shapes.data(), shapes.size(), 0, encIDs.data(), encIDs.size(), encOpts.data(), outputHandler.get(), theCache.get(), 0);
+	const prt::Status generateStatus = prt::generate(shapes.data(), shapes.size(), 0, encIDs.data(), encIDs.size(), encOpts.data(), outputHandler.get(), mPRTCtx->theCache.get(), 0);
 	if (generateStatus != prt::STATUS_OK)
 		std::cerr << "prt generate failed: " << prt::getStatusDescription(generateStatus) << std::endl;
 
@@ -400,20 +360,11 @@ MStatus PRTModifierAction::doIt()
 
 
 MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wstring & ruleFile, const std::wstring & startRule, const prt::RuleFileInfo* info) {
-	mGenerateAttrs = getDefaultAttributeValues(ruleFile, startRule, getResolveMap(), theCache);
+	mGenerateAttrs = getDefaultAttributeValues(ruleFile, startRule, getResolveMap(), mPRTCtx->theCache);
 
-
-	MStatus           stat;
-	MFnNumericData    numericData;
-	MFnTypedAttribute tAttr;
-	MFnStringData     attrDefaultStr;
-	MString           dummy;
-
+	MStatus stat;
 	MFnDependencyNode node(nodeObj, &stat);
 	MCHECK(stat);
-
-
-	mBriefName2prtAttr[NAME_GENERATE.asWChar()] = NAME_GENERATE.asWChar();
 
 	RuleAttributes sortedAttributes = getRuleAttributes(ruleFile, info);
 	sortRuleAttributes(sortedAttributes);
@@ -835,11 +786,3 @@ MStatus PRTModifierAction::addStrParameter(MFnDependencyNode & node, MObject & a
 
 	return MS::kSuccess;
 }
-
-
-// statics
-prt::ConsoleLogHandler* PRTModifierAction::theLogHandler = nullptr;
-prt::FileLogHandler*    PRTModifierAction::theFileLogHandler = nullptr;
-const prt::Object*      PRTModifierAction::thePRT = nullptr;
-CacheObjectUPtr         PRTModifierAction::theCache;
-ResolveMapCache*        PRTModifierAction::mResolveMapCache = nullptr;

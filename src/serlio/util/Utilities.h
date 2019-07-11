@@ -69,6 +69,15 @@ using ResolveMapSPtr = std::shared_ptr<const prt::ResolveMap>;
 
 namespace prtu {
 
+	std::wstring getPluginRoot();
+
+	template<typename C>
+	std::vector<const C*> toPtrVec(const std::vector<std::basic_string<C>>& sv) {
+		std::vector<const C*> pv(sv.size());
+		std::transform(sv.begin(), sv.end(), pv.begin(), [](const auto& s) { return s.c_str(); });
+		return pv;
+	}
+
 	template<typename C, typename D>
 	std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 		std::vector<const C*> pv(sv.size());
@@ -76,7 +85,12 @@ namespace prtu {
 		return pv;
 	}
 
+	// we don't want boost or c++17 dependency right now
 	SRL_TEST_EXPORTS_API const std::wstring filename(const std::wstring& path);
+	time_t getFileModificationTime(const std::wstring& p);
+	std::wstring temp_directory_path();
+	std::wstring getProcessTempDir(const std::wstring& prefix);
+	void remove_all(const std::wstring& path);
 
 	template<typename C> C getDirSeparator();
 	template<> char getDirSeparator();
@@ -104,12 +118,6 @@ namespace prtu {
 
 	SRL_TEST_EXPORTS_API std::wstring toFileURI(const std::wstring& p);
 	std::string percentEncode(const std::string& utf8String);
-	
-	time_t getFileModificationTime(const std::wstring& p);
-
-	//we don't want a boost or c++17 dependency for just 2 functions, therefore done ourselfs
-	std::wstring temp_directory_path();
-	void remove_all(const std::wstring& path);
 
 	std::string objectToXML(prt::Object const* obj);
 	template<typename T> std::string objectToXML(const std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }

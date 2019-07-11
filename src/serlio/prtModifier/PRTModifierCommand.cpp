@@ -28,10 +28,6 @@
 #include "maya/MFloatPointArray.h"
 
 
-void* PRTModifierCommand::creator()
-{
-	return new PRTModifierCommand();
-}
 
 bool PRTModifierCommand::isUndoable() const
 {
@@ -181,7 +177,7 @@ MStatus PRTModifierCommand::initModifierNode(MObject modifierNode)
 MStatus PRTModifierCommand::directModifier(MObject mesh)
 {
 	MStatus status;
-	PRTModifierAction fPRTModifierAction;
+	PRTModifierAction fPRTModifierAction(mPRTCtx);
 
 	fPRTModifierAction.setRandomSeed(mInitialSeed);
 	fPRTModifierAction.updateRuleFiles(MObject::kNullObj, mRulePkg);

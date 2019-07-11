@@ -21,6 +21,7 @@
 #pragma once
 
 #include "prtModifier/MayaCallbacks.h"
+#include "PRTContext.h"
 
 #include "maya/MString.h"
 #include "maya/MPxNode.h"
@@ -84,10 +85,10 @@ private:
 	static double getDouble(adsk::Data::Handle sHandle, const std::string& name);
 };
 
-class PRTMaterialNode : public MPxNode {
 
+class PRTMaterialNode : public MPxNode {
 public:
-	PRTMaterialNode() = default;
+	PRTMaterialNode(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) { }
 
 	static  void*       creator();
 	static  MStatus     initialize();
@@ -105,6 +106,7 @@ private:
 	static void setTexture(MString& mShadingCmd, const std::string& tex, const std::string& target);
 	static void setAttribute(MString& mShadingCmd, double vec, const std::string& target);
 	static MString sfxFile;
+
+private:
+	PRTContextUPtr& mPRTCtx;
 }; // class PRTMaterialNode
-
-

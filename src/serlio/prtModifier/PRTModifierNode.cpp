@@ -135,11 +135,6 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
 	return status;
 }
 
-void* PRTModifierNode::creator()
-{
-	return new PRTModifierNode();
-}
-
 MStatus PRTModifierNode::initialize()
 // Description:
 //  This method is called to create and initialize all of the attributes

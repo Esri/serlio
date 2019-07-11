@@ -20,9 +20,8 @@
 #pragma once
 
 #include "polyModifier/polyModifierFty.h"
-
 #include "util/Utilities.h"
-#include "util/ResolveMapCache.h"
+#include "PRTContext.h"
 
 #include "prt/API.h"
 
@@ -59,12 +58,11 @@ private:
 }; // class PRTModifierEnum
 
 
-class PRTModifierAction : public polyModifierFty
-{
+class PRTModifierAction : public polyModifierFty {
 	friend class PRTModifierEnum;
 
 public:
-	PRTModifierAction();
+	PRTModifierAction(PRTContextUPtr& prtCtx);
 
 	MStatus updateRuleFiles(MObject& node, const MString& rulePkg);
 	void fillAttributesFromNode(const MObject& node);
@@ -74,15 +72,8 @@ public:
 	// polyModifierFty inherited methods
 	MStatus		doIt() override;
 
-	//init in PRTModifierPlugin::initializePlugin, destroyed in PRTModifierPlugin::uninitializePlugin
-	static const prt::Object*       thePRT;
-	static CacheObjectUPtr          theCache;
-	static prt::ConsoleLogHandler*  theLogHandler;
-	static prt::FileLogHandler*     theFileLogHandler;
-	static const std::string&       getPluginRoot();
-	static ResolveMapCache*         mResolveMapCache;
-
 private:
+	PRTContextUPtr& mPRTCtx;
 
 	//init in PRTModifierAction::PRTModifierAction()
 	AttributeMapUPtr mMayaEncOpts;
