@@ -63,6 +63,8 @@ constexpr const wchar_t* MAX_KEY = L"max";
 const MString  PRT("PRT");
 constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
 
+const AttributeMapUPtr EMPTY_ATTRIBUTES(AttributeMapBuilderUPtr(prt::AttributeMapBuilder::create())->createAttributeMap());
+
 namespace UnitQuad {
 	const double   vertices[] = { 0, 0, 0,  0, 0, 1,  1, 0, 1,  1, 0, 0 };
 	const size_t   vertexCount = 12;
@@ -74,9 +76,8 @@ namespace UnitQuad {
 }
 
 AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, ResolveMapSPtr resolveMap, CacheObjectUPtr& cache) {
-	AttributeMapBuilderUPtr amb(prt::AttributeMapBuilder::create());
-	AttributeMapUPtr attrs(amb->createAttributeMapAndReset());
-	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, amb);
+	AttributeMapBuilderUPtr mayaCallbacksAttributeBuilder(prt::AttributeMapBuilder::create());
+	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, mayaCallbacksAttributeBuilder);
 
 	InitialShapeBuilderUPtr isb(prt::InitialShapeBuilder::create());
 
@@ -89,19 +90,19 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 		UnitQuad::faceCountsCount
 	);
 
-	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), UnitQuad::seed,L"", attrs.get(), resolveMap.get());
+	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), UnitQuad::seed,L"", EMPTY_ATTRIBUTES.get(), resolveMap.get());
 
-	InitialShapeUPtr shape(isb->createInitialShapeAndReset());
-	InitialShapeNOPtrVector shapes = { shape.get() };
+	const InitialShapeUPtr shape(isb->createInitialShapeAndReset());
+	const InitialShapeNOPtrVector shapes = { shape.get() };
 
 	const std::vector<const wchar_t*> encIDs = { ENC_ID_ATTR_EVAL };
-	AttributeMapUPtr attrEncOpts = prtu::createValidatedOptions(ENC_ID_ATTR_EVAL);
+	const AttributeMapUPtr attrEncOpts = prtu::createValidatedOptions(ENC_ID_ATTR_EVAL);
 	const AttributeMapNOPtrVector encOpts = { attrEncOpts.get() };
 	assert(encIDs.size() == encOpts.size());
 
 	prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(), &mayaCallbacks, cache.get(), nullptr);
 
-	return AttributeMapUPtr(amb->createAttributeMap());
+	return AttributeMapUPtr(mayaCallbacksAttributeBuilder->createAttributeMap());
 }
 
 } // namespace
