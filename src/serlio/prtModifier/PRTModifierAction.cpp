@@ -299,7 +299,7 @@ MStatus PRTModifierAction::doIt()
 		va[i * 3 + 1] = vertices[i].y;
 		va[i * 3 + 2] = vertices[i].z;
 	}
-	
+
 	std::vector <uint32_t> ia(pconnect.length());
 	pconnect.get((int*)ia.data());
 	std::vector <uint32_t> ca(pcounts.length());
@@ -355,106 +355,149 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 	RuleAttributes sortedAttributes = getRuleAttributes(ruleFile, info);
 	sortRuleAttributes(sortedAttributes);
 
-	for (AttributeProperties p: sortedAttributes) {
+	for (const AttributeProperties& p: sortedAttributes) {
+		const std::wstring key = p.name;
 
 		// only use attributes of current style
-		const std::wstring style = prtu::getStyle(p.name);
+		const std::wstring style = prtu::getStyle(key);
 		if (style != mRuleStyle)
 			continue;
 
-		size_t i = p.index;
+		const prt::Attributable::PrimitiveType attrType = mGenerateAttrs->getType(key.c_str());
 
-		const MString name = MString(p.name.c_str());
+		// TMP: detect attribute traits based on rule info / annotations
+		enum class AttributeTrait { ENUM, RANGE, FILE, DIR, COLOR, PLAIN };
+		struct AttributeTraitPayload { // intermediate representation of annotation data, poor man's std::variant
+			std::wstring mString;
+			const prt::Annotation* mAnnot = nullptr; // TODO: just while refactoring...
+		};
+
+		auto detectAttributeTrait = [&info](const std::wstring& key) -> std::pair<AttributeTrait, AttributeTraitPayload> {
+			for (size_t ai = 0, numAttrs = info->getNumAttributes(); ai < numAttrs; ai++) {
+				const auto* attr = info->getAttribute(ai);
+				if (std::wcscmp(key.c_str(), attr->getName()) != 0)
+					continue;
+
+				for (size_t a = 0; a < attr->getNumAnnotations(); a++) {
+					const prt::Annotation* an = attr->getAnnotation(a);
+					const wchar_t* anName = an->getName();
+					if (std::wcscmp(anName, ANNOT_ENUM) == 0)
+						return { AttributeTrait::ENUM, { {}, an } };
+					else if (std::wcscmp(anName, ANNOT_RANGE) == 0)
+						return { AttributeTrait::RANGE, { {}, an } };
+					else if (std::wcscmp(anName, ANNOT_COLOR) == 0)
+						return { AttributeTrait::COLOR, {} };
+					else if (std::wcscmp(anName, ANNOT_DIR) == 0) {
+						return { AttributeTrait::DIR, {} };
+					}
+					else if (std::wcscmp(anName, ANNOT_FILE) == 0) {
+						std::wstring exts;
+						for (size_t arg = 0; arg < an->getNumArguments(); arg++) {
+							if (an->getArgument(arg)->getType() == prt::AAT_STR) {
+								exts += an->getArgument(arg)->getStr();
+								exts += L" (*.";
+								exts += an->getArgument(arg)->getStr();
+								exts += L");";
+							}
+						}
+						exts += L"All Files (*.*)";
+						return { AttributeTrait::FILE, { exts, nullptr } };
+					}
+				}
+
+			}
+			return { AttributeTrait::PLAIN, {} };
+		};
+
+		auto attrTrait = detectAttributeTrait(key);
+
+		const MString name = MString(key.c_str());
 		MObject attr;
 
 		mBriefName2prtAttr[briefName(name).asWChar()] = name.asWChar(); // TODO: precompute this in getRuleAttributes
 
-		switch (info->getAttribute(i)->getReturnType()) {
-		case prt::AAT_BOOL: {
+		switch (attrType) {
+		case prt::Attributable::PT_BOOL: {
 			const bool value = mGenerateAttrs->getBool(name.asWChar());
-			if (p.enumAnnotation) {
+			if (attrTrait.first == AttributeTrait::ENUM) {
 				mEnums.emplace_front();
-				MCHECK(addEnumParameter(p.enumAnnotation, node, attr, name, value, mEnums.front()));
+				MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, name, value, mEnums.front()));
 			}
 			else {
 				MCHECK(addBoolParameter(node, attr, name, value));
 			}
 			break;
 		}
-		case prt::AAT_FLOAT: {
-			double min = std::numeric_limits<double>::quiet_NaN();
-			double max = std::numeric_limits<double>::quiet_NaN();
-			for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
-				const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
-				if (!(std::wcscmp(an->getName(), ANNOT_RANGE))) {
+		case prt::Attributable::PT_FLOAT: {
+			const double value = mGenerateAttrs->getFloat(name.asWChar());
+
+			switch (attrTrait.first) {
+			case AttributeTrait::ENUM: {
+				mEnums.emplace_front();
+				MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, name, value, mEnums.front()));
+				break;
+			}
+			case AttributeTrait::RANGE: {
+				auto tryParseRangeAnnotation = [](const prt::Annotation* an) -> std::pair<double, double> {
+					auto minMax = std::make_pair(std::numeric_limits<double>::quiet_NaN(),
+					                             std::numeric_limits<double>::quiet_NaN());
 					for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
 						const prt::AnnotationArgument* arg = an->getArgument(argIdx);
 						const wchar_t* key = arg->getKey();
 						if (std::wcscmp(key, MIN_KEY) == 0) {
-							min = arg->getFloat();
+							minMax.first = arg->getFloat();
 						}
 						else if (std::wcscmp(key, MAX_KEY) == 0) {
-							max = arg->getFloat();
+							minMax.second = arg->getFloat();
 						}
 					}
-				}
-			}
+					return minMax;
+				};
 
-			const double value = mGenerateAttrs->getFloat(name.asWChar());
+				std::pair<double,double> minMax = tryParseRangeAnnotation(attrTrait.second.mAnnot);
+				MCHECK(addFloatParameter(node, attr, name, value, minMax.first, minMax.second));
+				break;
+			}
+			case AttributeTrait::PLAIN: {
+				MCHECK(addFloatParameter(node, attr, name, value, std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()));
+				break;
+			}
+			default:
+				LOG_WRN << "Encountered unsupported annotation on float attribute " << key;
+				break;
+			} // switch attrTrait
 
-			if (p.enumAnnotation) {
-				mEnums.emplace_front();
-				MCHECK(addEnumParameter(p.enumAnnotation, node, attr, name, value, mEnums.front()));
-			}
-			else {
-				MCHECK(addFloatParameter(node, attr, name, value, min, max));
-			}
 			break;
 		}
-		case prt::AAT_STR: {
-			MString exts;
-			bool    asFile = false;
-			bool    asColor = false;
-			for (size_t a = 0; a < info->getAttribute(i)->getNumAnnotations(); a++) {
-				const prt::Annotation* an = info->getAttribute(i)->getAnnotation(a);
-				const wchar_t* anName = an->getName();
-				if (!(std::wcscmp(anName, ANNOT_COLOR)))
-					asColor = true;
-				else if (!(std::wcscmp(anName, ANNOT_DIR))) {
-					exts = MString(anName);
-					asFile = true;
-				}
-				else if (!(std::wcscmp(anName, ANNOT_FILE))) {
-					asFile = true;
-					for (size_t arg = 0; arg < an->getNumArguments(); arg++) {
-						if (an->getArgument(arg)->getType() == prt::AAT_STR) {
-							exts += MString(an->getArgument(arg)->getStr());
-							exts += " (*.";
-							exts += MString(an->getArgument(arg)->getStr());
-							exts += ");;";
-						}
-					}
-					exts += "All Files (*.*)";
-				}
-			}
-
+		case prt::Attributable::PT_STRING: {
 			const std::wstring value = mGenerateAttrs->getString(name.asWChar());
-			const MString mvalue(value.c_str());
-			if (!(asColor) && mvalue.length() == 7 && value[0] == L'#')
-				asColor = true;
 
-			if (p.enumAnnotation) {
-				mEnums.emplace_front();
-				MCHECK(addEnumParameter(p.enumAnnotation, node, attr, name, mvalue, mEnums.front()));
+			// special case: detect color trait from value
+			if (attrTrait.first == AttributeTrait::PLAIN) {
+				if (value.length() == 7 && value[0] == L'#')
+				attrTrait.first = AttributeTrait::COLOR;
 			}
-			else if (asFile) {
-				MCHECK(addFileParameter(node, attr, name, mvalue, exts));
-			}
-			else if (asColor) {
-				MCHECK(addColorParameter(node, attr, name, mvalue));
-			}
-			else {
-				MCHECK(addStrParameter(node, attr, name, mvalue));
+
+			const MString mvalue(value.c_str());
+
+			switch (attrTrait.first) {
+				case AttributeTrait::ENUM:
+					mEnums.emplace_front();
+					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, name, mvalue, mEnums.front()));
+					break;
+				case AttributeTrait::FILE:
+				case AttributeTrait::DIR:
+					MCHECK(addFileParameter(node, attr, name, mvalue, attrTrait.second.mString));
+					break;
+				case AttributeTrait::COLOR:
+					MCHECK(addColorParameter(node, attr, name, mvalue));
+					break;
+				case AttributeTrait::PLAIN:
+					MCHECK(addStrParameter(node, attr, name, mvalue));
+					break;
+				default:
+					LOG_WRN << "Encountered unsupported annotation on string attribute " << key;
+					break;
 			}
 			break;
 		}
@@ -468,7 +511,7 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 			fnAttr.addToCategory(MString(p.ruleFile.c_str()));
 			fnAttr.addToCategory(MString(join<wchar_t>(p.groups, L" > ").c_str()));
 		}
-	}
+	} // for all mGenerateAttrs keys
 
 	removeUnusedAttribs(info, node);
 
@@ -560,7 +603,7 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 				break;
 			}
 		}
-	
+
 
 	return MS::kSuccess;
 }
@@ -709,7 +752,7 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 	return MS::kSuccess;
 }
 
-MStatus PRTModifierAction::addFileParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue, const MString & /*exts*/) {
+MStatus PRTModifierAction::addFileParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue, const std::wstring& /*exts*/) {
 	MStatus           stat;
 	MFnTypedAttribute sAttr;
 

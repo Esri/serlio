@@ -105,7 +105,7 @@ private:
 	static MStatus  addBoolParameter(MFnDependencyNode & node, MObject & attr, const MString & name, bool defaultValue);
 	static MStatus  addFloatParameter(MFnDependencyNode & node, MObject & attr, const MString & name, double defaultValue, double min, double max);
 	static MStatus  addStrParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue);
-	static MStatus  addFileParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue, const MString & ext);
+	static MStatus  addFileParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue, const std::wstring& ext);
 	static MStatus  addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const MString & name, bool defaultValue, PRTModifierEnum & e);
 	static MStatus  addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const MString & name, double defaultValue, PRTModifierEnum & e);
 	static MStatus  addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const MString & name, MString defaultValue, PRTModifierEnum & e);

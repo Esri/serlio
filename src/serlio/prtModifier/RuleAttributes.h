@@ -53,7 +53,6 @@ struct AttributeProperties {
 	std::wstring name;
 	std::wstring ruleFile;
 	AttributeGroup groups; // groups can be nested
-	const prt::Annotation* enumAnnotation = nullptr; // TODO: avoid this, leads to lifetime issues
 	bool memberOfStartRuleFile = false;
 };
 

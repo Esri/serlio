@@ -68,9 +68,7 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 		for (size_t a = 0; a < ruleFileInfo->getAttribute(i)->getNumAnnotations(); a++) {
 			const prt::Annotation* an = ruleFileInfo->getAttribute(i)->getAnnotation(a);
 			const wchar_t* anName = an->getName();
-			if (!(std::wcscmp(anName, ANNOT_ENUM)))
-				p.enumAnnotation = an;
-			else if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
+			if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
 				hidden = true;
 			else if (!(std::wcscmp(anName, ANNOT_ORDER)))
 			{

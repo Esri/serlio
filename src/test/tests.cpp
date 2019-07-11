@@ -44,7 +44,6 @@ namespace std {
 			&& (a.name == b.name)
 			&& (a.ruleFile == b.ruleFile)
 			&& (a.groups == b.groups)
-			&& (a.enumAnnotation == b.enumAnnotation)
 			&& (a.memberOfStartRuleFile == b.memberOfStartRuleFile);
 	}
 } // namespace std
@@ -102,11 +101,11 @@ TEST_CASE("global group order") {
 	AttributeGroup ag_ak = { L"a", L"k" };
 
 	const RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", ag_bk, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", ag_bk, nullptr, true },
-			{ ORDER_NONE, 10, 0, L"C", L"foo", ag_bkp, nullptr, true },
-			{ ORDER_NONE, 20, 0, L"D", L"foo", ag_a, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"E", L"foo", ag_ak, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", ag_bk, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", ag_bk, true },
+			{ ORDER_NONE, 10, 0, L"C", L"foo", ag_bkp, true },
+			{ ORDER_NONE, 20, 0, L"D", L"foo", ag_a, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"E", L"foo", ag_ak, true },
 	};
 
 	AttributeGroupOrder ago = getGlobalGroupOrder(inp);
@@ -122,13 +121,13 @@ TEST_CASE("rule attribute sorting") {
 
 	SECTION("rule file 1") {
 		RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, nullptr, false },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, false },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, true },
 		};
 
 		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, nullptr, false },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, false },
 		};
 
 		sortRuleAttributes(inp);
@@ -137,13 +136,13 @@ TEST_CASE("rule attribute sorting") {
 
 	SECTION("rule file 2") {
 		RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, nullptr, false },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, false },
 		};
 
 		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, nullptr, false },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, false },
 		};
 
 		sortRuleAttributes(inp);
@@ -152,13 +151,13 @@ TEST_CASE("rule attribute sorting") {
 
 	SECTION("group order") {
 		RuleAttributes inp = {
-			{ ORDER_NONE, 1, 0, L"B", L"foo", { L"foo" }, nullptr, true },
-			{ ORDER_NONE, 0, 0, L"A", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, 1, 0, L"B", L"foo", { L"foo" }, true },
+			{ ORDER_NONE, 0, 0, L"A", L"foo", { L"foo" }, true },
 		};
 
 		RuleAttributes exp = {
-			{ ORDER_NONE, 0, 0, L"A", L"foo", { L"foo" }, nullptr, true },
-			{ ORDER_NONE, 1, 0, L"B", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, 0, 0, L"A", L"foo", { L"foo" }, true },
+			{ ORDER_NONE, 1, 0, L"B", L"foo", { L"foo" }, true },
 		};
 
 		sortRuleAttributes(inp);
@@ -167,13 +166,13 @@ TEST_CASE("rule attribute sorting") {
 
 	SECTION("nested groups") {
 		RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
 		};
 
 		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
 		};
 
 		sortRuleAttributes(inp);
@@ -182,13 +181,13 @@ TEST_CASE("rule attribute sorting") {
 
 	SECTION("nested groups disjunct") {
 		RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo1", L"bar" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo1", L"bar" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
 		};
 
 		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo1", L"bar" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo1", L"bar" }, true },
 		};
 
 		sortRuleAttributes(inp);
@@ -197,15 +196,15 @@ TEST_CASE("rule attribute sorting") {
 
 	SECTION("nested groups on same level") {
 		RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"C", L"foo", { L"foo", L"baz" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"C", L"foo", { L"foo", L"baz" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
 		};
 
 		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"C", L"foo", { L"foo", L"baz" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"C", L"foo", { L"foo", L"baz" }, true },
 		};
 
 		sortRuleAttributes(inp);
@@ -214,15 +213,15 @@ TEST_CASE("rule attribute sorting") {
 
 	SECTION("nested groups with group order") {
 		RuleAttributes inp = {
-			{ ORDER_NONE, 0,          0, L"C", L"foo", { L"foo", L"baz" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
+			{ ORDER_NONE, 0,          0, L"C", L"foo", { L"foo", L"baz" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
 		};
 
 		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, nullptr, true },
-			{ ORDER_NONE, 0,          0, L"C", L"foo", { L"foo", L"baz" }, nullptr, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, nullptr, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
+			{ ORDER_NONE, 0,          0, L"C", L"foo", { L"foo", L"baz" }, true },
+			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
 		};
 
 		sortRuleAttributes(inp);
@@ -231,18 +230,18 @@ TEST_CASE("rule attribute sorting") {
 
 	SECTION("all properties") {
 		RuleAttributes inp = {
-				{ ORDER_NONE, 3, 0, L"B", L"foo", { L"First" }, nullptr, true },
-				{ ORDER_NONE, 0, 0, L"A", L"foo", { L"First1", L"Second1", L"Third1" }, nullptr, true },
-				{ 0,          2, 0, L"C", L"foo", { L"First",  L"Second" }, nullptr, true },
-				{ 1,          2, 0, L"D", L"foo", { L"First",  L"Second" }, nullptr, true },
-				{ ORDER_NONE, 1, 0, L"E", L"foo", { L"First",  L"Second",  L"Third" }, nullptr, true }
+				{ ORDER_NONE, 3, 0, L"B", L"foo", { L"First" }, true },
+				{ ORDER_NONE, 0, 0, L"A", L"foo", { L"First1", L"Second1", L"Third1" }, true },
+				{ 0,          2, 0, L"C", L"foo", { L"First",  L"Second" }, true },
+				{ 1,          2, 0, L"D", L"foo", { L"First",  L"Second" }, true },
+				{ ORDER_NONE, 1, 0, L"E", L"foo", { L"First",  L"Second",  L"Third" }, true }
 		};
 		const RuleAttributes exp = {
-				{ ORDER_NONE, 0, 0, L"A", L"foo", { L"First1", L"Second1", L"Third1" }, nullptr, true },
-				{ ORDER_NONE, 3, 0, L"B", L"foo", { L"First" }, nullptr, true },
-				{ 0,          2, 0, L"C", L"foo", { L"First",  L"Second" }, nullptr, true },
-				{ 1,          2, 0, L"D", L"foo", { L"First",  L"Second" }, nullptr, true },
-				{ ORDER_NONE, 1, 0, L"E", L"foo", { L"First",  L"Second",  L"Third" }, nullptr, true }
+				{ ORDER_NONE, 0, 0, L"A", L"foo", { L"First1", L"Second1", L"Third1" }, true },
+				{ ORDER_NONE, 3, 0, L"B", L"foo", { L"First" }, true },
+				{ 0,          2, 0, L"C", L"foo", { L"First",  L"Second" }, true },
+				{ 1,          2, 0, L"D", L"foo", { L"First",  L"Second" }, true },
+				{ ORDER_NONE, 1, 0, L"E", L"foo", { L"First",  L"Second",  L"Third" }, true }
 		};
 
 		sortRuleAttributes(inp);
@@ -252,18 +251,18 @@ TEST_CASE("rule attribute sorting") {
 	SECTION("review example") {
 		// b k < b k p (group order=10) < a (group order=20) < a k < b k
 		RuleAttributes inp = {
-				{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"b", L"k" }, nullptr, true },
-				{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"b",  L"k" }, nullptr, true },
-				{ ORDER_NONE, 10, 0, L"C", L"foo", { L"b", L"k", L"p" }, nullptr, true },
-				{ ORDER_NONE, 20, 0, L"D", L"foo", { L"a" }, nullptr, true },
-				{ ORDER_NONE, ORDER_NONE, 0, L"E", L"foo", { L"a",  L"k" }, nullptr, true },
+				{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"b", L"k" }, true },
+				{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"b",  L"k" }, true },
+				{ ORDER_NONE, 10, 0, L"C", L"foo", { L"b", L"k", L"p" }, true },
+				{ ORDER_NONE, 20, 0, L"D", L"foo", { L"a" }, true },
+				{ ORDER_NONE, ORDER_NONE, 0, L"E", L"foo", { L"a",  L"k" }, true },
 		};
 		const RuleAttributes exp = {
-				{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"b", L"k" }, nullptr, true },
-				{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"b",  L"k" }, nullptr, true },
-				{ ORDER_NONE, 10, 0, L"C", L"foo", { L"b", L"k", L"p" }, nullptr, true },
-				{ ORDER_NONE, 20, 0, L"D", L"foo", { L"a" }, nullptr, true },
-				{ ORDER_NONE, ORDER_NONE, 0, L"E", L"foo", { L"a",  L"k" }, nullptr, true },
+				{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"b", L"k" }, true },
+				{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"b",  L"k" }, true },
+				{ ORDER_NONE, 10, 0, L"C", L"foo", { L"b", L"k", L"p" }, true },
+				{ ORDER_NONE, 20, 0, L"D", L"foo", { L"a" }, true },
+				{ ORDER_NONE, ORDER_NONE, 0, L"E", L"foo", { L"a",  L"k" }, true },
 		};
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
