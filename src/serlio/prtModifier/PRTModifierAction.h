@@ -88,6 +88,7 @@ private:
 	MString                       mRulePkg;
 	std::wstring                  mRuleFile;
 	std::wstring                  mStartRule;
+	const std::wstring            mRuleStyle = L"Default"; // Serlio atm only supports the "Default" style
 	int32_t                       mRandomSeed;
 
 	ResolveMapSPtr getResolveMap();

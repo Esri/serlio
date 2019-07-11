@@ -50,6 +50,35 @@ namespace std {
 } // namespace std
 
 
+TEST_CASE("rule style") {
+	SECTION("standard") {
+		const std::wstring fqRule = L"bar$foo";
+		const std::wstring expStyle = L"bar";
+		CHECK(prtu::getStyle(fqRule) == expStyle);
+	}
+
+	SECTION("no style") {
+		const std::wstring fqRule = L"foo";
+		CHECK(prtu::getStyle(fqRule).empty());
+	}
+
+	SECTION("empty rule") {
+		const std::wstring fqRule;
+		CHECK(prtu::getStyle(fqRule).empty());
+	}
+
+	SECTION("invalid 1") {
+		const std::wstring fqRule = L"$foo";
+		CHECK(prtu::getStyle(fqRule).empty());
+	}
+
+	SECTION("invalid 2") {
+		const std::wstring fqRule = L"foo$";
+		const std::wstring expStyle = L"foo";
+		CHECK(prtu::getStyle(fqRule) == expStyle);
+	}
+}
+
 TEST_CASE("default attribute values") {
 	const std::wstring rpk = testDataPath + L"/CE-6813-wrong-attr-style.rpk";
 	ResolveMapCache::LookupResult lookupResult = prtCtx->mResolveMapCache->get(rpk);

@@ -158,6 +158,15 @@ namespace prtu {
 		return {};
 	}
 
+	constexpr const wchar_t STYLE_DELIMITER = L'$';
+
+	SRL_TEST_EXPORTS_API inline std::wstring getStyle(const std::wstring& fqRule) {
+		const auto sepPos = fqRule.find(STYLE_DELIMITER);
+		if (sepPos == std::wstring::npos || sepPos == 0)
+			return {};
+		return fqRule.substr(0, sepPos);
+	}
+
 } // namespace prtu
 
 inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {

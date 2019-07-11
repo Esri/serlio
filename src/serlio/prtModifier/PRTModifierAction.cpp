@@ -346,6 +346,7 @@ MStatus PRTModifierAction::doIt()
 
 MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wstring & ruleFile, const std::wstring & startRule, const prt::RuleFileInfo* info) {
 	mGenerateAttrs = getDefaultAttributeValues(ruleFile, startRule, getResolveMap(), mPRTCtx->theCache);
+	LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
 	MStatus stat;
 	MFnDependencyNode node(nodeObj, &stat);
@@ -356,12 +357,17 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 
 	for (AttributeProperties p: sortedAttributes) {
 
+		// only use attributes of current style
+		const std::wstring style = prtu::getStyle(p.name);
+		if (style != mRuleStyle)
+			continue;
+
 		size_t i = p.index;
 
 		const MString name = MString(p.name.c_str());
 		MObject attr;
 
-		mBriefName2prtAttr[briefName(name).asWChar()] = name.asWChar();
+		mBriefName2prtAttr[briefName(name).asWChar()] = name.asWChar(); // TODO: precompute this in getRuleAttributes
 
 		switch (info->getAttribute(i)->getReturnType()) {
 		case prt::AAT_BOOL: {
