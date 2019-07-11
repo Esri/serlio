@@ -241,58 +241,43 @@ ResolveMapSPtr PRTModifierAction::getResolveMap() {
 
 MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg) {
 	mRulePkg = rulePkg;
-	MStatus  stat;
 
 	mEnums.clear();
 	mRuleFile.clear();
 	mStartRule.clear();
-	
+
 	ResolveMapSPtr resolveMap = getResolveMap();
-
-	if (resolveMap != nullptr) {
-		size_t nKeys;
-		const wchar_t * const* keys = resolveMap->getKeys(&nKeys);
-		std::wstring sCGB(L".cgb");
-		for (size_t k = 0; k < nKeys; k++) {
-			const std::wstring key = std::wstring(keys[k]);
-			if (std::equal(sCGB.rbegin(), sCGB.rend(), key.rbegin())) {
-				mRuleFile = key;
-				break;
-			}
-		}
-
-		if (mRuleFile.length() > 0)
-		{
-			const prt::RuleFileInfo::Entry* startRule = nullptr;
-
-			prt::Status infoStatus = prt::STATUS_UNSPECIFIED_ERROR;
-			RuleFileInfoUPtr info(prt::createRuleFileInfo(resolveMap->getString(mRuleFile.c_str()), nullptr, &infoStatus));
-			if (infoStatus == prt::STATUS_OK) {
-				for (size_t r = 0; r < info->getNumRules(); r++) {
-					if (info->getRule(r)->getNumParameters() > 0)
-						continue;
-					for (size_t a = 0; a < info->getRule(r)->getNumAnnotations(); a++) {
-						if (!(std::wcscmp(info->getRule(r)->getAnnotation(a)->getName(), ANNOT_START_RULE))) {
-							startRule = info->getRule(r);
-							break;
-						}
-					}
-				}
-			}
-			if (startRule) {
-				mStartRule = startRule->getName();
-
-				if (node != MObject::kNullObj)
-					createNodeAttributes(node, mRuleFile, mStartRule, info.get());
-			}
-
-		}
-
+	if (!resolveMap) {
+		LOG_ERR << "failed to get resolve map from rule package " << mRulePkg.asWChar();
+		return MS::kFailure;
 	}
+
+	mRuleFile = prtu::getRuleFileEntry(resolveMap);
+	if (mRuleFile.empty()) {
+		LOG_ERR << "could not find rule file in rule package " << mRulePkg.asWChar();
+		return MS::kFailure;
+	}
+
+	prt::Status infoStatus = prt::STATUS_UNSPECIFIED_ERROR;
+	const wchar_t* ruleFileURI = resolveMap->getString(mRuleFile.c_str());
+	if (ruleFileURI == nullptr) {
+		LOG_ERR << "could not find rule file URI in resolve map of rule package " << mRulePkg.asWChar();
+		return MS::kFailure;
+	}
+
+	RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI, mPRTCtx->theCache.get(), &infoStatus));
+	if (!info || infoStatus != prt::STATUS_OK) {
+		LOG_ERR << "could not get rule file info from rule file " << mRuleFile;
+		return MS::kFailure;
+	}
+
+	mStartRule = prtu::detectStartRule(info);
+
+	if (node != MObject::kNullObj)
+		createNodeAttributes(node, mRuleFile, mStartRule, info.get());
 
 	return MS::kSuccess;
 }
-
 
 MStatus PRTModifierAction::doIt()
 {

@@ -31,7 +31,6 @@ namespace prt {
 	class Annotation;
 }
 
-constexpr const wchar_t* ANNOT_START_RULE = L"@StartRule";
 constexpr const wchar_t* ANNOT_RANGE = L"@Range";
 constexpr const wchar_t* ANNOT_ENUM = L"@Enum";
 constexpr const wchar_t* ANNOT_HIDDEN = L"@Hidden";

@@ -125,6 +125,39 @@ namespace prtu {
 
 	AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions = nullptr);
 
+	inline std::wstring getRuleFileEntry(ResolveMapSPtr resolveMap) {
+		const std::wstring sCGB(L".cgb");
+
+		size_t nKeys;
+		wchar_t const* const* keys = resolveMap->getKeys(&nKeys);
+		for (size_t k = 0; k < nKeys; k++) {
+			const std::wstring key(keys[k]);
+			if (std::equal(sCGB.rbegin(), sCGB.rend(), key.rbegin()))
+				return key;
+		}
+
+		return {};
+	}
+
+	constexpr const wchar_t* ANNOT_START_RULE = L"@StartRule";
+
+	inline std::wstring detectStartRule(const RuleFileInfoUPtr& ruleFileInfo) {
+		for (size_t r = 0; r < ruleFileInfo->getNumRules(); r++) {
+			const auto* rule = ruleFileInfo->getRule(r);
+
+			// start rules must not have any parameters
+			if (rule->getNumParameters() > 0)
+				continue;
+
+			for (size_t a = 0; a < rule->getNumAnnotations(); a++) {
+				if (std::wcscmp(rule->getAnnotation(a)->getName(), ANNOT_START_RULE) == 0) {
+					return rule->getName();
+				}
+			}
+		}
+		return {};
+	}
+
 } // namespace prtu
 
 inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {
