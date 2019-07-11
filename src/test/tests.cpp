@@ -1,10 +1,39 @@
+/**
+ * Serlio - Esri CityEngine Plugin for Autodesk Maya
+ *
+ * See https://github.com/esri/serlio for build and usage instructions.
+ *
+ * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "prtModifier/RuleAttributes.h"
 #include "util/Utilities.h"
+#include "util/LogHandler.h"
+#include "PRTContext.h"
 
 #define CATCH_CONFIG_RUNNER
 #include "catch.hpp"
 
 #include <sstream>
+
+
+namespace {
+
+PRTContextUPtr prtCtx;
+const std::wstring testDataPath = prtu::toUTF16FromOSNarrow(TEST_DATA_PATH);
+
+} // namespace
 
 namespace std {
 	// inject comparison for AttributeProperties into std namespace so STL algos can find it
@@ -20,6 +49,22 @@ namespace std {
 	}
 } // namespace std
 
+
+TEST_CASE("default attribute values") {
+	const std::wstring rpk = testDataPath + L"/CE-6813-wrong-attr-style.rpk";
+	ResolveMapCache::LookupResult lookupResult = prtCtx->mResolveMapCache->get(rpk);
+	ResolveMapSPtr resolveMap = lookupResult.first;
+	std::wstring ruleFile = L"bin/r1.cgb";
+	RuleFileInfoUPtr ruleInfo(prt::createRuleFileInfo(resolveMap->getString(ruleFile.c_str())));
+
+	RuleAttributes ruleAttrs = getRuleAttributes(ruleFile, ruleInfo.get());
+
+	for (const auto& ap: ruleAttrs) {
+		LOG_DBG << ap.name;
+	}
+
+	// TODO: add assertion for value, needs interface into PRTModifierAction.cpp without introducing maya dep here
+}
 
 TEST_CASE("global group order") {
 	AttributeGroup ag_bk = { L"b", L"k" };
@@ -225,7 +270,16 @@ TEST_CASE("toFileURI") {
 #endif
 }
 
+
+// we use a custom main function to manage PRT lifetime
 int main( int argc, char* argv[] ) {
+	const std::vector<std::wstring> addExtDirs = {
+		prtu::toUTF16FromOSNarrow(SERLIO_CODEC_PATH) // set to absolute path to houdini encoder lib via cmake
+	};
+
+	prtCtx.reset(new PRTContext(addExtDirs));
 	int result = Catch::Session().run( argc, argv );
+	prtCtx.reset();
+
 	return result;
 }

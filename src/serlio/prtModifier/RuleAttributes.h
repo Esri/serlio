@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "serlioPlugin.h"
+
 #include <string>
 #include <limits>
 #include <vector>
@@ -58,7 +60,7 @@ struct AttributeProperties {
 
 using RuleAttributes = std::vector<AttributeProperties>;
 
-RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo);
+SRL_TEST_EXPORTS_API RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo);
 AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes);
 void sortRuleAttributes(RuleAttributes& ra);
 std::wostream& operator<<(std::wostream& ostr, const AttributeProperties& ap);
