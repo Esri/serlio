@@ -41,6 +41,9 @@ namespace std {
 		return (a.order == b.order)
 			&& (a.groupOrder == b.groupOrder)
 			&& (a.fqName == b.fqName)
+			&& (a.mayaBriefName == b.mayaBriefName)
+			&& (a.mayaFullName == b.mayaFullName)
+			&& (a.mayaNiceName == b.mayaNiceName)
 			&& (a.ruleFile == b.ruleFile)
 			&& (a.groups == b.groups)
 			&& (a.memberOfStartRuleFile == b.memberOfStartRuleFile);
@@ -140,7 +143,7 @@ const AttributeGroup AG_BK   = { L"b", L"k" };
 const AttributeGroup AG_BKP  = { L"b", L"k", L"p" };
 
 RuleAttribute getAttr(std::wstring fqName, AttributeGroup ag, int o, int go, std::wstring rf, bool sr) {
-	return RuleAttribute{ fqName, ag, o, go, rf, sr };
+	return RuleAttribute{ fqName, L"", L"", L"", prt::AAT_UNKNOWN, ag, o, go, rf, sr };
 }
 
 TEST_CASE("global group order") {

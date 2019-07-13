@@ -53,7 +53,6 @@ constexpr const wchar_t* FILE_CGA_PRINT   = L"CGAPrint.txt";
 constexpr const wchar_t* NULL_KEY = L"#NULL#";
 constexpr const wchar_t* MIN_KEY = L"min";
 constexpr const wchar_t* MAX_KEY = L"max";
-const MString  PRT("PRT");
 constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
 
 const AttributeMapUPtr EMPTY_ATTRIBUTES(AttributeMapBuilderUPtr(prt::AttributeMapBuilder::create())->createAttributeMap());
@@ -114,6 +113,8 @@ PRTModifierAction::PRTModifierAction(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) {
 	mCGAPrintOptions = prtu::createValidatedOptions(ENC_ID_CGA_PRINT, printOptions.get());
 }
 
+const RuleAttribute RULE_NOT_FOUND{};
+
 void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 	MStatus           stat;
 	const MFnDependencyNode fNode(node, &stat);
@@ -121,33 +122,44 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 
 	auto resolveMap = getResolveMap();
 	const RuleFileInfoUPtr info(prt::createRuleFileInfo(resolveMap->getString(mRuleFile.c_str())));
-	auto getRuleAttributeType = [&info](const std::wstring& name){
-		for (size_t ai = 0, numAttrs = info->getNumAttributes(); ai < numAttrs; ai++) {
-			const auto* a = info->getAttribute(ai);
-			if (std::wcscmp(a->getName(), name.c_str()) == 0) {
-				return a->getReturnType();
-			}
-		}
-		return prt::AAT_UNKNOWN;
+
+	auto reverseLookupAttribute = [this](const std::wstring& mayaFullAttrName) {
+		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(), [&mayaFullAttrName](const auto& ra) {
+			return (ra.mayaFullName == mayaFullAttrName);
+		});
+		if (it != mRuleAttributes.end())
+			return *it;
+		return RULE_NOT_FOUND;
 	};
 
 	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), mPRTCtx->theCache);
+	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
 
 	const unsigned int count = fNode.attributeCount(&stat);
 	MCHECK(stat);
-
-	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
-
 	for (unsigned int i = 0; i < count; i++) {
 		const MObject attr = fNode.attribute(i, &stat);
 		if (stat != MS::kSuccess) continue;
 
 		const MPlug plug(node, attr);
-		if (!(plug.isDynamic())) continue;
+		if (!(plug.isDynamic()))
+			continue;
 
-		const MString       briefName = plug.partialName();
-		const std::wstring  name = mBriefName2prtAttr[briefName.asWChar()];
-		const auto ruleAttrType = getRuleAttributeType(name);
+		MFnAttribute fnAttr(attr);
+
+		// special case: color compound attributes do not have counterparts in mRuleAttributes
+		if (fnAttr.isUsedAsColor()) {
+			MFnCompoundAttribute fnCompAttr(attr);
+			if (fnCompAttr.numChildren() == 0)
+				continue; // skip child color component attrs
+		}
+
+		const MString fullAttrName = fnAttr.name();
+		const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar());
+		assert(!ruleAttr.fqName.empty()); // poor mans check for RULE_NOT_FOUND
+
+		const std::wstring fqAttrName = ruleAttr.fqName;
+		const auto ruleAttrType = ruleAttr.mType;
 
 		if (attr.hasFn(MFn::kNumericAttribute)) {
 			MFnNumericAttribute nAttr(attr);
@@ -158,9 +170,9 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 				bool val;
 				MCHECK(plug.getValue(val));
 
-				const auto defVal = defaultAttributeValues->getBool(name.c_str());
+				const auto defVal = defaultAttributeValues->getBool(fqAttrName.c_str());
 				if (val != defVal)
-					aBuilder->setBool(name.c_str(), val);
+					aBuilder->setBool(fqAttrName.c_str(), val);
 			}
 			else if (nAttr.unitType() == MFnNumericData::kDouble) {
 				assert(ruleAttrType == prt::AAT_FLOAT);
@@ -168,13 +180,13 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 				double val;
 				MCHECK(plug.getValue(val));
 
-				const auto defVal = defaultAttributeValues->getFloat(name.c_str());
+				const auto defVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
 				if (val != defVal)
-					aBuilder->setFloat(name.c_str(), val);
+					aBuilder->setFloat(fqAttrName.c_str(), val);
 			}
 			else if (nAttr.isUsedAsColor()) {
 				assert(ruleAttrType == prt::AAT_STR);
-				const wchar_t* defColStr = defaultAttributeValues->getString(name.c_str());
+				const wchar_t* defColStr = defaultAttributeValues->getString(fqAttrName.c_str());
 
 				MObject rgb;
 				MCHECK(plug.getValue(rgb));
@@ -185,7 +197,7 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 				const std::wstring colStr = prtu::getColorString(col);
 
 				if (std::wcscmp(colStr.c_str(), defColStr) != 0)
-					aBuilder->setString(name.c_str(), colStr.c_str());
+					aBuilder->setString(fqAttrName.c_str(), colStr.c_str());
 			}
 		}
 		else if (attr.hasFn(MFn::kTypedAttribute)) {
@@ -194,9 +206,9 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 			MString val;
 			MCHECK(plug.getValue(val));
 
-			const auto defVal = defaultAttributeValues->getString(name.c_str());
+			const auto defVal = defaultAttributeValues->getString(fqAttrName.c_str());
 			if (std::wcscmp(val.asWChar(), defVal) != 0)
-				aBuilder->setString(name.c_str(), val.asWChar());
+				aBuilder->setString(fqAttrName.c_str(), val.asWChar());
 		}
 		else if (attr.hasFn(MFn::kEnumAttribute)) {
 			MFnEnumAttribute eAttr(attr);
@@ -208,16 +220,16 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 			if (i != di) {
 				switch (ruleAttrType) {
 					case prt::AAT_STR:
-						aBuilder->setString(name.c_str(), eAttr.fieldName(i).asWChar());
+						aBuilder->setString(fqAttrName.c_str(), eAttr.fieldName(i).asWChar());
 						break;
 					case prt::AAT_FLOAT:
-						aBuilder->setFloat(name.c_str(), eAttr.fieldName(i).asDouble());
+						aBuilder->setFloat(fqAttrName.c_str(), eAttr.fieldName(i).asDouble());
 						break;
 					case prt::AAT_BOOL:
-						aBuilder->setBool(name.c_str(), eAttr.fieldName(i).asInt() != 0);
+						aBuilder->setBool(fqAttrName.c_str(), eAttr.fieldName(i).asInt() != 0);
 						break;
 					default:
-						LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << name;
+						LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
 				}
 			}
 		}
@@ -245,6 +257,7 @@ MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg
 	mEnums.clear();
 	mRuleFile.clear();
 	mStartRule.clear();
+	mRuleAttributes.clear();
 
 	ResolveMapSPtr resolveMap = getResolveMap();
 	if (!resolveMap) {
@@ -273,8 +286,16 @@ MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg
 
 	mStartRule = prtu::detectStartRule(info);
 
-	if (node != MObject::kNullObj)
-		createNodeAttributes(node, mRuleFile, mStartRule, info.get());
+	if (node != MObject::kNullObj) {
+		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), mPRTCtx->theCache);
+		LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
+
+		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
+		mRuleAttributes = getRuleAttributes(mRuleFile, info.get());
+		sortRuleAttributes(mRuleAttributes);
+
+		createNodeAttributes(node, info.get());
+	}
 
 	return MS::kSuccess;
 }
@@ -344,26 +365,20 @@ MStatus PRTModifierAction::doIt()
 }
 
 
-MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wstring & ruleFile, const std::wstring & startRule, const prt::RuleFileInfo* info) {
-	mGenerateAttrs = getDefaultAttributeValues(ruleFile, startRule, getResolveMap(), mPRTCtx->theCache);
-	LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
-
+MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const prt::RuleFileInfo* info) {
 	MStatus stat;
 	MFnDependencyNode node(nodeObj, &stat);
 	MCHECK(stat);
 
-	RuleAttributes sortedAttributes = getRuleAttributes(ruleFile, info);
-	sortRuleAttributes(sortedAttributes);
-
-	for (const RuleAttribute& p: sortedAttributes) {
-		const std::wstring key = p.fqName;
+	for (const RuleAttribute& p: mRuleAttributes) {
+		const std::wstring fqName = p.fqName;
 
 		// only use attributes of current style
-		const std::wstring style = prtu::getStyle(key);
+		const std::wstring style = prtu::getStyle(fqName);
 		if (style != mRuleStyle)
 			continue;
 
-		const prt::Attributable::PrimitiveType attrType = mGenerateAttrs->getType(key.c_str());
+		const prt::Attributable::PrimitiveType attrType = mGenerateAttrs->getType(fqName.c_str());
 
 		// TMP: detect attribute traits based on rule info / annotations
 		enum class AttributeTrait { ENUM, RANGE, FILE, DIR, COLOR, PLAIN };
@@ -409,32 +424,29 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 			return { AttributeTrait::PLAIN, {} };
 		};
 
-		auto attrTrait = detectAttributeTrait(key);
+		auto attrTrait = detectAttributeTrait(fqName);
 
-		const MString name = MString(key.c_str());
 		MObject attr;
-
-		mBriefName2prtAttr[briefName(name).asWChar()] = name.asWChar(); // TODO: precompute this in getRuleAttributes
 
 		switch (attrType) {
 		case prt::Attributable::PT_BOOL: {
-			const bool value = mGenerateAttrs->getBool(name.asWChar());
+			const bool value = mGenerateAttrs->getBool(fqName.c_str());
 			if (attrTrait.first == AttributeTrait::ENUM) {
 				mEnums.emplace_front();
-				MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, name, value, mEnums.front()));
+				MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums.front()));
 			}
 			else {
-				MCHECK(addBoolParameter(node, attr, name, value));
+				MCHECK(addBoolParameter(node, attr, p, value));
 			}
 			break;
 		}
 		case prt::Attributable::PT_FLOAT: {
-			const double value = mGenerateAttrs->getFloat(name.asWChar());
+			const double value = mGenerateAttrs->getFloat(fqName.c_str());
 
 			switch (attrTrait.first) {
 			case AttributeTrait::ENUM: {
 				mEnums.emplace_front();
-				MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, name, value, mEnums.front()));
+				MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums.front()));
 				break;
 			}
 			case AttributeTrait::RANGE: {
@@ -455,22 +467,22 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 				};
 
 				std::pair<double,double> minMax = tryParseRangeAnnotation(attrTrait.second.mAnnot);
-				MCHECK(addFloatParameter(node, attr, name, value, minMax.first, minMax.second));
+				MCHECK(addFloatParameter(node, attr, p, value, minMax.first, minMax.second));
 				break;
 			}
 			case AttributeTrait::PLAIN: {
-				MCHECK(addFloatParameter(node, attr, name, value, std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()));
+				MCHECK(addFloatParameter(node, attr, p, value, std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()));
 				break;
 			}
 			default:
-				LOG_WRN << "Encountered unsupported annotation on float attribute " << key;
+				LOG_WRN << "Encountered unsupported annotation on float attribute " << fqName;
 				break;
 			} // switch attrTrait
 
 			break;
 		}
 		case prt::Attributable::PT_STRING: {
-			const std::wstring value = mGenerateAttrs->getString(name.asWChar());
+			const std::wstring value = mGenerateAttrs->getString(fqName.c_str());
 
 			// special case: detect color trait from value
 			if (attrTrait.first == AttributeTrait::PLAIN) {
@@ -483,20 +495,20 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 			switch (attrTrait.first) {
 				case AttributeTrait::ENUM:
 					mEnums.emplace_front();
-					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, name, mvalue, mEnums.front()));
+					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, mvalue, mEnums.front()));
 					break;
 				case AttributeTrait::FILE:
 				case AttributeTrait::DIR:
-					MCHECK(addFileParameter(node, attr, name, mvalue, attrTrait.second.mString));
+					MCHECK(addFileParameter(node, attr, p, mvalue, attrTrait.second.mString));
 					break;
 				case AttributeTrait::COLOR:
-					MCHECK(addColorParameter(node, attr, name, mvalue));
+					MCHECK(addColorParameter(node, attr, p, mvalue));
 					break;
 				case AttributeTrait::PLAIN:
-					MCHECK(addStrParameter(node, attr, name, mvalue));
+					MCHECK(addStrParameter(node, attr, p, mvalue));
 					break;
 				default:
-					LOG_WRN << "Encountered unsupported annotation on string attribute " << key;
+					LOG_WRN << "Encountered unsupported annotation on string attribute " << fqName;
 					break;
 			}
 			break;
@@ -513,19 +525,17 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 		}
 	} // for all mGenerateAttrs keys
 
-	removeUnusedAttribs(info, node);
+	removeUnusedAttribs(node);
 
 	return MS::kSuccess;
 }
 
-void PRTModifierAction::removeUnusedAttribs(const prt::RuleFileInfo* info, MFnDependencyNode &node) {
-	auto isInUse = [&info](const MString& attrName) {
-		for (size_t j = 0; j < info->getNumAttributes(); j++) {
-			const MString name = longName(info->getAttribute(j)->getName());
-			if (name == attrName)
-				return true;
-		}
-		return false;
+void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
+	auto isInUse = [this](const MString& attrName) {
+		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(), [&attrName](const auto& ra){
+			return (ra.mayaFullName == attrName.asWChar());
+		});
+		return (it != mRuleAttributes.end());
 	};
 
 	std::list<MObject> attrToRemove;
@@ -633,18 +643,6 @@ template<typename T> T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependenc
 	return plugValue;
 }
 
-MString PRTModifierAction::longName(const MString& attrName) {
-	return PRT + mu::toCleanId(attrName);
-}
-
-MString PRTModifierAction::briefName(const MString & attrName) {
-	return mu::toCleanId(attrName.substring(attrName.indexW(L'$') + 1, attrName.length())); //remove style
-}
-
-MString PRTModifierAction::niceName(const MString & attrName) { //remove style and import rule name
-	return mu::toCleanId(attrName.substring(std::max(attrName.indexW(L'$'), attrName.rindexW(L'.')) + 1, attrName.length()));
-}
-
 MStatus PRTModifierAction::addParameter(MFnDependencyNode & node, MObject & attr, MFnAttribute& tAttr) {
 	if (!(node.hasAttribute(tAttr.shortName()))) {
 		MCHECK(tAttr.setKeyable(true));
@@ -655,13 +653,13 @@ MStatus PRTModifierAction::addParameter(MFnDependencyNode & node, MObject & attr
 	return MS::kSuccess;
 }
 
-MStatus PRTModifierAction::addBoolParameter(MFnDependencyNode & node, MObject & attr, const MString & name, bool defaultValue) {
+MStatus PRTModifierAction::addBoolParameter(MFnDependencyNode & node, MObject & attr, const RuleAttribute& ruleAttr, bool defaultValue) {
 	MStatus stat;
 	MFnNumericAttribute nAttr;
 
-	bool plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
-	attr = nAttr.create(longName(name), briefName(name), MFnNumericData::kBoolean, defaultValue, &stat);
-	nAttr.setNiceNameOverride(niceName(name));
+	bool plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultValue);
+	attr = nAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), MFnNumericData::kBoolean, defaultValue, &stat);
+	nAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	if (stat != MS::kSuccess) throw stat;
 
 	MCHECK(addParameter(node, attr, nAttr));
@@ -672,13 +670,13 @@ MStatus PRTModifierAction::addBoolParameter(MFnDependencyNode & node, MObject & 
 	return MS::kSuccess;
 }
 
-MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode & node, MObject & attr, const MString & name, double defaultValue, double min, double max) {
+MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode & node, MObject & attr, const RuleAttribute& ruleAttr, double defaultValue, double min, double max) {
 	MStatus stat;
 	MFnNumericAttribute nAttr;
 
-	double plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
-	attr = nAttr.create(longName(name), briefName(name), MFnNumericData::kDouble, defaultValue, &stat);
-	nAttr.setNiceNameOverride(niceName(name));
+	double plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultValue);
+	attr = nAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), MFnNumericData::kDouble, defaultValue, &stat);
+	nAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	if (stat != MS::kSuccess)
 		throw stat;
 
@@ -698,7 +696,7 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode & node, MObject &
 	return MS::kSuccess;
 }
 
-MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const MString & name, bool defaultValue, PRTModifierEnum & e) {
+MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const RuleAttribute& ruleAttr, bool defaultValue, PRTModifierEnum & e) {
 	short idx = 0;
 	for (int i = static_cast<int>(e.mBVals.length()); --i >= 0;) {
 		if ((e.mBVals[i] != 0) == defaultValue) {
@@ -707,10 +705,10 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 		}
 	}
 
-	return addEnumParameter(annot, node, attr, name, idx, e);
+	return addEnumParameter(annot, node, attr, ruleAttr, idx, e);
 }
 
-MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const MString & name, double defaultValue, PRTModifierEnum & e) {
+MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const RuleAttribute& ruleAttr, double defaultValue, PRTModifierEnum & e) {
 	short idx = 0;
 	for (int i = static_cast<int>(e.mFVals.length()); --i >= 0;) {
 		if (e.mFVals[i] == defaultValue) {
@@ -719,10 +717,10 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 		}
 	}
 
-	return addEnumParameter(annot, node, attr, name, idx, e);
+	return addEnumParameter(annot, node, attr, ruleAttr, idx, e);
 }
 
-MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const MString & name, MString defaultValue, PRTModifierEnum & e) {
+MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const RuleAttribute& ruleAttr, MString defaultValue, PRTModifierEnum & e) {
 	short idx = 0;
 	for (int i = static_cast<int>(e.mSVals.length()); --i >= 0;) {
 		if (e.mSVals[i] == defaultValue) {
@@ -731,15 +729,15 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 		}
 	}
 
-	return addEnumParameter(annot, node, attr, name, idx, e);
+	return addEnumParameter(annot, node, attr, ruleAttr, idx, e);
 }
 
-MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const MString & name, short defaultValue, PRTModifierEnum & e) {
+MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const RuleAttribute& ruleAttr, short defaultValue, PRTModifierEnum & e) {
 	MStatus stat;
 
-	short plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
-	attr = e.mAttr.create(longName(name), briefName(name), defaultValue, &stat);
-	e.mAttr.setNiceNameOverride(niceName(name));
+	short plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultValue);
+	attr = e.mAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), defaultValue, &stat);
+	e.mAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	MCHECK(stat);
 
 	MCHECK(e.fill(annot));
@@ -752,17 +750,17 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 	return MS::kSuccess;
 }
 
-MStatus PRTModifierAction::addFileParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue, const std::wstring& /*exts*/) {
+MStatus PRTModifierAction::addFileParameter(MFnDependencyNode & node, MObject & attr, const RuleAttribute& ruleAttr, const MString & defaultValue, const std::wstring& /*exts*/) {
 	MStatus           stat;
 	MFnTypedAttribute sAttr;
 
-	MString plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
+	MString plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultValue);
 
-	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, MObject::kNullObj, &stat);
+	attr = sAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), MFnData::kString, MObject::kNullObj, &stat);
 	// NOTE: we must not set the default string above, otherwise the value will not be stored, relying on setValue below
 	// see http://ewertb.mayasound.com/api/api.017.php
 
-	MCHECK(sAttr.setNiceNameOverride(niceName(name)));
+	MCHECK(sAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str()));
 	MCHECK(stat);
 	MCHECK(sAttr.setUsedAsFilename(true));
 	MCHECK(addParameter(node, attr, sAttr));
@@ -773,7 +771,7 @@ MStatus PRTModifierAction::addFileParameter(MFnDependencyNode & node, MObject & 
 	return MS::kSuccess;
 }
 
-MStatus PRTModifierAction::addColorParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue) {
+MStatus PRTModifierAction::addColorParameter(MFnDependencyNode & node, MObject & attr, const RuleAttribute& ruleAttr, const MString & defaultValue) {
 	MStatus             stat;
 	MFnNumericAttribute nAttr;
 
@@ -785,9 +783,9 @@ MStatus PRTModifierAction::addColorParameter(MFnDependencyNode & node, MObject &
 	MCHECK(stat);
 	fnData.setData(color[0], color[1], color[2]);
 
-	MObject plugValue = getPlugValueAndRemoveAttr(node, briefName(name), rgb);
-	attr = nAttr.createColor(longName(name), briefName(name), &stat);
-	nAttr.setNiceNameOverride(niceName(name));
+	MObject plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), rgb);
+	attr = nAttr.createColor(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), &stat);
+	nAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	nAttr.setDefault(color[0], color[1], color[2]);
 
 	MCHECK(stat);
@@ -799,17 +797,17 @@ MStatus PRTModifierAction::addColorParameter(MFnDependencyNode & node, MObject &
 	return MS::kSuccess;
 }
 
-MStatus PRTModifierAction::addStrParameter(MFnDependencyNode & node, MObject & attr, const MString & name, const MString & defaultValue) {
+MStatus PRTModifierAction::addStrParameter(MFnDependencyNode & node, MObject & attr, const RuleAttribute& ruleAttr, const MString & defaultValue) {
 	MStatus           stat;
 	MFnTypedAttribute sAttr;
 
-	MString plugValue = getPlugValueAndRemoveAttr(node, briefName(name), defaultValue);
+	MString plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultValue);
 
-	attr = sAttr.create(longName(name), briefName(name), MFnData::kString, MObject::kNullObj, &stat);
+	attr = sAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), MFnData::kString, MObject::kNullObj, &stat);
 	// NOTE: we must not set the default string above, otherwise the value will not be stored, relying on setValue below
 	// see http://ewertb.mayasound.com/api/api.017.php
 
-	sAttr.setNiceNameOverride(niceName(name));
+	sAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	MCHECK(stat);
 	MCHECK(addParameter(node, attr, sAttr));
 

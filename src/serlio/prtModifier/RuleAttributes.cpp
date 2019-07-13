@@ -30,9 +30,31 @@
 #include <algorithm>
 #include <cassert>
 
+
 namespace {
 
 constexpr bool DBG = false;
+
+constexpr const wchar_t* PRT_ATTR_FULL_NAME_PREFIX = L"PRT";
+
+const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+std::wstring cleanForMaya(const std::wstring& name) {
+	auto r = name;
+	replace_all_not_of(r, MAYA_COMPATIBLE_CHARS);
+	return r;
+}
+
+std::wstring getFullName(const std::wstring& fqAttrName) {
+	return PRT_ATTR_FULL_NAME_PREFIX + cleanForMaya(fqAttrName);
+}
+
+std::wstring getBriefName(const std::wstring& fqAttrName) {
+	return cleanForMaya(prtu::removeStyle(fqAttrName));
+}
+
+std::wstring getNiceName(const std::wstring& fqAttrName) {
+	return cleanForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
+}
 
 } // namespace
 
@@ -46,11 +68,19 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
 
 	for (size_t i = 0; i < ruleFileInfo->getNumAttributes(); i++) {
-		if (ruleFileInfo->getAttribute(i)->getNumParameters() != 0) continue;
+		const prt::RuleFileInfo::Entry* attr = ruleFileInfo->getAttribute(i);
+
+		if (attr->getNumParameters() != 0)
+			continue;
 
 		RuleAttribute p;
-		p.fqName = ruleFileInfo->getAttribute(i)->getName();
+		p.fqName = attr->getName();
+		p.mayaBriefName = getBriefName(p.fqName);
+		p.mayaFullName = getFullName(p.fqName);
+		p.mayaNiceName = getNiceName(p.fqName);
+		p.mType = attr->getReturnType();
 
+		// TODO: is this correct? import name != rule file name
 		std::wstring ruleName = p.fqName;
 		size_t idxStyle = ruleName.find(L"$");
 		if (idxStyle != std::wstring::npos)
@@ -65,8 +95,8 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 		}
 
 		bool hidden = false;
-		for (size_t a = 0; a < ruleFileInfo->getAttribute(i)->getNumAnnotations(); a++) {
-			const prt::Annotation* an = ruleFileInfo->getAttribute(i)->getAnnotation(a);
+		for (size_t a = 0; a < attr->getNumAnnotations(); a++) {
+			const prt::Annotation* an = attr->getAnnotation(a);
 			const wchar_t* anName = an->getName();
 			if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
 				hidden = true;

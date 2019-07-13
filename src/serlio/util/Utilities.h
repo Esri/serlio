@@ -159,6 +159,7 @@ namespace prtu {
 	}
 
 	constexpr const wchar_t STYLE_DELIMITER = L'$';
+	constexpr const wchar_t IMPORT_DELIMITER = L'.';
 
 	SRL_TEST_EXPORTS_API inline std::wstring getStyle(const std::wstring& fqRuleName) {
 		const auto sepPos = fqRuleName.find(STYLE_DELIMITER);
@@ -167,8 +168,8 @@ namespace prtu {
 		return fqRuleName.substr(0, sepPos);
 	}
 
-	SRL_TEST_EXPORTS_API inline std::wstring removeStyle(const std::wstring& fqRuleName) {
-		const auto sepPos = fqRuleName.find(STYLE_DELIMITER);
+	SRL_TEST_EXPORTS_API inline std::wstring removePrefix(const std::wstring& fqRuleName, wchar_t delim) {
+		const auto sepPos = fqRuleName.find(delim);
 		if (sepPos == std::wstring::npos)
 			return fqRuleName;
 		if (sepPos == fqRuleName.length()-1)
@@ -176,6 +177,14 @@ namespace prtu {
 		if (fqRuleName.length() <= 1)
 			return {};
 		return fqRuleName.substr(sepPos+1);
+	}
+
+	SRL_TEST_EXPORTS_API inline std::wstring removeStyle(const std::wstring& fqRuleName) {
+		return removePrefix(fqRuleName, STYLE_DELIMITER);
+	}
+
+	SRL_TEST_EXPORTS_API inline std::wstring removeImport(const std::wstring& fqRuleName) {
+		return removePrefix(fqRuleName, IMPORT_DELIMITER);
 	}
 
 } // namespace prtu
