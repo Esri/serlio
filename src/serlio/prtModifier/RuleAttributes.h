@@ -46,21 +46,22 @@ constexpr int ORDER_NONE = std::numeric_limits<int>::max();
 using AttributeGroup = std::vector<std::wstring>;
 using AttributeGroupOrder = std::map<AttributeGroup,int>;
 
-struct AttributeProperties {
-	int order = ORDER_NONE;
-	int groupOrder = ORDER_NONE;
-	size_t index;
-	std::wstring name;
-	std::wstring ruleFile;
+struct RuleAttribute {
+	std::wstring   fqName; // fully qualified rule name (i.e. including style prefix)
+
 	AttributeGroup groups; // groups can be nested
-	bool memberOfStartRuleFile = false;
+	int            order      = ORDER_NONE;
+	int            groupOrder = ORDER_NONE;
+
+	std::wstring   ruleFile;
+	bool           memberOfStartRuleFile = false;
 };
 
-using RuleAttributes = std::vector<AttributeProperties>;
+using RuleAttributes = std::vector<RuleAttribute>;
 
 SRL_TEST_EXPORTS_API RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo);
 AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes);
 void sortRuleAttributes(RuleAttributes& ra);
-std::wostream& operator<<(std::wostream& ostr, const AttributeProperties& ap);
-std::ostream& operator<<(std::ostream& ostr, const AttributeProperties& ap);
+std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap);
+std::ostream& operator<<(std::ostream& ostr, const RuleAttribute& ap);
 std::wostream& operator<<(std::wostream& wostr, const AttributeGroupOrder& ago);

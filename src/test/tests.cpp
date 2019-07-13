@@ -37,11 +37,10 @@ const std::wstring testDataPath = prtu::toUTF16FromOSNarrow(TEST_DATA_PATH);
 
 namespace std {
 	// inject comparison for AttributeProperties into std namespace so STL algos can find it
-	bool operator==(const AttributeProperties& a, const AttributeProperties& b) {
+	bool operator==(const RuleAttribute& a, const RuleAttribute& b) {
 		return (a.order == b.order)
 			&& (a.groupOrder == b.groupOrder)
-			&& (a.index == b.index)
-			&& (a.name == b.name)
+			&& (a.fqName == b.fqName)
 			&& (a.ruleFile == b.ruleFile)
 			&& (a.groups == b.groups)
 			&& (a.memberOfStartRuleFile == b.memberOfStartRuleFile);
@@ -127,182 +126,134 @@ TEST_CASE("default attribute values") {
 	RuleAttributes ruleAttrs = getRuleAttributes(ruleFile, ruleInfo.get());
 
 	for (const auto& ap: ruleAttrs) {
-		LOG_DBG << ap.name;
+		LOG_DBG << ap.fqName;
 	}
 
 	// TODO: add assertion for value, needs interface into PRTModifierAction.cpp without introducing maya dep here
 }
 
+const AttributeGroup AG_EMPTY = {};
+const AttributeGroup ag_a = { L"a"};
+const AttributeGroup ag_ak = { L"a", L"k" };
+const AttributeGroup ag_b = { L"b"};
+const AttributeGroup ag_bk = { L"b", L"k" };
+const AttributeGroup ag_bkp = { L"b", L"k", L"p" };
+
 TEST_CASE("global group order") {
-	AttributeGroup ag_bk = { L"b", L"k" };
-	AttributeGroup ag_bkp = { L"b", L"k", L"p" };
-	AttributeGroup ag_a = { L"a"};
-	AttributeGroup ag_ak = { L"a", L"k" };
+	const RuleAttribute A = { L"style$A", L"A", ag_bk, ORDER_NONE, ORDER_NONE, L"foo", true };
+	const RuleAttribute B = { L"style$B", L"B", ag_bk, ORDER_NONE, ORDER_NONE, L"foo", true };
+	const RuleAttribute C = { L"style$C", L"C", ag_bkp, ORDER_NONE, 10, L"foo", true };
+	const RuleAttribute D = { L"style$D", L"D", ag_a, ORDER_NONE, 20, L"foo", true };
+	const RuleAttribute E = { L"style$E", L"E", ag_ak, ORDER_NONE, ORDER_NONE, L"foo", true };
 
-	const RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", ag_bk, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", ag_bk, true },
-			{ ORDER_NONE, 10, 0, L"C", L"foo", ag_bkp, true },
-			{ ORDER_NONE, 20, 0, L"D", L"foo", ag_a, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"E", L"foo", ag_ak, true },
-	};
-
-	AttributeGroupOrder ago = getGlobalGroupOrder(inp);
-	CHECK(ago.size() == 5);
-	CHECK(ago[{ L"b", L"k", L"p" }] == 10);
-	CHECK(ago[{ L"b", L"k" }]       == 10);
-	CHECK(ago[{ L"b" }]             == 10);
-	CHECK(ago[{ L"a", L"k" }]       == ORDER_NONE);
-	CHECK(ago[{ L"a" }]             == 20);
+	const RuleAttributes inp = { A, B, C, D, E };
+	const AttributeGroupOrder ago = getGlobalGroupOrder(inp);
+	CHECK(ago.size()     == 5);
+	CHECK(ago.at(ag_bkp) == 10);
+	CHECK(ago.at(ag_bk)  == 10);
+	CHECK(ago.at(ag_b)   == 10);
+	CHECK(ago.at(ag_ak)  == ORDER_NONE);
+	CHECK(ago.at(ag_a)   == 20);
 }
 
 TEST_CASE("rule attribute sorting") {
 
 	SECTION("rule file 1") {
-		RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, false },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, true },
-		};
+		const RuleAttribute A = { L"style$A", L"A", {}, ORDER_NONE, ORDER_NONE, L"bar", true };
+		const RuleAttribute B = { L"style$B", L"B", {}, ORDER_NONE, ORDER_NONE, L"foo", false };
 
-		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, false },
-		};
-
+		RuleAttributes inp = { B, A };
+		const RuleAttributes exp = { A, B };
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("rule file 2") {
-		RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, false },
-		};
+		const RuleAttribute A = { L"style$A", L"A", {}, ORDER_NONE, ORDER_NONE, L"bar", false };
+		const RuleAttribute B = { L"style$B", L"B", {}, ORDER_NONE, ORDER_NONE, L"foo", true };
 
-		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"bar", { }, false },
-		};
-
+		RuleAttributes inp = { B, A };
+		const RuleAttributes exp = { B, A };
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("group order") {
-		RuleAttributes inp = {
-			{ ORDER_NONE, 1, 0, L"B", L"foo", { L"foo" }, true },
-			{ ORDER_NONE, 0, 0, L"A", L"foo", { L"foo" }, true },
-		};
+		const RuleAttribute A = { L"style$A", L"A", { L"foo" }, ORDER_NONE, 0, L"foo", true };
+		const RuleAttribute B = { L"style$B", L"B", { L"foo" }, ORDER_NONE, 1, L"foo", true };
 
-		RuleAttributes exp = {
-			{ ORDER_NONE, 0, 0, L"A", L"foo", { L"foo" }, true },
-			{ ORDER_NONE, 1, 0, L"B", L"foo", { L"foo" }, true },
-		};
-
+		RuleAttributes inp = { B, A };
+		const RuleAttributes exp = { A, B };
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups") {
-		RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
-		};
+		const RuleAttribute A = { L"style$A", L"A", { L"foo", L"bar" }, ORDER_NONE, ORDER_NONE, L"bar", true };
+		const RuleAttribute B = { L"style$B", L"B", { L"foo" }, ORDER_NONE, ORDER_NONE, L"foo", true };
 
-		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
-		};
-
+		RuleAttributes inp = { A, B };
+		const RuleAttributes exp = { B, A };
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups disjunct") {
-		RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo1", L"bar" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
-		};
+		const RuleAttribute A = { L"style$A", L"A", { L"foo1", L"bar" }, ORDER_NONE, ORDER_NONE, L"bar", true };
+		const RuleAttribute B = { L"style$B", L"B", { L"foo" }, ORDER_NONE, ORDER_NONE, L"foo", true };
 
-		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo1", L"bar" }, true },
-		};
-
+		RuleAttributes inp = { A, B };
+		const RuleAttributes exp = { B, A };
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups on same level") {
-		RuleAttributes inp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"C", L"foo", { L"foo", L"baz" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
-		};
+		const RuleAttribute A = { L"style$A", L"A", { L"foo", L"bar" }, ORDER_NONE, ORDER_NONE, L"foo", true };
+		const RuleAttribute B = { L"style$B", L"B", { L"foo" }, ORDER_NONE, ORDER_NONE, L"foo", true };
+		const RuleAttribute C = { L"style$C", L"C", { L"foo", L"baz" }, ORDER_NONE, ORDER_NONE, L"foo", true };
 
-		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"C", L"foo", { L"foo", L"baz" }, true },
-		};
-
+		RuleAttributes inp = { C, A, B };
+		const RuleAttributes exp = { B, A, C };
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups with group order") {
-		RuleAttributes inp = {
-			{ ORDER_NONE, 0,          0, L"C", L"foo", { L"foo", L"baz" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
-		};
+		const RuleAttribute A = { L"style$A", L"A", { L"foo", L"bar" }, ORDER_NONE, ORDER_NONE, L"foo", true };
+		const RuleAttribute B = { L"style$B", L"B", { L"foo" }, ORDER_NONE, ORDER_NONE, L"foo", true };
+		const RuleAttribute C = { L"style$C", L"C", { L"foo", L"baz" }, ORDER_NONE, 0, L"foo", true };
 
-		RuleAttributes exp = {
-			{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"foo" }, true },
-			{ ORDER_NONE, 0,          0, L"C", L"foo", { L"foo", L"baz" }, true },
-			{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"foo", L"bar" }, true },
-		};
-
+		RuleAttributes inp = { C, A, B };
+		const RuleAttributes exp = { B, C, A };
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("all properties") {
-		RuleAttributes inp = {
-				{ ORDER_NONE, 3, 0, L"B", L"foo", { L"First" }, true },
-				{ ORDER_NONE, 0, 0, L"A", L"foo", { L"First1", L"Second1", L"Third1" }, true },
-				{ 0,          2, 0, L"C", L"foo", { L"First",  L"Second" }, true },
-				{ 1,          2, 0, L"D", L"foo", { L"First",  L"Second" }, true },
-				{ ORDER_NONE, 1, 0, L"E", L"foo", { L"First",  L"Second",  L"Third" }, true }
-		};
-		const RuleAttributes exp = {
-				{ ORDER_NONE, 0, 0, L"A", L"foo", { L"First1", L"Second1", L"Third1" }, true },
-				{ ORDER_NONE, 3, 0, L"B", L"foo", { L"First" }, true },
-				{ 0,          2, 0, L"C", L"foo", { L"First",  L"Second" }, true },
-				{ 1,          2, 0, L"D", L"foo", { L"First",  L"Second" }, true },
-				{ ORDER_NONE, 1, 0, L"E", L"foo", { L"First",  L"Second",  L"Third" }, true }
-		};
+		const RuleAttribute A = { L"style$A", L"A", { L"First1", L"Second1", L"Third1" }, ORDER_NONE, 0, L"foo", true };
+		const RuleAttribute B = { L"style$B", L"B", { L"First" }, ORDER_NONE, 3, L"foo", true };
+		const RuleAttribute C = { L"style$C", L"C", { L"First",  L"Second" }, 0, 2, L"foo", true };
+		const RuleAttribute D = { L"style$D", L"D", { L"First",  L"Second" }, 1, 2, L"foo", true };
+		const RuleAttribute E = { L"style$E", L"E", { L"First",  L"Second",  L"Third" }, ORDER_NONE, 1, L"foo", true };
 
+		RuleAttributes inp = { B, A, C, D, E };
+		const RuleAttributes exp = { A, B, C, D, E };
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("review example") {
 		// b k < b k p (group order=10) < a (group order=20) < a k < b k
-		RuleAttributes inp = {
-				{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"b", L"k" }, true },
-				{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"b",  L"k" }, true },
-				{ ORDER_NONE, 10, 0, L"C", L"foo", { L"b", L"k", L"p" }, true },
-				{ ORDER_NONE, 20, 0, L"D", L"foo", { L"a" }, true },
-				{ ORDER_NONE, ORDER_NONE, 0, L"E", L"foo", { L"a",  L"k" }, true },
-		};
-		const RuleAttributes exp = {
-				{ ORDER_NONE, ORDER_NONE, 0, L"A", L"foo", { L"b", L"k" }, true },
-				{ ORDER_NONE, ORDER_NONE, 0, L"B", L"foo", { L"b",  L"k" }, true },
-				{ ORDER_NONE, 10, 0, L"C", L"foo", { L"b", L"k", L"p" }, true },
-				{ ORDER_NONE, 20, 0, L"D", L"foo", { L"a" }, true },
-				{ ORDER_NONE, ORDER_NONE, 0, L"E", L"foo", { L"a",  L"k" }, true },
-		};
+
+		const RuleAttribute A = { L"style$A", L"A", ag_bk, ORDER_NONE, ORDER_NONE, L"foo", true };
+		const RuleAttribute B = { L"style$B", L"B", ag_bk, ORDER_NONE, ORDER_NONE, L"foo", true };
+		const RuleAttribute C = { L"style$C", L"C", ag_bkp, ORDER_NONE, 10, L"foo", true };
+		const RuleAttribute D = { L"style$D", L"D", ag_a, ORDER_NONE, 20, L"foo", true };
+		const RuleAttribute E = { L"style$E", L"E", ag_ak, ORDER_NONE, ORDER_NONE, L"foo", true };
+
+		RuleAttributes inp = { A, B, C, D, E };
+		const RuleAttributes exp = { A, B, C, D, E };
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}

@@ -355,8 +355,8 @@ MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const std::wst
 	RuleAttributes sortedAttributes = getRuleAttributes(ruleFile, info);
 	sortRuleAttributes(sortedAttributes);
 
-	for (const AttributeProperties& p: sortedAttributes) {
-		const std::wstring key = p.name;
+	for (const RuleAttribute& p: sortedAttributes) {
+		const std::wstring key = p.fqName;
 
 		// only use attributes of current style
 		const std::wstring style = prtu::getStyle(key);

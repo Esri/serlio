@@ -31,8 +31,10 @@
 #include <cassert>
 
 namespace {
+
 constexpr bool DBG = false;
-}
+
+} // namespace
 
 
 RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
@@ -44,14 +46,12 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
 
 	for (size_t i = 0; i < ruleFileInfo->getNumAttributes(); i++) {
-
 		if (ruleFileInfo->getAttribute(i)->getNumParameters() != 0) continue;
 
-		AttributeProperties p;
-		p.index = i;
-		p.name = ruleFileInfo->getAttribute(i)->getName();
+		RuleAttribute p;
+		p.fqName = ruleFileInfo->getAttribute(i)->getName();
 
-		std::wstring ruleName = p.name;
+		std::wstring ruleName = p.fqName;
 		size_t idxStyle = ruleName.find(L"$");
 		if (idxStyle != std::wstring::npos)
 			ruleName = ruleName.substr(idxStyle + 1);
@@ -122,7 +122,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return a < b;
 	};
 
-	auto compareRuleFile = [&](const AttributeProperties& a, const AttributeProperties& b) {
+	auto compareRuleFile = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		// sort main rule attributes before the rest
 		if (a.memberOfStartRuleFile)
 			return true;
@@ -132,7 +132,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return lowerCaseOrdering(a.ruleFile, b.ruleFile);
 	};
 
-	auto isChildOf = [](const AttributeProperties& child, const AttributeProperties& parent) {
+	auto isChildOf = [](const RuleAttribute& child, const RuleAttribute& parent) {
 		const size_t np = parent.groups.size();
 		const size_t nc = child.groups.size();
 
@@ -149,7 +149,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return true;
 	};
 
-	auto firstDifferentGroupInA = [](const AttributeProperties& a, const AttributeProperties& b) {
+	auto firstDifferentGroupInA = [](const RuleAttribute& a, const RuleAttribute& b) {
 		assert(a.groups.size() == b.groups.size());
 		size_t i = 0;
 		while ((i < a.groups.size()) && (a.groups[i] == b.groups[i])) { i++; }
@@ -159,12 +159,12 @@ void sortRuleAttributes(RuleAttributes& ra) {
 	const AttributeGroupOrder globalGroupOrder = getGlobalGroupOrder(ra);
 	if (DBG) LOG_DBG << "globalGroupOrder:\n" << globalGroupOrder;
 
-	auto getGroupOrder = [&globalGroupOrder](const AttributeProperties& ap){
+	auto getGroupOrder = [&globalGroupOrder](const RuleAttribute& ap){
 		const auto it = globalGroupOrder.find(ap.groups);
 		return (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
 	};
 
-	auto compareGroups = [&](const AttributeProperties& a, const AttributeProperties& b) {
+	auto compareGroups = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		if (isChildOf(a, b))
 			return false; // child a should be sorted after parent b
 
@@ -183,14 +183,14 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return lowerCaseOrdering(firstDifferentGroupInA(a, b), firstDifferentGroupInA(b, a));
 	};
 
-	auto compareAttributeOrder = [&](const AttributeProperties& a, const AttributeProperties& b) {
+	auto compareAttributeOrder = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		if (a.order == ORDER_NONE && b.order == ORDER_NONE)
-			return lowerCaseOrdering(a.name, b.name);
+			return lowerCaseOrdering(a.fqName, b.fqName);
 
 		return a.order < b.order;
 	};
 
-	auto attributeOrder = [&](const AttributeProperties& a, const AttributeProperties& b) {
+	auto attributeOrder = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		if (a.ruleFile != b.ruleFile)
 			return compareRuleFile(a, b);
 
@@ -203,7 +203,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 	std::sort(ra.begin(), ra.end(), attributeOrder);
 }
 
-std::wostream& operator<<(std::wostream& ostr, const AttributeProperties& ap) {
+std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap) {
 	auto orderVal = [](int order) {
 		std::wostringstream ostr;
 		if (order == ORDER_NONE)
@@ -212,15 +212,15 @@ std::wostream& operator<<(std::wostream& ostr, const AttributeProperties& ap) {
 			ostr << order;
 		return ostr.str();
 	};
-	ostr << L"AttributeProperties '" << ap.name << L"':"
-		 << L" order = " << orderVal(ap.order)
-		 << L", groupOrder = " << orderVal(ap.groupOrder)
-		 << L", ruleFile = '" << ap.ruleFile << L"'"
-		 << L", groups = [ " << join<wchar_t>(ap.groups, L" ") << L" ]\n";
+	ostr << L"RuleAttribute '" << ap.fqName << L"':"
+	     << L" order = " << orderVal(ap.order)
+	     << L", groupOrder = " << orderVal(ap.groupOrder)
+	     << L", ruleFile = '" << ap.ruleFile << L"'"
+	     << L", groups = [ " << join<wchar_t>(ap.groups, L" ") << L" ]\n";
 	return ostr;
 }
 
-std::ostream& operator<<(std::ostream& ostr, const AttributeProperties& ap) {
+std::ostream& operator<<(std::ostream& ostr, const RuleAttribute& ap) {
 	std::wostringstream wostr;
 	wostr << ap;
 	ostr << prtu::toOSNarrowFromUTF16(wostr.str());
