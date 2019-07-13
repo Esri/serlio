@@ -49,7 +49,7 @@ namespace std {
 } // namespace std
 
 
-TEST_CASE("rule style") {
+TEST_CASE("get rule style") {
 	SECTION("standard") {
 		const std::wstring fqRule = L"bar$foo";
 		const std::wstring expStyle = L"bar";
@@ -75,6 +75,45 @@ TEST_CASE("rule style") {
 		const std::wstring fqRule = L"foo$";
 		const std::wstring expStyle = L"foo";
 		CHECK(prtu::getStyle(fqRule) == expStyle);
+	}
+
+	SECTION("invalid 3") {
+		const std::wstring fqRule = L"$";
+		CHECK(prtu::getStyle(fqRule).empty());
+	}
+}
+
+TEST_CASE("remove rule style") {
+	SECTION("standard") {
+		const std::wstring fqRule = L"bar$foo";
+		const std::wstring expName = L"foo";
+		CHECK(prtu::removeStyle(fqRule) == expName);
+	}
+
+	SECTION("no style") {
+		const std::wstring fqRule = L"foo";
+		CHECK(prtu::removeStyle(fqRule) == fqRule);
+	}
+
+	SECTION("empty rule") {
+		const std::wstring fqRule;
+		CHECK(prtu::removeStyle(fqRule).empty());
+	}
+
+	SECTION("invalid 1") {
+		const std::wstring fqRule = L"$foo";
+		const std::wstring expName = L"foo";
+		CHECK(prtu::removeStyle(fqRule) == expName);
+	}
+
+	SECTION("invalid 2") {
+		const std::wstring fqRule = L"foo$";
+		CHECK(prtu::removeStyle(fqRule).empty());
+	}
+
+	SECTION("invalid 3") {
+		const std::wstring fqRule = L"$";
+		CHECK(prtu::removeStyle(fqRule).empty());
 	}
 }
 

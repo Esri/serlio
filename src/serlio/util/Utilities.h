@@ -160,11 +160,22 @@ namespace prtu {
 
 	constexpr const wchar_t STYLE_DELIMITER = L'$';
 
-	SRL_TEST_EXPORTS_API inline std::wstring getStyle(const std::wstring& fqRule) {
-		const auto sepPos = fqRule.find(STYLE_DELIMITER);
+	SRL_TEST_EXPORTS_API inline std::wstring getStyle(const std::wstring& fqRuleName) {
+		const auto sepPos = fqRuleName.find(STYLE_DELIMITER);
 		if (sepPos == std::wstring::npos || sepPos == 0)
 			return {};
-		return fqRule.substr(0, sepPos);
+		return fqRuleName.substr(0, sepPos);
+	}
+
+	SRL_TEST_EXPORTS_API inline std::wstring removeStyle(const std::wstring& fqRuleName) {
+		const auto sepPos = fqRuleName.find(STYLE_DELIMITER);
+		if (sepPos == std::wstring::npos)
+			return fqRuleName;
+		if (sepPos == fqRuleName.length()-1)
+			return {};
+		if (fqRuleName.length() <= 1)
+			return {};
+		return fqRuleName.substr(sepPos+1);
 	}
 
 } // namespace prtu
