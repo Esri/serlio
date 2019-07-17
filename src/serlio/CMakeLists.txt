@@ -78,6 +78,8 @@ endif()
 srl_add_dependency_prt(${SERLIO_TARGET})
 srl_add_dependency_maya(${SERLIO_TARGET})
 
+# Add to solution folder (Visual Studio)
+set_property(TARGET ${SERLIO_TARGET} PROPERTY FOLDER "Serlio Maya Plugin")
 
 ### setup install target
 

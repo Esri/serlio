@@ -4,6 +4,10 @@ project(serlio CXX)
 
 include(common.cmake)
 
+# Enable solution folders for Visual Studio
+# TODO: Can we make this stuff conditional on VS Generator?
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 
 ### version
 
@@ -33,6 +37,13 @@ add_dependencies(${SERLIO_TARGET} ${CODEC_TARGET})
 
 enable_testing()
 add_subdirectory(test EXCLUDE_FROM_ALL)
+
+### Windows installer
+
+INCLUDE_EXTERNAL_MSPROJECT("serlio_installer" ${CMAKE_CURRENT_LIST_DIR}/../installer/serlio_installer.wixproj)
+set_property(TARGET "serlio_installer" PROPERTY FOLDER "Serlio Installer")
+# TODO: file system structure is a little odd.
+# include(${CMAKE_CURRENT_SOURCE_DIR}/../deployment/cpack_setup.cmake)
 
 
 ### setup packaging
