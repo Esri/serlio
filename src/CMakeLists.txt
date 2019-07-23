@@ -5,7 +5,6 @@ project(serlio CXX)
 include(common.cmake)
 
 # Enable solution folders for Visual Studio
-# TODO: Can we make this stuff conditional on VS Generator?
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 
@@ -38,42 +37,12 @@ add_dependencies(${SERLIO_TARGET} ${CODEC_TARGET})
 enable_testing()
 add_subdirectory(test EXCLUDE_FROM_ALL)
 
-### Windows installer
 
-INCLUDE_EXTERNAL_MSPROJECT("serlio_installer" ${CMAKE_CURRENT_LIST_DIR}/../installer/serlio_installer.wixproj)
-set_property(TARGET "serlio_installer" PROPERTY FOLDER "Serlio Installer")
-# TODO: file system structure is a little odd.
-# include(${CMAKE_CURRENT_SOURCE_DIR}/../deployment/cpack_setup.cmake)
-
-
-### setup packaging
-
-if(SRL_WINDOWS)
-    set(CPACK_GENERATOR             ZIP)
-    set(CPACK_SOURCE_GENERATOR      ZIP)
-    set(CPACK_ZIP_COMPONENT_INSTALL 1)
-    set(SRL_PKG_OS "windows")
-elseif(SRL_MACOS)
-    set(CPACK_GENERATOR             TGZ)
-    set(CPACK_SOURCE_GENERATOR      TGZ)
-    set(CPACK_TGZ_COMPONENT_INSTALL 1)
-    set(SRL_PKG_OS "macos")
-elseif(SRL_LINUX)
-    set(CPACK_GENERATOR             TGZ)
-    set(CPACK_SOURCE_GENERATOR      TGZ)
-    set(CPACK_TGZ_COMPONENT_INSTALL 1)
-    set(SRL_PKG_OS "linux")
+# If not explictly told to build Windows installers, assume zip/tgz archives.
+if(WIN_INSTALLER) # <-- To be set on the command line
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_installer.cmake)
+else()
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_archives.cmake)
 endif()
-
-set(CPACK_PACKAGE_NAME                "serlio")
-set(CPACK_PACKAGE_VENDOR              "Esri R&D Center Zurich")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Esri CityEngine Plugin for Autodesk Maya")
-set(CPACK_PACKAGE_VERSION_MAJOR       ${SRL_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR       ${SRL_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH       ${SRL_VERSION_PATCH})
-set(CPACK_PACKAGE_INSTALL_DIRECTORY   "serlio-${SRL_VERSION}")
-set(CPACK_PACKAGE_FILE_NAME           "${CPACK_PACKAGE_NAME}-${SRL_VERSION}-${SRL_PKG_OS}")
-
-configure_file(deployment.properties.in deployment.properties @ONLY)
 
 include(CPack)

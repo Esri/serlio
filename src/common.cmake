@@ -102,9 +102,9 @@ if (maya_LINK_LIB_METADATA)
 endif()
 
 # temporary heuristic to detect maya version number
-if(maya_DIR MATCHES "maya2018")
+if(maya_DIR MATCHES "[Mm]aya2018")
 	set(maya_VERSION_MAJOR "2018")
-elseif(maya_DIR MATCHES "maya2019")
+elseif(maya_DIR MATCHES "[Mm]aya2019")
 	set(maya_VERSION_MAJOR "2019")
 endif()
 
