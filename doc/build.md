@@ -6,10 +6,12 @@
 ### All Platforms
 * License for CityEngine (2019.0 or later), e.g. to author Rule Packages.
 * CMake 3.13 or later (http://www.cmake.org)
+* Autodesk Maya 2018 or 2019 installation or the corresponding development kit
 
 ### Windows
 * Windows 7, 8.1 or 10 (64bit)
 * Required C++ compiler: Visual Studio 2017 with Toolset MSVC 14.11 or later
+* WiX Toolset 3.11.1: Optional, required for building .msi installers
 * Required flags for extension libraries release mode: `/bigobj /GR /EHsc /MD`
 
 ### Linux
@@ -22,8 +24,12 @@
 
 ### Windows
 
+#### Quick build for the impatient
+1. Open a Visual Studio 2017 x64 Command Shell in the `serlio` root directory.
+2. Call `powershell .\build.ps1`.
+
 #### Building with Visual Studio
-1. Open a Windows Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
+1. Open a Visual Studio 2017 x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
 2. Create a build directory with `mkdir build` and change into it with `cd build`.
 3. Run `cmake` to generate a Visual Studio solution:
    ```
@@ -48,6 +54,21 @@
    make install
    ```
 5. The build result will appear in the `install` directory in parallel to the `build` directory. We will use this as the plugin directory below.
+
+#### Building MSI Installers
+1. WiX Toolset 3 (3.11.1 or better) is required for building MSI installers.
+2. Open a Visual Studio 2017 x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
+2. Create a build directory with `mkdir build_installers` and change into it with `cd build_installers`.
+3. Run `cmake` to generate the Makefiles. Make sure to set `WIN_INSTALLER` to `True`:
+   ```
+   cmake -G "NMake Makefiles" -DWIN_INSTALLER=True -DCMAKE_BUILD_TYPE=Release ../src
+   ```
+   Use options `-Dprt_DIR=<ce sdk root>\cmake` and `-Dmaya_DIR=<maya installation root>` to override the default locations of CityEngine SDK and Maya.
+4. Run make to build the package target, i.e.
+   ```
+   make package
+   ```
+5. The installer will appear in `build_installers`.
 
 ### Linux
 1. Open a terminal (e.g. bash)
