@@ -30,19 +30,18 @@ set(CODEC_TARGET serlio_codec)
 set(SERLIO_TARGET serlio)
 set(TEST_TARGET serlio_test)
 
+### configure packaging
+if(WIN_INSTALLER) # <-- To be set on the command line
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_installer.cmake)
+else()
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_archives.cmake)
+endif()
+
 add_subdirectory(codec)
 add_subdirectory(serlio)
 add_dependencies(${SERLIO_TARGET} ${CODEC_TARGET})
 
 enable_testing()
 add_subdirectory(test EXCLUDE_FROM_ALL)
-
-
-# If not explictly told to build Windows installers, assume zip/tgz archives.
-if(WIN_INSTALLER) # <-- To be set on the command line
-    include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_installer.cmake)
-else()
-    include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_archives.cmake)
-endif()
 
 include(CPack)

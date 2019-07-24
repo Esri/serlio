@@ -2,6 +2,9 @@
 
 include(${CMAKE_CURRENT_LIST_DIR}/cpack_common.cmake)
 
+# Put everything into the archive root (cf. cpack_installer.cmake)
+set(INSTALL_FOLDER_PREFIX ".")
+
 if(SRL_WINDOWS)
     set(CPACK_GENERATOR             ZIP)
     set(CPACK_SOURCE_GENERATOR      ZIP)

@@ -35,9 +35,9 @@
     <!-- OS: Valid values seem to be win64|macOS|linux -->
     <Components>
         <RuntimeRequirements SupportPath="./doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="@maya_VERSION_MAJOR@" SeriesMax="@maya_VERSION_MAJOR@" />
-        <MayaEnv expr="MAYA_SCRIPT_PATH+:=scripts/" />
-        <MayaEnv expr="MAYA_PLUG_IN_PATH+:=plug-ins/" />
-        <ComponentEntry ModuleName="./plug-ins/@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
+        <MayaEnv expr="PATH+:=plug-ins/" />
+        <!-- Not sure if below line actually is required -->
+        <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
     </Components>
 
 </ApplicationPackage>

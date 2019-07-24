@@ -83,14 +83,14 @@ set_property(TARGET ${SERLIO_TARGET} PROPERTY FOLDER "Serlio Maya Plugin")
 
 ### setup install target
 
-install(TARGETS ${SERLIO_TARGET} DESTINATION plug-ins)
-install(FILES ${PRT_LIBRARIES} DESTINATION plug-ins)
-install(FILES ${PRT_EXT_LIBRARIES} DESTINATION plug-ins/ext)
-install(FILES scripts/AEserlioTemplate.mel DESTINATION scripts)
-install(FILES scripts/serlioCreateUI.mel DESTINATION scripts)
-install(FILES scripts/serlioDeleteUI.mel DESTINATION scripts)
-install(FILES shaders/serlioShaderStingray.sfx DESTINATION shaders)
+install(TARGETS ${SERLIO_TARGET} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
+install(FILES ${PRT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
+install(FILES ${PRT_EXT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+install(FILES scripts/AEserlioTemplate.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
+install(FILES scripts/serlioCreateUI.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
+install(FILES scripts/serlioDeleteUI.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
+install(FILES shaders/serlioShaderStingray.sfx DESTINATION ${INSTALL_FOLDER_PREFIX}/shaders)
 
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/../doc DESTINATION .)
-install(FILES ${PROJECT_SOURCE_DIR}/../README.md ${PROJECT_SOURCE_DIR}/../LICENSE DESTINATION .)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/../doc DESTINATION ${INSTALL_FOLDER_PREFIX})
+install(FILES ${PROJECT_SOURCE_DIR}/../README.md ${PROJECT_SOURCE_DIR}/../LICENSE DESTINATION ${INSTALL_FOLDER_PREFIX})
 

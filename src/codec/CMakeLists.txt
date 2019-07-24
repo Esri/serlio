@@ -45,4 +45,4 @@ set_property(TARGET ${CODEC_TARGET} PROPERTY FOLDER "Serlio Maya Plugin")
 
 ### setup install target
 
-install(TARGETS ${CODEC_TARGET} DESTINATION plug-ins/ext)
+install(TARGETS ${CODEC_TARGET} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
