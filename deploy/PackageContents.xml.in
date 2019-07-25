@@ -18,7 +18,7 @@
     AutodeskProduct="Maya"
     Name="@PROJECT_NAME@"
     Description="@CPACK_PACKAGE_DESCRIPTION_SUMMARY@"
-    AppVersion="@CPACK_PACKAGE_VERSION@"
+    AppVersion="@SRL_VERSION_BASE@"
     Author="@PACKAGE_VENDOR_ESCAPED@"
     AppNameSpace="com.esri.prt"
     HelpFile="./doc/usage.md"

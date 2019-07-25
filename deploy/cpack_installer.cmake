@@ -35,10 +35,13 @@ set(CPACK_WIX_SKIP_PROGRAM_FOLDER true)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/PackageContents.xml.in ${PROJECT_BINARY_DIR}/PackageContents.xml)
 
 # We need to overwrite a couple of variables from cpack_common because slightly different values are required.
-set(CPACK_PACKAGE_INSTALL_DIRECTORY   "C:/ProgramData/Autodesk/ApplicationPlugins/Serlio")
-# TODO: This is not so nice. CPACK_PACKAGE_NAME is also used in the PackageContents.xml template above.
-# If this line appears before 'configure_file' things may break.
+set(CPACK_PACKAGE_INSTALL_DIRECTORY   "C:/ProgramData/Autodesk/ApplicationPlugins/serlio-${SRL_VERSION_MMP_PRE}")
+
+# Careful: CPACK_PACKAGE_NAME is also used in the PackageContents.xml template above.
+# Make sure that this line always appears after the 'configure_file' directive.
 set(CPACK_PACKAGE_NAME   "Serlio")
+# We need to set the CPACK_PACKAGE_VERSION to a format that MSI understands (MAJOR.MINOR.PATCH).
+set(CPACK_PACKAGE_VERSION   ${SRL_VERSION_MMP})
 
 # Add it to the WiX installer.
 install(FILES ${PROJECT_BINARY_DIR}/PackageContents.xml DESTINATION "/")
