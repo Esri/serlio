@@ -299,7 +299,7 @@ TEST_CASE("toFileURI") {
 // we use a custom main function to manage PRT lifetime
 int main( int argc, char* argv[] ) {
 	const std::vector<std::wstring> addExtDirs = {
-		prtu::toUTF16FromOSNarrow(SERLIO_CODEC_PATH) // set to absolute path to houdini encoder lib via cmake
+		prtu::toUTF16FromOSNarrow(SERLIO_CODEC_PATH) // set to absolute path to serlio encoder lib via cmake
 	};
 
 	prtCtx.reset(new PRTContext(addExtDirs));
