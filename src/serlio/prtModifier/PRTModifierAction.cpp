@@ -214,7 +214,7 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 				MFnNumericData fRGB(rgb);
 
 				prtu::Color col;
-				MCHECK(fRGB.getData3Double(col[0], col[1], col[2]));
+				MCHECK(fRGB.getData3Float(col[0], col[1], col[2]));
 				const std::wstring colStr = prtu::getColorString(col);
 
 				if (std::wcscmp(colStr.c_str(), defColStr) != 0)
@@ -800,9 +800,9 @@ MStatus PRTModifierAction::addColorParameter(MFnDependencyNode & node, MObject &
 	const prtu::Color color = prtu::parseColor(s);
 
 	MFnNumericData fnData;
-	MObject        rgb = fnData.create(MFnNumericData::k3Double, &stat);
+	MObject        rgb = fnData.create(MFnNumericData::k3Float, &stat);
 	MCHECK(stat);
-	fnData.setData(color[0], color[1], color[2]);
+	fnData.setData3Float(color[0], color[1], color[2]);
 
 	MObject plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), rgb);
 	attr = nAttr.createColor(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), &stat);
