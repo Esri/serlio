@@ -99,7 +99,7 @@ MStatus initializePlugin(MObject obj)
 	if (PRTModifierAction::thePRT == nullptr || status != prt::STATUS_OK)
 		return MS::kFailure;
 
-	PRTModifierAction::theCache = prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT);
+	PRTModifierAction::theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
     PRTModifierAction::mResolveMapCache = new ResolveMapCache(getProcessTempDir());
 
 	MFnPlugin plugin(obj, "Esri R&D Center Zurich", SRL_VERSION, "Any");
@@ -125,10 +125,8 @@ MStatus initializePlugin(MObject obj)
 // called when the plug-in is unloaded from Maya.
 MStatus uninitializePlugin(MObject obj)
 {
-	if (PRTModifierAction::theCache) {
-		PRTModifierAction::theCache->destroy();
-		PRTModifierAction::theCache = nullptr;
-	}
+	PRTModifierAction::theCache.reset();
+
 	if (PRTModifierAction::thePRT) {
 		PRTModifierAction::thePRT->destroy();
 		PRTModifierAction::thePRT = nullptr;

@@ -22,9 +22,8 @@
 
 #include "encoder/IMayaCallbacks.h"
 
+#include "util/Utilities.h"
 #include "util/LogHandler.h"
-
-#include "prt/Cache.h"
 
 #include "maya/MObject.h"
 
@@ -38,19 +37,8 @@
 
 class MayaCallbacks : public IMayaCallbacks {
 public:
-	class AttributeHolder {
-	public:
-		AttributeHolder() { }
-		AttributeHolder(bool b, double d, std::wstring s) : mBool(b), mFloat(d), mString(s) { }
-		bool         mBool;
-		double       mFloat;
-		std::wstring mString;
-	};
-	typedef std::map<std::wstring, AttributeHolder> NamedAttributeHolders;
-
-public:
-	MayaCallbacks(const MObject inMesh, const MObject outMesh)
-		: inMeshObj(inMesh), outMeshObj(outMesh) { }
+	MayaCallbacks(MObject inMesh, MObject outMesh, AttributeMapBuilderUPtr& amb)
+		: inMeshObj(inMesh), outMeshObj(outMesh), mAttributeMapBuilder(amb) { }
 
 	// prt::Callbacks interface
 	virtual prt::Status generateError(size_t /*isIndex*/, prt::Status /*status*/, const wchar_t* message) override {
@@ -101,16 +89,9 @@ public:
 		const int32_t* shapeIDs
 	);
 
-public:
-	const NamedAttributeHolders& getAttrs() const { return mAttrs; }
-
-private:
-	// must not be called
-	MayaCallbacks() { }
-
 private:
 	MObject                 outMeshObj;
 	MObject                 inMeshObj;
 
-	NamedAttributeHolders    mAttrs;
+	AttributeMapBuilderUPtr& mAttributeMapBuilder;
 };
