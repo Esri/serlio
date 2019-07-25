@@ -28,7 +28,7 @@ constexpr bool DBG = false;
 
 constexpr const wchar_t* SRL_TMP_PREFIX     = L"serlio_";
 constexpr const wchar_t* PRT_EXT_SUBDIR     = L"ext";
-constexpr prt::LogLevel  PRT_LOG_LEVEL      = prt::LOG_DEBUG;
+constexpr prt::LogLevel  PRT_LOG_LEVEL      = prt::LOG_INFO;
 constexpr bool           ENABLE_LOG_CONSOLE = true;
 constexpr bool           ENABLE_LOG_FILE    = false;
 
