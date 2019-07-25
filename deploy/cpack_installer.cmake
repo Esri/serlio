@@ -34,7 +34,7 @@ set(CPACK_WIX_SKIP_PROGRAM_FOLDER true)
 # Fill in the PackageContents template
 configure_file(${CMAKE_CURRENT_LIST_DIR}/PackageContents.xml.in ${PROJECT_BINARY_DIR}/PackageContents.xml)
 
-# We need to overwrite a couple of variables from cpack_common because slightly differnet values are required.
+# We need to overwrite a couple of variables from cpack_common because slightly different values are required.
 set(CPACK_PACKAGE_INSTALL_DIRECTORY   "C:/ProgramData/Autodesk/ApplicationPlugins/Serlio")
 # TODO: This is not so nice. CPACK_PACKAGE_NAME is also used in the PackageContents.xml template above.
 # If this line appears before 'configure_file' things may break.
@@ -42,3 +42,6 @@ set(CPACK_PACKAGE_NAME   "Serlio")
 
 # Add it to the WiX installer.
 install(FILES ${PROJECT_BINARY_DIR}/PackageContents.xml DESTINATION "/")
+
+# Inject fragment to force root drive to C:\ (see https://stackoverflow.com/a/52561165/1097883)
+set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_LIST_DIR}/wix_fragments/force_rootdrive.wxs")
