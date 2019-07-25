@@ -288,7 +288,7 @@ MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg
 
 	if (node != MObject::kNullObj) {
 		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), mPRTCtx->theCache);
-		LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
+		if (DBG) LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
 		mRuleAttributes = getRuleAttributes(mRuleFile, info.get());
@@ -339,7 +339,7 @@ MStatus PRTModifierAction::doIt()
 		ca.size()
 	);
 	if (setGeoStatus != prt::STATUS_OK)
-		std::cerr << "InitialShapeBuilder setGeometry failed status = " << prt::getStatusDescription(setGeoStatus) << std::endl;
+		LOG_ERR << "InitialShapeBuilder setGeometry failed status = " << prt::getStatusDescription(setGeoStatus);
 
 	isb->setAttributes(
 		mRuleFile.c_str(),
@@ -359,7 +359,7 @@ MStatus PRTModifierAction::doIt()
 	InitialShapeNOPtrVector shapes = { shape.get() };
 	const prt::Status generateStatus = prt::generate(shapes.data(), shapes.size(), 0, encIDs.data(), encIDs.size(), encOpts.data(), outputHandler.get(), mPRTCtx->theCache.get(), 0);
 	if (generateStatus != prt::STATUS_OK)
-		std::cerr << "prt generate failed: " << prt::getStatusDescription(generateStatus) << std::endl;
+		LOG_ERR << "prt generate failed: " << prt::getStatusDescription(generateStatus);
 
 	return status;
 }
@@ -814,7 +814,7 @@ MStatus PRTModifierAction::addStrParameter(MFnDependencyNode & node, MObject & a
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	LOG_DBG << sAttr.name().asWChar() << " = " << plugValue.asWChar();
+	if (DBG) LOG_DBG << sAttr.name().asWChar() << " = " << plugValue.asWChar();
 
 	return MS::kSuccess;
 }
