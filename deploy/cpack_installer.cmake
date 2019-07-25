@@ -43,5 +43,5 @@ set(CPACK_PACKAGE_NAME   "Serlio")
 # Add it to the WiX installer.
 install(FILES ${PROJECT_BINARY_DIR}/PackageContents.xml DESTINATION "/")
 
-# Inject fragment to force root drive to C:\ (see https://stackoverflow.com/a/52561165/1097883)
-set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_LIST_DIR}/wix_fragments/force_rootdrive.wxs")
+# Inject patch to force root drive to C:\ (see https://stackoverflow.com/a/52561165/1097883)
+set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_LIST_DIR}/wix_patches/force_rootdrive.wxpatch")
