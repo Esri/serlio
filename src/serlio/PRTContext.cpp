@@ -35,23 +35,21 @@ constexpr bool           ENABLE_LOG_FILE    = false;
 } // namespace
 
 
-PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) {
-	const std::wstring pluginRoot = prtu::getPluginRoot();
-
+PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRootPath(prtu::getPluginRoot()) {
 	if (ENABLE_LOG_CONSOLE) {
 		theLogHandler = prt::ConsoleLogHandler::create(prt::LogHandler::ALL, prt::LogHandler::ALL_COUNT);
 		prt::addLogHandler(theLogHandler);
 	}
 
 	if (ENABLE_LOG_FILE) {
-		const std::wstring logPath = pluginRoot + prtu::getDirSeparator<wchar_t>() + L"serlio.log";
+		const std::wstring logPath = mPluginRootPath + prtu::getDirSeparator<wchar_t>() + L"serlio.log";
 		theFileLogHandler = prt::FileLogHandler::create(prt::LogHandler::ALL, prt::LogHandler::ALL_COUNT, logPath.c_str());
 		prt::addLogHandler(theFileLogHandler);
 	}
 
-	if (DBG) LOG_DBG << "initialized prt logger";
+	if (DBG) LOG_DBG << "initialized prt logger, plugin root path is " << mPluginRootPath;
 
-	std::vector<std::wstring> extensionPaths = { pluginRoot + PRT_EXT_SUBDIR };
+	std::vector<std::wstring> extensionPaths = { mPluginRootPath + PRT_EXT_SUBDIR };
 	extensionPaths.insert(extensionPaths.end(), addExtDirs.begin(), addExtDirs.end());
 	if (DBG) LOG_DBG << "looking for prt extensions at\n" << extensionPaths;
 

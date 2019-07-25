@@ -291,11 +291,10 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 
 		// determine path of shader fx file
 		if (sfxFile.length() == 0) {
-			std::wstring pluginRoot = prtu::getPluginRoot(); // TODO
-			pluginRoot = pluginRoot.substr(0, pluginRoot.rfind(L"plug-ins"));
-			//mel command wants forward slashes
-			std::replace(pluginRoot.begin(), pluginRoot.end(), L'\\', L'/');
-			sfxFile = MString(pluginRoot.c_str()) + "shaders/serlioShaderStingray.sfx";
+			// mel command wants forward slashes
+			const std::wstring shadersPath = prtu::toGenericPath(mPRTCtx->mPluginRootPath + L"../shaders/");
+			sfxFile = MString(shadersPath.c_str()) + "serlioShaderStingray.sfx";
+			LOG_DBG << "stingray shader located at " << sfxFile.asWChar();
 		}
 
 		adsk::Data::Channel* channel = outputAssociations.findChannel(gPRTMatChannel);
