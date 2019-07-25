@@ -37,8 +37,6 @@
 
 class MayaCallbacks : public IMayaCallbacks {
 public:
-	MayaCallbacks() = delete;
-
 	MayaCallbacks(MObject inMesh, MObject outMesh, AttributeMapBuilderUPtr& amb)
 		: inMeshObj(inMesh), outMeshObj(outMesh), mAttributeMapBuilder(amb) { }
 
