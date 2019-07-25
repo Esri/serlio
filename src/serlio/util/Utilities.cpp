@@ -137,9 +137,9 @@ namespace prtu {
 	Color parseColor(const wchar_t* colorString) {
 		Color c{0.0, 0.0, 0.0};
 		if (std::wcslen(colorString) >= 7 && colorString[0] == '#') {
-			c[0] = static_cast<double>((prtu::fromHex(colorString[1]) << 4) + prtu::fromHex(colorString[2])) / 255.0;
-			c[1] = static_cast<double>((prtu::fromHex(colorString[3]) << 4) + prtu::fromHex(colorString[4])) / 255.0;
-			c[2] = static_cast<double>((prtu::fromHex(colorString[5]) << 4) + prtu::fromHex(colorString[6])) / 255.0;
+			c[0] = static_cast<float>((prtu::fromHex(colorString[1]) << 4) + prtu::fromHex(colorString[2])) / 255.0f;
+			c[1] = static_cast<float>((prtu::fromHex(colorString[3]) << 4) + prtu::fromHex(colorString[4])) / 255.0f;
+			c[2] = static_cast<float>((prtu::fromHex(colorString[5]) << 4) + prtu::fromHex(colorString[6])) / 255.0f;
 		}
 		return c;
 	}
@@ -147,12 +147,12 @@ namespace prtu {
 	std:: wstring getColorString(const Color& c) {
 		std::wstringstream colStr;
 		colStr << L'#';
-		colStr << toHex(((int)(c[0] * 255)) >> 4);
-		colStr << toHex((int)(c[0] * 255));
-		colStr << toHex(((int)(c[1] * 255)) >> 4);
+		colStr << toHex(((int)(c[0] * 255.0f)) >> 4);
+		colStr << toHex((int)(c[0] * 255.0f));
+		colStr << toHex(((int)(c[1] * 255.0f)) >> 4);
 		colStr << toHex((int)(c[1] * 255));
-		colStr << toHex(((int)(c[2] * 255)) >> 4);
-		colStr << toHex((int)(c[2] * 255));
+		colStr << toHex(((int)(c[2] * 255.0f)) >> 4);
+		colStr << toHex((int)(c[2] * 255.0f));
 		return colStr.str();
 	}
 

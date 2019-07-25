@@ -108,7 +108,7 @@ namespace prtu {
 #endif
 	}
 
-	using Color = std::array<double,3>;
+	using Color = std::array<float,3>;
 	Color parseColor(const wchar_t* colorString);
 	std:: wstring getColorString(const Color& c);
 
