@@ -1,6 +1,16 @@
 # Serlio ChangeLog
 
-## v0.5.0 (XXX, 2019)
+## v1.0.0-beta.1 (2019-XX-XX)
+* Added attribute sorting in the Maya node editor like in CityEngine.
+* Fixed saving of string rule attributes in Maya scene.
+* Fixed connectivity of generated meshes and normal orientation.
+* Fixed handling of rule attribute annotations (enum, range).
+* Fixed tex-coords handling in case some meshes do not have any.
+* Performance optimizations.
+* Rebranding to "Serlio" in UI.
+* Publication of source code on github.
+
+## v0.5.0 (2019-06-12)
 * First release after complete rewrite based on Maya "modifier node" example.
 * Better UX and conformance with behavior of other Maya geometry tools (e.g. undo). 
 * Improved performance and Material support. 
