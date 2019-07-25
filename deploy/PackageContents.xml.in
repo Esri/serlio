@@ -34,8 +34,19 @@
 
     <!-- OS: Valid values seem to be win64|macOS|linux -->
     <Components>
-        <RuntimeRequirements SupportPath="./doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="@maya_VERSION_MAJOR@" SeriesMax="@maya_VERSION_MAJOR@" />
-        <MayaEnv expr="PATH+:=plug-ins/" />
+        <RuntimeRequirements SupportPath="./2018/doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="2018" SeriesMax="2018" />
+        <MayaEnv expr="PATH+:=2018/plug-ins/" />
+        <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2018/plug-ins/" />
+        <MayaEnv expr="MAYA_SCRIPT_PATH+:=2018/scripts/" />
+        <!-- Not sure if below line actually is required -->
+        <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
+    </Components>
+
+    <Components>
+        <RuntimeRequirements SupportPath="./2019/doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="2019" SeriesMax="2019" />
+        <MayaEnv expr="PATH+:=2019/plug-ins/" />
+        <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2019/plug-ins/" />
+        <MayaEnv expr="MAYA_SCRIPT_PATH+:=2019/scripts/" />
         <!-- Not sure if below line actually is required -->
         <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
     </Components>

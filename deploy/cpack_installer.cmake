@@ -2,7 +2,7 @@
 include(${CMAKE_CURRENT_LIST_DIR}/cpack_common.cmake)
 
 # Windows installer needs slightly different folder layout
-set(INSTALL_FOLDER_PREFIX "Contents")
+set(INSTALL_FOLDER_PREFIX "Contents/${maya_VERSION_MAJOR}")
 
 set(CPACK_GENERATOR WIX)
 
