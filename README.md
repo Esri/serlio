@@ -1,6 +1,6 @@
 # ![](doc/img/serlio_32.png)  Serlio - CityEngine Plugin for Autodesk Maya
 
-*Binaries and examples are available at https://esri.github.io/serlio*
+*Binaries/downloads are attached to the [releases](https://github.com/esri/serlio/releases).*
 
 Serlio is a plugin for [Autodesk Maya](https://www.autodesk.com/maya). It provides a modifier node which enables the execution of [Esri CityEngine](http://www.esri.com/software/cityengine) ‘rules’ within a Maya scene. Therefore, a 3D environment artist does not have to leave their familiar Maya toolset anymore to make use of CityEngine’s procedural modeling power. Complicated export-import pipelines are no longer needed, which also means that the procedural building models do not need to be “baked” anymore. The buildings stay procedural during the entire modeling workflow. Consequently, the 3D environment artist can change the height, style and appearance of buildings easily with a parametric interface at any point during production.
 
