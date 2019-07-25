@@ -113,6 +113,40 @@ PRTModifierAction::PRTModifierAction(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) {
 	mCGAPrintOptions = prtu::createValidatedOptions(ENC_ID_CGA_PRINT, printOptions.get());
 }
 
+std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& node) {
+	std::list<MObject> rawAttrs;
+	std::list<MObject> ignoreList;
+
+	for (size_t i = 0, numAttrs = node.attributeCount(); i < numAttrs; i++) {
+		MStatus attrStat;
+		const MObject attrObj = node.attribute(i, &attrStat);
+		if (attrStat != MS::kSuccess)
+			continue;
+
+		const MFnAttribute attr(attrObj);
+
+		// CGA rule attributes are maya dynamic attributes
+		if (!attr.isDynamic())
+			continue;
+
+		// maya annoyance: color attributes automatically get per-component plugs/child attrs
+		if (attr.isUsedAsColor()) {
+			MFnCompoundAttribute compAttr(attrObj);
+			for (size_t ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
+				ignoreList.emplace_back(compAttr.child(ci));
+		}
+
+		rawAttrs.push_back(attrObj);
+	}
+
+	std::list<MObject> filteredAttrs;
+	for (const auto& a: rawAttrs) {
+		if (std::find(ignoreList.begin(), ignoreList.end(), a) == ignoreList.end())
+			filteredAttrs.push_back(a);
+	}
+	return filteredAttrs;
+}
+
 const RuleAttribute RULE_NOT_FOUND{};
 
 void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
@@ -132,27 +166,14 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 		return RULE_NOT_FOUND;
 	};
 
+	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
+
 	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), mPRTCtx->theCache);
 	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
 
-	const unsigned int count = fNode.attributeCount(&stat);
-	MCHECK(stat);
-	for (unsigned int i = 0; i < count; i++) {
-		const MObject attr = fNode.attribute(i, &stat);
-		if (stat != MS::kSuccess) continue;
-
-		const MPlug plug(node, attr);
-		if (!(plug.isDynamic()))
-			continue;
-
-		MFnAttribute fnAttr(attr);
-
-		// special case: color compound attributes do not have counterparts in mRuleAttributes
-		if (fnAttr.isUsedAsColor()) {
-			MFnCompoundAttribute fnCompAttr(attr);
-			if (fnCompAttr.numChildren() == 0)
-				continue; // skip child color component attrs
-		}
+	for (const auto& attrObj: cgaAttributes) {
+		MFnAttribute fnAttr(attrObj);
+		const MPlug plug(node, attrObj);
 
 		const MString fullAttrName = fnAttr.name();
 		const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar());
@@ -161,8 +182,8 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 		const std::wstring fqAttrName = ruleAttr.fqName;
 		const auto ruleAttrType = ruleAttr.mType;
 
-		if (attr.hasFn(MFn::kNumericAttribute)) {
-			MFnNumericAttribute nAttr(attr);
+		if (attrObj.hasFn(MFn::kNumericAttribute)) {
+			MFnNumericAttribute nAttr(attrObj);
 
 			if (nAttr.unitType() == MFnNumericData::kBoolean) {
 				assert(ruleAttrType == prt::AAT_BOOL);
@@ -193,14 +214,14 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 				MFnNumericData fRGB(rgb);
 
 				prtu::Color col;
-				MCHECK(fRGB.getData(col[0], col[1], col[2]));
+				MCHECK(fRGB.getData3Double(col[0], col[1], col[2]));
 				const std::wstring colStr = prtu::getColorString(col);
 
 				if (std::wcscmp(colStr.c_str(), defColStr) != 0)
 					aBuilder->setString(fqAttrName.c_str(), colStr.c_str());
 			}
 		}
-		else if (attr.hasFn(MFn::kTypedAttribute)) {
+		else if (attrObj.hasFn(MFn::kTypedAttribute)) {
 			assert(ruleAttrType == prt::AAT_STR);
 
 			MString val;
@@ -210,8 +231,8 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 			if (std::wcscmp(val.asWChar(), defVal) != 0)
 				aBuilder->setString(fqAttrName.c_str(), val.asWChar());
 		}
-		else if (attr.hasFn(MFn::kEnumAttribute)) {
-			MFnEnumAttribute eAttr(attr);
+		else if (attrObj.hasFn(MFn::kEnumAttribute)) {
+			MFnEnumAttribute eAttr(attrObj);
 
 			short di;
 			short i;
