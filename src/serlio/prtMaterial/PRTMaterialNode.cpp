@@ -59,11 +59,6 @@ MObject PRTMaterialNode::aOutMesh;
 MString PRTMaterialNode::sfxFile;
 const MString OUTPUT_GEOMETRY = MString("og");
 
-void* PRTMaterialNode::creator()
-{
-	return new PRTMaterialNode();
-}
-
 const char* PRTMaterialNode::nodeName()
 {
 	return "PRTMaterialNode";
@@ -294,13 +289,12 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 			itHwShaders.next();
 		}
 
-		//determina path of shader fx file
+		// determine path of shader fx file
 		if (sfxFile.length() == 0) {
-			std::string pluginRoot = PRTModifierAction::getPluginRoot();
-			pluginRoot = pluginRoot.substr(0, pluginRoot.rfind("plug-ins"));
-			//mel command wants forward slashes
-			std::replace(pluginRoot.begin(), pluginRoot.end(), '\\', '/');
-			sfxFile = MString(pluginRoot.c_str()) + "shaders/serlioShaderStingray.sfx";
+			// mel command wants forward slashes
+			const std::wstring shadersPath = prtu::toGenericPath(mPRTCtx->mPluginRootPath + L"../shaders/");
+			sfxFile = MString(shadersPath.c_str()) + "serlioShaderStingray.sfx";
+			LOG_DBG << "stingray shader located at " << sfxFile.asWChar();
 		}
 
 		adsk::Data::Channel* channel = outputAssociations.findChannel(gPRTMatChannel);

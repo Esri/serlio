@@ -5,24 +5,6 @@
 
 namespace mu {
 
-MString toCleanId(const MString& name) {
-	const unsigned int len = name.numChars();
-	const wchar_t*     wname = name.asWChar();
-	auto dst = std::make_unique<wchar_t[]>(len + 1);
-	for (unsigned int i = 0; i < len; i++) {
-		wchar_t c = wname[i];
-		if ((c >= '0' && c <= '9') ||
-			(c >= 'A' && c <= 'Z') ||
-			(c >= 'a' && c <= 'z'))
-			dst[i] = c;
-		else
-			dst[i] = '_';
-	}
-	dst[len] = L'\0';
-	MString result(dst.get());
-	return result;
-}
-
 int32_t computeSeed(const MFloatPoint& p) {
 	float x = p[0];
 	float z = p[2];

@@ -19,6 +19,10 @@
 
 #pragma once
 
+#include "serlioPlugin.h"
+
+#include "prt/Annotation.h"
+
 #include <string>
 #include <limits>
 #include <vector>
@@ -26,10 +30,8 @@
 
 namespace prt {
 	class RuleFileInfo;
-	class Annotation;
 }
 
-constexpr const wchar_t* ANNOT_START_RULE = L"@StartRule";
 constexpr const wchar_t* ANNOT_RANGE = L"@Range";
 constexpr const wchar_t* ANNOT_ENUM = L"@Enum";
 constexpr const wchar_t* ANNOT_HIDDEN = L"@Hidden";
@@ -45,22 +47,26 @@ constexpr int ORDER_NONE = std::numeric_limits<int>::max();
 using AttributeGroup = std::vector<std::wstring>;
 using AttributeGroupOrder = std::map<AttributeGroup,int>;
 
-struct AttributeProperties {
-	int order = ORDER_NONE;
-	int groupOrder = ORDER_NONE;
-	size_t index;
-	std::wstring name;
-	std::wstring ruleFile;
-	AttributeGroup groups; // groups can be nested
-	const prt::Annotation* enumAnnotation = nullptr; // TODO: avoid this, leads to lifetime issues
-	bool memberOfStartRuleFile = false;
+struct RuleAttribute {
+	std::wstring   fqName;        // fully qualified rule name (i.e. including style prefix)
+	std::wstring   mayaBriefName; // see Maya MFnAttribute create() method
+	std::wstring   mayaFullName;  // "
+	std::wstring   mayaNiceName;  // see Maya MFnAtribute setNiceNameOverride() method
+	prt::AnnotationArgumentType mType;
+
+	AttributeGroup groups;        // groups can be nested
+	int            order      = ORDER_NONE;
+	int            groupOrder = ORDER_NONE;
+
+	std::wstring   ruleFile;
+	bool           memberOfStartRuleFile = false;
 };
 
-using RuleAttributes = std::vector<AttributeProperties>;
+using RuleAttributes = std::vector<RuleAttribute>;
 
-RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo);
+SRL_TEST_EXPORTS_API RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo);
 AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes);
 void sortRuleAttributes(RuleAttributes& ra);
-std::wostream& operator<<(std::wostream& ostr, const AttributeProperties& ap);
-std::ostream& operator<<(std::ostream& ostr, const AttributeProperties& ap);
+std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap);
+std::ostream& operator<<(std::ostream& ostr, const RuleAttribute& ap);
 std::wostream& operator<<(std::wostream& wostr, const AttributeGroupOrder& ago);

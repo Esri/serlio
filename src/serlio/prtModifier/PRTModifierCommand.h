@@ -20,16 +20,12 @@
 #pragma once
 
 #include "polyModifier/polyModifierCmd.h"
-
+#include "PRTContext.h"
 
 // based on the splitUVCommand and meshOpCommand Maya example . 
-class PRTModifierCommand : public polyModifierCmd
-{
+class PRTModifierCommand : public polyModifierCmd {
 public:
-
-	PRTModifierCommand() = default;
-
-	static void* creator();
+	PRTModifierCommand(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) { }
 
 	bool isUndoable() const override;
 
@@ -41,6 +37,7 @@ public:
 	MStatus directModifier(MObject mesh) override;
 
 private:
+	PRTContextUPtr& mPRTCtx;
 
 	MString mRulePkg;
 	int32_t mInitialSeed = 0;

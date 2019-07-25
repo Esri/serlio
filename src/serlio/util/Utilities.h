@@ -69,6 +69,15 @@ using ResolveMapSPtr = std::shared_ptr<const prt::ResolveMap>;
 
 namespace prtu {
 
+	std::wstring getPluginRoot();
+
+	template<typename C>
+	std::vector<const C*> toPtrVec(const std::vector<std::basic_string<C>>& sv) {
+		std::vector<const C*> pv(sv.size());
+		std::transform(sv.begin(), sv.end(), pv.begin(), [](const auto& s) { return s.c_str(); });
+		return pv;
+	}
+
 	template<typename C, typename D>
 	std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 		std::vector<const C*> pv(sv.size());
@@ -76,7 +85,13 @@ namespace prtu {
 		return pv;
 	}
 
+	// poor mans std::filesystem - we don't want boost or c++17 dependency right now
 	SRL_TEST_EXPORTS_API const std::wstring filename(const std::wstring& path);
+	time_t getFileModificationTime(const std::wstring& p);
+	std::wstring temp_directory_path();
+	std::wstring getProcessTempDir(const std::wstring& prefix);
+	void remove_all(const std::wstring& path);
+	std::wstring toGenericPath(const std::wstring& osPath);
 
 	template<typename C> C getDirSeparator();
 	template<> char getDirSeparator();
@@ -104,18 +119,74 @@ namespace prtu {
 
 	SRL_TEST_EXPORTS_API std::wstring toFileURI(const std::wstring& p);
 	std::string percentEncode(const std::string& utf8String);
-	
-	time_t getFileModificationTime(const std::wstring& p);
-
-	//we don't want a boost or c++17 dependency for just 2 functions, therefore done ourselfs
-	std::wstring temp_directory_path();
-	void remove_all(const std::wstring& path);
 
 	std::string objectToXML(prt::Object const* obj);
 	template<typename T> std::string objectToXML(const std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }
 	template<typename T> std::string objectToXML(std::unique_ptr<T, PRTDestroyer>& ptr) { return objectToXML(ptr.get()); }
 
 	AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions = nullptr);
+
+	inline std::wstring getRuleFileEntry(ResolveMapSPtr resolveMap) {
+		const std::wstring sCGB(L".cgb");
+
+		size_t nKeys;
+		wchar_t const* const* keys = resolveMap->getKeys(&nKeys);
+		for (size_t k = 0; k < nKeys; k++) {
+			const std::wstring key(keys[k]);
+			if (std::equal(sCGB.rbegin(), sCGB.rend(), key.rbegin()))
+				return key;
+		}
+
+		return {};
+	}
+
+	constexpr const wchar_t* ANNOT_START_RULE = L"@StartRule";
+
+	inline std::wstring detectStartRule(const RuleFileInfoUPtr& ruleFileInfo) {
+		for (size_t r = 0; r < ruleFileInfo->getNumRules(); r++) {
+			const auto* rule = ruleFileInfo->getRule(r);
+
+			// start rules must not have any parameters
+			if (rule->getNumParameters() > 0)
+				continue;
+
+			for (size_t a = 0; a < rule->getNumAnnotations(); a++) {
+				if (std::wcscmp(rule->getAnnotation(a)->getName(), ANNOT_START_RULE) == 0) {
+					return rule->getName();
+				}
+			}
+		}
+		return {};
+	}
+
+	constexpr const wchar_t STYLE_DELIMITER = L'$';
+	constexpr const wchar_t IMPORT_DELIMITER = L'.';
+
+	SRL_TEST_EXPORTS_API inline std::wstring getStyle(const std::wstring& fqRuleName) {
+		const auto sepPos = fqRuleName.find(STYLE_DELIMITER);
+		if (sepPos == std::wstring::npos || sepPos == 0)
+			return {};
+		return fqRuleName.substr(0, sepPos);
+	}
+
+	SRL_TEST_EXPORTS_API inline std::wstring removePrefix(const std::wstring& fqRuleName, wchar_t delim) {
+		const auto sepPos = fqRuleName.find(delim);
+		if (sepPos == std::wstring::npos)
+			return fqRuleName;
+		if (sepPos == fqRuleName.length()-1)
+			return {};
+		if (fqRuleName.length() <= 1)
+			return {};
+		return fqRuleName.substr(sepPos+1);
+	}
+
+	SRL_TEST_EXPORTS_API inline std::wstring removeStyle(const std::wstring& fqRuleName) {
+		return removePrefix(fqRuleName, STYLE_DELIMITER);
+	}
+
+	SRL_TEST_EXPORTS_API inline std::wstring removeImport(const std::wstring& fqRuleName) {
+		return removePrefix(fqRuleName, IMPORT_DELIMITER);
+	}
 
 } // namespace prtu
 

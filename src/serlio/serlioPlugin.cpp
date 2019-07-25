@@ -18,6 +18,7 @@
  */
 
 #include "serlioPlugin.h"
+#include "PRTContext.h"
 
 #include "prtModifier/PRTModifierAction.h"
 #include "prtModifier/PRTModifierCommand.h"
@@ -32,129 +33,66 @@
 #include "maya/MFnPlugin.h"
 #include "maya/MSceneMessage.h"
 
-#ifdef _WIN32
-#   include <process.h>
-#else
-#   include <unistd.h>
-#endif
-
 
 namespace {
 	constexpr bool DBG = false;
 
-	constexpr const char* MODIFIER_NODE = "serlio";
-	constexpr const char* CMD_ASSIGN    = "serlioAssign";
+	constexpr const char* NODE_MODIFIER      = "serlio";
+	constexpr const char* NODE_MATERIAL      = "serlioMaterial";
+	constexpr const char* CMD_ASSIGN         = "serlioAssign";
+	constexpr const char* MEL_PROC_CREATE_UI = "serlioCreateUI";
+	constexpr const char* MEL_PROC_DELETE_UI = "serlioDeleteUI";
+	constexpr const char* SERLIO_VENDOR      = "Esri R&D Center Zurich";
 
-	const wchar_t*      PRT_EXT_SUBDIR = L"ext";
-	const prt::LogLevel PRT_LOG_LEVEL = prt::LOG_DEBUG;
-	const bool          ENABLE_LOG_CONSOLE = true;
-	const bool          ENABLE_LOG_FILE = false;
-
-	std::wstring getProcessTempDir() {
-        std::wstring tp = prtu::temp_directory_path();
-		wchar_t sep = prtu::getDirSeparator<wchar_t>();
-		if (tp[tp.size()-1] != sep)
-			tp += sep;
-        std::wstring n = std::wstring(L"serlio_") +
-#ifdef _WIN32
-			std::to_wstring(::_getpid()); //prevent warning in win32
-#else
-			std::to_wstring(::getpid());
-#endif
-        return { tp.append(n) };
-    }
+	// global PRT lifetime handler
+	PRTContextUPtr prtCtx;
 
 } // namespace
 
+
 // called when the plug-in is loaded into Maya.
-MStatus initializePlugin(MObject obj)
-{
+MStatus initializePlugin(MObject obj) {
+	if (!prtCtx) {
+		prtCtx.reset(new PRTContext());
 
-	if (ENABLE_LOG_CONSOLE) {
-		PRTModifierAction::theLogHandler = prt::ConsoleLogHandler::create(prt::LogHandler::ALL, prt::LogHandler::ALL_COUNT);
-		prt::addLogHandler(PRTModifierAction::theLogHandler);
+		// maya exit does not call uninitializePlugin automatically, therefore use addCallback
+		auto mayaExitCallback = [](void*) { uninitializePlugin(MObject::kNullObj); }; // TODO: correct obj value?
+		MStatus mayaStatus = MStatus::kFailure;
+		MSceneMessage::addCallback(MSceneMessage::kMayaExiting, mayaExitCallback, nullptr, &mayaStatus);
+		MCHECK(mayaStatus);
 	}
 
-	if (ENABLE_LOG_FILE) {
-		const std::string logPath = PRTModifierAction::getPluginRoot() + prtu::getDirSeparator<char>() + "serlio.log";
-		std::wstring wLogPath(logPath.length(), L' ');
-		std::copy(logPath.begin(), logPath.end(), wLogPath.begin());
-		PRTModifierAction::theFileLogHandler = prt::FileLogHandler::create(prt::LogHandler::ALL, prt::LogHandler::ALL_COUNT, wLogPath.c_str());
-		prt::addLogHandler(PRTModifierAction::theFileLogHandler);
-	}
-
-	if (DBG) LOG_DBG << "initialized prt logger";
-
-	const std::string& pluginRoot = PRTModifierAction::getPluginRoot();
-	std::wstring wPluginRoot(pluginRoot.length(), L' ');
-	std::copy(pluginRoot.begin(), pluginRoot.end(), wPluginRoot.begin());
-
-	const std::wstring prtExtPath = wPluginRoot + PRT_EXT_SUBDIR;
-	if (DBG) LOG_DBG << "looking for prt extensions at " << prtExtPath;
-
-	prt::Status status = prt::STATUS_UNSPECIFIED_ERROR;
-	const wchar_t* prtExtPathPOD = prtExtPath.c_str();
-	PRTModifierAction::thePRT = prt::init(&prtExtPathPOD, 1, PRT_LOG_LEVEL, &status);
-
-	if (PRTModifierAction::thePRT == nullptr || status != prt::STATUS_OK)
+	if (!prtCtx->isAlive())
 		return MS::kFailure;
 
-	PRTModifierAction::theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
-    PRTModifierAction::mResolveMapCache = new ResolveMapCache(getProcessTempDir());
+	// TODO: extract string literals
+	MFnPlugin plugin(obj, SERLIO_VENDOR, SRL_VERSION);
 
-	MFnPlugin plugin(obj, "Esri R&D Center Zurich", SRL_VERSION, "Any");
+	auto createModifierCommand = [](){ return (void*) new PRTModifierCommand(prtCtx); };
+	MCHECK(plugin.registerCommand(CMD_ASSIGN, createModifierCommand));
 
-	MCHECK(plugin.registerCommand(CMD_ASSIGN, PRTModifierCommand::creator));
+	auto createModifierNode = [](){ return (void*) new PRTModifierNode(prtCtx); };
+	MCHECK(plugin.registerNode(NODE_MODIFIER, PRTModifierNode::id, createModifierNode, PRTModifierNode::initialize));
 
-	MCHECK(plugin.registerNode(MODIFIER_NODE,
-		PRTModifierNode::id,
-		PRTModifierNode::creator,
-		PRTModifierNode::initialize));
+	auto createMaterialNode = [](){ return (void*) new PRTMaterialNode(prtCtx); };
+	MCHECK(plugin.registerNode(NODE_MATERIAL, PRTMaterialNode::id, createMaterialNode, &PRTMaterialNode::initialize, MPxNode::kDependNode));
 
-	MCHECK(plugin.registerNode("serlioMaterial", PRTMaterialNode::id, &PRTMaterialNode::creator, &PRTMaterialNode::initialize, MPxNode::kDependNode));
-	MCHECK(plugin.registerUI("serlioCreateUI", "serlioDeleteUI"));
-
-	MStatus mayaStatus = MStatus::kFailure; //maya exit does not call uninitializePlugin, therefore addCallback
-	auto mayaExitCallback = [](void*) { uninitializePlugin(MObject::kNullObj); };
-	MSceneMessage::addCallback(MSceneMessage::kMayaExiting, mayaExitCallback, nullptr, &mayaStatus);
-	MCHECK(mayaStatus);
+	MCHECK(plugin.registerUI(MEL_PROC_CREATE_UI, MEL_PROC_DELETE_UI));
 
 	return MStatus::kSuccess;
 }
 
 // called when the plug-in is unloaded from Maya.
-MStatus uninitializePlugin(MObject obj)
-{
-	PRTModifierAction::theCache.reset();
+MStatus uninitializePlugin(MObject obj) {
+	// shutdown PRT
+	prtCtx.reset();
 
-	if (PRTModifierAction::thePRT) {
-		PRTModifierAction::thePRT->destroy();
-		PRTModifierAction::thePRT = nullptr;
-	}
-	if (PRTModifierAction::mResolveMapCache) {
-		delete PRTModifierAction::mResolveMapCache;
-		PRTModifierAction::mResolveMapCache = nullptr;
-	}
-
-	if (ENABLE_LOG_CONSOLE && PRTModifierAction::theLogHandler) {
-		prt::removeLogHandler(PRTModifierAction::theLogHandler);
-		PRTModifierAction::theLogHandler->destroy();
-		PRTModifierAction::theLogHandler = nullptr;
-	}
-	if (ENABLE_LOG_FILE && PRTModifierAction::theFileLogHandler) {
-		prt::removeLogHandler(PRTModifierAction::theFileLogHandler);
-		PRTModifierAction::theFileLogHandler->destroy();
-		PRTModifierAction::theFileLogHandler = nullptr;
-	}
-
-	MStatus   status;
-
-	if (obj != MObject::kNullObj) {
+	MStatus status;
+	if (obj != MObject::kNullObj) { // TODO
 		MFnPlugin plugin(obj);
 		MCHECK(plugin.deregisterCommand(CMD_ASSIGN));
 		MCHECK(plugin.deregisterNode(PRTModifierNode::id));
 		MCHECK(plugin.deregisterNode(PRTMaterialNode::id));
 	}
-
 	return status;
 }

@@ -105,7 +105,8 @@ using LogHandlerPtr = std::unique_ptr<LogHandler>;
 
 
 // switch logger here
-#define LT logging::PRTLogger
+template<prt::LogLevel L>
+using LT = logging::PRTLogger<L>;
 
 using _LOG_DBG = LT<prt::LOG_DEBUG>;
 using _LOG_INF = LT<prt::LOG_INFO>;

@@ -24,12 +24,13 @@
 
 #ifdef _WIN32
 // workaround for  "combaseapi.h(229): error C2187: syntax error: 'identifier' was unexpected here" when using /permissive-
-struct IUnknown;
+	struct IUnknown;
 #   include <windows.h>
-//#   include <tchar.h>
-//#   include <shellapi.h>
+#   include <process.h>
 #else
 #   include <ftw.h>
+#   include <unistd.h>
+#	include <dlfcn.h>
 #endif
 
 #include <sys/stat.h>
@@ -42,6 +43,38 @@ struct IUnknown;
 
 
 namespace prtu {
+
+	// plugin root = location of serlio shared library
+	std::wstring getPluginRoot() {
+#ifdef _WIN32
+		char dllPath[_MAX_PATH];
+		char drive[8];
+		char dir[_MAX_PATH];
+		HMODULE hModule = 0;
+
+		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)getPluginRoot, &hModule);
+		const DWORD res = ::GetModuleFileName(hModule, dllPath, _MAX_PATH);
+		if (res == 0) {
+			// TODO DWORD e = ::GetLastError();
+			throw std::runtime_error("failed to get plugin location");
+		}
+
+		_splitpath_s(dllPath, drive, 8, dir, _MAX_PATH, 0, 0, 0, 0);
+		std::wstring rootPath = prtu::toUTF16FromOSNarrow(drive);
+		rootPath.append(prtu::toUTF16FromOSNarrow(dir));
+#else
+		Dl_info dl_info;
+		dladdr((const void*)getPluginRoot, &dl_info);
+		const std::string tmp(dl_info.dli_fname);
+		std::wstring rootPath = prtu::toUTF16FromOSNarrow(tmp.substr(0, tmp.find_last_of(prtu::getDirSeparator<char>())));
+#endif
+
+		// ensure path separator at end
+		if (*rootPath.rbegin() != prtu::getDirSeparator<wchar_t>())
+			rootPath.append(1, prtu::getDirSeparator<wchar_t>());
+
+		return rootPath;
+	}
 
 	const std::wstring filename(const std::wstring& path) {
 		size_t pos = path.find_last_of(L'/');
@@ -239,6 +272,20 @@ namespace prtu {
 
 	}
 
+	std::wstring getProcessTempDir(const std::wstring& prefix) {
+	    std::wstring tp = prtu::temp_directory_path();
+		wchar_t sep = prtu::getDirSeparator<wchar_t>();
+		if (*tp.rbegin() != sep)
+			tp += sep;
+	    std::wstring n = prefix;
+#ifdef _WIN32
+		n += std::to_wstring(::_getpid()); // prevent warning in win32
+#else
+		n += std::to_wstring(::getpid());
+#endif
+	    return { tp.append(n) };
+	}
+
 	time_t getFileModificationTime(const std::wstring& p) {
 		std::wstring pn = p;
 
@@ -258,6 +305,12 @@ namespace prtu {
 			return st.st_mtime;
 		}
 		return -1;
+	}
+
+	std::wstring toGenericPath(const std::wstring& osPath) {
+		std::wstring genPath = osPath;
+		std::replace(genPath.begin(), genPath.end(), L'\\', L'/');
+		return genPath;
 	}
 
 	std::string objectToXML(prt::Object const* obj) {
