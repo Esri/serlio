@@ -373,7 +373,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					MString shaderNameMstr = MString(shaderName.c_str());
 					MString shadingGroupNameMstr = MString(shadingGroupName.c_str());
 
-					MString shaderCmd = "shadingNode - asShader StingrayPBS - n " + shaderNameMstr + ";\n";
+					MString shaderCmd = "shadingNode -asShader StingrayPBS -n " + shaderNameMstr + " -ss;\n";
 					shaderCmd += "shaderfx -sfxnode \"" + shaderNameMstr + "\" -loadGraph  \"" + sfxFile + "\";\n";
 
 					//create shadingnode and add metadata
@@ -409,7 +409,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 
 					MString blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? "0": "1";
 					mShadingCmd += "$shadingNodeIndex = `shaderfx -sfxnode $shName -getNodeIDByName \"Standard_Base\"`;\n";
-					mShadingCmd += "shaderfx - sfxnode $shName - edit_stringlist $shadingNodeIndex blendmode "+ blendMode +";\n";
+					mShadingCmd += "shaderfx -sfxnode $shName -edit_stringlist $shadingNodeIndex blendmode "+ blendMode +";\n";
 
 					//ignored: ambientColor, specularColor
 					setAttribute(mShadingCmd, matInfo.diffuseColor, 3, "diffuse_color");
@@ -464,7 +464,7 @@ void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::vector<doubl
 {
 	if (vec.size() >= elements) {
 		MString colString = MaterialInfo::toMString(vec, elements, 0);
-		mShadingCmd += "setAttr ($shName+\"."+ MString(target.c_str()) +"\") - type double"+ MString(std::to_string(elements).c_str()) + " " + colString + ";\n";
+		mShadingCmd += "setAttr ($shName+\"."+ MString(target.c_str()) +"\") -type double"+ MString(std::to_string(elements).c_str()) + " " + colString + ";\n";
 	}
 }
 
@@ -472,7 +472,7 @@ void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::vector<doubl
 {
 	if (vec.size()+offset >= elements) {
 		MString colString = MaterialInfo::toMString(vec, elements,offset);
-		mShadingCmd += "setAttr ($shName+\"." + MString(target.c_str()) + "\") - type double" + MString(std::to_string(elements).c_str()) + " " + colString + ";\n";
+		mShadingCmd += "setAttr ($shName+\"." + MString(target.c_str()) + "\") -type double" + MString(std::to_string(elements).c_str()) + " " + colString + ";\n";
 	}
 }
 
@@ -486,8 +486,8 @@ void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& tex, c
 	if (tex.size() > 0) {
 		mShadingCmd += "$colormap = \"" + MString(tex.c_str()) + "\";\n";
 		mShadingCmd += "$nodeName = $sgName +\"" + MString(target.c_str()) + "\";\n";
-		mShadingCmd += "shadingNode - asTexture file - n $nodeName;\n";
-		mShadingCmd += R"foo(setAttr($nodeName + ".fileTextureName") - type "string" $colormap ;)foo" "\n";
+		mShadingCmd += "shadingNode -asTexture file -n $nodeName -ss;\n";
+		mShadingCmd += R"foo(setAttr($nodeName + ".fileTextureName") -type "string" $colormap ;)foo" "\n";
 
 		mShadingCmd += R"foo(connectAttr -force ($nodeName + ".outColor") ($shName + ".TEX_)foo" + MString(target.c_str()) +"\");\n";
 		mShadingCmd += "setAttr ($shName+\".use_"+ MString(target.c_str())+"\") 1;\n";
