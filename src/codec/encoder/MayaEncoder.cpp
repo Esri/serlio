@@ -63,7 +63,13 @@ struct SerializedGeometry {
 	std::vector<prtx::IndexVector>  uvCounts;
 	std::vector<prtx::IndexVector>  uvIndices;
 
-	SerializedGeometry(uint32_t uvSets) : uvs(uvSets), uvCounts(uvSets), uvIndices(uvSets) { }
+	SerializedGeometry(uint32_t numCounts, uint32_t numIndices, uint32_t uvSets)
+		: uvs(uvSets), uvCounts(uvSets), uvIndices(uvSets)
+	{
+		counts.reserve(numCounts);
+		vertexIndices.reserve(numIndices);
+		normalIndices.reserve(numIndices);
+	}
 };
 
 const prtx::EncodePreparator::PreparationFlags PREP_FLAGS = prtx::EncodePreparator::PreparationFlags()
@@ -379,6 +385,8 @@ namespace detail {
 
 SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, const std::vector<prtx::MaterialPtrVector>& materials) {
 	// PASS 1: scan
+	uint32_t numCounts = 0;
+	uint32_t numIndices = 0;
 	uint32_t maxNumUVSets = 0;
 	auto matsIt = materials.cbegin();
 	for (const auto& geo: geometries) {
@@ -386,6 +394,10 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 		const prtx::MaterialPtrVector& mats = *matsIt;
 		auto matIt = mats.cbegin();
 		for (const auto& mesh: meshes) {
+			numCounts += mesh->getFaceCount();
+			const auto& vtxCnts = mesh->getFaceVertexCounts();
+			numIndices = std::accumulate(vtxCnts.begin(), vtxCnts.end(), numIndices);
+
 			const prtx::MaterialPtr& mat = *matIt;
 			const uint32_t requiredUVSetsByMaterial = scanValidTextures(mat);
 			maxNumUVSets = std::max(maxNumUVSets, std::max(mesh->getUVSetsCount(), requiredUVSetsByMaterial));
@@ -393,7 +405,7 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 		}
 		++matsIt;
 	}
-	SerializedGeometry sg(maxNumUVSets);
+	SerializedGeometry sg(numCounts, numIndices, maxNumUVSets);
 
 	// PASS 2: copy
 	uint32_t vertexIndexBase = 0u;
@@ -446,14 +458,11 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 			} // for all uv sets
 
 			// append counts and indices for vertices and vertex normals
-			sg.counts.reserve(sg.counts.size() + mesh->getFaceCount());
 			for (uint32_t fi = 0, faceCount = mesh->getFaceCount(); fi < faceCount; ++fi) {
 				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
 				sg.counts.push_back(vtxCnt);
 				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
 				const uint32_t* nrmIdx = mesh->getFaceVertexNormalIndices(fi);
-				sg.vertexIndices.reserve(sg.vertexIndices.size() + vtxCnt);
-				sg.normalIndices.reserve(sg.normalIndices.size() + vtxCnt);
 				for (uint32_t vi = 0; vi < vtxCnt; vi++) {
 					sg.vertexIndices.push_back(vertexIndexBase + vtxIdx[vi]);
 					sg.normalIndices.push_back(normalIndexBase + nrmIdx[vi]);
