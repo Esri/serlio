@@ -89,7 +89,7 @@ global proc createPrtMenu() {
 		setParent -m ..; 
 		setParent -m $gPrtMenu;
 		menuItem -divider true;
-		menuItem -label "Attach Rule..."  -c "createPrtNode" -annotation "Attach a CGA rule package to a geometry";
+		menuItem -label "Attach CityEngine Rule Package..."  -c "createPrtNode" -annotation "Attach a CGA rule package to a geometry";
 		menuItem -label "Create Materials"  -c "createPrtMaterialNode" -annotation "Create Materials";
 		setParent -m ..;
 	}
