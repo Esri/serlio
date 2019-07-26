@@ -8,10 +8,10 @@ set(CPACK_GENERATOR WIX)
 
 # UPGRADE_GUID. This GUID must remain constant, it helps the installer
 # to identify different (previous) installations of the same software.
-set(CPACK_WIX_UPGRADE_GUID "9B170749-ECDF-4F66-9E2F-C9045727A6D4")
+# The GUID must be different for different Maya versions to allow for
+# side-by-side installations.
+set(CPACK_WIX_UPGRADE_GUID "9B170749-ECDF-4F66-9E2F-C9045727${maya_VERSION_MAJOR}")
 
-# TODO: Ideally, the same version of the software should have the same
-# GUID. (Maybe hash the version string?)
 set(CPACK_WIX_PRODUCT_GUID "*")
 
 # This sets the path to the license file explicitly. If not set, it
@@ -39,7 +39,7 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY   "C:/ProgramData/Autodesk/ApplicationPlugin
 
 # Careful: CPACK_PACKAGE_NAME is also used in the PackageContents.xml template above.
 # Make sure that this line always appears after the 'configure_file' directive.
-set(CPACK_PACKAGE_NAME   "Serlio")
+set(CPACK_PACKAGE_NAME   "Serlio for Maya ${maya_VERSION_MAJOR}")
 # We need to set the CPACK_PACKAGE_VERSION to a format that MSI understands (MAJOR.MINOR.PATCH).
 set(CPACK_PACKAGE_VERSION   ${SRL_VERSION_MMP})
 

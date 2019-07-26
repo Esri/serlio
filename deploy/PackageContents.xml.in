@@ -38,7 +38,6 @@
         <MayaEnv expr="PATH+:=2018/plug-ins/" />
         <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2018/plug-ins/" />
         <MayaEnv expr="MAYA_SCRIPT_PATH+:=2018/scripts/" />
-        <!-- Not sure if below line actually is required -->
         <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
     </Components>
 
@@ -47,7 +46,6 @@
         <MayaEnv expr="PATH+:=2019/plug-ins/" />
         <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2019/plug-ins/" />
         <MayaEnv expr="MAYA_SCRIPT_PATH+:=2019/scripts/" />
-        <!-- Not sure if below line actually is required -->
         <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
     </Components>
 
