@@ -66,8 +66,28 @@ function FetchTools {
     $ninja = Triple $BUILD_NINJA_URL $NINJA_FOLDER $NINJA_EXE
     $cmake = Triple $CMAKE_URL $CMAKE_FOLDER $CMAKE_EXE
     $wix = Triple $WIX_TOOLSET_URL $WIX_FOLDER $WIX_EXE
-    $tool_list = $ninja, $cmake, $wix
+    $tool_list = @()
+
     Write-Host ">>> Fetching tools..." -ForegroundColor Green
+    if ($NINJA_ON_PATH) {
+        Write-Host ">>>>> Build Ninja already on PATH. Skipping!" -ForegroundColor Green
+    } else {
+        $tool_list += ,$ninja
+    }
+
+    if ($CMAKE_ON_PATH) {
+        Write-Host ">>>>> CMake already on PATH. Skipping!" -ForegroundColor Green
+    } else {
+        $tool_list += ,$cmake
+    }
+
+    if ($WIX_ON_PATH) {
+        Write-Host ">>>>> WIX already on PATH. Skipping!" -ForegroundColor Green
+    } else {
+        $tool_list += ,$wix
+    }
+
+    
     foreach ($t in $tool_list) {
         $u = $t.Item1
         $archive = $u.Split('/') | Select-Object -Last 1
@@ -91,14 +111,34 @@ function FetchTools {
 
 function SetupEnv {
     Write-Host ">>> Preparing PATH..." -ForegroundColor Green
-    $ninjaPath = FindFile 'ninja.exe' $NINJA_FOLDER
-    Write-Host ">>>>> Found ninja.exe in $ninjaPath. Good!" -ForegroundColor Green
-    $cmakePath = FindFile 'cmake.exe' $CMAKE_FOLDER
-    Write-Host ">>>>> Found cmake.exe in $cmakePath. Good!" -ForegroundColor Green
-    $wixPath = FindFile 'candle.exe' $WIX_FOLDER
-    Write-Host ">>>>> Found candle.exe in $wixPath. Good!" -ForegroundColor Green
 
-    $env:Path = "$ninjaPath;$cmakePath;$wixPath;$env:Path"
+    $path = "";
+
+    if($NINJA_ON_PATH) {
+        Write-Host ">>>>> Build Ninja already on PATH. Skipping." -ForegroundColor Green
+    } else {
+        $ninjaPath = FindFile 'ninja.exe' $NINJA_FOLDER
+        Write-Host ">>>>> Found ninja.exe in $ninjaPath. Good!" -ForegroundColor Green
+        $path += "$ninjaPath;"
+    }
+
+    if ($CMAKE_ON_PATH) {
+        Write-Host ">>>>> CMake already on PATH. Skipping." -ForegroundColor Green
+    } else {
+        $cmakePath = FindFile 'cmake.exe' $CMAKE_FOLDER
+        Write-Host ">>>>> Found cmake.exe in $cmakePath. Good!" -ForegroundColor Green
+        $path += "$cmakePath;"
+    }
+
+    if ($WIX_ON_PATH) {
+        Write-Host ">>>>> WIX already on PATH. Skipping." -ForegroundColor Green
+    } else {
+        $wixPath = FindFile 'candle.exe' $WIX_FOLDER
+        Write-Host ">>>>> Found candle.exe in $wixPath. Good!" -ForegroundColor Green
+        $path += "$wixPath;"
+    }
+
+    $env:Path = "$path$env:Path"
 }
 
 function BuildArchive {
@@ -211,17 +251,45 @@ function FindFile([String]$Name, [String]$SearchRoot) {
     }
 }
 
-function ExeOnPath([String]$Exe) {
-    if(Get-Command $Exe -ErrorAction SilentlyContinue) {
-        return $True
-    }
-    return $False
-}
 function Triple($Item1, $Item2, $Item3) {
     return [System.Tuple]::Create($Item1, $Item2, $Item3)
 }
 
+Function ExeOnPath
+{
+    Param
+    (
+        [Parameter(Mandatory = $True)]
+        [string]
+        $Executable,
+
+        [string]
+        $MinimumVersion = ""
+    )
+
+    $Cmd = Get-Command -Name $Executable -ErrorAction SilentlyContinue
+
+    If ($Cmd -and $MinimumVersion)
+    {
+        $CurrentVersion = $Cmd.Version
+        $RequiredVersion = [version]$MinimumVersion
+
+        If ($CurrentVersion -lt $RequiredVersion)
+        {
+            return $False
+        }
+    }
+
+    return $null -ne $Cmd
+}
+
 $ErrorActionPreference = "Stop"
+# Check if required executables are already on PATH.
+$NINJA_ON_PATH = ExeOnPath $NINJA_EXE
+# VS Command Prompt also puts cmake on PATH, but it's an older version than required.
+$CMAKE_ON_PATH = ExeOnPath $CMAKE_EXE '3.13'
+$WIX_ON_PATH = ExeOnPath $WIX_EXE
+# Do the build.
 DoIt
 
 
