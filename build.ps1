@@ -5,6 +5,10 @@ param(
 [Bool]$DEBUGINFO = $false,
 # MAYA installation directory. If left empty, cmake will try to find it on its own
 [String]$MAYA_DIR = '',
+# CityEngine SDK dir. If left empty, cmake will try to download it from Github.
+[String]$CESDK_DIR = '',
+# Build 'number'.
+[String]$BUILD_NO = 'DEV',
 # Default download locations for required tools. May be overwritten if desired.
 [String]$BUILD_NINJA_URL = 'https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip',
 [String]$CMAKE_URL = 'https://github.com/Kitware/CMake/releases/download/v3.15.0/cmake-3.15.0-win64-x64.zip',
@@ -104,8 +108,9 @@ function BuildArchive {
     # Call cmake
     Write-Host ">>>>> Calling 'cmake' now." -ForegroundColor Green
     $mdir = If ([System.String]::IsNullOrWhiteSpace($MAYA_DIR)) { "" } else { "-Dmaya_DIR='$MAYA_DIR'" }
+    $cesdkdir = If ([System.String]::IsNullOrWhiteSpace($CESDK_DIR)) { "" } else { "-Dprt_DIR='$CESDK_DIR'" }
     $bt = If ($DEBUGINFO) { "-DCMAKE_BUILD_TYPE=RelWithDebInfo" } else { "-DCMAKE_BUILD_TYPE=Release" }
-    cmake -G Ninja $mdir $bt ../../src
+    cmake -G Ninja $mdir $cesdkdir -DSRL_VERSION_BUILD="$BUILD_NO" $bt ../../src
     # ...and ninja
     Write-Host ">>>>> Calling 'ninja' now." -ForegroundColor Green
     ninja package
@@ -128,7 +133,8 @@ function BuildInstaller {
     # Call cmake
     Write-Host ">>>>> Calling 'cmake' now." -ForegroundColor Green
     $mdir = If ([System.String]::IsNullOrWhiteSpace($MAYA_DIR)) { "" } else { "-Dmaya_DIR='$MAYA_DIR'" }
-    cmake -G Ninja -DWIN_INSTALLER=True $mdir ../../src
+    $cesdkdir = If ([System.String]::IsNullOrWhiteSpace($CESDK_DIR)) { "" } else { "-Dprt_DIR='$CESDK_DIR'" }
+    cmake -G Ninja -DWIN_INSTALLER=True $mdir $cesdkdir -DSRL_VERSION_BUILD="$BUILD_NO" ../../src
     # ...and ninja
     Write-Host ">>>>> Calling 'ninja' now." -ForegroundColor Green
     ninja package
