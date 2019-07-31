@@ -9,9 +9,9 @@ add_library(${SERLIO_TARGET} SHARED
 		PRTContext.cpp
 		prtModifier/MayaCallbacks.cpp
 		prtModifier/RuleAttributes.cpp
-        prtModifier/PRTModifierAction.cpp
-        prtModifier/PRTModifierCommand.cpp
-        prtModifier/PRTModifierNode.cpp
+		prtModifier/PRTModifierAction.cpp
+		prtModifier/PRTModifierCommand.cpp
+		prtModifier/PRTModifierNode.cpp
 		prtModifier/polyModifier/polyModifierCmd.cpp
 		prtModifier/polyModifier/polyModifierFty.cpp
 		prtModifier/polyModifier/polyModifierNode.cpp
@@ -19,6 +19,25 @@ add_library(${SERLIO_TARGET} SHARED
 		util/Utilities.cpp
 		util/ResolveMapCache.cpp
 		util/MayaUtilities.cpp)
+
+if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
+	target_sources(${SERLIO_TARGET}
+		PRIVATE
+			serlioPlugin.h
+			PRTContext.h
+			prtModifier/MayaCallbacks.h
+			prtModifier/RuleAttributes.h
+			prtModifier/PRTModifierAction.h
+			prtModifier/PRTModifierCommand.h
+			prtModifier/PRTModifierNode.h
+			prtModifier/polyModifier/polyModifierCmd.h
+			prtModifier/polyModifier/polyModifierFty.h
+			prtModifier/polyModifier/polyModifierNode.h
+			prtMaterial/PRTMaterialNode.h
+			util/Utilities.h
+			util/ResolveMapCache.h
+			util/MayaUtilities.h)
+endif()
 
 set_target_properties(${SERLIO_TARGET} PROPERTIES
 	INSTALL_RPATH_USE_LINK_PATH FALSE

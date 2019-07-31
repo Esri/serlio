@@ -6,9 +6,14 @@ cmake_policy(SET CMP0015 NEW)
 
 add_library(${CODEC_TARGET} SHARED
 	CodecMain.cpp
-	CodecMain.h
-	encoder/MayaEncoder.cpp
-	encoder/IMayaCallbacks.h)
+	encoder/MayaEncoder.cpp)
+
+if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
+	target_sources(${CODEC_TARGET}
+		PRIVATE
+			CodecMain.h
+			encoder/IMayaCallbacks.h)
+endif()
 
 
 ### setup compiler flags

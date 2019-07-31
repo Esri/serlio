@@ -5,7 +5,7 @@
 include(FetchContent)
 
 ### IDE related
-if(MSVC)
+if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 endif()
 
