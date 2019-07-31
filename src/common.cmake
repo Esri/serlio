@@ -4,6 +4,11 @@
 
 include(FetchContent)
 
+### IDE related
+if(MSVC)
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif()
+
 
 ### environment
 

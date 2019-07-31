@@ -4,10 +4,6 @@ project(serlio CXX)
 
 include(common.cmake)
 
-# Enable solution folders for Visual Studio
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-
 ### version
 
 set(SRL_VERSION_MAJOR 1)
