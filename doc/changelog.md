@@ -1,6 +1,11 @@
 # Serlio ChangeLog
 
-## v1.0.0-beta.1 (2019-XX-XX)
+## v1.0.0 (2019-07-31)
+* Optimized the encoding of PRT geometry with many meshes (e.g. results in a speedup of about 5x for the "Parthenon" CityEngine example).
+* Do not change maya selection after user touches the attribute sliders.
+* Do not pass maya's automatically created color child attributes to PRT.
+
+## v1.0.0-beta.1 (2019-07-26)
 * Added attribute sorting in the Maya node editor like in CityEngine.
 * Fixed saving of string rule attributes in Maya scene.
 * Fixed connectivity of generated meshes and normal orientation.
