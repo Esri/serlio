@@ -49,6 +49,7 @@ Map getTasks(String branchName = null) {
 	Map tasks = [:]
 	tasks << taskGenSerlio()
 	tasks << taskGenSerlioTests()
+	tasks << taskGenSerlioInstallers()
 	return tasks
 }
 
