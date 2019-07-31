@@ -9,7 +9,7 @@ include(common.cmake)
 
 set(SRL_VERSION_MAJOR 1)
 set(SRL_VERSION_MINOR 0)
-set(SRL_VERSION_PATCH 0-beta.1)
+set(SRL_VERSION_PATCH 0)
 if(NOT SRL_VERSION_BUILD)
     set(SRL_VERSION_BUILD DEV)
 endif()
