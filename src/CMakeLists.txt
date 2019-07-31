@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.13)
 
 project(serlio CXX)
 
+set(SRL_PROJECT_NAME "serlio")
+set(SRL_VENDOR "Esri R&D Center Zurich")
+set(SRL_DESCRIPTION "Esri CityEngine Plugin for Autodesk Maya")
+
 include(common.cmake)
 
 ### version
