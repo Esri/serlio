@@ -14,7 +14,7 @@ import com.esri.zrh.jenkins.PslFactory
 
 // -- SETUP
 
-psl.runsHere('development')
+psl.runsHere('production')
 env.PIPELINE_ARCHIVING_ALLOWED = "true"
 
 // -- LOAD & RUN PIPELINE
