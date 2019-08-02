@@ -3,6 +3,7 @@ import com.esri.zrh.jenkins.PipelineSupportLibrary
 import com.esri.zrh.jenkins.PslFactory
 import com.esri.zrh.jenkins.psl.UploadTrackingPsl
 import com.esri.zrh.jenkins.JenkinsTools
+import com.esri.zrh.jenkins.ToolInfo
 import com.esri.zrh.jenkins.ce.CityEnginePipelineLibrary
 import com.esri.zrh.jenkins.ce.PrtAppPipelineLibrary
 
@@ -48,6 +49,7 @@ Map getTasks(String branchName = null) {
 	Map tasks = [:]
 	tasks << taskGenSerlio()
 	tasks << taskGenSerlioTests()
+	tasks << taskGenSerlioInstallers()
 	return tasks
 }
 
@@ -62,6 +64,9 @@ Map taskGenSerlioTests() {
 	return cepl.generateTasks('serlio-test', this.&taskBuildSerlioTests, TEST_CONFIGS)
 }
 
+Map taskGenSerlioInstallers() {
+	return cepl.generateTasks('serlio-installers', this.&taskBuildSerlioInstaller, CONFIGS.findAll { it.os == cepl.CFG_OS_WIN10})
+}
 
 // -- TASK BUILDERS
 
@@ -96,6 +101,48 @@ def taskBuildSerlioTests(cfg) {
 
 	papl.buildConfig(REPO, myBranch, SOURCES, 'build_and_run_tests', cfg, DEPS, defs, REPO_CREDS)
 	papl.jpe.junit('build/test/serlio_test_report.xml')
+}
+
+def taskBuildSerlioInstaller(cfg) {
+	final String appName = 'serlio-installer'
+	cepl.cleanCurrentDir()
+	papl.checkout(REPO, myBranch, REPO_CREDS)
+	final List deps = [ PrtAppPipelineLibrary.Dependencies.CESDK, cfg.maya ]
+	deps.each { d -> papl.fetchDependency(d, cfg) }
+
+	// Toolchain definition for building MSI installers.
+	final JenkinsTools compiler = cepl.getToolchainTool(cfg)
+	final def toolchain = [
+		new ToolInfo(JenkinsTools.CMAKE313, cfg),
+		new ToolInfo(JenkinsTools.NINJA, cfg),
+		new ToolInfo(JenkinsTools.WIX, cfg),
+		new ToolInfo(compiler, cfg)
+	]
+
+	// Setup environment according to above toolchain definition.
+	withTool(toolchain) {
+		dir('serlio.git') {
+			String cmd = JenkinsTools.generateSetupPreamble(this, cfg, toolchain.collect { it.tool })
+			cmd += "\n"
+			cmd += "powershell .\\build.ps1"
+			cmd += " -MAYA_DIR ${cfg.maya.p.call(cfg)}" // <-- !!!
+			cmd += " -CESDK_DIR ${PrtAppPipelineLibrary.Dependencies.CESDK.p.call(cfg)}"
+			cmd += " -BUILD_NO ${env.BUILD_NUMBER}"
+			cmd += " -TARGET InstallerFromScratch"
+
+			psl.runCmd(cmd)
+
+			def buildProps = papl.jpe.readProperties(file: 'build/build_msi/deployment.properties')
+			final String artifactPattern = "out/${buildProps.package_file}.*"
+			final def artifactVersion = { p -> buildProps.package_version_base }
+
+			// TODO: abusing grp again to label artifact
+			def classifierExtractor = { p ->
+				return cepl.getArchiveClassifier(cfg) + '-' + cfg.grp
+			}
+			papl.publish(appName, myBranch, artifactPattern, artifactVersion, cfg, classifierExtractor)
+		}
+	}
 }
 
 // -- make embeddable

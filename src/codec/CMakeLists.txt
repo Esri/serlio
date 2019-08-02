@@ -6,8 +6,14 @@ cmake_policy(SET CMP0015 NEW)
 
 add_library(${CODEC_TARGET} SHARED
 	CodecMain.cpp
-	encoder/MayaEncoder.cpp
-	encoder/IMayaCallbacks.h)
+	encoder/MayaEncoder.cpp)
+
+if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
+	target_sources(${CODEC_TARGET}
+		PRIVATE
+			CodecMain.h
+			encoder/IMayaCallbacks.h)
+endif()
 
 
 ### setup compiler flags
@@ -39,7 +45,9 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	target_link_libraries(${CODEC_TARGET} z pthread dl rt)
 endif()
 
+# Setup solution folder (for Visual Studio Solution)
+set_property(TARGET ${CODEC_TARGET} PROPERTY FOLDER "Serlio Maya Plugin")
 
 ### setup install target
 
-install(TARGETS ${CODEC_TARGET} DESTINATION plug-ins/ext)
+install(TARGETS ${CODEC_TARGET} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)

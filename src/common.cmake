@@ -4,6 +4,11 @@
 
 include(FetchContent)
 
+### IDE related
+if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif()
+
 
 ### environment
 
@@ -66,9 +71,17 @@ endfunction()
 
 if(NOT maya_DIR)
 	if(WIN32)
-		set(maya_DIR "C:/Program Files/Autodesk/Maya2018")
+		if(EXISTS "C:/Program Files/Autodesk/Maya2019")
+			set(maya_DIR "C:/Program Files/Autodesk/Maya2019")
+		else() 
+			set(maya_DIR "C:/Program Files/Autodesk/Maya2018")
+		endif()
 	else()
-		set(maya_DIR "/opt/autodesk/maya2018")
+		if(EXISTS "/opt/autodesk/maya2019")
+			set(maya_DIR "/opt/autodesk/maya2019")
+		else()
+			set(maya_DIR "/opt/autodesk/maya2018")
+		endif()
 	endif()
 endif()
 message(STATUS "Using maya_DIR = ${maya_DIR} (use '-Dmaya_DIR=xxx' to override)")
@@ -94,9 +107,9 @@ if (maya_LINK_LIB_METADATA)
 endif()
 
 # temporary heuristic to detect maya version number
-if(maya_DIR MATCHES "maya2018")
+if(maya_DIR MATCHES "[Mm]aya2018")
 	set(maya_VERSION_MAJOR "2018")
-elseif(maya_DIR MATCHES "maya2019")
+elseif(maya_DIR MATCHES "[Mm]aya2019")
 	set(maya_VERSION_MAJOR "2019")
 endif()
 

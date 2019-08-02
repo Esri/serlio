@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Cmake template to generate the final PackageContents.xml file.
+    The variables @MY_VAR@ will be replaced by the cmake values set(MY_VAR "value")
+    see "cpack_setup.cmake".
+
+    PackageContents.xml describes the location of our plugin files (.mel/.py/.mll etc.)
+    and update Maya environment variables.
+
+    When PackageContents.xml is present in "C:\ProgramData\Autodesk\ApplicationPlugins\plugin_name"
+    Maya automatically read this file and loads the necessary scripts and file.
+ -->
+
+ <!-- Note: UpgradeCode will be required to sell the plugin on autodesk store. -->
+<ApplicationPackage SchemaVersion="1.0"
+    ProductType="Application"
+
+    AutodeskProduct="Maya"
+    Name="@PROJECT_NAME@"
+    Description="@CPACK_PACKAGE_DESCRIPTION_SUMMARY@"
+    AppVersion="@SRL_VERSION_BASE@"
+    Author="@PACKAGE_VENDOR_ESCAPED@"
+    AppNameSpace="com.esri.prt"
+    HelpFile="./doc/usage.md"
+    OnlineDocumentation="https://github.com/ArcGIS/serlio"
+
+    ProductCode="*"
+    UpgradeCode="{9B170749-ECDF-4F66-9E2F-C9045727A6D4}" >
+
+    <CompanyDetails Name="@PACKAGE_VENDOR_ESCAPED@"
+        Phone=""
+        Url="https://github.com/ArcGIS/serlio"
+        Email="" />
+
+    <!-- OS: Valid values seem to be win64|macOS|linux -->
+    <Components>
+        <RuntimeRequirements SupportPath="./2018/doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="2018" SeriesMax="2018" />
+        <MayaEnv expr="PATH+:=2018/plug-ins/" />
+        <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2018/plug-ins/" />
+        <MayaEnv expr="MAYA_SCRIPT_PATH+:=2018/scripts/" />
+        <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
+    </Components>
+
+    <Components>
+        <RuntimeRequirements SupportPath="./2019/doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="2019" SeriesMax="2019" />
+        <MayaEnv expr="PATH+:=2019/plug-ins/" />
+        <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2019/plug-ins/" />
+        <MayaEnv expr="MAYA_SCRIPT_PATH+:=2019/scripts/" />
+        <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
+    </Components>
+
+</ApplicationPackage>

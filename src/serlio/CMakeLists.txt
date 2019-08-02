@@ -9,9 +9,9 @@ add_library(${SERLIO_TARGET} SHARED
 		PRTContext.cpp
 		prtModifier/MayaCallbacks.cpp
 		prtModifier/RuleAttributes.cpp
-        prtModifier/PRTModifierAction.cpp
-        prtModifier/PRTModifierCommand.cpp
-        prtModifier/PRTModifierNode.cpp
+		prtModifier/PRTModifierAction.cpp
+		prtModifier/PRTModifierCommand.cpp
+		prtModifier/PRTModifierNode.cpp
 		prtModifier/polyModifier/polyModifierCmd.cpp
 		prtModifier/polyModifier/polyModifierFty.cpp
 		prtModifier/polyModifier/polyModifierNode.cpp
@@ -19,6 +19,25 @@ add_library(${SERLIO_TARGET} SHARED
 		util/Utilities.cpp
 		util/ResolveMapCache.cpp
 		util/MayaUtilities.cpp)
+
+if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
+	target_sources(${SERLIO_TARGET}
+		PRIVATE
+			serlioPlugin.h
+			PRTContext.h
+			prtModifier/MayaCallbacks.h
+			prtModifier/RuleAttributes.h
+			prtModifier/PRTModifierAction.h
+			prtModifier/PRTModifierCommand.h
+			prtModifier/PRTModifierNode.h
+			prtModifier/polyModifier/polyModifierCmd.h
+			prtModifier/polyModifier/polyModifierFty.h
+			prtModifier/polyModifier/polyModifierNode.h
+			prtMaterial/PRTMaterialNode.h
+			util/Utilities.h
+			util/ResolveMapCache.h
+			util/MayaUtilities.h)
+endif()
 
 set_target_properties(${SERLIO_TARGET} PROPERTIES
 	INSTALL_RPATH_USE_LINK_PATH FALSE
@@ -78,17 +97,19 @@ endif()
 srl_add_dependency_prt(${SERLIO_TARGET})
 srl_add_dependency_maya(${SERLIO_TARGET})
 
+# Add to solution folder (Visual Studio)
+set_property(TARGET ${SERLIO_TARGET} PROPERTY FOLDER "Serlio Maya Plugin")
 
 ### setup install target
 
-install(TARGETS ${SERLIO_TARGET} DESTINATION plug-ins)
-install(FILES ${PRT_LIBRARIES} DESTINATION plug-ins)
-install(FILES ${PRT_EXT_LIBRARIES} DESTINATION plug-ins/ext)
-install(FILES scripts/AEserlioTemplate.mel DESTINATION scripts)
-install(FILES scripts/serlioCreateUI.mel DESTINATION scripts)
-install(FILES scripts/serlioDeleteUI.mel DESTINATION scripts)
-install(FILES shaders/serlioShaderStingray.sfx DESTINATION shaders)
+install(TARGETS ${SERLIO_TARGET} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
+install(FILES ${PRT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
+install(FILES ${PRT_EXT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+install(FILES scripts/AEserlioTemplate.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
+install(FILES scripts/serlioCreateUI.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
+install(FILES scripts/serlioDeleteUI.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
+install(FILES shaders/serlioShaderStingray.sfx DESTINATION ${INSTALL_FOLDER_PREFIX}/shaders)
 
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/../doc DESTINATION .)
-install(FILES ${PROJECT_SOURCE_DIR}/../README.md ${PROJECT_SOURCE_DIR}/../LICENSE DESTINATION .)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/../doc DESTINATION ${INSTALL_FOLDER_PREFIX})
+install(FILES ${PROJECT_SOURCE_DIR}/../README.md ${PROJECT_SOURCE_DIR}/../LICENSE DESTINATION ${INSTALL_FOLDER_PREFIX})
 
