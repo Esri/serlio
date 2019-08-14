@@ -1,6 +1,6 @@
-/src/cmake-*
-/build*
+/src
+/build
 /install
-/**/.idea
-/src/CMakeSettings.json
-/.vs
+/.idea
+/_site
+/Gemfile.lock
