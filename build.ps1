@@ -174,7 +174,7 @@ function BuildInstaller {
     Write-Host ">>>>> Calling 'cmake' now." -ForegroundColor Green
     $mdir = If ([System.String]::IsNullOrWhiteSpace($MAYA_DIR)) { "" } else { "-Dmaya_DIR='$MAYA_DIR'" }
     $cesdkdir = If ([System.String]::IsNullOrWhiteSpace($CESDK_DIR)) { "" } else { "-Dprt_DIR='$CESDK_DIR'" }
-    cmake -G Ninja -DWIN_INSTALLER=True $mdir $cesdkdir -DSRL_VERSION_BUILD="$BUILD_NO" ../../src
+    cmake -G Ninja -DWIN_INSTALLER=True $mdir $cesdkdir -DSRL_VERSION_BUILD="$BUILD_NO" -DCMAKE_BUILD_TYPE=Release ../../src
     # ...and ninja
     Write-Host ">>>>> Calling 'ninja' now." -ForegroundColor Green
     ninja package
