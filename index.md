@@ -29,7 +29,32 @@ More downloads (also for Maya 2018) are available on the [github release page](h
 
 ## Examples
 
-Coming soon...
+<table>
+	<tr><td colspan="2"><h3>Favela</h3></td></tr>
+	<tr>
+		<td>
+				<a href="images/favela/maya-scene-1-basic.png"><img src="images/favela/maya-scene-1-basic.png" width="400" /></a>
+				<a href="images/favela/maya-scene-2-multiple-lots.png"><img src="images/favela/maya-scene-2-multiple-lots.png" width="400" /></a>
+		</td>
+		<td>
+				<p>The Favela example demonstrates how a complex CityEngine Rule Package (RPK) is applied on one or more polygons. The provided Maya project includes an Alembic file with shapes from CityEngine, the Favela RPK itself and Maya scenes.</p>
+
+				<p>Note: Upon opening, the Maya scenes will immediately trigger the generation of the Favela model - <em>it might take a while to load the RPK</em>.</p>
+
+				<p>Downloads:</p>
+				<ul>
+						<li><a href="https://github.com/Esri/serlio/releases/download/v1.0.0/favela_maya_project_v1.zip">Maya Project</a></li>
+				</ul>
+
+				<p>Notes:</p>
+				<ul>
+						<li>Requires Maya 2018 or later.</li>
+						<li>Based on the original <a href="https://www.youtube.com/watch?v=IY5gU1J39Ec">"Favela" project (YouTube)</a> created with CityEngine, Maya and Maxwell created by Matthias Bühler and Cyrill Oberhänsli.</li>
+						<li>v1 released on 2019-08-15.</li>
+				</ul>
+		</td>
+	</tr>
+</table>
 
 
 ## Licensing
