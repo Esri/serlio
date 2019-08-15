@@ -21,13 +21,6 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 endif()
 
 
-### build type
-
-if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose one of: Debug Release RelWithDebInfo MinSizeRel")
-endif()
-
-
 ### look for the PRT libraries
 
 # if prt_DIR is not provided, download PRT from its github home
