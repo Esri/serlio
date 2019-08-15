@@ -100,16 +100,27 @@ srl_add_dependency_maya(${SERLIO_TARGET})
 # Add to solution folder (Visual Studio)
 set_property(TARGET ${SERLIO_TARGET} PROPERTY FOLDER "Serlio Maya Plugin")
 
+
 ### setup install target
 
-install(TARGETS ${SERLIO_TARGET} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
-install(FILES ${PRT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
-install(FILES ${PRT_EXT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+# serlio
+install(TARGETS ${SERLIO_TARGET} RUNTIME DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
 install(FILES scripts/AEserlioTemplate.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
 install(FILES scripts/serlioCreateUI.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
 install(FILES scripts/serlioDeleteUI.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
 install(FILES shaders/serlioShaderStingray.sfx DESTINATION ${INSTALL_FOLDER_PREFIX}/shaders)
 
+# PRT: filter import libraries (Windows)
+set(SRL_PRT_LIBRARIES ${PRT_LIBRARIES})
+list(FILTER SRL_PRT_LIBRARIES EXCLUDE REGEX "\\.lib")
+install(FILES ${SRL_PRT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
+
+# PRT: whitelist required extension libraries
+set(SRL_PRT_EXT_LIBRARIES ${PRT_EXT_LIBRARIES})
+list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.codecs|com\\.esri\\.prt\\.adaptors|VueExport")
+install(FILES ${SRL_PRT_EXT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+
+# doc
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/../doc DESTINATION ${INSTALL_FOLDER_PREFIX})
 install(FILES ${PROJECT_SOURCE_DIR}/../README.md ${PROJECT_SOURCE_DIR}/../LICENSE DESTINATION ${INSTALL_FOLDER_PREFIX})
 
