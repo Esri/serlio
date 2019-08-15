@@ -1,3 +1,4 @@
 theme: jekyll-theme-cayman
 title: Serlio - CityEngine Plugin for Autodesk Maya
+repository: esri/serlio
 show_downloads: false
