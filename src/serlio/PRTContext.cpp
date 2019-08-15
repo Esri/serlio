@@ -32,6 +32,12 @@ constexpr prt::LogLevel  PRT_LOG_LEVEL      = prt::LOG_INFO;
 constexpr bool           ENABLE_LOG_CONSOLE = true;
 constexpr bool           ENABLE_LOG_FILE    = false;
 
+bool verifyMayaEncoder() {
+    constexpr const wchar_t* ENC_ID_MAYA = L"MayaEncoder";
+    const auto mayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
+    return mayaEncOpts.operator bool();
+}
+
 } // namespace
 
 
@@ -57,12 +63,20 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 	const auto extensionPathPtrs = prtu::toPtrVec(extensionPaths);
 	thePRT.reset(prt::init(extensionPathPtrs.data(), extensionPathPtrs.size(), PRT_LOG_LEVEL, &status));
 
+	// early sanity check for maya encoder
+	if (!verifyMayaEncoder()) {
+        LOG_FTL << "Unable to load Maya encoder extension!";
+        status = prt::STATUS_ENCODER_NOT_FOUND;
+    }
+
 	if (!thePRT || status != prt::STATUS_OK) {
         LOG_FTL << "Could not initialize PRT: " << prt::getStatusDescription(status);
+        thePRT.reset();
 	}
-
-	theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
-    mResolveMapCache = new ResolveMapCache(prtu::getProcessTempDir(SRL_TMP_PREFIX));
+	else {
+        theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
+        mResolveMapCache = new ResolveMapCache(prtu::getProcessTempDir(SRL_TMP_PREFIX));
+    }
 }
 
 PRTContext::~PRTContext() {
