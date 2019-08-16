@@ -328,6 +328,8 @@ namespace prtu {
 
 	AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions) {
 		const EncoderInfoUPtr encInfo(prt::createEncoderInfo(encID));
+		if (!encInfo)
+		    return {};
 		const prt::AttributeMap* validatedOptions = nullptr;
 		const prt::AttributeMap* optionStates = nullptr;
 		const prt::Status s = encInfo->createValidatedOptionsAndStates(unvalidatedOptions, &validatedOptions, &optionStates);
