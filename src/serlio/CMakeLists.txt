@@ -104,7 +104,15 @@ set_property(TARGET ${SERLIO_TARGET} PROPERTY FOLDER "Serlio Maya Plugin")
 ### setup install target
 
 # serlio
-install(TARGETS ${SERLIO_TARGET} RUNTIME DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
+
+# TODO: below line is sufficient with CMake >= 3.14
+#install(TARGETS ${SERLIO_TARGET} RUNTIME DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
+if(SRL_WINDOWS)
+	install(TARGETS ${SERLIO_TARGET} RUNTIME DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
+else()
+	install(TARGETS ${SERLIO_TARGET} LIBRARY DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins)
+endif()
+
 install(FILES scripts/AEserlioTemplate.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
 install(FILES scripts/serlioCreateUI.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
 install(FILES scripts/serlioDeleteUI.mel DESTINATION ${INSTALL_FOLDER_PREFIX}/scripts)
