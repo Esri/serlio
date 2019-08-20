@@ -303,6 +303,9 @@ int main( int argc, char* argv[] ) {
 	};
 
 	prtCtx.reset(new PRTContext(addExtDirs));
+	if (!prtCtx->isAlive())
+		return 1;
+
 	int result = Catch::Session().run( argc, argv );
 	prtCtx.reset();
 

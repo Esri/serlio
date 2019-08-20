@@ -50,4 +50,10 @@ set_property(TARGET ${CODEC_TARGET} PROPERTY FOLDER "Serlio Maya Plugin")
 
 ### setup install target
 
-install(TARGETS ${CODEC_TARGET} RUNTIME DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+# TODO: below line is sufficient with CMake >= 3.14
+#install(TARGETS ${CODEC_TARGET} RUNTIME DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+if(SRL_WINDOWS)
+	install(TARGETS ${CODEC_TARGET} RUNTIME DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+else()
+	install(TARGETS ${CODEC_TARGET} LIBRARY DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+endif()
