@@ -21,8 +21,8 @@ Serlio is well suited for managing the procedural generation of architectural 3D
 
 ## Downloads
 
-| ![Linux](images/linux.png)   | [Serlio 1.0.0, Maya 2019, PRT 2.0](https://github.com/Esri/serlio/releases/download/v1.0.0/serlio-1.0.0+b2980-rhel7-gcc63-x86_64-rel-opt-maya2019.tar.gz) |
-| ![Windows](images/win32.png) | [Serlio 1.0.0, Maya 2019, PRT 2.0](https://github.com/Esri/serlio/releases/download/v1.0.0/serlio-installer-1.0.0+b2980-win10-vc141-x86_64-rel-opt-maya2019.msi) |
+| ![Linux](images/linux.png)   | [Serlio 1.0.1, Maya 2019, PRT 2.0](https://github.com/Esri/serlio/releases/download/v1.0.1/serlio-1.0.1+b2994-rhel7-gcc63-x86_64-rel-opt-maya2019.tar.gz) |
+| ![Windows](images/win32.png) | [Serlio 1.0.1, Maya 2019, PRT 2.0](https://github.com/Esri/serlio/releases/download/v1.0.1/serlio-installer-1.0.1+b2994-win10-vc141-x86_64-rel-opt-maya2019.msi) |
 
 More downloads (also for Maya 2018) are available on the [github release page](https://github.com/esri/serlio/releases).
 
