@@ -39,12 +39,16 @@ More downloads (also for Maya 2018) are available on the [github release page](h
 		<td>
 				<p>The Favela example demonstrates how a complex CityEngine Rule Package (RPK) is applied on one or more polygons. The provided Maya project includes an Alembic file with shapes from CityEngine, the Favela RPK itself and Maya scenes.</p>
 
-				<p>Note: Upon opening, the Maya scenes will immediately trigger the generation of the Favela model - <em>it might take a while to load the RPK</em>.</p>
-
 				<p>Downloads:</p>
 				<ul>
-						<li><a href="https://github.com/Esri/serlio/releases/download/v1.0.0/favela_maya_project_v1.zip">Maya Project</a></li>
+					<li><a href="https://github.com/Esri/serlio/releases/download/v1.0.0/favela_maya_project_v1.zip">Favela Maya Project</a></li>
 				</ul>
+
+				<p>Guide:</p>
+				<ol>
+					<li>Call "File | Set Project..." and set it to the downloaded Favela Maya project (otherwise Serlio will not find the Favela RPK).</li>
+					<li>Open one of the two provided Maya scenes, this will immediately trigger the generation of the Favela model - <em>it might take a while to load the RPK on the first time after starting Maya</em>.</li>
+				</ol>
 
 				<p>Notes:</p>
 				<ul>
