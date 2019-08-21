@@ -149,13 +149,20 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 
 const RuleAttribute RULE_NOT_FOUND{};
 
-void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
+MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 	MStatus           stat;
 	const MFnDependencyNode fNode(node, &stat);
 	MCHECK(stat);
 
 	auto resolveMap = getResolveMap();
-	const RuleFileInfoUPtr info(prt::createRuleFileInfo(resolveMap->getString(mRuleFile.c_str())));
+	if (!resolveMap)
+		return MStatus::kInvalidParameter;
+
+	const wchar_t* ruleFileURI = resolveMap->getString(mRuleFile.c_str());
+	if (ruleFileURI == nullptr)
+		return MStatus::kInvalidParameter;
+	
+	const RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI));
 
 	auto reverseLookupAttribute = [this](const std::wstring& mayaFullAttrName) {
 		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(), [&mayaFullAttrName](const auto& ra) {
@@ -257,6 +264,7 @@ void PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 	}
 
 	mGenerateAttrs.reset(aBuilder->createAttributeMap());
+	return MStatus::kSuccess;
 }
 
 // Sets the mesh object for the action  to operate on

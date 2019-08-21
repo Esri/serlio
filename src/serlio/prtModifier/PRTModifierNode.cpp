@@ -112,7 +112,11 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
 				auto mObj = thisMObject(); // needed because C++ standard does not allow reference to rvalue
 				fPRTModifierAction.updateRuleFiles(mObj, rulePkgData.asString());
 			}
-			fPRTModifierAction.fillAttributesFromNode(thisMObject());
+
+			status = fPRTModifierAction.fillAttributesFromNode(thisMObject());
+			if (status != MStatus::kSuccess)
+				return status;
+
 			fPRTModifierAction.setMesh(iMesh, oMesh);
 
 			MDataHandle randomSeed = data.inputValue(mRandomSeed, &status);

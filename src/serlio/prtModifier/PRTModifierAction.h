@@ -66,7 +66,7 @@ public:
 	PRTModifierAction(PRTContextUPtr& prtCtx);
 
 	MStatus updateRuleFiles(MObject& node, const MString& rulePkg);
-	void fillAttributesFromNode(const MObject& node);
+	MStatus fillAttributesFromNode(const MObject& node);
 	void setMesh(MObject& _inMesh, MObject& _outMesh);
 	void setRandomSeed(int32_t randomSeed) { mRandomSeed = randomSeed; };
 
