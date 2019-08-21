@@ -1,5 +1,12 @@
 # Serlio ChangeLog
 
+## v1.0.1 (2019-08-21)
+* Merged support for creating MSI installers via CMake.
+* Fixed wrong build type of codec library in MSI installers.
+* Improved error handling when loading the plugin (check codec library).
+* Do not install unnecessary PRT codecs for Serlio.
+* Improved error handling (prevent crash) if a specified Rule Package (RPK) is not readable.
+
 ## v1.0.0 (2019-07-31)
 * Optimized the encoding of PRT geometry with many meshes (e.g. results in a speedup of about 5x for the "Parthenon" CityEngine example).
 * Do not change maya selection after user touches the attribute sliders.
