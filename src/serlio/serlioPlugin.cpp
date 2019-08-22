@@ -32,6 +32,7 @@
 
 #include "maya/MFnPlugin.h"
 #include "maya/MSceneMessage.h"
+#include "maya/MGlobal.h"
 
 
 namespace {
@@ -47,11 +48,27 @@ namespace {
 	// global PRT lifetime handler
 	PRTContextUPtr prtCtx;
 
+	MStatus checkRequiredPluginDependencies() {
+		const std::vector<MString> dependencies = { "shaderFXPlugin" };
+		for (const auto& d: dependencies) {
+			auto p = MFnPlugin::findPlugin(d);
+			if (p.isNull()) {
+				MGlobal::displayError("Serlio: the required dependency '" + d + "' is not loaded, please activate it!");
+				return MStatus::kFailure;
+			}
+		}
+		return MStatus::kSuccess;
+	}
+
 } // namespace
 
 
 // called when the plug-in is loaded into Maya.
 MStatus initializePlugin(MObject obj) {
+	const MStatus dependencyStatus = checkRequiredPluginDependencies();
+	if (dependencyStatus != MStatus::kSuccess)
+		return dependencyStatus;
+
 	if (!prtCtx) {
 		prtCtx.reset(new PRTContext());
 
