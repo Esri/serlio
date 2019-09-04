@@ -350,9 +350,9 @@ MStatus PRTModifierAction::doIt()
 	}
 
 	std::vector<uint32_t> ia(pconnect.length());
-	pconnect.get((int*)ia.data());
+	pconnect.get(reinterpret_cast<int*>(ia.data()));
 	std::vector<uint32_t> ca(pcounts.length());
-	pcounts.get((int*)ca.data());
+	pcounts.get(reinterpret_cast<int*>(ca.data()));
 
 	AttributeMapBuilderUPtr amb(prt::AttributeMapBuilder::create());
 	std::unique_ptr<MayaCallbacks> outputHandler(new MayaCallbacks(inMesh, outMesh, amb));
