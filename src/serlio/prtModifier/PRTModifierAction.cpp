@@ -67,7 +67,7 @@ namespace UnitQuad {
 	const int32_t  seed = mu::computeSeed(vertices, vertexCount);
 }
 
-AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, ResolveMapSPtr resolveMap, const CacheObjectUPtr& cache) {
+AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, const prt::ResolveMap& resolveMap, prt::CacheObject& cache) {
 	AttributeMapBuilderUPtr mayaCallbacksAttributeBuilder(prt::AttributeMapBuilder::create());
 	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, mayaCallbacksAttributeBuilder);
 
@@ -82,7 +82,7 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 		UnitQuad::faceCountsCount
 	);
 
-	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), UnitQuad::seed,L"", EMPTY_ATTRIBUTES.get(), resolveMap.get());
+	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), UnitQuad::seed, L"", EMPTY_ATTRIBUTES.get(), &resolveMap);
 
 	const InitialShapeUPtr shape(isb->createInitialShapeAndReset());
 	const InitialShapeNOPtrVector shapes = { shape.get() };
@@ -92,7 +92,7 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 	const AttributeMapNOPtrVector encOpts = { attrEncOpts.get() };
 	assert(encIDs.size() == encOpts.size());
 
-	prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(), &mayaCallbacks, cache.get(), nullptr);
+	prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(), &mayaCallbacks, &cache, nullptr);
 
 	return AttributeMapUPtr(mayaCallbacksAttributeBuilder->createAttributeMap());
 }
@@ -174,7 +174,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 
 	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
 
-	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), mPRTCtx.theCache);
+	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache);
 	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
 
 	for (const auto& attrObj: cgaAttributes) {
@@ -315,7 +315,7 @@ MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg
 	mStartRule = prtu::detectStartRule(info);
 
 	if (node != MObject::kNullObj) {
-		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), mPRTCtx.theCache);
+		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache);
 		if (DBG) LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
