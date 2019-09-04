@@ -123,7 +123,7 @@ double MaterialInfo::getDouble(adsk::Data::Handle sHandle, const std::string& na
 	{
 		double* data = sHandle.asDouble();
 		if (sHandle.dataLength() >= 1 && data) {
-			return data[0];
+			return *data;
 		}
 	}
 	return NAN;

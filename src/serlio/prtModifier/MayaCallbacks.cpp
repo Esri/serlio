@@ -377,10 +377,10 @@ void MayaCallbacks::addMesh(
 
 
 				handle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str());
-				handle.asInt32()[0] = faceRanges[fri];
+				*handle.asInt32() = faceRanges[fri];
 
 				handle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str());
-				handle.asInt32()[0] = faceRanges[fri+1];
+				*handle.asInt32() = faceRanges[fri+1];
 
 				newStream.setElement(static_cast<adsk::Data::IndexCount>(fri), handle);
 
