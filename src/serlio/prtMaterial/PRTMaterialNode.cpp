@@ -264,9 +264,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 		adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
 		std::set<std::string> shaderNames;
 		std::list<std::pair<const MObject, const MaterialInfo>> existinMaterialInfos;
-		MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader);
-		while (!itHwShaders.isDone())
-		{
+		for (auto itHwShaders = MItDependencyNodes(MFn::kPluginHardwareShader); !itHwShaders.isDone(); itHwShaders.next()) {
 			MObject obj = itHwShaders.thisNode();
 			MFnDependencyNode n(obj);
 			shaderNames.insert(std::string(n.name().asChar()));
@@ -286,7 +284,6 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					}
 				}
 			}
-			itHwShaders.next();
 		}
 
 		// determine path of shader fx file
@@ -322,9 +319,8 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					MaterialInfo matInfo(sHandle);
 
 					//material with same metadata already exists?
-					MItDependencyNodes it(MFn::kPluginHardwareShader);
 					MObject matchingMaterial = MObject::kNullObj;
-					while (!it.isDone())
+					for (auto it = MItDependencyNodes(MFn::kPluginHardwareShader); !it.isDone(); it.next())
 					{
 						MObject obj = it.thisNode();
 						MFnDependencyNode n(obj);
@@ -338,8 +334,6 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 
 						if (matchingMaterial != MObject::kNullObj)
 							break;
-
-						it.next();
 					}
 
 					sHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str());
