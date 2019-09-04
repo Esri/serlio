@@ -80,10 +80,6 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 }
 
 PRTContext::~PRTContext() {
-	theCache.reset();
-	thePRT.reset();
-	mResolveMapCache.reset();
-
 	if (ENABLE_LOG_CONSOLE && theLogHandler) {
 		prt::removeLogHandler(theLogHandler);
 		theLogHandler->destroy();
