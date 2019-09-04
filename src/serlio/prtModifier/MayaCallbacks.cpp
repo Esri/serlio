@@ -108,7 +108,7 @@ void MayaCallbacks::addMesh(
 		double const* const* uvs, size_t const* uvsSizes,
 		uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
 		uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
-		uint32_t uvSetsCount,
+		size_t uvSetsCount,
 		const uint32_t* faceRanges, size_t faceRangesSize,
 		const prt::AttributeMap** materials,
 		const prt::AttributeMap** reports,
