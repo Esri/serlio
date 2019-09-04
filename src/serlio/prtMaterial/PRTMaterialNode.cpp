@@ -84,7 +84,7 @@ MStatus PRTMaterialNode::initialize()
 	return MStatus::kSuccess;
 }
 
-MString MaterialInfo::toMString(const std::vector<double> &d, size_t size, size_t offset)
+MString MaterialInfo::toMString(const std::vector<double>& d, size_t size, size_t offset)
 {
 	MString colString;
 	for (size_t i = offset; i < d.size() && i < offset+size; i++)

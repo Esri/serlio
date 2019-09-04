@@ -342,16 +342,16 @@ MStatus PRTModifierAction::doIt()
 	iMeshFn.getPoints(vertices);
 	iMeshFn.getVertices(pcounts, pconnect);
 
-	std::vector<double> va(vertices.length()*3);
+	std::vector<double> va(vertices.length() * 3);
 	for (int i = static_cast<int>(vertices.length()); --i >= 0;) {
 		va[i * 3 + 0] = vertices[i].x;
 		va[i * 3 + 1] = vertices[i].y;
 		va[i * 3 + 2] = vertices[i].z;
 	}
 
-	std::vector <uint32_t> ia(pconnect.length());
+	std::vector<uint32_t> ia(pconnect.length());
 	pconnect.get((int*)ia.data());
-	std::vector <uint32_t> ca(pcounts.length());
+	std::vector<uint32_t> ca(pcounts.length());
 	pcounts.get((int*)ca.data());
 
 	AttributeMapBuilderUPtr amb(prt::AttributeMapBuilder::create());
@@ -378,7 +378,7 @@ MStatus PRTModifierAction::doIt()
 		getResolveMap().get()
 	);
 
-	std::unique_ptr <const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
+	std::unique_ptr<const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
 
 	const std::vector<const wchar_t*> encIDs = { ENC_ID_MAYA, ENC_ID_CGA_ERROR, ENC_ID_CGA_PRINT };
 	const AttributeMapNOPtrVector encOpts = { mMayaEncOpts.get(), mCGAErrorOptions.get(), mCGAPrintOptions.get() };
