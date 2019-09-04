@@ -263,7 +263,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 		//find all existing prt materials
 		adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
 		std::set<std::string> shaderNames;
-		std::list<std::pair<const MObject, const MaterialInfo>> existinMaterialInfos;
+		std::list<std::pair<const MObject, const MaterialInfo>> existingMaterialInfos;
 		for (auto itHwShaders = MItDependencyNodes(MFn::kPluginHardwareShader); !itHwShaders.isDone(); itHwShaders.next()) {
 			MObject obj = itHwShaders.thisNode();
 			MFnDependencyNode n(obj);
@@ -280,7 +280,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 						adsk::Data::Handle matSHandle = matStream->element(0);
 						if (!matSHandle.usesStructure(*fStructure)) continue;
 						auto p = std::pair<const MObject, const MaterialInfo>(obj, matSHandle);
-						existinMaterialInfos.push_back(p);
+						existingMaterialInfos.push_back(p);
 					}
 				}
 			}
@@ -323,7 +323,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 						MObject obj = it.thisNode();
 						MFnDependencyNode n(obj);
 
-						for (const auto& kv : existinMaterialInfos) {
+						for (const auto& kv : existingMaterialInfos) {
 							if (matInfo.equals(kv.second)) {
 								matchingMaterial = kv.first;
 								break;
