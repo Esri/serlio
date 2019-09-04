@@ -309,9 +309,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 
 				std::array<wchar_t, 512> buf;
 
-				for (unsigned int i = 0; i < stream->elementCount(); ++i)
-				{
-					adsk::Data::Handle sHandle = stream->element(i);
+				for (adsk::Data::Handle& sHandle : *stream) {
 					if (!sHandle.hasData()) continue;
 					
 					if (!sHandle.usesStructure(*fStructure)) continue;
