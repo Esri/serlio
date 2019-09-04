@@ -110,8 +110,8 @@ std::vector<double> MaterialInfo::getDoubleVector(adsk::Data::Handle sHandle, co
 	{
 		double* data = sHandle.asDouble();
 		if (sHandle.dataLength() >= numElements && data!=nullptr) {
-			for (int i = 0; i < numElements; i++)
-				r.push_back(data[i]);
+			r.reserve(numElements);
+			std::copy(data, data + numElements, std::back_inserter(r));
 		}
 	}
 	return r;
