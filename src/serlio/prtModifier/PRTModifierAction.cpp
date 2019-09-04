@@ -117,7 +117,7 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 	std::list<MObject> rawAttrs;
 	std::list<MObject> ignoreList;
 
-	for (size_t i = 0, numAttrs = node.attributeCount(); i < numAttrs; i++) {
+	for (unsigned int i = 0, numAttrs = node.attributeCount(); i < numAttrs; i++) {
 		MStatus attrStat;
 		const MObject attrObj = node.attribute(i, &attrStat);
 		if (attrStat != MS::kSuccess)
@@ -132,7 +132,7 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 		// maya annoyance: color attributes automatically get per-component plugs/child attrs
 		if (attr.isUsedAsColor()) {
 			MFnCompoundAttribute compAttr(attrObj);
-			for (size_t ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
+			for (unsigned int ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
 				ignoreList.emplace_back(compAttr.child(ci));
 		}
 
@@ -569,7 +569,7 @@ void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 	std::list<MObject> attrToRemove;
 	std::list<MObject> ignoreList;
 
-	for (size_t i = 0; i < node.attributeCount(); i++) {
+	for (unsigned int i = 0; i < node.attributeCount(); i++) {
 		const MObject attrObj = node.attribute(i);
 		const MFnAttribute attr(attrObj);
 		const MString attrName = attr.name();
@@ -580,7 +580,7 @@ void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 
 		if (attr.isUsedAsColor()) {
 			MFnCompoundAttribute compAttr(attrObj);
-			for (size_t ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
+			for (unsigned int ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
 				ignoreList.emplace_back(compAttr.child(ci));
 		}
 

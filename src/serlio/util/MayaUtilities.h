@@ -22,7 +22,7 @@ void statusCheck(MStatus status, const char* file, int line);
 
 template<typename F>
 void forAllAttributes(const MFnDependencyNode& node, F func) {
-	for (size_t i = 0; i < node.attributeCount(); i++) {
+	for (unsigned int i = 0; i < node.attributeCount(); i++) {
 		const MObject attrObj = node.attribute(i);
 		const MFnAttribute attr(attrObj);
 		func(attr);

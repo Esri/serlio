@@ -53,17 +53,17 @@ void checkStringLength(const wchar_t *string, const size_t &maxStringLength) {
 }
 
 MIntArray toMayaIntArray(uint32_t const *a, size_t s) {
-	MIntArray mia(s, 0);
-	for (size_t i = 0; i < s; ++i)
+	MIntArray mia(static_cast<unsigned int>(s), 0);
+	for (unsigned int i = 0; i < s; ++i)
 		mia.set(a[i], i);
 	return mia;
 }
 
 MFloatPointArray toMayaFloatPointArray(double const *a, size_t s) {
 	assert(s % 3 == 0);
-	const size_t numPoints = s/3;
+	const unsigned int numPoints = static_cast<unsigned int>(s) / 3;
 	MFloatPointArray mfpa(numPoints);
-	for (size_t i = 0; i < numPoints; ++i) {
+	for (unsigned int i = 0; i < numPoints; ++i) {
 		mfpa.set(MFloatPoint(static_cast<float>(a[i * 3 + 0]),
 							 static_cast<float>(a[i * 3 + 1]),
 							 static_cast<float>(a[i * 3 + 2])), i);
@@ -182,8 +182,8 @@ void MayaCallbacks::addMesh(
 		// guaranteed by MayaEncoder, see prtx::VertexNormalProcessor::SET_MISSING_TO_FACE_NORMALS
 
 		// convert to native maya normal layout
-		MVectorArray expandedNormals(vertexIndicesSize);
-		MIntArray faceList(vertexIndicesSize);
+		MVectorArray expandedNormals(static_cast<unsigned int>(vertexIndicesSize));
+		MIntArray faceList(static_cast<unsigned int>(vertexIndicesSize));
 
 		int indexCount = 0;
 		for (int i = 0; i < faceCountsSize; i++) {

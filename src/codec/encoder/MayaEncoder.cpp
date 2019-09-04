@@ -445,7 +445,7 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 				if (DBG) log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
 
 				// append uv vertex indices
-				for (uint32_t fi = 0, faceCount = faceUVCounts.size(); fi < faceCount; ++fi) {
+				for (uint32_t fi = 0, faceCount = static_cast<uint32_t>(faceUVCounts.size()); fi < faceCount; ++fi) {
 					const uint32_t* faceUVIdx0 = (numUVSets > 0) ? mesh->getFaceUVIndices(fi, 0) : EMPTY_IDX.data();
 					const uint32_t* faceUVIdx = (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVIndices(fi, uvSet) : faceUVIdx0;
 					const uint32_t faceUVCnt = faceUVCounts[fi];
@@ -454,7 +454,7 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 						sg.uvIndices[uvSet].push_back(uvIndexBases[uvSet] + faceUVIdx[vi]);
 				}
 
-				uvIndexBases[uvSet] += src.size() / 2u;
+				uvIndexBases[uvSet] += static_cast<uint32_t>(src.size()) / 2;
 			} // for all uv sets
 
 			// append counts and indices for vertices and vertex normals
