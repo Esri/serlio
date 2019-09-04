@@ -88,10 +88,10 @@ MStatus initializePlugin(MObject obj) {
 	auto createModifierCommand = [](){ return (void*) new PRTModifierCommand(prtCtx); };
 	MCHECK(plugin.registerCommand(CMD_ASSIGN, createModifierCommand));
 
-	auto createModifierNode = [](){ return (void*) new PRTModifierNode(prtCtx); };
+	auto createModifierNode = [](){ return (void*) new PRTModifierNode(*prtCtx); };
 	MCHECK(plugin.registerNode(NODE_MODIFIER, PRTModifierNode::id, createModifierNode, PRTModifierNode::initialize));
 
-	auto createMaterialNode = [](){ return (void*) new PRTMaterialNode(prtCtx); };
+	auto createMaterialNode = [](){ return (void*) new PRTMaterialNode(*prtCtx); };
 	MCHECK(plugin.registerNode(NODE_MATERIAL, PRTMaterialNode::id, createMaterialNode, &PRTMaterialNode::initialize, MPxNode::kDependNode));
 
 	MCHECK(plugin.registerUI(MEL_PROC_CREATE_UI, MEL_PROC_DELETE_UI));

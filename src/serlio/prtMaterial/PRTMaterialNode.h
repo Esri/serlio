@@ -88,7 +88,7 @@ private:
 
 class PRTMaterialNode : public MPxNode {
 public:
-	PRTMaterialNode(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) { }
+	PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {}
 
 	static  void*       creator();
 	static  MStatus     initialize();
@@ -108,5 +108,5 @@ private:
 	static MString sfxFile;
 
 private:
-	PRTContextUPtr& mPRTCtx;
+	const PRTContext& mPRTCtx;
 }; // class PRTMaterialNode

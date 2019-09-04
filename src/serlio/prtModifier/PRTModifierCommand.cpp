@@ -177,7 +177,7 @@ MStatus PRTModifierCommand::initModifierNode(MObject modifierNode)
 MStatus PRTModifierCommand::directModifier(MObject mesh)
 {
 	MStatus status;
-	PRTModifierAction fPRTModifierAction(mPRTCtx);
+	PRTModifierAction fPRTModifierAction(*mPRTCtx);
 
 	fPRTModifierAction.setRandomSeed(mInitialSeed);
 	fPRTModifierAction.updateRuleFiles(MObject::kNullObj, mRulePkg);
