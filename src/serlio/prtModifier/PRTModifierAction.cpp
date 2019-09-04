@@ -158,7 +158,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 		return MStatus::kInvalidParameter;
 
 	const wchar_t* ruleFileURI = resolveMap->getString(mRuleFile.c_str());
-	if (ruleFileURI == nullptr)
+	if (!ruleFileURI)
 		return MStatus::kInvalidParameter;
 	
 	const RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI));

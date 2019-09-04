@@ -109,7 +109,7 @@ std::vector<double> MaterialInfo::getDoubleVector(adsk::Data::Handle sHandle, co
 	if (sHandle.setPositionByMemberName(name.c_str()))
 	{
 		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= numElements && data!=nullptr) {
+		if (sHandle.dataLength() >= numElements && data) {
 			r.reserve(numElements);
 			std::copy(data, data + numElements, std::back_inserter(r));
 		}
@@ -122,7 +122,7 @@ double MaterialInfo::getDouble(adsk::Data::Handle sHandle, const std::string& na
 	if (sHandle.setPositionByMemberName(name.c_str()))
 	{
 		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= 1 && data != nullptr) {
+		if (sHandle.dataLength() >= 1 && data) {
 			return data[0];
 		}
 	}
