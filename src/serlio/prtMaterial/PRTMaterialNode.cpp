@@ -271,18 +271,23 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 			const adsk::Data::Associations* materialMetadata = n.metadata(&status);
 			MCHECK(status);
 
-			if (materialMetadata) {
-				adsk::Data::Associations materialAssociations(materialMetadata);
-				adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
-				if (matChannel) {
-					adsk::Data::Stream*	matStream = matChannel->findDataStream(gPRTMatStream);
-					if (matStream && matStream->elementCount() == 1) {
-						adsk::Data::Handle matSHandle = matStream->element(0);
-						if (!matSHandle.usesStructure(*fStructure)) continue;
-						auto p = std::pair<const MObject, const MaterialInfo>(obj, matSHandle);
-						existingMaterialInfos.push_back(p);
-					}
-				}
+			if (!materialMetadata) {
+				continue;
+			}
+
+			adsk::Data::Associations materialAssociations(materialMetadata);
+			adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
+
+			if (!matChannel) {
+				continue;
+			}
+
+			adsk::Data::Stream*	matStream = matChannel->findDataStream(gPRTMatStream);
+			if (matStream && matStream->elementCount() == 1) {
+				adsk::Data::Handle matSHandle = matStream->element(0);
+				if (!matSHandle.usesStructure(*fStructure)) continue;
+				auto p = std::pair<const MObject, const MaterialInfo>(obj, matSHandle);
+				existingMaterialInfos.push_back(p);
 			}
 		}
 
