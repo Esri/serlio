@@ -257,7 +257,7 @@ void MayaCallbacks::addMesh(
 						keyToUse = key + std::to_wstring(i);
 					prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp, &maxStringLengthTmp);
 					fStructure->addMember(type, size, tmp);
-					delete tmp;
+					delete[] tmp;
 				}
 			}
 		}
@@ -374,7 +374,7 @@ void MayaCallbacks::addMesh(
 					}
 
 				}
-				delete tmp;
+				delete[] tmp;
 
 
 
