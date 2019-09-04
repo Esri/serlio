@@ -65,7 +65,7 @@ class PRTModifierAction : public polyModifierFty {
 public:
 	PRTModifierAction(const PRTContext& prtCtx);
 
-	MStatus updateRuleFiles(MObject& node, const MString& rulePkg);
+	MStatus updateRuleFiles(const MObject& node, const MString& rulePkg);
 	MStatus fillAttributesFromNode(const MObject& node);
 	void setMesh(MObject& _inMesh, MObject& _outMesh);
 	void setRandomSeed(int32_t randomSeed) { mRandomSeed = randomSeed; };
@@ -100,7 +100,7 @@ private:
 
 	std::list<PRTModifierEnum> mEnums;
 //	std::map<std::wstring, std::wstring> mBriefName2prtAttr;
-	MStatus createNodeAttributes(MObject& node, const prt::RuleFileInfo* info);
+	MStatus createNodeAttributes(const MObject& node, const prt::RuleFileInfo* info);
 	void removeUnusedAttribs(MFnDependencyNode& node);
 
 	static MStatus  addParameter(MFnDependencyNode & node, MObject & attr, MFnAttribute& tAttr);

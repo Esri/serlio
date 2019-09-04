@@ -109,8 +109,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
 			// Set the mesh object and component List on the factory
 
 			if (rulePkgData.asString() != currentRulePkgData.asString()) {
-				auto mObj = thisMObject(); // needed because C++ standard does not allow reference to rvalue
-				fPRTModifierAction.updateRuleFiles(mObj, rulePkgData.asString());
+				fPRTModifierAction.updateRuleFiles(thisMObject(), rulePkgData.asString());
 			}
 
 			status = fPRTModifierAction.fillAttributesFromNode(thisMObject());

@@ -279,7 +279,7 @@ ResolveMapSPtr PRTModifierAction::getResolveMap() {
 	return resolveMap;
 }
 
-MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg) {
+MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& rulePkg) {
 	mRulePkg = rulePkg;
 
 	mEnums.clear();
@@ -393,7 +393,7 @@ MStatus PRTModifierAction::doIt()
 }
 
 
-MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const prt::RuleFileInfo* info) {
+MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const prt::RuleFileInfo* info) {
 	MStatus stat;
 	MFnDependencyNode node(nodeObj, &stat);
 	MCHECK(stat);
