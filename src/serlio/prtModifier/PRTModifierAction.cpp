@@ -343,7 +343,7 @@ MStatus PRTModifierAction::doIt()
 	iMeshFn.getVertices(pcounts, pconnect);
 
 	std::vector<double> va(vertices.length() * 3);
-	for (int i = static_cast<int>(vertices.length()); --i >= 0;) {
+	for (unsigned int i = 0; i < vertices.length(); ++i) {
 		va[i * 3 + 0] = vertices[i].x;
 		va[i * 3 + 1] = vertices[i].y;
 		va[i * 3 + 2] = vertices[i].z;
