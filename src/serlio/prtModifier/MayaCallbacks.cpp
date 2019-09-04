@@ -204,9 +204,9 @@ void MayaCallbacks::addMesh(
 	outputMesh.copyInPlace(oMesh);
 
 	// create material metadata
-	unsigned int maxStringLength = 400;
-	unsigned int maxFloatArrayLength = 5;
-	unsigned int maxStringArrayLength = 2;
+	const unsigned int maxStringLength = 400;
+	const unsigned int maxFloatArrayLength = 5;
+	const unsigned int maxStringArrayLength = 2;
 
 	adsk::Data::Structure* fStructure;	  // Structure to use for creation
 	fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
@@ -251,13 +251,12 @@ void MayaCallbacks::addMesh(
 			if (size > 0) {
 				for (unsigned int i=0; i<arrayLength; i++) {
 					size_t maxStringLengthTmp = maxStringLength;
-					char* tmp = new char[maxStringLength];
+					std::array<char, maxStringLength> tmp;
 					std::wstring keyToUse = key;
 					if (i>0)
 						keyToUse = key + std::to_wstring(i);
-					prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp, &maxStringLengthTmp);
-					fStructure->addMember(type, size, tmp);
-					delete[] tmp;
+					prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp.data(), &maxStringLengthTmp);
+					fStructure->addMember(type, size, tmp.data());
 				}
 			}
 		}
@@ -288,7 +287,7 @@ void MayaCallbacks::addMesh(
 
 				const prt::AttributeMap* mat = materials[fri];
 
-				char* tmp = new char[maxStringLength];
+				std::array<char, maxStringLength> tmp;
 
 				size_t keyCount = 0;
 				wchar_t const* const* keys = mat->getKeys(&keyCount);
@@ -298,9 +297,9 @@ void MayaCallbacks::addMesh(
 					wchar_t const* key = keys[k];
 
 					size_t maxStringLengthTmp = maxStringLength;
-					prt::StringUtils::toOSNarrowFromUTF16(key, tmp, &maxStringLengthTmp);
+					prt::StringUtils::toOSNarrowFromUTF16(key, tmp.data(), &maxStringLengthTmp);
 
-					if (!handle.setPositionByMemberName(tmp))
+					if (!handle.setPositionByMemberName(tmp.data()))
 						continue;
 
 					maxStringLengthTmp = maxStringLength;
@@ -355,8 +354,8 @@ void MayaCallbacks::addMesh(
 							if (i > 0) {
 								std::wstring keyToUse = key + std::to_wstring(i);
 								maxStringLengthTmp = maxStringLength;
-								prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp, &maxStringLengthTmp);
-								if (!handle.setPositionByMemberName(tmp))
+								prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp.data(), &maxStringLengthTmp);
+								if (!handle.setPositionByMemberName(tmp.data()))
 									continue;
 							}
 
@@ -374,7 +373,6 @@ void MayaCallbacks::addMesh(
 					}
 
 				}
-				delete[] tmp;
 
 
 
