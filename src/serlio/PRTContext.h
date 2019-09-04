@@ -44,7 +44,7 @@ struct SRL_TEST_EXPORTS_API PRTContext final {
 	CacheObjectUPtr         theCache;
 	prt::ConsoleLogHandler* theLogHandler = nullptr;
 	prt::FileLogHandler*    theFileLogHandler = nullptr;
-	ResolveMapCache*        mResolveMapCache = nullptr;
+	ResolveMapCacheUPtr     mResolveMapCache;
 };
 
 using PRTContextUPtr = std::unique_ptr<PRTContext>;

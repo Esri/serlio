@@ -75,18 +75,14 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 	}
 	else {
         theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
-        mResolveMapCache = new ResolveMapCache(prtu::getProcessTempDir(SRL_TMP_PREFIX));
+        mResolveMapCache = std::make_unique<ResolveMapCache>(prtu::getProcessTempDir(SRL_TMP_PREFIX));
     }
 }
 
 PRTContext::~PRTContext() {
-	if (mResolveMapCache) { // TODO: smart ptr
-		delete mResolveMapCache;
-		mResolveMapCache = nullptr;
-	}
-
 	theCache.reset();
 	thePRT.reset();
+	mResolveMapCache.reset();
 
 	if (ENABLE_LOG_CONSOLE && theLogHandler) {
 		prt::removeLogHandler(theLogHandler);
