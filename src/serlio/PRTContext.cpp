@@ -35,7 +35,7 @@ constexpr bool           ENABLE_LOG_FILE    = false;
 bool verifyMayaEncoder() {
     constexpr const wchar_t* ENC_ID_MAYA = L"MayaEncoder";
     const auto mayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
-    return mayaEncOpts.operator bool();
+	return static_cast<bool>(mayaEncOpts);
 }
 
 } // namespace

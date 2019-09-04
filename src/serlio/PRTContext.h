@@ -37,7 +37,7 @@ struct SRL_TEST_EXPORTS_API PRTContext final {
 	~PRTContext();
 
 	ResolveMapSPtr getResolveMap(const std::wstring& rpk);
-	bool isAlive() const { return thePRT.operator bool(); }
+	bool isAlive() const { return static_cast<bool>(thePRT); }
 
 	const std::wstring      mPluginRootPath; // the path where serlio dso resides
 	ObjectUPtr              thePRT;
