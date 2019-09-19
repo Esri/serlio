@@ -318,20 +318,12 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 
 					//material with same metadata already exists?
 					MObject matchingMaterial = MObject::kNullObj;
-					for (auto it = MItDependencyNodes(MFn::kPluginHardwareShader); !it.isDone(); it.next())
-					{
-						MObject obj = it.thisNode();
-						MFnDependencyNode n(obj);
 
-						for (const auto& kv : existingMaterialInfos) {
-							if (matInfo.equals(kv.second)) {
-								matchingMaterial = kv.first;
-								break;
-							}
-						}
-
-						if (matchingMaterial != MObject::kNullObj)
+					for (const auto& kv : existingMaterialInfos) {
+						if (matInfo.equals(kv.second)) {
+							matchingMaterial = kv.first;
 							break;
+						}
 					}
 
 					sHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str());
