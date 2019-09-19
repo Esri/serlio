@@ -22,6 +22,7 @@
 
 #include "util/Utilities.h"
 #include "util/MayaUtilities.h"
+#include "util/MItDependencyNodesWrapper.h"
 
 #include "prt/StringUtils.h"
 
@@ -259,9 +260,10 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 		adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
 		std::set<std::string> shaderNames;
 		std::list<std::pair<const MObject, const MaterialInfo>> existingMaterialInfos;
-		for (auto itHwShaders = MItDependencyNodes(MFn::kPluginHardwareShader); !itHwShaders.isDone(); itHwShaders.next()) {
-			MObject obj = itHwShaders.thisNode();
-			MFnDependencyNode n(obj);
+		MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
+		MCHECK(status);
+		for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders)) {
+			MFnDependencyNode n(hwShaderNode);
 			shaderNames.insert(std::string(n.name().asChar()));
 			const adsk::Data::Associations* materialMetadata = n.metadata(&status);
 			MCHECK(status);
@@ -281,7 +283,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 			if (matStream && matStream->elementCount() == 1) {
 				adsk::Data::Handle matSHandle = matStream->element(0);
 				if (!matSHandle.usesStructure(*fStructure)) continue;
-				auto p = std::pair<const MObject, const MaterialInfo>(obj, matSHandle);
+				auto p = std::pair<const MObject, const MaterialInfo>(hwShaderNode, matSHandle);
 				existingMaterialInfos.push_back(p);
 			}
 		}
@@ -362,11 +364,11 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 
 					//create shadingnode and add metadata
 					MCHECK(MGlobal::executeCommand(shaderCmd, DBG));
-					MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader);
-					while (!itHwShaders.isDone())
+					MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
+					MCHECK(status);
+					for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders))
 					{
-						MObject obj = itHwShaders.thisNode();
-						MFnDependencyNode n(obj);
+						MFnDependencyNode n(hwShaderNode);
 
 						if (n.name() == shaderNameMstr) {
 							adsk::Data::Associations newMetadata;
@@ -381,7 +383,6 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 							n.setMetadata(newMetadata);
 							break;
 						}
-						itHwShaders.next();
 					}
 
 					mShadingCmd += "$shName = \""+ shaderNameMstr + "\";\n";
