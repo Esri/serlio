@@ -35,57 +35,6 @@
 
 #define PRT_MATERIAL_TYPE_ID 0x8667b
 
-const std::string gPRTMatStructure = "prtMaterialStructure";
-const std::string gPRTMatChannel = "prtMaterialChannel";
-const std::string gPRTMatStream = "prtMaterialStream";
-const std::string gPRTMatMemberFaceStart = "faceIndexStart";
-const std::string gPRTMatMemberFaceEnd = "faceIndexEnd";
-
-class MaterialInfo {
-public:
-	explicit MaterialInfo(adsk::Data::Handle sHandle);
-
-	std::string bumpMap;
-	std::string colormap;
-	std::string dirtmap;
-	std::string emissiveMap;
-	std::string metallicMap;
-	std::string normalMap;
-	std::string occlusionMap;
-	std::string opacityMap;
-	std::string roughnessMap;
-	std::string specularMap;
-
-	double opacity;
-	double metallic;
-	double roughness;
-	
-	std::vector<double> ambientColor;
-	std::vector<double> diffuseColor;
-	std::vector<double> emissiveColor;
-	std::vector<double> specularColor;
-
-	std::vector<double> specularmapTrafo;
-	std::vector<double> bumpmapTrafo;
-	std::vector<double> colormapTrafo;
-	std::vector<double> dirtmapTrafo;	
-	std::vector<double> emissivemapTrafo;
-	std::vector<double> metallicmapTrafo;
-	std::vector<double> normalmapTrafo;
-	std::vector<double> occlusionmapTrafo;
-	std::vector<double> opacitymapTrafo;
-	std::vector<double> roughnessmapTrafo;
-
-	bool equals(const MaterialInfo& o) const;
-	static MString toMString(const std::vector<double> &d, size_t size, size_t offset);
-
-private:
-	static std::string getTexture(adsk::Data::Handle sHandle, const std::string& texName);
-	static std::vector<double>  getDoubleVector(adsk::Data::Handle sHandle,const std::string& name, size_t numElements);
-	static double getDouble(adsk::Data::Handle sHandle, const std::string& name);
-};
-
-
 class PRTMaterialNode : public MPxNode {
 public:
 	PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {}

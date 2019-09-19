@@ -15,6 +15,7 @@ add_library(${SERLIO_TARGET} SHARED
 		prtModifier/polyModifier/polyModifierCmd.cpp
 		prtModifier/polyModifier/polyModifierFty.cpp
 		prtModifier/polyModifier/polyModifierNode.cpp
+		prtMaterial/MaterialInfo.cpp
 		prtMaterial/PRTMaterialNode.cpp
 		util/Utilities.cpp
 		util/ResolveMapCache.cpp
@@ -34,6 +35,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 			prtModifier/polyModifier/polyModifierCmd.h
 			prtModifier/polyModifier/polyModifierFty.h
 			prtModifier/polyModifier/polyModifierNode.h
+			prtMaterial/MaterialInfo.h
 			prtMaterial/PRTMaterialNode.h
 			util/Utilities.h
 			util/ResolveMapCache.h

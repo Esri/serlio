@@ -18,6 +18,9 @@
  */
 
 #include "prtMaterial/PRTMaterialNode.h"
+
+#include "prtMaterial/MaterialInfo.h"
+
 #include "prtModifier/PRTModifierAction.h"
 
 #include "util/Utilities.h"
@@ -39,13 +42,6 @@
 #include <set>
 #include <algorithm>
 #include <array>
-
-#ifdef _WIN32
-#	include <Windows.h>
-#else
-#	include <dlfcn.h>
-#endif
-
 
 namespace {
 
@@ -78,114 +74,6 @@ MStatus PRTMaterialNode::initialize()
 	attributeAffects(aInMesh, aOutMesh);
 
 	return MStatus::kSuccess;
-}
-
-MString MaterialInfo::toMString(const std::vector<double>& d, size_t size, size_t offset)
-{
-	MString colString;
-	for (size_t i = offset; i < d.size() && i < offset+size; i++)
-	{
-		colString += d[i];
-		colString += " ";
-	}
-	return colString;
-}
-
-std::string MaterialInfo::getTexture(adsk::Data::Handle sHandle, const std::string& texName)
-{
-	std::string r;
-	if (sHandle.setPositionByMemberName(texName.c_str()))
-		r = (char*)sHandle.asUInt8();
-	return r;
-}
-
-std::vector<double> MaterialInfo::getDoubleVector(adsk::Data::Handle sHandle, const std::string& name, size_t numElements)
-{
-	std::vector<double> r;
-	if (sHandle.setPositionByMemberName(name.c_str()))
-	{
-		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= numElements && (data != nullptr)) {
-			r.reserve(numElements);
-			std::copy(data, data + numElements, std::back_inserter(r));
-		}
-	}
-	return r;
-}
-
-double MaterialInfo::getDouble(adsk::Data::Handle sHandle, const std::string& name)
-{
-	if (sHandle.setPositionByMemberName(name.c_str()))
-	{
-		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= 1 && (data != nullptr)) {
-			return *data;
-		}
-	}
-	return NAN;
-}
-
-MaterialInfo::MaterialInfo(adsk::Data::Handle sHandle) {
-	bumpMap = getTexture(sHandle, "bumpMap");
-	colormap = getTexture(sHandle, "diffuseMap");
-	dirtmap = getTexture(sHandle, "diffuseMap1");
-	emissiveMap = getTexture(sHandle, "emissiveMap");
-	metallicMap = getTexture(sHandle, "metallicMap");
-	normalMap = getTexture(sHandle, "normalMap");
-	occlusionMap = getTexture(sHandle, "occlusionMap");
-	opacityMap = getTexture(sHandle, "opacityMap");
-	roughnessMap = getTexture(sHandle, "roughnessMap");
-	specularMap = getTexture(sHandle, "specularMap");
-
-	opacity = getDouble(sHandle, "opacity");
-	metallic = getDouble(sHandle, "metallic");
-	roughness = getDouble(sHandle, "roughness");
-
-	ambientColor = getDoubleVector(sHandle, "ambientColor", 3);
-	bumpmapTrafo = getDoubleVector(sHandle, "bumpmapTrafo", 5);
-	colormapTrafo = getDoubleVector(sHandle, "colormapTrafo", 5);
-	diffuseColor = getDoubleVector(sHandle, "diffuseColor", 3);
-	dirtmapTrafo = getDoubleVector(sHandle, "dirtmapTrafo", 5);
-	emissiveColor = getDoubleVector(sHandle, "emissiveColor", 3);
-	emissivemapTrafo = getDoubleVector(sHandle, "emissivemapTrafo", 5);
-	metallicmapTrafo = getDoubleVector(sHandle, "metallicmapTrafo", 5);
-	normalmapTrafo = getDoubleVector(sHandle, "normalmapTrafo", 5);
-	occlusionmapTrafo = getDoubleVector(sHandle, "occlusionmapTrafo", 5);
-	opacitymapTrafo = getDoubleVector(sHandle, "opacitymapTrafo", 5);
-	roughnessmapTrafo = getDoubleVector(sHandle, "roughnessmapTrafo", 5);
-	specularColor = getDoubleVector(sHandle, "specularColor", 3);
-	specularmapTrafo = getDoubleVector(sHandle, "specularmapTrafo", 5);
-}
-
-bool MaterialInfo::equals(const MaterialInfo& o) const {
-	return
-		bumpMap == o.bumpMap &&
-		colormap == o.colormap &&
-		dirtmap == o.dirtmap &&
-		emissiveMap == o.emissiveMap &&
-		metallicMap == o.metallicMap &&
-		normalMap == o.normalMap &&
-		occlusionMap == o.occlusionMap &&
-		opacityMap == o.opacityMap &&
-		roughnessMap == o.roughnessMap &&
-		specularMap == o.specularMap &&
-		opacity == o.opacity &&
-		metallic == o.metallic &&
-		roughness == o.roughness &&
-		ambientColor == o.ambientColor &&
-		bumpmapTrafo == o.bumpmapTrafo &&
-		colormapTrafo == o.colormapTrafo &&
-		diffuseColor == o.diffuseColor &&
-		dirtmapTrafo == o.dirtmapTrafo &&
-		emissiveColor == o.emissiveColor &&
-		emissivemapTrafo == o.emissivemapTrafo &&
-		metallicmapTrafo == o.metallicmapTrafo &&
-		normalmapTrafo == o.normalmapTrafo &&
-		occlusionmapTrafo == o.occlusionmapTrafo &&
-		opacitymapTrafo == o.opacitymapTrafo &&
-		roughnessmapTrafo == o.roughnessmapTrafo &&
-		specularColor == o.specularColor &&
-		specularmapTrafo == o.specularmapTrafo;
 }
 
 MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
