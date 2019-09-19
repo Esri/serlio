@@ -59,11 +59,6 @@ MObject PRTMaterialNode::aOutMesh;
 MString PRTMaterialNode::sfxFile;
 const MString OUTPUT_GEOMETRY = MString("og");
 
-const char* PRTMaterialNode::nodeName()
-{
-	return "PRTMaterialNode";
-}
-
 MStatus PRTMaterialNode::initialize()
 {
 	MStatus status;

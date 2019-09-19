@@ -92,7 +92,6 @@ public:
 
 	static  void*       creator();
 	static  MStatus     initialize();
-	static  const char* nodeName();
 
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
 
