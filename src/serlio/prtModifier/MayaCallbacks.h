@@ -87,7 +87,7 @@ public:
 		const prt::AttributeMap** materials,
 		const prt::AttributeMap** reports,
 		const int32_t* shapeIDs
-	);
+	) override;
 
 private:
 	MObject                 outMeshObj;
