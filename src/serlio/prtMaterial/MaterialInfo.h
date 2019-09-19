@@ -48,7 +48,9 @@ public:
 	double opacity;
 	double metallic;
 	double roughness;
+	// TODO: add shininess, reflectivity and bumpValue
 
+	// TODO: make structs for colors and trafos instead of vectors
 	std::vector<double> ambientColor;
 	std::vector<double> diffuseColor;
 	std::vector<double> emissiveColor;
