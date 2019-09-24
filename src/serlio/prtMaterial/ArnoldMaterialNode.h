@@ -21,6 +21,9 @@
 
 #include <maya/MPxNode.h>
 
+class MaterialInfo;
+class MELScriptBuilder;
+
 class ArnoldMaterialNode : public MPxNode {
 
 public:
@@ -31,4 +34,13 @@ public:
 	static MObject aOutMesh;
 
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
+
+private:
+	void buildMaterialShaderScript(MELScriptBuilder& sb,
+								   const MaterialInfo& matInfo,
+								   const std::wstring& shaderName,
+								   const std::wstring& shadingGroupName,
+								   const std::wstring& meshName,
+								   const int faceStart,
+								   const int faceEnd);
 };

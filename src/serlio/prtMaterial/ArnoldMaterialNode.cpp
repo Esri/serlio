@@ -208,8 +208,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	sb.declString(L"$metallicMapBlendNode");
 	sb.declString(L"$uvTrafoNode");
 
-	std::array<wchar_t, 512> buf{};
-
 	for (adsk::Data::Handle& inMatStreamHandle : *inMatStream) {
 		if (!inMatStreamHandle.hasData())
 			continue;
@@ -266,301 +264,311 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		shadingGroupName += std::to_wstring(shIdx);
 		shaderNames.insert(shaderName);
 
-		// TODO: combine texture nodes with same texture
-		// TODO: investigate using place2dtexture nodes to transform textures instead of using the attributes of aiUvTransform
-
-		size_t tmpSize = 0;
-
-		sb.setVar(L"$shaderNode", shaderName);
-		sb.setVar(L"$shadingGroup", shadingGroupName);
-		sb.createShader(L"aiStandardSurface", L"$shaderNode");
-
-		// build shading group
-		sb.setsCreate(L"$shadingGroup");
-		sb.setsAddFaceRange(L"$shadingGroup", meshName.asWChar(), faceStart, faceEnd);
-		sb.connectAttr(L"($shaderNode + \".outColor\")", L"($shadingGroup + \".surfaceShader\")");
-
-		sb.setAttr(L"($shaderNode + \".base\")", 1.0);
-
-		// color/dirt map multiply node
-		sb.setVar(L"$dirtMapBlendNode", shadingGroupName + L"_dirt_multiply");
-		sb.createShader(L"aiMultiply", L"$dirtMapBlendNode");
-		sb.connectAttr(L"($dirtMapBlendNode + \".outColor\")", L"($shaderNode + \".baseColor\")");
-
-		// color/color map multiply node
-		sb.setVar(L"$colorMapBlendNode", shadingGroupName + L"_color_map_blend");
-		sb.createShader(L"aiMultiply", L"$colorMapBlendNode");
-		sb.connectAttr(L"($colorMapBlendNode + \".outColor\")", L"($dirtMapBlendNode + \".input1\")");
-
-		// color
-		sb.setAttr(L"($colorMapBlendNode + \".input1\")", matInfo.diffuseColor[0], matInfo.diffuseColor[1], matInfo.diffuseColor[2]);
-
-		// color map
-		if (matInfo.colormap.empty()) {
-			sb.setAttr(L"($colorMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
-		}
-		else {
-			tmpSize = buf.size();
-			sb.setVar(L"$mapNode", shadingGroupName + L"_color_map");
-			sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.colormap.c_str(), buf.data(), &tmpSize));
-			sb.createTexture(L"$mapNode");
-			sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-			sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_color_map_trafo");
-			sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-			sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"map1\"");
-			sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-			sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.colormapTrafo[0], 1.0 / matInfo.colormapTrafo[1]);
-			sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.colormapTrafo[2] / matInfo.colormapTrafo[0], -matInfo.colormapTrafo[3] / matInfo.colormapTrafo[1]);
-			if (matInfo.colormapTrafo[5] != 0.0) {
-				LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-			}
-			sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-			sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($colorMapBlendNode + \".input2\")");
-		}
-
-		// bump map
-		if (!matInfo.bumpMap.empty()) {
-			tmpSize = buf.size();
-			sb.setVar(L"$mapNode", shadingGroupName + L"_bump_map");
-			sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.bumpMap.c_str(), buf.data(), &tmpSize));
-			sb.createTexture(L"$mapNode");
-			sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-			sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_bump_map_trafo");
-			sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-			sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"bumpMap\"");
-			sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-			sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.bumpmapTrafo[0], 1.0 / matInfo.bumpmapTrafo[1]);
-			sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.bumpmapTrafo[2] / matInfo.bumpmapTrafo[0], -matInfo.bumpmapTrafo[3] / matInfo.bumpmapTrafo[1]);
-			if (matInfo.bumpmapTrafo[5] != 0.0) {
-				LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-			}
-
-			sb.setVar(L"$displacementNode", shadingGroupName + L"_bump_displacement");
-			sb.createShader(L"displacementShader", L"$displacementNode");
-
-			sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-			sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($displacementNode + \".vectorDisplacement\")");
-			sb.connectAttr(L"($displacementNode + \".displacement\")", L"($shadingGroup + \".displacementShader\")");
-		}
-
-		// dirt map
-		if (matInfo.dirtmap.empty()) {
-			sb.setAttr(L"($dirtMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
-		}
-		else {
-			tmpSize = buf.size();
-			sb.setVar(L"$mapNode", shadingGroupName + L"_dirt_map");
-			sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.dirtmap.c_str(), buf.data(), &tmpSize));
-			sb.createTexture(L"$mapNode");
-			sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-			sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_dirt_map_trafo");
-			sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-			sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"dirtMap\"");
-			sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-			sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.dirtmapTrafo[0], 1.0 / matInfo.dirtmapTrafo[1]);
-			sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.dirtmapTrafo[2] / matInfo.dirtmapTrafo[0], -matInfo.dirtmapTrafo[3] / matInfo.dirtmapTrafo[1]);
-			if (matInfo.dirtmapTrafo[5] != 0.0) {
-				LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-			}
-
-			sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-			sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($dirtMapBlendNode + \".input2\")");
-		}
-
-		// shininess
-		sb.setAttr(L"($shaderNode + \".specular\")", 1.0);
-
-		// specular/specular map multiply node
-		sb.setVar(L"$specularMapBlendNode", shadingGroupName + L"_specular_map_blend");
-		sb.createShader(L"aiMultiply", L"$specularMapBlendNode");
-		sb.connectAttr(L"($specularMapBlendNode + \".outColor\")", L"($shaderNode + \".specularColor\")");
-
-		// specular color
-		sb.setAttr(L"($specularMapBlendNode + \".input1\")", matInfo.specularColor[0], matInfo.specularColor[1], matInfo.specularColor[2]);
-
-		// specular map
-		if (matInfo.specularMap.empty()) {
-			sb.setAttr(L"($specularMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
-		}
-		else {
-			tmpSize = buf.size();
-			sb.setVar(L"$mapNode", shadingGroupName + L"_specular_map");
-			sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.specularMap.c_str(), buf.data(), &tmpSize));
-			sb.createTexture(L"$mapNode");
-			sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-			sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_specular_map_trafo");
-			sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-			sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"specularMap\"");
-			sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-			sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.specularmapTrafo[0], 1.0 / matInfo.specularmapTrafo[1]);
-			sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.specularmapTrafo[2] / matInfo.specularmapTrafo[0], -matInfo.specularmapTrafo[3] / matInfo.specularmapTrafo[1]);
-			if (matInfo.specularmapTrafo[5] != 0.0) {
-				LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-			}
-
-			sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-			sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($specularMapBlendNode + \".input2\")");
-		}
-
-		// opacity/opacity map multiply node
-		sb.setVar(L"$opacityMapBlendNode", shadingGroupName + L"_opacity_map_blend");
-		sb.createShader(L"aiMultiply", L"$opacityMapBlendNode");
-		sb.connectAttr(L"($opacityMapBlendNode + \".outColorR\")", L"($shaderNode + \".opacityR\")");
-		sb.connectAttr(L"($opacityMapBlendNode + \".outColorR\")", L"($shaderNode + \".opacityG\")");
-		sb.connectAttr(L"($opacityMapBlendNode + \".outColorR\")", L"($shaderNode + \".opacityB\")");
-
-		// opacity
-		sb.setAttr(L"($opacityMapBlendNode + \".input1R\")", matInfo.opacity);
-
-		// TODO: support opacitymap mode (opaque, blend, mask)
-		// opacity map
-		if (matInfo.opacityMap.empty()) {
-			sb.setAttr(L"($opacityMapBlendNode + \".input2R\")", 1.0);
-		}
-		else {
-			tmpSize = buf.size();
-			sb.setVar(L"$mapNode", shadingGroupName + L"_opacity_map");
-			sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.opacityMap.c_str(), buf.data(), &tmpSize));
-			sb.createTexture(L"$mapNode");
-			sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-			sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_opacity_map_trafo");
-			sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-			sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"opacityMap\"");
-			sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-			sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.opacitymapTrafo[0], 1.0 / matInfo.opacitymapTrafo[1]);
-			sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.opacitymapTrafo[2] / matInfo.opacitymapTrafo[0], -matInfo.opacitymapTrafo[3] / matInfo.opacitymapTrafo[1]);
-			if (matInfo.opacitymapTrafo[5] != 0.0) {
-				LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-			}
-			// TODO: handle RGB textures, where the luminance should be the opacity
-			sb.connectAttr(L"($mapNode + \".outAlpha\")", L"($uvTrafoNode + \".passthroughR\")");
-			sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($opacityMapBlendNode + \".input2R\")");
-		}
-
-		// normal map
-		if (!matInfo.normalMap.empty()) {
-			tmpSize = buf.size();
-			sb.setVar(L"$mapNode", shadingGroupName + L"_normal_map");
-			sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.normalMap.c_str(), buf.data(), &tmpSize));
-			sb.createTexture(L"$mapNode");
-			sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-			sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_normal_map_trafo");
-			sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-			sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"normalMap\"");
-			sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-			sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.normalmapTrafo[0], 1.0 / matInfo.normalmapTrafo[1]);
-			sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.normalmapTrafo[2] / matInfo.normalmapTrafo[0], -matInfo.normalmapTrafo[3] / matInfo.normalmapTrafo[1]);
-			if (matInfo.normalmapTrafo[5] != 0.0) {
-				LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-			}
-
-			sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-			sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($shaderNode + \".normalCamera\")");
-		}
-
-		// emission
-		sb.setAttr(L"($shaderNode + \".emission\")", 1.0);
-
-		// emission/emissive map multiply node
-		sb.setVar(L"$emissiveMapBlendNode", shadingGroupName + L"_emissive_map_blend");
-		sb.createShader(L"aiMultiply", L"$emissiveMapBlendNode");
-		sb.connectAttr(L"($emissiveMapBlendNode + \".outColor\")", L"($shaderNode + \".emissionColor\")");
-
-		// emissive color
-		sb.setAttr(L"($emissiveMapBlendNode + \".input1\")", matInfo.emissiveColor[0], matInfo.emissiveColor[1], matInfo.emissiveColor[2]);
-
-		// emissive map
-		if (matInfo.emissiveMap.empty()) {
-			sb.setAttr(L"($emissiveMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
-		}
-		else {
-			tmpSize = buf.size();
-			sb.setVar(L"$mapNode", shadingGroupName + L"_emissive_map");
-			sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.emissiveMap.c_str(), buf.data(), &tmpSize));
-			sb.createTexture(L"$mapNode");
-			sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-			sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_emissive_map_trafo");
-			sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-			sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"emissiveMap\"");
-			sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-			sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.emissivemapTrafo[0], 1.0 / matInfo.emissivemapTrafo[1]);
-			sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.emissivemapTrafo[2] / matInfo.emissivemapTrafo[0], -matInfo.emissivemapTrafo[3] / matInfo.emissivemapTrafo[1]);
-			if (matInfo.emissivemapTrafo[5] != 0.0) {
-				LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-			}
-
-			sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-			sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($emissiveMapBlendNode + \".input2\")");
-		}
-
-		// TODO: support occlusion map
-
-		// roughness/roughness map multiply node
-		sb.setVar(L"$roughnessMapBlendNode", shadingGroupName + L"_roughness_map_blend");
-		sb.createShader(L"aiMultiply", L"$roughnessMapBlendNode");
-		sb.connectAttr(L"($roughnessMapBlendNode + \".outColorR\")", L"($shaderNode + \".specularRoughness\")");
-
-		// roughness
-		sb.setAttr(L"($roughnessMapBlendNode + \".input1R\")", matInfo.roughness);
-
-		// roughness map
-		if (matInfo.roughnessMap.empty()) {
-			sb.setAttr(L"($roughnessMapBlendNode + \".input2R\")", 1.0);
-		}
-		else {
-			tmpSize = buf.size();
-			sb.setVar(L"$mapNode", shadingGroupName + L"_roughness_map");
-			sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.roughnessMap.c_str(), buf.data(), &tmpSize));
-			sb.createTexture(L"$mapNode");
-			sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-			sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_roughness_map_trafo");
-			sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-			sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"roughnessMap\"");
-			sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-			sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.roughnessmapTrafo[0], 1.0 / matInfo.roughnessmapTrafo[1]);
-			sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.roughnessmapTrafo[2] / matInfo.roughnessmapTrafo[0], -matInfo.roughnessmapTrafo[3] / matInfo.roughnessmapTrafo[1]);
-			if (matInfo.roughnessmapTrafo[5] != 0.0) {
-				LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-			}
-			// TODO: GlTF defines the roughness to be in the green channel of an RGB texture, do we also need to support single channel textures?
-			sb.connectAttr(L"($mapNode + \".outColorG\")", L"($uvTrafoNode + \".passthroughR\")");
-			sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($roughnessMapBlendNode + \".input2R\")");
-		}
-
-		// metallic/metallic map multiply node
-		sb.setVar(L"$metallicMapBlendNode", shadingGroupName + L"_metallic_map_blend");
-		sb.createShader(L"aiMultiply", L"$metallicMapBlendNode");
-		sb.connectAttr(L"($metallicMapBlendNode + \".outColorR\")", L"($shaderNode + \".metalness\")");
-
-		// metallic
-		sb.setAttr(L"($metallicMapBlendNode + \".input1R\")", matInfo.metallic);
-
-		// metallic map
-		if (matInfo.metallicMap.empty()) {
-			sb.setAttr(L"($metallicMapBlendNode + \".input2R\")", 1.0);
-		}
-		else {
-			tmpSize = buf.size();
-			sb.setVar(L"$mapNode", shadingGroupName + L"_metallic_map");
-			sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.metallicMap.c_str(), buf.data(), &tmpSize));
-			sb.createTexture(L"$mapNode");
-			sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-			sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_metallic_map_trafo");
-			sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-			sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"metallicMap\"");
-			sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-			sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.metallicmapTrafo[0], 1.0 / matInfo.metallicmapTrafo[1]);
-			sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.metallicmapTrafo[2] / matInfo.metallicmapTrafo[0], -matInfo.metallicmapTrafo[3] / matInfo.metallicmapTrafo[1]);
-			if (matInfo.metallicmapTrafo[5] != 0.0) {
-				LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-			}
-			// TODO: GlTF defines the metalness to be in the blue channel of an RGB texture, do we also need to support single channel textures?
-			sb.connectAttr(L"($mapNode + \".outColorB\")", L"($uvTrafoNode + \".passthroughR\")");
-			sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($metallicMapBlendNode + \".input2R\")");
-		}
+		buildMaterialShaderScript(sb, matInfo, shaderName, shadingGroupName, meshName.asWChar(), faceStart, faceEnd);
 	}
 
 	sb.execute();
 
 	return MStatus::kSuccess;
+}
+
+void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
+												   const MaterialInfo& matInfo,
+												   const std::wstring& shaderName,
+												   const std::wstring& shadingGroupName,
+												   const std::wstring& meshName,
+												   const int faceStart,
+												   const int faceEnd) {
+	// TODO: combine texture nodes with same texture
+	// TODO: investigate using place2dtexture nodes to transform textures instead of using the attributes of aiUvTransform
+
+	std::array<wchar_t, 512> buf{};
+
+	sb.setVar(L"$shaderNode", shaderName);
+	sb.setVar(L"$shadingGroup", shadingGroupName);
+	sb.createShader(L"aiStandardSurface", L"$shaderNode");
+
+	// build shading group
+	sb.setsCreate(L"$shadingGroup");
+	sb.setsAddFaceRange(L"$shadingGroup", meshName, faceStart, faceEnd);
+	sb.connectAttr(L"($shaderNode + \".outColor\")", L"($shadingGroup + \".surfaceShader\")");
+
+	sb.setAttr(L"($shaderNode + \".base\")", 1.0);
+
+	// color/dirt map multiply node
+	sb.setVar(L"$dirtMapBlendNode", shadingGroupName + L"_dirt_multiply");
+	sb.createShader(L"aiMultiply", L"$dirtMapBlendNode");
+	sb.connectAttr(L"($dirtMapBlendNode + \".outColor\")", L"($shaderNode + \".baseColor\")");
+
+	// color/color map multiply node
+	sb.setVar(L"$colorMapBlendNode", shadingGroupName + L"_color_map_blend");
+	sb.createShader(L"aiMultiply", L"$colorMapBlendNode");
+	sb.connectAttr(L"($colorMapBlendNode + \".outColor\")", L"($dirtMapBlendNode + \".input1\")");
+
+	// color
+	sb.setAttr(L"($colorMapBlendNode + \".input1\")", matInfo.diffuseColor[0], matInfo.diffuseColor[1], matInfo.diffuseColor[2]);
+
+	// color map
+	if (matInfo.colormap.empty()) {
+		sb.setAttr(L"($colorMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
+	}
+	else {
+		size_t tmpSize = buf.size();
+		sb.setVar(L"$mapNode", shadingGroupName + L"_color_map");
+		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.colormap.c_str(), buf.data(), &tmpSize));
+		sb.createTexture(L"$mapNode");
+		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_color_map_trafo");
+		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
+		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"map1\"");
+		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
+		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.colormapTrafo[0], 1.0 / matInfo.colormapTrafo[1]);
+		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.colormapTrafo[2] / matInfo.colormapTrafo[0], -matInfo.colormapTrafo[3] / matInfo.colormapTrafo[1]);
+		if (matInfo.colormapTrafo[5] != 0.0) {
+			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
+		}
+		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
+		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($colorMapBlendNode + \".input2\")");
+	}
+
+	// bump map
+	if (!matInfo.bumpMap.empty()) {
+		size_t tmpSize = buf.size();
+		sb.setVar(L"$mapNode", shadingGroupName + L"_bump_map");
+		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.bumpMap.c_str(), buf.data(), &tmpSize));
+		sb.createTexture(L"$mapNode");
+		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_bump_map_trafo");
+		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
+		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"bumpMap\"");
+		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
+		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.bumpmapTrafo[0], 1.0 / matInfo.bumpmapTrafo[1]);
+		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.bumpmapTrafo[2] / matInfo.bumpmapTrafo[0], -matInfo.bumpmapTrafo[3] / matInfo.bumpmapTrafo[1]);
+		if (matInfo.bumpmapTrafo[5] != 0.0) {
+			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
+		}
+
+		sb.setVar(L"$displacementNode", shadingGroupName + L"_bump_displacement");
+		sb.createShader(L"displacementShader", L"$displacementNode");
+
+		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
+		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($displacementNode + \".vectorDisplacement\")");
+		sb.connectAttr(L"($displacementNode + \".displacement\")", L"($shadingGroup + \".displacementShader\")");
+	}
+
+	// dirt map
+	if (matInfo.dirtmap.empty()) {
+		sb.setAttr(L"($dirtMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
+	}
+	else {
+		size_t tmpSize = buf.size();
+		sb.setVar(L"$mapNode", shadingGroupName + L"_dirt_map");
+		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.dirtmap.c_str(), buf.data(), &tmpSize));
+		sb.createTexture(L"$mapNode");
+		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_dirt_map_trafo");
+		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
+		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"dirtMap\"");
+		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
+		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.dirtmapTrafo[0], 1.0 / matInfo.dirtmapTrafo[1]);
+		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.dirtmapTrafo[2] / matInfo.dirtmapTrafo[0], -matInfo.dirtmapTrafo[3] / matInfo.dirtmapTrafo[1]);
+		if (matInfo.dirtmapTrafo[5] != 0.0) {
+			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
+		}
+
+		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
+		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($dirtMapBlendNode + \".input2\")");
+	}
+
+	// shininess
+	sb.setAttr(L"($shaderNode + \".specular\")", 1.0);
+
+	// specular/specular map multiply node
+	sb.setVar(L"$specularMapBlendNode", shadingGroupName + L"_specular_map_blend");
+	sb.createShader(L"aiMultiply", L"$specularMapBlendNode");
+	sb.connectAttr(L"($specularMapBlendNode + \".outColor\")", L"($shaderNode + \".specularColor\")");
+
+	// specular color
+	sb.setAttr(L"($specularMapBlendNode + \".input1\")", matInfo.specularColor[0], matInfo.specularColor[1], matInfo.specularColor[2]);
+
+	// specular map
+	if (matInfo.specularMap.empty()) {
+		sb.setAttr(L"($specularMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
+	}
+	else {
+		size_t tmpSize = buf.size();
+		sb.setVar(L"$mapNode", shadingGroupName + L"_specular_map");
+		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.specularMap.c_str(), buf.data(), &tmpSize));
+		sb.createTexture(L"$mapNode");
+		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_specular_map_trafo");
+		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
+		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"specularMap\"");
+		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
+		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.specularmapTrafo[0], 1.0 / matInfo.specularmapTrafo[1]);
+		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.specularmapTrafo[2] / matInfo.specularmapTrafo[0], -matInfo.specularmapTrafo[3] / matInfo.specularmapTrafo[1]);
+		if (matInfo.specularmapTrafo[5] != 0.0) {
+			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
+		}
+
+		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
+		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($specularMapBlendNode + \".input2\")");
+	}
+
+	// opacity/opacity map multiply node
+	sb.setVar(L"$opacityMapBlendNode", shadingGroupName + L"_opacity_map_blend");
+	sb.createShader(L"aiMultiply", L"$opacityMapBlendNode");
+	sb.connectAttr(L"($opacityMapBlendNode + \".outColorR\")", L"($shaderNode + \".opacityR\")");
+	sb.connectAttr(L"($opacityMapBlendNode + \".outColorR\")", L"($shaderNode + \".opacityG\")");
+	sb.connectAttr(L"($opacityMapBlendNode + \".outColorR\")", L"($shaderNode + \".opacityB\")");
+
+	// opacity
+	sb.setAttr(L"($opacityMapBlendNode + \".input1R\")", matInfo.opacity);
+
+	// TODO: support opacitymap mode (opaque, blend, mask)
+	// opacity map
+	if (matInfo.opacityMap.empty()) {
+		sb.setAttr(L"($opacityMapBlendNode + \".input2R\")", 1.0);
+	}
+	else {
+		size_t tmpSize = buf.size();
+		sb.setVar(L"$mapNode", shadingGroupName + L"_opacity_map");
+		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.opacityMap.c_str(), buf.data(), &tmpSize));
+		sb.createTexture(L"$mapNode");
+		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_opacity_map_trafo");
+		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
+		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"opacityMap\"");
+		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
+		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.opacitymapTrafo[0], 1.0 / matInfo.opacitymapTrafo[1]);
+		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.opacitymapTrafo[2] / matInfo.opacitymapTrafo[0], -matInfo.opacitymapTrafo[3] / matInfo.opacitymapTrafo[1]);
+		if (matInfo.opacitymapTrafo[5] != 0.0) {
+			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
+		}
+		// TODO: handle RGB textures, where the luminance should be the opacity
+		sb.connectAttr(L"($mapNode + \".outAlpha\")", L"($uvTrafoNode + \".passthroughR\")");
+		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($opacityMapBlendNode + \".input2R\")");
+	}
+
+	// normal map
+	if (!matInfo.normalMap.empty()) {
+		size_t tmpSize = buf.size();
+		sb.setVar(L"$mapNode", shadingGroupName + L"_normal_map");
+		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.normalMap.c_str(), buf.data(), &tmpSize));
+		sb.createTexture(L"$mapNode");
+		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_normal_map_trafo");
+		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
+		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"normalMap\"");
+		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
+		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.normalmapTrafo[0], 1.0 / matInfo.normalmapTrafo[1]);
+		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.normalmapTrafo[2] / matInfo.normalmapTrafo[0], -matInfo.normalmapTrafo[3] / matInfo.normalmapTrafo[1]);
+		if (matInfo.normalmapTrafo[5] != 0.0) {
+			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
+		}
+
+		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
+		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($shaderNode + \".normalCamera\")");
+	}
+
+	// emission
+	sb.setAttr(L"($shaderNode + \".emission\")", 1.0);
+
+	// emission/emissive map multiply node
+	sb.setVar(L"$emissiveMapBlendNode", shadingGroupName + L"_emissive_map_blend");
+	sb.createShader(L"aiMultiply", L"$emissiveMapBlendNode");
+	sb.connectAttr(L"($emissiveMapBlendNode + \".outColor\")", L"($shaderNode + \".emissionColor\")");
+
+	// emissive color
+	sb.setAttr(L"($emissiveMapBlendNode + \".input1\")", matInfo.emissiveColor[0], matInfo.emissiveColor[1], matInfo.emissiveColor[2]);
+
+	// emissive map
+	if (matInfo.emissiveMap.empty()) {
+		sb.setAttr(L"($emissiveMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
+	}
+	else {
+		size_t tmpSize = buf.size();
+		sb.setVar(L"$mapNode", shadingGroupName + L"_emissive_map");
+		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.emissiveMap.c_str(), buf.data(), &tmpSize));
+		sb.createTexture(L"$mapNode");
+		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_emissive_map_trafo");
+		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
+		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"emissiveMap\"");
+		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
+		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.emissivemapTrafo[0], 1.0 / matInfo.emissivemapTrafo[1]);
+		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.emissivemapTrafo[2] / matInfo.emissivemapTrafo[0], -matInfo.emissivemapTrafo[3] / matInfo.emissivemapTrafo[1]);
+		if (matInfo.emissivemapTrafo[5] != 0.0) {
+			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
+		}
+
+		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
+		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($emissiveMapBlendNode + \".input2\")");
+	}
+
+	// TODO: support occlusion map
+
+	// roughness/roughness map multiply node
+	sb.setVar(L"$roughnessMapBlendNode", shadingGroupName + L"_roughness_map_blend");
+	sb.createShader(L"aiMultiply", L"$roughnessMapBlendNode");
+	sb.connectAttr(L"($roughnessMapBlendNode + \".outColorR\")", L"($shaderNode + \".specularRoughness\")");
+
+	// roughness
+	sb.setAttr(L"($roughnessMapBlendNode + \".input1R\")", matInfo.roughness);
+
+	// roughness map
+	if (matInfo.roughnessMap.empty()) {
+		sb.setAttr(L"($roughnessMapBlendNode + \".input2R\")", 1.0);
+	}
+	else {
+		size_t tmpSize = buf.size();
+		sb.setVar(L"$mapNode", shadingGroupName + L"_roughness_map");
+		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.roughnessMap.c_str(), buf.data(), &tmpSize));
+		sb.createTexture(L"$mapNode");
+		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_roughness_map_trafo");
+		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
+		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"roughnessMap\"");
+		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
+		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.roughnessmapTrafo[0], 1.0 / matInfo.roughnessmapTrafo[1]);
+		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.roughnessmapTrafo[2] / matInfo.roughnessmapTrafo[0], -matInfo.roughnessmapTrafo[3] / matInfo.roughnessmapTrafo[1]);
+		if (matInfo.roughnessmapTrafo[5] != 0.0) {
+			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
+		}
+		// TODO: GlTF defines the roughness to be in the green channel of an RGB texture, do we also need to support single channel textures?
+		sb.connectAttr(L"($mapNode + \".outColorG\")", L"($uvTrafoNode + \".passthroughR\")");
+		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($roughnessMapBlendNode + \".input2R\")");
+	}
+
+	// metallic/metallic map multiply node
+	sb.setVar(L"$metallicMapBlendNode", shadingGroupName + L"_metallic_map_blend");
+	sb.createShader(L"aiMultiply", L"$metallicMapBlendNode");
+	sb.connectAttr(L"($metallicMapBlendNode + \".outColorR\")", L"($shaderNode + \".metalness\")");
+
+	// metallic
+	sb.setAttr(L"($metallicMapBlendNode + \".input1R\")", matInfo.metallic);
+
+	// metallic map
+	if (matInfo.metallicMap.empty()) {
+		sb.setAttr(L"($metallicMapBlendNode + \".input2R\")", 1.0);
+	}
+	else {
+		size_t tmpSize = buf.size();
+		sb.setVar(L"$mapNode", shadingGroupName + L"_metallic_map");
+		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.metallicMap.c_str(), buf.data(), &tmpSize));
+		sb.createTexture(L"$mapNode");
+		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_metallic_map_trafo");
+		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
+		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"metallicMap\"");
+		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
+		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.metallicmapTrafo[0], 1.0 / matInfo.metallicmapTrafo[1]);
+		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.metallicmapTrafo[2] / matInfo.metallicmapTrafo[0], -matInfo.metallicmapTrafo[3] / matInfo.metallicmapTrafo[1]);
+		if (matInfo.metallicmapTrafo[5] != 0.0) {
+			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
+		}
+		// TODO: GlTF defines the metalness to be in the blue channel of an RGB texture, do we also need to support single channel textures?
+		sb.connectAttr(L"($mapNode + \".outColorB\")", L"($uvTrafoNode + \".passthroughR\")");
+		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($metallicMapBlendNode + \".input2R\")");
+	}
 }
