@@ -90,7 +90,6 @@ class PRTMaterialNode : public MPxNode {
 public:
 	PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {}
 
-	static  void*       creator();
 	static  MStatus     initialize();
 
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
