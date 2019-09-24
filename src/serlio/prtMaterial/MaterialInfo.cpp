@@ -21,31 +21,62 @@
 
 #include <cmath>
 
-MString MaterialInfo::toMString(const std::vector<double>& d, size_t size, size_t offset) {
-	MString colString;
-	for (size_t i = offset; i < d.size() && i < offset + size; i++) {
-		colString += d[i];
-		colString += " ";
-	}
-	return colString;
+double MaterialColor::r() const noexcept {
+	return (*this)[0];
+}
+
+double MaterialColor::g() const noexcept {
+	return (*this)[1];
+}
+
+double MaterialColor::b() const noexcept {
+	return (*this)[2];
+}
+
+double MaterialTrafo::su() const noexcept {
+	return (*this)[0];
+}
+
+double MaterialTrafo::sv() const noexcept {
+	return (*this)[1];
+}
+
+double MaterialTrafo::tu() const noexcept {
+	return (*this)[2];
+}
+
+double MaterialTrafo::tv() const noexcept {
+	return (*this)[3];
+}
+
+double MaterialTrafo::rw() const noexcept {
+	return (*this)[4];
+}
+
+std::array<double, 2> MaterialTrafo::tuv() const noexcept {
+	return {tu(), tv()};
+}
+
+std::array<double, 3> MaterialTrafo::suvw() const noexcept {
+	return {su(), sv(), rw()};
+}
+
+MaterialColor MaterialInfo::getColor(adsk::Data::Handle sHandle, const std::string& name) {
+	MaterialColor color;
+	getDoubleArray(color, sHandle, name);
+	return color;
+}
+
+MaterialTrafo MaterialInfo::getTrafo(adsk::Data::Handle sHandle, const std::string& name) {
+	MaterialTrafo trafo;
+	getDoubleArray(trafo, sHandle, name);
+	return trafo;
 }
 
 std::string MaterialInfo::getTexture(adsk::Data::Handle sHandle, const std::string& texName) {
 	std::string r;
 	if (sHandle.setPositionByMemberName(texName.c_str()))
 		r = (char*)sHandle.asUInt8();
-	return r;
-}
-
-std::vector<double> MaterialInfo::getDoubleVector(adsk::Data::Handle sHandle, const std::string& name, size_t numElements) {
-	std::vector<double> r;
-	if (sHandle.setPositionByMemberName(name.c_str())) {
-		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= numElements && data != nullptr) {
-			r.reserve(numElements);
-			std::copy(data, data + numElements, std::back_inserter(r));
-		}
-	}
 	return r;
 }
 
@@ -75,20 +106,20 @@ MaterialInfo::MaterialInfo(adsk::Data::Handle sHandle) {
 	metallic = getDouble(sHandle, "metallic");
 	roughness = getDouble(sHandle, "roughness");
 
-	ambientColor = getDoubleVector(sHandle, "ambientColor", 3);
-	bumpmapTrafo = getDoubleVector(sHandle, "bumpmapTrafo", 5);
-	colormapTrafo = getDoubleVector(sHandle, "colormapTrafo", 5);
-	diffuseColor = getDoubleVector(sHandle, "diffuseColor", 3);
-	dirtmapTrafo = getDoubleVector(sHandle, "dirtmapTrafo", 5);
-	emissiveColor = getDoubleVector(sHandle, "emissiveColor", 3);
-	emissivemapTrafo = getDoubleVector(sHandle, "emissivemapTrafo", 5);
-	metallicmapTrafo = getDoubleVector(sHandle, "metallicmapTrafo", 5);
-	normalmapTrafo = getDoubleVector(sHandle, "normalmapTrafo", 5);
-	occlusionmapTrafo = getDoubleVector(sHandle, "occlusionmapTrafo", 5);
-	opacitymapTrafo = getDoubleVector(sHandle, "opacitymapTrafo", 5);
-	roughnessmapTrafo = getDoubleVector(sHandle, "roughnessmapTrafo", 5);
-	specularColor = getDoubleVector(sHandle, "specularColor", 3);
-	specularmapTrafo = getDoubleVector(sHandle, "specularmapTrafo", 5);
+	ambientColor = getColor(sHandle, "ambientColor");
+	bumpmapTrafo = getTrafo(sHandle, "bumpmapTrafo");
+	colormapTrafo = getTrafo(sHandle, "colormapTrafo");
+	diffuseColor = getColor(sHandle, "diffuseColor");
+	dirtmapTrafo = getTrafo(sHandle, "dirtmapTrafo");
+	emissiveColor = getColor(sHandle, "emissiveColor");
+	emissivemapTrafo = getTrafo(sHandle, "emissivemapTrafo");
+	metallicmapTrafo = getTrafo(sHandle, "metallicmapTrafo");
+	normalmapTrafo = getTrafo(sHandle, "normalmapTrafo");
+	occlusionmapTrafo = getTrafo(sHandle, "occlusionmapTrafo");
+	opacitymapTrafo = getTrafo(sHandle, "opacitymapTrafo");
+	roughnessmapTrafo = getTrafo(sHandle, "roughnessmapTrafo");
+	specularColor = getColor(sHandle, "specularColor");
+	specularmapTrafo = getTrafo(sHandle, "specularmapTrafo");
 }
 
 bool MaterialInfo::equals(const MaterialInfo& o) const {

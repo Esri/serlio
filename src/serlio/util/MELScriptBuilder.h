@@ -24,6 +24,8 @@
 #include <sstream>
 #include <string>
 
+class MaterialColor;
+
 class MELScriptBuilder {
 
 public:
@@ -34,6 +36,8 @@ public:
 	void setAttr(const std::wstring& attribute, double val1, double val2, double val3);
 
 	void setAttr(const std::wstring& attribute, const std::wstring& val);
+
+	void setAttr(const std::wstring& attribute, const MaterialColor& color);
 
 	void connectAttr(const std::wstring& source, const std::wstring& dest);
 

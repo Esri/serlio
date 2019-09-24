@@ -22,13 +22,40 @@
 #include <maya/MString.h>
 #include <maya/adskDataHandle.h>
 
-#include <vector>
+#include <array>
 
 const std::string gPRTMatStructure = "prtMaterialStructure";
 const std::string gPRTMatChannel = "prtMaterialChannel";
 const std::string gPRTMatStream = "prtMaterialStream";
 const std::string gPRTMatMemberFaceStart = "faceIndexStart";
 const std::string gPRTMatMemberFaceEnd = "faceIndexEnd";
+
+class MaterialColor : private std::array<double, 3> {
+
+public:
+	double r() const noexcept;
+	double g() const noexcept;
+	double b() const noexcept;
+
+private:
+	friend class MaterialInfo;
+};
+
+class MaterialTrafo : private std::array<double, 5> {
+
+public:
+	double su() const noexcept;
+	double sv() const noexcept;
+	double tu() const noexcept;
+	double tv() const noexcept;
+	double rw() const noexcept;
+
+	std::array<double, 2> tuv() const noexcept;
+	std::array<double, 3> suvw() const noexcept;
+
+private:
+	friend class MaterialInfo;
+};
 
 class MaterialInfo {
 public:
@@ -50,28 +77,38 @@ public:
 	double roughness;
 	// TODO: add shininess, reflectivity and bumpValue
 
-	// TODO: make structs for colors and trafos instead of vectors
-	std::vector<double> ambientColor;
-	std::vector<double> diffuseColor;
-	std::vector<double> emissiveColor;
-	std::vector<double> specularColor;
+	MaterialColor ambientColor;
+	MaterialColor diffuseColor;
+	MaterialColor emissiveColor;
+	MaterialColor specularColor;
 
-	std::vector<double> specularmapTrafo;
-	std::vector<double> bumpmapTrafo;
-	std::vector<double> colormapTrafo;
-	std::vector<double> dirtmapTrafo;
-	std::vector<double> emissivemapTrafo;
-	std::vector<double> metallicmapTrafo;
-	std::vector<double> normalmapTrafo;
-	std::vector<double> occlusionmapTrafo;
-	std::vector<double> opacitymapTrafo;
-	std::vector<double> roughnessmapTrafo;
+	MaterialTrafo specularmapTrafo;
+	MaterialTrafo bumpmapTrafo;
+	MaterialTrafo colormapTrafo;
+	MaterialTrafo dirtmapTrafo;
+	MaterialTrafo emissivemapTrafo;
+	MaterialTrafo metallicmapTrafo;
+	MaterialTrafo normalmapTrafo;
+	MaterialTrafo occlusionmapTrafo;
+	MaterialTrafo opacitymapTrafo;
+	MaterialTrafo roughnessmapTrafo;
 
 	bool equals(const MaterialInfo& o) const;
-	static MString toMString(const std::vector<double>& d, size_t size, size_t offset);
 
 private:
 	static std::string getTexture(adsk::Data::Handle sHandle, const std::string& texName);
-	static std::vector<double> getDoubleVector(adsk::Data::Handle sHandle, const std::string& name, size_t numElements);
 	static double getDouble(adsk::Data::Handle sHandle, const std::string& name);
+	static MaterialColor getColor(adsk::Data::Handle sHandle, const std::string& name);
+	static MaterialTrafo getTrafo(adsk::Data::Handle sHandle, const std::string& name);
+
+	template <size_t N>
+	static void getDoubleArray(std::array<double, N>& array, adsk::Data::Handle sHandle, const std::string& name) {
+		array.fill(0.0);
+		if (sHandle.setPositionByMemberName(name.c_str())) {
+			double* data = sHandle.asDouble();
+			if (sHandle.dataLength() >= N && data) {
+				std::copy(data, data + N, array.begin());
+			}
+		}
+	}
 };

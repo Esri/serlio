@@ -35,6 +35,8 @@
 
 #define PRT_MATERIAL_TYPE_ID 0x8667b
 
+class MaterialColor;
+
 class PRTMaterialNode : public MPxNode {
 public:
 	PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {}
@@ -48,10 +50,14 @@ public:
 	static  MObject aOutMesh;
 
 private:
-	static void setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, const std::string& target);
-	static void setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, size_t offset, const std::string& target);
 	static void setTexture(MString& mShadingCmd, const std::string& tex, const std::string& target);
-	static void setAttribute(MString& mShadingCmd, double vec, const std::string& target);
+	static void setAttribute(MString& mShadingCmd, const std::string& target, const double val);
+	static void setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2);
+	static void setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2, double const val3);
+	static void setAttribute(MString& mShadingCmd, const std::string& target, const MaterialColor& color);
+	static void setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 2>& val);
+	static void setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 3>& val);
+
 	static MString sfxFile;
 
 private:
