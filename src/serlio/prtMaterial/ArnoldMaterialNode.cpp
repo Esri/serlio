@@ -147,6 +147,10 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	//find all existing prt materials
 	const adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
+	if (!fStructure) {
+		return MStatus::kFailure;
+	}
+
 	std::set<std::wstring> shaderNames;
 	std::list<std::pair<const MObject, const MaterialInfo>> existingMaterialInfos;
 	MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
@@ -157,8 +161,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		MString shaderNodeName = fnDependencyNode.name(&status);
 		MCHECK(status);
 		shaderNames.insert(shaderNodeName.asWChar());
-
-		// TODO: we can probably already go to the next shader here, if fStructure is NULL
 
 		const adsk::Data::Associations* materialMetadata = fnDependencyNode.metadata(&status);
 		MCHECK(status);
@@ -185,8 +187,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 		existingMaterialInfos.emplace_back(hwShaderNode, matSHandle);
 	}
-
-	// TODO: handle fStructure == nullptr case
 
 	MELScriptBuilder sb;
 
