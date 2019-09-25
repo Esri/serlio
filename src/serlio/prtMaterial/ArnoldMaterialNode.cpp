@@ -25,6 +25,7 @@
 
 #include "util/MELScriptBuilder.h"
 #include "util/MItDependencyNodesWrapper.h"
+#include "util/MPlugArrayWrapper.h"
 #include "util/MayaUtilities.h"
 
 #include <maya/MFnGenericAttribute.h>
@@ -109,7 +110,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		if (!connectedPlugs.length()) {
 			return MStatus::kFailure;
 		}
-		for (const auto& connectedPlug : connectedPlugs) {
+		for (const auto& connectedPlug : makePlugArrayConstWrapper(connectedPlugs)) {
 			MFnDependencyNode connectedDepNode(connectedPlug.node(), &status);
 			MCHECK(status);
 			MObject connectedDepNodeObj = connectedDepNode.object(&status);

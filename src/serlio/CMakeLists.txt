@@ -44,7 +44,8 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 			util/ResolveMapCache.h
 			util/MayaUtilities.h
 			util/MELScriptBuilder.h
-			util/MItDependencyNodesWrapper.h)
+			util/MItDependencyNodesWrapper.h
+			util/MPlugArrayWrapper.h)
 endif()
 
 set_target_properties(${SERLIO_TARGET} PROPERTIES
