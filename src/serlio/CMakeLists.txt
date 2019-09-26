@@ -43,6 +43,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 			util/Utilities.h
 			util/ResolveMapCache.h
 			util/MayaUtilities.h
+			util/MArrayIteratorTraits.h
 			util/MELScriptBuilder.h
 			util/MItDependencyNodesWrapper.h
 			util/MPlugArrayWrapper.h)
