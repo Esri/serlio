@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#include "prtModifier/PRTMesh.h"
 #include "prtModifier/PRTModifierAction.h"
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/MayaCallbacks.h"
@@ -333,39 +334,19 @@ MStatus PRTModifierAction::doIt()
 {
 	MStatus status;
 
-	// Get access to the mesh's function set
-	const MFnMesh iMeshFn(inMesh);
-
-	MFloatPointArray vertices;
-	MIntArray        pcounts;
-	MIntArray        pconnect;
-
-	iMeshFn.getPoints(vertices);
-	iMeshFn.getVertices(pcounts, pconnect);
-
-	std::vector<double> va(vertices.length() * 3);
-	for (unsigned int i = 0; i < vertices.length(); ++i) {
-		va[i * 3 + 0] = vertices[i].x;
-		va[i * 3 + 1] = vertices[i].y;
-		va[i * 3 + 2] = vertices[i].z;
-	}
-
-	std::vector<uint32_t> ia(pconnect.length());
-	pconnect.get(reinterpret_cast<int*>(ia.data()));
-	std::vector<uint32_t> ca(pcounts.length());
-	pcounts.get(reinterpret_cast<int*>(ca.data()));
-
 	AttributeMapBuilderUPtr amb(prt::AttributeMapBuilder::create());
 	std::unique_ptr<MayaCallbacks> outputHandler(new MayaCallbacks(inMesh, outMesh, amb));
 
+	PRTMesh prtMesh(inMesh);
+
 	InitialShapeBuilderUPtr isb(prt::InitialShapeBuilder::create());
-	prt::Status setGeoStatus = isb->setGeometry(
-		va.data(),
-		va.size(),
-		ia.data(),
-		ia.size(),
-		ca.data(),
-		ca.size()
+	const prt::Status setGeoStatus = isb->setGeometry(
+		prtMesh.vertexCoords(),
+		prtMesh.vcCount(),
+		prtMesh.indices(),
+		prtMesh.indicesCount(),
+		prtMesh.faceCounts(),
+		prtMesh.faceCountsCount()
 	);
 	if (setGeoStatus != prt::STATUS_OK)
 		LOG_ERR << "InitialShapeBuilder setGeometry failed status = " << prt::getStatusDescription(setGeoStatus);
