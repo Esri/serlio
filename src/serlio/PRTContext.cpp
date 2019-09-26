@@ -80,6 +80,11 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 }
 
 PRTContext::~PRTContext() {
+
+	// the cache needs to be destructed before PRT, so reset them explicitely in the right order here
+	theCache.reset();
+	thePRT.reset();
+
 	if (ENABLE_LOG_CONSOLE && theLogHandler) {
 		prt::removeLogHandler(theLogHandler);
 		theLogHandler->destroy();
