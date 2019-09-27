@@ -250,13 +250,11 @@ void MayaCallbacks::addMesh(
 
 			if (size > 0) {
 				for (unsigned int i=0; i<arrayLength; i++) {
-					size_t maxStringLengthTmp = maxStringLength;
-					std::array<char, maxStringLength> tmp;
 					std::wstring keyToUse = key;
 					if (i>0)
 						keyToUse = key + std::to_wstring(i);
-					prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp.data(), &maxStringLengthTmp);
-					fStructure->addMember(type, size, tmp.data());
+					const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
+					fStructure->addMember(type, size, keyToUseNarrow.c_str());
 				}
 			}
 		}
@@ -287,8 +285,6 @@ void MayaCallbacks::addMesh(
 
 				const prt::AttributeMap* mat = materials[fri];
 
-				std::array<char, maxStringLength> tmp;
-
 				size_t keyCount = 0;
 				wchar_t const* const* keys = mat->getKeys(&keyCount);
 
@@ -296,13 +292,11 @@ void MayaCallbacks::addMesh(
 
 					wchar_t const* key = keys[k];
 
-					size_t maxStringLengthTmp = maxStringLength;
-					prt::StringUtils::toOSNarrowFromUTF16(key, tmp.data(), &maxStringLengthTmp);
+					const std::string keyNarrow = prtu::toOSNarrowFromUTF16(key);
 
-					if (!handle.setPositionByMemberName(tmp.data()))
+					if (!handle.setPositionByMemberName(keyNarrow.c_str()))
 						continue;
 
-					maxStringLengthTmp = maxStringLength;
 					size_t arraySize = 0;
 
 					switch (mat->getType(key)) {
@@ -316,6 +310,7 @@ void MayaCallbacks::addMesh(
 						if (wcslen(str) == 0)
 							break;
 						checkStringLength(str, maxStringLength);
+						size_t maxStringLengthTmp = maxStringLength;
 						prt::StringUtils::toOSNarrowFromUTF16(str, (char*)handle.asUInt8(), &maxStringLengthTmp);
 						break;
 					}
@@ -353,14 +348,13 @@ void MayaCallbacks::addMesh(
 
 							if (i > 0) {
 								std::wstring keyToUse = key + std::to_wstring(i);
-								maxStringLengthTmp = maxStringLength;
-								prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp.data(), &maxStringLengthTmp);
-								if (!handle.setPositionByMemberName(tmp.data()))
+								const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
+								if (!handle.setPositionByMemberName(keyToUseNarrow.c_str()))
 									continue;
 							}
 
-							maxStringLengthTmp = maxStringLength;
 							checkStringLength(stringArray[i], maxStringLength);
+							size_t maxStringLengthTmp = maxStringLength;
 							prt::StringUtils::toOSNarrowFromUTF16(stringArray[i], (char*)handle.asUInt8(), &maxStringLengthTmp);
 						}
 						break;
