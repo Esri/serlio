@@ -204,9 +204,9 @@ void MayaCallbacks::addMesh(
 	outputMesh.copyInPlace(oMesh);
 
 	// create material metadata
-	const unsigned int maxStringLength = 400;
-	const unsigned int maxFloatArrayLength = 5;
-	const unsigned int maxStringArrayLength = 2;
+	constexpr unsigned int maxStringLength = 400;
+	constexpr unsigned int maxFloatArrayLength = 5;
+	constexpr unsigned int maxStringArrayLength = 2;
 
 	adsk::Data::Structure* fStructure;	  // Structure to use for creation
 	fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
