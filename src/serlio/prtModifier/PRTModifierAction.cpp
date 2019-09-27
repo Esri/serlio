@@ -139,9 +139,10 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 		rawAttrs.push_back(attrObj);
 	}
 
-	std::remove_if(rawAttrs.begin(), rawAttrs.end(), [&ignoreList] (const auto& attr) {
+	const auto isIgnored = [&ignoreList](const auto& attr) {
 		return std::find(ignoreList.begin(), ignoreList.end(), attr) != ignoreList.end();
-	});
+	};
+	rawAttrs.erase(std::remove_if(rawAttrs.begin(), rawAttrs.end(), isIgnored), rawAttrs.end());
 
 	return rawAttrs;
 }
