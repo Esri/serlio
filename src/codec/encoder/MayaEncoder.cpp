@@ -329,7 +329,7 @@ struct AttributeMapNOPtrVectorOwner {
 	AttributeMapNOPtrVector v;
 	~AttributeMapNOPtrVectorOwner() {
 		for (const auto& m: v) {
-			if (m) m->destroy();
+			if (m != nullptr) m->destroy();
 		}
 	}
 };

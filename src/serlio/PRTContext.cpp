@@ -85,13 +85,13 @@ PRTContext::~PRTContext() {
 	theCache.reset();
 	thePRT.reset();
 
-	if (ENABLE_LOG_CONSOLE && theLogHandler) {
+	if (ENABLE_LOG_CONSOLE && (theLogHandler != nullptr)) {
 		prt::removeLogHandler(theLogHandler);
 		theLogHandler->destroy();
 		theLogHandler = nullptr;
 	}
 
-	if (ENABLE_LOG_FILE && theFileLogHandler) {
+	if (ENABLE_LOG_FILE && (theFileLogHandler != nullptr)) {
 		prt::removeLogHandler(theFileLogHandler);
 		theFileLogHandler->destroy();
 		theFileLogHandler = nullptr;

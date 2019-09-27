@@ -46,7 +46,7 @@
 
 struct PRTDestroyer {
 	void operator()(prt::Object const* p) {
-		if (p) p->destroy();
+		if (p != nullptr) p->destroy();
 	}
 };
 

@@ -105,7 +105,7 @@ std::vector<double> MaterialInfo::getDoubleVector(adsk::Data::Handle sHandle, co
 	if (sHandle.setPositionByMemberName(name.c_str()))
 	{
 		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= numElements && data) {
+		if (sHandle.dataLength() >= numElements && (data != nullptr)) {
 			r.reserve(numElements);
 			std::copy(data, data + numElements, std::back_inserter(r));
 		}
@@ -118,7 +118,7 @@ double MaterialInfo::getDouble(adsk::Data::Handle sHandle, const std::string& na
 	if (sHandle.setPositionByMemberName(name.c_str()))
 	{
 		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= 1 && data) {
+		if (sHandle.dataLength() >= 1 && (data != nullptr)) {
 			return *data;
 		}
 	}
@@ -251,7 +251,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 		}
 	}
 
-	if (inputAssociations && meshFound)
+	if ((inputAssociations != nullptr) && meshFound)
 	{
 		adsk::Data::Associations outputAssociations(inputMesh.metadata(&status));
 		MCHECK(status);
@@ -268,19 +268,19 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 			const adsk::Data::Associations* materialMetadata = n.metadata(&status);
 			MCHECK(status);
 
-			if (!materialMetadata) {
+			if (materialMetadata == nullptr) {
 				continue;
 			}
 
 			adsk::Data::Associations materialAssociations(materialMetadata);
 			adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
 
-			if (!matChannel) {
+			if (matChannel == nullptr) {
 				continue;
 			}
 
 			adsk::Data::Stream*	matStream = matChannel->findDataStream(gPRTMatStream);
-			if (matStream && matStream->elementCount() == 1) {
+			if ((matStream != nullptr) && matStream->elementCount() == 1) {
 				adsk::Data::Handle matSHandle = matStream->element(0);
 				if (!matSHandle.usesStructure(*fStructure)) continue;
 				auto p = std::pair<const MObject, const MaterialInfo>(hwShaderNode, matSHandle);
@@ -297,9 +297,9 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 		}
 
 		adsk::Data::Channel* channel = outputAssociations.findChannel(gPRTMatChannel);
-		if (channel) {
+		if (channel != nullptr) {
 			adsk::Data::Stream*	stream = channel->findDataStream(gPRTMatStream);
-			if (stream) {
+			if (stream != nullptr) {
 
 
 				MString mShadingCmd;
