@@ -514,7 +514,7 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
 		setUvTransformAttrs(sb, L"roughnessMap", matInfo.roughnessmapTrafo);
 
-		// TODO: GlTF defines the roughness to be in the green channel of an RGB texture, do we also need to support single channel textures?
+		// in PRT the roughness map only uses the green channel
 		sb.connectAttr(L"($mapNode + \".outColorG\")", L"($uvTrafoNode + \".passthroughR\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($roughnessMapBlendNode + \".input2R\")");
 	}
@@ -544,7 +544,7 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
 		setUvTransformAttrs(sb, L"metallicMap", matInfo.metallicmapTrafo);
 
-		// TODO: GlTF defines the metalness to be in the blue channel of an RGB texture, do we also need to support single channel textures?
+		// in PRT the metallic map only uses the blue channel
 		sb.connectAttr(L"($mapNode + \".outColorB\")", L"($uvTrafoNode + \".passthroughR\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($metallicMapBlendNode + \".input2R\")");
 	}
