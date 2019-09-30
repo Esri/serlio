@@ -61,26 +61,26 @@ std::array<double, 3> MaterialTrafo::suvw() const noexcept {
 	return {su(), sv(), rw()};
 }
 
-MaterialColor MaterialInfo::getColor(adsk::Data::Handle sHandle, const std::string& name) {
+MaterialColor MaterialInfo::getColor(adsk::Data::Handle& sHandle, const std::string& name) {
 	MaterialColor color;
 	getDoubleArray(color, sHandle, name);
 	return color;
 }
 
-MaterialTrafo MaterialInfo::getTrafo(adsk::Data::Handle sHandle, const std::string& name) {
+MaterialTrafo MaterialInfo::getTrafo(adsk::Data::Handle& sHandle, const std::string& name) {
 	MaterialTrafo trafo;
 	getDoubleArray(trafo, sHandle, name);
 	return trafo;
 }
 
-std::string MaterialInfo::getTexture(adsk::Data::Handle sHandle, const std::string& texName) {
+std::string MaterialInfo::getTexture(adsk::Data::Handle& sHandle, const std::string& texName) {
 	std::string r;
 	if (sHandle.setPositionByMemberName(texName.c_str()))
 		r = (char*)sHandle.asUInt8();
 	return r;
 }
 
-double MaterialInfo::getDouble(adsk::Data::Handle sHandle, const std::string& name) {
+double MaterialInfo::getDouble(adsk::Data::Handle& sHandle, const std::string& name) {
 	if (sHandle.setPositionByMemberName(name.c_str())) {
 		double* data = sHandle.asDouble();
 		if (sHandle.dataLength() >= 1 && data != nullptr) {

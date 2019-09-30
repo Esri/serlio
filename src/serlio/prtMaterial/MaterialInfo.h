@@ -96,13 +96,13 @@ public:
 	bool equals(const MaterialInfo& o) const;
 
 private:
-	static std::string getTexture(adsk::Data::Handle sHandle, const std::string& texName);
-	static double getDouble(adsk::Data::Handle sHandle, const std::string& name);
-	static MaterialColor getColor(adsk::Data::Handle sHandle, const std::string& name);
-	static MaterialTrafo getTrafo(adsk::Data::Handle sHandle, const std::string& name);
+	static std::string getTexture(adsk::Data::Handle& sHandle, const std::string& texName);
+	static double getDouble(adsk::Data::Handle& sHandle, const std::string& name);
+	static MaterialColor getColor(adsk::Data::Handle& sHandle, const std::string& name);
+	static MaterialTrafo getTrafo(adsk::Data::Handle& sHandle, const std::string& name);
 
 	template <size_t N>
-	static void getDoubleArray(std::array<double, N>& array, adsk::Data::Handle sHandle, const std::string& name) {
+	static void getDoubleArray(std::array<double, N>& array, adsk::Data::Handle& sHandle, const std::string& name) {
 		array.fill(0.0);
 		if (sHandle.setPositionByMemberName(name.c_str())) {
 			double* data = sHandle.asDouble();
