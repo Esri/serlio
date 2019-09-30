@@ -22,6 +22,7 @@
 #include <maya/MPxNode.h>
 
 class MaterialInfo;
+class MaterialTrafo;
 class MELScriptBuilder;
 
 class ArnoldMaterialNode : public MPxNode {
@@ -43,4 +44,8 @@ private:
 								   const std::wstring& meshName,
 								   const int faceStart,
 								   const int faceEnd);
+
+	void setUvTransformAttrs(MELScriptBuilder& sb,
+							 const std::wstring& uvSet,
+							 const MaterialTrafo& trafo);
 };

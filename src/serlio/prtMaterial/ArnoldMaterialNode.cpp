@@ -320,15 +320,11 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.colormap.c_str(), buf.data(), &tmpSize));
 		sb.createTexture(L"$mapNode");
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_color_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"map1\"");
-		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.colormapTrafo.su(), 1.0 / matInfo.colormapTrafo.sv());
-		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.colormapTrafo.tu() / matInfo.colormapTrafo.su(), -matInfo.colormapTrafo.tv() / matInfo.colormapTrafo.sv());
-		if (matInfo.colormapTrafo.rw() != 0.0) {
-			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-		}
+		setUvTransformAttrs(sb, L"map1", matInfo.colormapTrafo);
+
 		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($colorMapBlendNode + \".input2\")");
 	}
@@ -342,15 +338,10 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
 		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
 		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
+
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_bump_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"bumpMap\"");
-		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.bumpmapTrafo.su(), 1.0 / matInfo.bumpmapTrafo.sv());
-		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.bumpmapTrafo.tu() / matInfo.bumpmapTrafo.su(), -matInfo.bumpmapTrafo.tv() / matInfo.bumpmapTrafo.sv());
-		if (matInfo.bumpmapTrafo.rw() != 0.0) {
-			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-		}
+		setUvTransformAttrs(sb, L"bumpMap", matInfo.bumpmapTrafo);
 
 		sb.setVar(L"$displacementNode", shadingGroupName + L"_bump_displacement");
 		sb.createShader(L"displacementShader", L"$displacementNode");
@@ -370,15 +361,10 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.dirtmap.c_str(), buf.data(), &tmpSize));
 		sb.createTexture(L"$mapNode");
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_dirt_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"dirtMap\"");
-		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.dirtmapTrafo.su(), 1.0 / matInfo.dirtmapTrafo.sv());
-		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.dirtmapTrafo.tu() / matInfo.dirtmapTrafo.su(), -matInfo.dirtmapTrafo.tv() / matInfo.dirtmapTrafo.sv());
-		if (matInfo.dirtmapTrafo.rw() != 0.0) {
-			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-		}
+		setUvTransformAttrs(sb, L"dirtMap", matInfo.dirtmapTrafo);
 
 		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($dirtMapBlendNode + \".input2\")");
@@ -408,15 +394,10 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.specularMap.c_str(), buf.data(), &tmpSize));
 		sb.createTexture(L"$mapNode");
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_specular_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"specularMap\"");
-		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.specularmapTrafo.su(), 1.0 / matInfo.specularmapTrafo.sv());
-		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.specularmapTrafo.tu() / matInfo.specularmapTrafo.su(), -matInfo.specularmapTrafo.tv() / matInfo.specularmapTrafo.sv());
-		if (matInfo.specularmapTrafo.rw() != 0.0) {
-			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-		}
+		setUvTransformAttrs(sb, L"specularMap", matInfo.specularmapTrafo);
 
 		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($specularMapBlendNode + \".input2\")");
@@ -443,15 +424,11 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.opacityMap.c_str(), buf.data(), &tmpSize));
 		sb.createTexture(L"$mapNode");
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_opacity_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"opacityMap\"");
-		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.opacitymapTrafo.su(), 1.0 / matInfo.opacitymapTrafo.sv());
-		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.opacitymapTrafo.tu() / matInfo.opacitymapTrafo.su(), -matInfo.opacitymapTrafo.tv() / matInfo.opacitymapTrafo.sv());
-		if (matInfo.opacitymapTrafo.rw() != 0.0) {
-			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-		}
+		setUvTransformAttrs(sb, L"opacityMap", matInfo.opacitymapTrafo);
+
 		// TODO: handle RGB textures, where the luminance should be the opacity
 		sb.connectAttr(L"($mapNode + \".outAlpha\")", L"($uvTrafoNode + \".passthroughR\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($opacityMapBlendNode + \".input2R\")");
@@ -469,13 +446,7 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_normal_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"normalMap\"");
-		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.normalmapTrafo.su(), 1.0 / matInfo.normalmapTrafo.sv());
-		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.normalmapTrafo.tu() / matInfo.normalmapTrafo.su(), -matInfo.normalmapTrafo.tv() / matInfo.normalmapTrafo.sv());
-		if (matInfo.normalmapTrafo.rw() != 0.0) {
-			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-		}
+		setUvTransformAttrs(sb, L"normalMap", matInfo.normalmapTrafo);
 
 		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
 
@@ -507,15 +478,10 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.emissiveMap.c_str(), buf.data(), &tmpSize));
 		sb.createTexture(L"$mapNode");
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_emissive_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"emissiveMap\"");
-		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.emissivemapTrafo.su(), 1.0 / matInfo.emissivemapTrafo.sv());
-		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.emissivemapTrafo.tu() / matInfo.emissivemapTrafo.su(), -matInfo.emissivemapTrafo.tv() / matInfo.emissivemapTrafo.sv());
-		if (matInfo.emissivemapTrafo.rw() != 0.0) {
-			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-		}
+		setUvTransformAttrs(sb, L"emissiveMap", matInfo.emissivemapTrafo);
 
 		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($emissiveMapBlendNode + \".input2\")");
@@ -543,15 +509,11 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
 		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
 		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
+
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_roughness_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"roughnessMap\"");
-		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.roughnessmapTrafo.su(), 1.0 / matInfo.roughnessmapTrafo.sv());
-		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.roughnessmapTrafo.tu() / matInfo.roughnessmapTrafo.su(), -matInfo.roughnessmapTrafo.tv() / matInfo.roughnessmapTrafo.sv());
-		if (matInfo.roughnessmapTrafo.rw() != 0.0) {
-			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-		}
+		setUvTransformAttrs(sb, L"roughnessMap", matInfo.roughnessmapTrafo);
+
 		// TODO: GlTF defines the roughness to be in the green channel of an RGB texture, do we also need to support single channel textures?
 		sb.connectAttr(L"($mapNode + \".outColorG\")", L"($uvTrafoNode + \".passthroughR\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($roughnessMapBlendNode + \".input2R\")");
@@ -577,17 +539,25 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
 		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
 		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
+
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_metallic_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"metallicMap\"");
-		sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
-		sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / matInfo.metallicmapTrafo.su(), 1.0 / matInfo.metallicmapTrafo.sv());
-		sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -matInfo.metallicmapTrafo.tu() / matInfo.metallicmapTrafo.su(), -matInfo.metallicmapTrafo.tv() / matInfo.metallicmapTrafo.sv());
-		if (matInfo.metallicmapTrafo.rw() != 0.0) {
-			LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
-		}
+		setUvTransformAttrs(sb, L"metallicMap", matInfo.metallicmapTrafo);
+
 		// TODO: GlTF defines the metalness to be in the blue channel of an RGB texture, do we also need to support single channel textures?
 		sb.connectAttr(L"($mapNode + \".outColorB\")", L"($uvTrafoNode + \".passthroughR\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($metallicMapBlendNode + \".input2R\")");
+	}
+}
+
+void ArnoldMaterialNode::setUvTransformAttrs(MELScriptBuilder& sb,
+											 const std::wstring& uvSet,
+											 const MaterialTrafo& trafo) {
+	sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"" + uvSet + L"\"");
+	sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
+	sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / trafo.su(), 1.0 / trafo.sv());
+	sb.setAttr(L"($uvTrafoNode + \".translateFrame\")", -trafo.tu() / trafo.su(), -trafo.tv() / trafo.sv());
+	if (trafo.rw() != 0.0) {
+		LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
 	}
 }
