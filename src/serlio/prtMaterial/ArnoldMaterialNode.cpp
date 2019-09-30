@@ -182,7 +182,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		}
 
 		adsk::Data::Handle matSHandle = matStream->element(0);
-		if ((fStructure == nullptr) || !matSHandle.usesStructure(*fStructure)) {
+		if (!matSHandle.usesStructure(*fStructure)) {
 			continue;
 		}
 
