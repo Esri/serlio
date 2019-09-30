@@ -91,7 +91,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	const adsk::Data::Associations* inMetadata = inMesh.metadata(&status);
 	MCHECK(status);
-	if (!inMetadata) {
+	if (inMetadata == nullptr) {
 		return MStatus::kSuccess;
 	}
 
@@ -137,18 +137,18 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	adsk::Data::Associations inAssociations(inMetadata);
 	adsk::Data::Channel* inMatChannel = inAssociations.findChannel(gPRTMatChannel);
 
-	if (!inMatChannel) {
+	if (inMatChannel == nullptr) {
 		return MStatus::kSuccess;
 	}
 
 	adsk::Data::Stream* inMatStream = inMatChannel->findDataStream(gPRTMatStream);
-	if (!inMatStream) {
+	if (inMatStream == nullptr) {
 		return MStatus::kSuccess;
 	}
 
 	//find all existing prt materials
 	const adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
-	if (!fStructure) {
+	if (fStructure == nullptr) {
 		return MStatus::kFailure;
 	}
 
@@ -166,23 +166,23 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		const adsk::Data::Associations* materialMetadata = fnDependencyNode.metadata(&status);
 		MCHECK(status);
 
-		if (!materialMetadata) {
+		if (materialMetadata == nullptr) {
 			continue;
 		}
 
 		adsk::Data::Associations materialAssociations(materialMetadata);
 		adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
-		if (!matChannel) {
+		if (matChannel == nullptr) {
 			continue;
 		}
 
 		adsk::Data::Stream* matStream = matChannel->findDataStream(gPRTMatStream);
-		if (!matStream || matStream->elementCount() != 1) {
+		if ((matStream == nullptr) || matStream->elementCount() != 1) {
 			continue;
 		}
 
 		adsk::Data::Handle matSHandle = matStream->element(0);
-		if (!fStructure || !matSHandle.usesStructure(*fStructure)) {
+		if ((fStructure == nullptr) || !matSHandle.usesStructure(*fStructure)) {
 			continue;
 		}
 
