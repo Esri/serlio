@@ -25,15 +25,15 @@ void MELScriptBuilder::setAttr(const std::wstring& attribute, const bool val) {
 	commandStream << "setAttr " << attribute << " " << (val ? 1 : 0) << ";\n";
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, double val) {
+void MELScriptBuilder::setAttr(const std::wstring& attribute, const double val) {
 	commandStream << "setAttr " << attribute << " " << val << ";\n";
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, double val1, double val2) {
+void MELScriptBuilder::setAttr(const std::wstring& attribute, const double val1, const double val2) {
 	commandStream << "setAttr -type double2 " << attribute << " " << val1 << " " << val2 << ";\n";
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, double val1, double val2, double val3) {
+void MELScriptBuilder::setAttr(const std::wstring& attribute, const double val1, const double val2, const double val3) {
 	commandStream << "setAttr -type double3 " << attribute << " " << val1 << " " << val2 << " " << val3 << ";\n";
 }
 

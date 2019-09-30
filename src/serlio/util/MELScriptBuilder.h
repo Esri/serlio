@@ -31,11 +31,11 @@ class MELScriptBuilder {
 public:
 	void setAttr(const std::wstring& attribute, const bool val);
 
-	void setAttr(const std::wstring& attribute, double val);
+	void setAttr(const std::wstring& attribute, const double val);
 
-	void setAttr(const std::wstring& attribute, double val1, double val2);
+	void setAttr(const std::wstring& attribute, const double val1, const double val2);
 
-	void setAttr(const std::wstring& attribute, double val1, double val2, double val3);
+	void setAttr(const std::wstring& attribute, const double val1, const double val2, const double val3);
 
 	void setAttr(const std::wstring& attribute, const wchar_t* val);
 
