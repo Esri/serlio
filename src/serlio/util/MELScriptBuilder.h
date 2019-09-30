@@ -29,11 +29,15 @@ class MaterialColor;
 class MELScriptBuilder {
 
 public:
+	void setAttr(const std::wstring& attribute, const bool val);
+
 	void setAttr(const std::wstring& attribute, double val);
 
 	void setAttr(const std::wstring& attribute, double val1, double val2);
 
 	void setAttr(const std::wstring& attribute, double val1, double val2, double val3);
+
+	void setAttr(const std::wstring& attribute, const wchar_t* val);
 
 	void setAttr(const std::wstring& attribute, const std::wstring& val);
 

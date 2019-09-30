@@ -21,6 +21,10 @@
 
 #include "prtMaterial/MaterialInfo.h"
 
+void MELScriptBuilder::setAttr(const std::wstring& attribute, const bool val) {
+	commandStream << "setAttr " << attribute << " " << (val ? 1 : 0) << ";\n";
+}
+
 void MELScriptBuilder::setAttr(const std::wstring& attribute, double val) {
 	commandStream << "setAttr " << attribute << " " << val << ";\n";
 }
@@ -31,6 +35,10 @@ void MELScriptBuilder::setAttr(const std::wstring& attribute, double val1, doubl
 
 void MELScriptBuilder::setAttr(const std::wstring& attribute, double val1, double val2, double val3) {
 	commandStream << "setAttr -type double3 " << attribute << " " << val1 << " " << val2 << " " << val3 << ";\n";
+}
+
+void MELScriptBuilder::setAttr(const std::wstring& attribute, const wchar_t* val) {
+	setAttr(attribute, std::wstring(val));
 }
 
 void MELScriptBuilder::setAttr(const std::wstring& attribute, const std::wstring& val) {

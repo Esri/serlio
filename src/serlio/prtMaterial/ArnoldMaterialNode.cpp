@@ -200,6 +200,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	sb.declString(L"$mapFile");
 	sb.declString(L"$mapNode");
 	sb.declString(L"$displacementNode");
+	sb.declString(L"$normalMapConvertNode");
 	sb.declString(L"$colorMapBlendNode");
 	sb.declString(L"$dirtMapBlendNode");
 	sb.declString(L"$opacityMapBlendNode");
@@ -462,6 +463,7 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
 		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
 		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
+
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_normal_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
 		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"normalMap\"");
@@ -473,7 +475,12 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		}
 
 		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($shaderNode + \".normalCamera\")");
+
+		sb.setVar(L"$normalMapConvertNode", shadingGroupName + L"_normal_map_convert");
+		sb.createShader(L"aiNormalMap", L"$normalMapConvertNode");
+		sb.setAttr(L"($normalMapConvertNode + \".colorToSigned\")", true);
+		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($normalMapConvertNode + \".input\")");
+		sb.connectAttr(L"($normalMapConvertNode + \".outValue\")", L"($shaderNode + \".normalCamera\")");
 	}
 
 	// emission
