@@ -339,6 +339,8 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.bumpMap.c_str(), buf.data(), &tmpSize));
 		sb.createTexture(L"$mapNode");
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
+		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_bump_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
 		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"bumpMap\"");
@@ -458,6 +460,8 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.normalMap.c_str(), buf.data(), &tmpSize));
 		sb.createTexture(L"$mapNode");
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
+		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_normal_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
 		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"normalMap\"");
@@ -527,6 +531,8 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.roughnessMap.c_str(), buf.data(), &tmpSize));
 		sb.createTexture(L"$mapNode");
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
+		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_roughness_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
 		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"roughnessMap\"");
@@ -559,6 +565,8 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.metallicMap.c_str(), buf.data(), &tmpSize));
 		sb.createTexture(L"$mapNode");
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
+		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_metallic_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
 		sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"metallicMap\"");
