@@ -199,6 +199,8 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	sb.declString(L"$shaderNode");
 	sb.declString(L"$mapFile");
 	sb.declString(L"$mapNode");
+	sb.declString(L"$bumpLuminanceNode");
+	sb.declString(L"$bumpValueNode");
 	sb.declString(L"$displacementNode");
 	sb.declString(L"$normalMapConvertNode");
 	sb.declString(L"$colorMapBlendNode");
@@ -330,7 +332,14 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	}
 
 	// bump map
-	if (!matInfo.bumpMap.empty()) {
+	sb.setVar(L"$bumpValueNode", shadingGroupName + L"_bump_value");
+	sb.createShader(L"bump2d", L"$bumpValueNode");
+	sb.connectAttr(L"($bumpValueNode + \".outNormal\")", L"($shaderNode + \".normalCamera\")");
+
+	if (matInfo.bumpMap.empty()) {
+		sb.setAttr(L"($bumpValueNode + \".bumpValue\")", 0.0);
+	}
+	else {
 		size_t tmpSize = buf.size();
 		sb.setVar(L"$mapNode", shadingGroupName + L"_bump_map");
 		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.bumpMap.c_str(), buf.data(), &tmpSize));
@@ -342,13 +351,12 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_bump_map_trafo");
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
 		setUvTransformAttrs(sb, L"bumpMap", matInfo.bumpmapTrafo);
-
-		sb.setVar(L"$displacementNode", shadingGroupName + L"_bump_displacement");
-		sb.createShader(L"displacementShader", L"$displacementNode");
-
 		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($displacementNode + \".vectorDisplacement\")");
-		sb.connectAttr(L"($displacementNode + \".displacement\")", L"($shadingGroup + \".displacementShader\")");
+
+		sb.setVar(L"$bumpLuminanceNode", shadingGroupName + L"_bump_luminance");
+		sb.createShader(L"luminance", L"$bumpLuminanceNode");
+		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($bumpLuminanceNode + \".value\")");
+		sb.connectAttr(L"($bumpLuminanceNode + \".outValue\")", L"($bumpValueNode + \".bumpValue\")");
 	}
 
 	// dirt map
@@ -454,7 +462,7 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.createShader(L"aiNormalMap", L"$normalMapConvertNode");
 		sb.setAttr(L"($normalMapConvertNode + \".colorToSigned\")", true);
 		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($normalMapConvertNode + \".input\")");
-		sb.connectAttr(L"($normalMapConvertNode + \".outValue\")", L"($shaderNode + \".normalCamera\")");
+		sb.connectAttr(L"($normalMapConvertNode + \".outValue\")", L"($bumpValueNode + \".normalCamera\")");
 	}
 
 	// emission
