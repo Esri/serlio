@@ -58,32 +58,26 @@ constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
 
 const AttributeMapUPtr EMPTY_ATTRIBUTES(AttributeMapBuilderUPtr(prt::AttributeMapBuilder::create())->createAttributeMap());
 
-namespace UnitQuad {
-	const double   vertices[] = { 0, 0, 0,  0, 0, 1,  1, 0, 1,  1, 0, 0 };
-	const size_t   vertexCount = 12;
-	const uint32_t indices[] = { 0, 1, 2, 3 };
-	const size_t   indexCount = 4;
-	const uint32_t faceCounts[] = { 4 };
-	const size_t   faceCountsCount = 1;
-	const int32_t  seed = mu::computeSeed(vertices, vertexCount);
-}
-
-AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, const prt::ResolveMap& resolveMap, prt::CacheObject& cache) {
+AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, const prt::ResolveMap& resolveMap, prt::CacheObject& cache, const MObject& mesh) {
 	AttributeMapBuilderUPtr mayaCallbacksAttributeBuilder(prt::AttributeMapBuilder::create());
 	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, mayaCallbacksAttributeBuilder);
 
 	InitialShapeBuilderUPtr isb(prt::InitialShapeBuilder::create());
 
+	PRTMesh prtMesh(mesh);
+
 	isb->setGeometry(
-		UnitQuad::vertices,
-		UnitQuad::vertexCount,
-		UnitQuad::indices,
-		UnitQuad::indexCount,
-		UnitQuad::faceCounts,
-		UnitQuad::faceCountsCount
+		prtMesh.vertexCoords(),
+		prtMesh.vcCount(),
+		prtMesh.indices(),
+		prtMesh.indicesCount(),
+		prtMesh.faceCounts(),
+		prtMesh.faceCountsCount()
 	);
 
-	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), UnitQuad::seed, L"", EMPTY_ATTRIBUTES.get(), &resolveMap);
+	const int32_t seed = mu::computeSeed(prtMesh.vertexCoords(), prtMesh.vcCount());
+
+	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), seed, L"", EMPTY_ATTRIBUTES.get(), &resolveMap);
 
 	const InitialShapeUPtr shape(isb->createInitialShapeAndReset());
 	const InitialShapeNOPtrVector shapes = { shape.get() };
@@ -176,7 +170,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 
 	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
 
-	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache);
+	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache, inMesh);
 	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
 
 	for (const auto& attrObj: cgaAttributes) {
@@ -317,7 +311,7 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	mStartRule = prtu::detectStartRule(info);
 
 	if (node != MObject::kNullObj) {
-		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache);
+		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache, inMesh);
 		if (DBG) LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
