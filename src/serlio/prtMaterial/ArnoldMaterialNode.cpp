@@ -392,8 +392,11 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	sb.createShader(L"aiMultiply", L"$specularMapBlendNode");
 	sb.connectAttr(L"($specularMapBlendNode + \".outColor\")", L"($shaderNode + \".specularColor\")");
 
-	// specular color
-	sb.setAttr(L"($specularMapBlendNode + \".input1\")", matInfo.specularColor);
+	// ignore the specular color for now (matInfo.specularColor), since in the metallic-roughness
+	// model of glTF specularity is controlled entirely via the roughness which requires the specular
+	// color of the aiStandardSurface shader to be set to white, however, the default value for
+	// matInfo.specularColor is black
+	sb.setAttr(L"($specularMapBlendNode + \".input1\")", 1.0, 1.0, 1.0);
 
 	// specular map
 	if (matInfo.specularMap.empty()) {
