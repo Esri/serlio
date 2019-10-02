@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <maya/MPxNode.h>
+#include "maya/MPxNode.h"
 
 class MaterialInfo;
 class MaterialTrafo;

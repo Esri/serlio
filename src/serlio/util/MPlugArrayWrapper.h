@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <maya/MPlugArray.h>
+#include "maya/MPlugArray.h"
 
 #include <iterator>
 #include <type_traits>

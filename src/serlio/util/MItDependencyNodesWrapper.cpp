@@ -21,7 +21,7 @@
 
 #include "util/MayaUtilities.h"
 
-#include <maya/MItDependencyNodes.h>
+#include "maya/MItDependencyNodes.h"
 
 MItDependencyNodesWrapperIt::MItDependencyNodesWrapperIt(MItDependencyNodes& itDepNodes)
 	: itDepNodes(&itDepNodes) {

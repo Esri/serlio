@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <maya/MGlobal.h>
+#include "maya/MGlobal.h"
 
 #include <sstream>
 #include <string>

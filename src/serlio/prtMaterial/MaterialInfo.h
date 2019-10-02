@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <maya/MString.h>
-#include <maya/adskDataHandle.h>
+#include "maya/MString.h"
+#include "maya/adskDataHandle.h"
 
 #include <array>
 

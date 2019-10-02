@@ -28,15 +28,15 @@
 #include "util/MPlugArrayWrapper.h"
 #include "util/MayaUtilities.h"
 
-#include <maya/MFnGenericAttribute.h>
-#include <maya/MFnMesh.h>
-#include <maya/MFnTypedAttribute.h>
-#include <maya/MGlobal.h>
-#include <maya/MItDependencyNodes.h>
-#include <maya/MPlugArray.h>
-#include <maya/adskDataAssociations.h>
-#include <maya/adskDataStream.h>
-#include <maya/adskDataStructure.h>
+#include "maya/MFnGenericAttribute.h"
+#include "maya/MFnMesh.h"
+#include "maya/MFnTypedAttribute.h"
+#include "maya/MGlobal.h"
+#include "maya/MItDependencyNodes.h"
+#include "maya/MPlugArray.h"
+#include "maya/adskDataAssociations.h"
+#include "maya/adskDataStream.h"
+#include "maya/adskDataStructure.h"
 
 #include <list>
 #include <sstream>
