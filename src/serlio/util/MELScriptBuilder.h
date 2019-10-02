@@ -62,6 +62,5 @@ public:
 	void execute();
 
 private:
-	// TODO: we should reconsider string encoding (see also https://utf8everywhere.org/)
 	std::wstringstream commandStream;
 };

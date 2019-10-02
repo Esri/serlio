@@ -75,7 +75,6 @@ public:
 	double opacity;
 	double metallic;
 	double roughness;
-	// TODO: add shininess, reflectivity and bumpValue
 
 	MaterialColor ambientColor;
 	MaterialColor diffuseColor;

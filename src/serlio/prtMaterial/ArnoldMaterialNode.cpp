@@ -41,7 +41,7 @@
 #include <list>
 #include <sstream>
 
-MTypeId ArnoldMaterialNode::id(0x12345); //TODO: register block ID if not done yet and set unique IDs for all our nodes! http://mayaid.herokuapp.com/
+MTypeId ArnoldMaterialNode::id(0x12345);
 
 MObject ArnoldMaterialNode::aInMesh;
 MObject ArnoldMaterialNode::aOutMesh;
@@ -95,9 +95,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		return MStatus::kSuccess;
 	}
 
-	// TODO: this should really be a traversal over the (potentially cyclic!) dependency
-	// graph to find all the relevant directly and indirectly connected mesh nodes
-	// for now, just follow direct or indirect connections via group parts nodes
 	MString meshName;
 	bool meshFound = false;
 	bool searchEnded = false;
@@ -191,7 +188,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	MELScriptBuilder sb;
 
-	// TODO: we probably don't want to add a sky, if there are existing light sources in the scene already
 	sb.python(L"import mtoa.ui.arnoldmenu as arnoldmenu");
 	sb.python(L"arnoldmenu.doCreatePhysicalSky()");
 
@@ -247,7 +243,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			MString matchingMaterialNodeName = matchingMaterialDependencyNode.name(&status);
 			MCHECK(status);
 			std::wstring matchingMaterialName(matchingMaterialNodeName.asWChar());
-			// TODO: try to find a more reliable way than comparing node names
 			const size_t idx = matchingMaterialName.find_last_of(L"Sh");
 			if (idx != std::wstring::npos) {
 				matchingMaterialName[idx] = L'g';
@@ -283,9 +278,6 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 												   const std::wstring& meshName,
 												   const int faceStart,
 												   const int faceEnd) {
-	// TODO: combine texture nodes with same texture
-	// TODO: investigate using place2dtexture nodes to transform textures instead of using the attributes of aiUvTransform
-
 	std::array<wchar_t, 512> buf{};
 
 	sb.setVar(L"$shaderNode", shaderName);
@@ -378,7 +370,7 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($dirtMapBlendNode + \".input2\")");
 	}
 
-	// shininess
+	// reflectivity
 	sb.setAttr(L"($shaderNode + \".specular\")", 1.0);
 
 	// specular/specular map multiply node
@@ -421,7 +413,6 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	// opacity
 	sb.setAttr(L"($opacityMapBlendNode + \".input1R\")", matInfo.opacity);
 
-	// TODO: support opacitymap mode (opaque, blend, mask)
 	// opacity map
 	if (matInfo.opacityMap.empty()) {
 		sb.setAttr(L"($opacityMapBlendNode + \".input2R\")", 1.0);
@@ -437,7 +428,6 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
 		setUvTransformAttrs(sb, L"opacityMap", matInfo.opacitymapTrafo);
 
-		// TODO: handle RGB textures, where the luminance should be the opacity
 		sb.connectAttr(L"($mapNode + \".outAlpha\")", L"($uvTrafoNode + \".passthroughR\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($opacityMapBlendNode + \".input2R\")");
 	}
@@ -494,8 +484,6 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
 		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($emissiveMapBlendNode + \".input2\")");
 	}
-
-	// TODO: support occlusion map
 
 	// roughness/roughness map multiply node
 	sb.setVar(L"$roughnessMapBlendNode", shadingGroupName + L"_roughness_map_blend");
