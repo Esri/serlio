@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-#include "prtModifier/PRTMesh.h"
 #include "prtModifier/PRTModifierAction.h"
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/MayaCallbacks.h"
@@ -58,13 +57,11 @@ constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
 
 const AttributeMapUPtr EMPTY_ATTRIBUTES(AttributeMapBuilderUPtr(prt::AttributeMapBuilder::create())->createAttributeMap());
 
-AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, const prt::ResolveMap& resolveMap, prt::CacheObject& cache, const MObject& mesh) {
+AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, const prt::ResolveMap& resolveMap, prt::CacheObject& cache, const PRTMesh& prtMesh) {
 	AttributeMapBuilderUPtr mayaCallbacksAttributeBuilder(prt::AttributeMapBuilder::create());
 	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, mayaCallbacksAttributeBuilder);
 
 	InitialShapeBuilderUPtr isb(prt::InitialShapeBuilder::create());
-
-	PRTMesh prtMesh(mesh);
 
 	isb->setGeometry(
 		prtMesh.vertexCoords(),
@@ -170,7 +167,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 
 	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
 
-	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache, inMesh);
+	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache, *inPrtMesh);
 	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
 
 	for (const auto& attrObj: cgaAttributes) {
@@ -267,6 +264,8 @@ void PRTModifierAction::setMesh(MObject& _inMesh, MObject& _outMesh)
 {
 	inMesh = _inMesh;
 	outMesh = _outMesh;
+
+	inPrtMesh = std::make_unique<PRTMesh>(_inMesh);
 }
 
 ResolveMapSPtr PRTModifierAction::getResolveMap() {
@@ -311,7 +310,7 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	mStartRule = prtu::detectStartRule(info);
 
 	if (node != MObject::kNullObj) {
-		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache, inMesh);
+		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache, *inPrtMesh);
 		if (DBG) LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
@@ -331,16 +330,14 @@ MStatus PRTModifierAction::doIt()
 	AttributeMapBuilderUPtr amb(prt::AttributeMapBuilder::create());
 	std::unique_ptr<MayaCallbacks> outputHandler(new MayaCallbacks(inMesh, outMesh, amb));
 
-	PRTMesh prtMesh(inMesh);
-
 	InitialShapeBuilderUPtr isb(prt::InitialShapeBuilder::create());
 	const prt::Status setGeoStatus = isb->setGeometry(
-		prtMesh.vertexCoords(),
-		prtMesh.vcCount(),
-		prtMesh.indices(),
-		prtMesh.indicesCount(),
-		prtMesh.faceCounts(),
-		prtMesh.faceCountsCount()
+		inPrtMesh->vertexCoords(),
+		inPrtMesh->vcCount(),
+		inPrtMesh->indices(),
+		inPrtMesh->indicesCount(),
+		inPrtMesh->faceCounts(),
+		inPrtMesh->faceCountsCount()
 	);
 	if (setGeoStatus != prt::STATUS_OK)
 		LOG_ERR << "InitialShapeBuilder setGeometry failed status = " << prt::getStatusDescription(setGeoStatus);

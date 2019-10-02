@@ -20,6 +20,7 @@
 #pragma once
 
 #include "polyModifier/polyModifierFty.h"
+#include "prtModifier/PRTMesh.h"
 #include "prtModifier/RuleAttributes.h"
 #include "util/Utilities.h"
 #include "PRTContext.h"
@@ -84,6 +85,9 @@ private:
 	// Mesh Nodes: only used during doIt
 	MObject inMesh;
 	MObject outMesh;
+
+	// PRT representation for the geometry of inMesh
+	std::unique_ptr<PRTMesh> inPrtMesh;
 
 	// Set in updateRuleFiles(rulePkg)
 	MString                       mRulePkg;
