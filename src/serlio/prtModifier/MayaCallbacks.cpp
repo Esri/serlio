@@ -405,3 +405,23 @@ prt::Status MayaCallbacks::attrString(size_t /*isIndex*/, int32_t /*shapeID*/, c
 	mAttributeMapBuilder->setString(key, value);
 	return prt::STATUS_OK;
 }
+
+// PRT version >= 2.1
+#if PRT_VERSION_GTE(2, 1)
+
+prt::Status MayaCallbacks::attrBoolArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, const bool* values, size_t size) {
+	mAttributeMapBuilder->setBoolArray(key, values, size);
+	return prt::STATUS_OK;
+}
+
+prt::Status MayaCallbacks::attrFloatArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, const double* values, size_t size) {
+	mAttributeMapBuilder->setFloatArray(key, values, size);
+	return prt::STATUS_OK;
+}
+
+prt::Status MayaCallbacks::attrStringArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, const wchar_t* const* values, size_t size) {
+	mAttributeMapBuilder->setStringArray(key, values, size);
+	return prt::STATUS_OK;
+}
+
+#endif // PRT version >= 2.1
