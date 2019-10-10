@@ -50,7 +50,7 @@ void MELScriptBuilder::setAttr(const std::wstring& attribute, const MaterialColo
 }
 
 void MELScriptBuilder::connectAttr(const std::wstring& source, const std::wstring& dest) {
-	commandStream << "connectAttr " << source << " " << dest << ";\n";
+	commandStream << "connectAttr -force " << source << " " << dest << ";\n";
 }
 
 void MELScriptBuilder::python(const std::wstring& pythonCmd) {
