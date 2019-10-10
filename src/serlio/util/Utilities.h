@@ -39,6 +39,13 @@
 #include <string>
 #include <array>
 
+// PRT version >= VERSION_MAJOR.VERSION_MINOR
+#define PRT_VERSION_GTE(VERSION_MAJOR, VERSION_MINOR) \
+	((PRT_VERSION_MAJOR >= (VERSION_MAJOR)) && ((PRT_VERSION_MAJOR > (VERSION_MAJOR)) || (PRT_VERSION_MINOR >= (VERSION_MINOR))))
+// PRT version <= VERSION_MAJOR.VERSION_MINOR
+#define PRT_VERSION_LTE(VERSION_MAJOR, VERSION_MINOR) \
+	((PRT_VERSION_MAJOR <= (VERSION_MAJOR)) && ((PRT_VERSION_MAJOR < (VERSION_MAJOR)) || (PRT_VERSION_MINOR <= (VERSION_MINOR))))
+
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 #   include <cfloat>
 #endif
@@ -46,7 +53,7 @@
 
 struct PRTDestroyer {
 	void operator()(prt::Object const* p) {
-		if (p) p->destroy();
+		if (p != nullptr) p->destroy();
 	}
 };
 

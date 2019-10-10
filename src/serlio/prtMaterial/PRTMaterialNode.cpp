@@ -22,6 +22,7 @@
 
 #include "util/Utilities.h"
 #include "util/MayaUtilities.h"
+#include "util/MItDependencyNodesWrapper.h"
 
 #include "prt/StringUtils.h"
 
@@ -59,11 +60,6 @@ MObject PRTMaterialNode::aOutMesh;
 MString PRTMaterialNode::sfxFile;
 const MString OUTPUT_GEOMETRY = MString("og");
 
-const char* PRTMaterialNode::nodeName()
-{
-	return "PRTMaterialNode";
-}
-
 MStatus PRTMaterialNode::initialize()
 {
 	MStatus status;
@@ -84,7 +80,7 @@ MStatus PRTMaterialNode::initialize()
 	return MStatus::kSuccess;
 }
 
-MString MaterialInfo::toMString(const std::vector<double> &d, size_t size, size_t offset)
+MString MaterialInfo::toMString(const std::vector<double>& d, size_t size, size_t offset)
 {
 	MString colString;
 	for (size_t i = offset; i < d.size() && i < offset+size; i++)
@@ -109,9 +105,9 @@ std::vector<double> MaterialInfo::getDoubleVector(adsk::Data::Handle sHandle, co
 	if (sHandle.setPositionByMemberName(name.c_str()))
 	{
 		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= numElements && data!=nullptr) {
-			for (int i = 0; i < numElements; i++)
-				r.push_back(data[i]);
+		if (sHandle.dataLength() >= numElements && (data != nullptr)) {
+			r.reserve(numElements);
+			std::copy(data, data + numElements, std::back_inserter(r));
 		}
 	}
 	return r;
@@ -122,8 +118,8 @@ double MaterialInfo::getDouble(adsk::Data::Handle sHandle, const std::string& na
 	if (sHandle.setPositionByMemberName(name.c_str()))
 	{
 		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= 1 && data != nullptr) {
-			return data[0];
+		if (sHandle.dataLength() >= 1 && (data != nullptr)) {
+			return *data;
 		}
 	}
 	return NAN;
@@ -255,7 +251,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 		}
 	}
 
-	if (inputAssociations && meshFound)
+	if ((inputAssociations != nullptr) && meshFound)
 	{
 		adsk::Data::Associations outputAssociations(inputMesh.metadata(&status));
 		MCHECK(status);
@@ -263,44 +259,47 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 		//find all existing prt materials
 		adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
 		std::set<std::string> shaderNames;
-		std::list<std::pair<const MObject, const MaterialInfo>> existinMaterialInfos;
-		MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader);
-		while (!itHwShaders.isDone())
-		{
-			MObject obj = itHwShaders.thisNode();
-			MFnDependencyNode n(obj);
+		std::list<std::pair<const MObject, const MaterialInfo>> existingMaterialInfos;
+		MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
+		MCHECK(status);
+		for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders)) {
+			MFnDependencyNode n(hwShaderNode);
 			shaderNames.insert(std::string(n.name().asChar()));
 			const adsk::Data::Associations* materialMetadata = n.metadata(&status);
 			MCHECK(status);
 
-			if (materialMetadata) {
-				adsk::Data::Associations materialAssociations(materialMetadata);
-				adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
-				if (matChannel) {
-					adsk::Data::Stream*	matStream = matChannel->findDataStream(gPRTMatStream);
-					if (matStream && matStream->elementCount() == 1) {
-						adsk::Data::Handle matSHandle = matStream->element(0);
-						if (!matSHandle.usesStructure(*fStructure)) continue;
-						auto p = std::pair<const MObject, const MaterialInfo>(obj, matSHandle);
-						existinMaterialInfos.push_back(p);
-					}
-				}
+			if (materialMetadata == nullptr) {
+				continue;
 			}
-			itHwShaders.next();
+
+			adsk::Data::Associations materialAssociations(materialMetadata);
+			adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
+
+			if (matChannel == nullptr) {
+				continue;
+			}
+
+			adsk::Data::Stream*	matStream = matChannel->findDataStream(gPRTMatStream);
+			if ((matStream != nullptr) && matStream->elementCount() == 1) {
+				adsk::Data::Handle matSHandle = matStream->element(0);
+				if (!matSHandle.usesStructure(*fStructure)) continue;
+				auto p = std::pair<const MObject, const MaterialInfo>(hwShaderNode, matSHandle);
+				existingMaterialInfos.push_back(p);
+			}
 		}
 
 		// determine path of shader fx file
 		if (sfxFile.length() == 0) {
 			// mel command wants forward slashes
-			const std::wstring shadersPath = prtu::toGenericPath(mPRTCtx->mPluginRootPath + L"../shaders/");
+			const std::wstring shadersPath = prtu::toGenericPath(mPRTCtx.mPluginRootPath + L"../shaders/");
 			sfxFile = MString(shadersPath.c_str()) + "serlioShaderStingray.sfx";
 			LOG_DBG << "stingray shader located at " << sfxFile.asWChar();
 		}
 
 		adsk::Data::Channel* channel = outputAssociations.findChannel(gPRTMatChannel);
-		if (channel) {
+		if (channel != nullptr) {
 			adsk::Data::Stream*	stream = channel->findDataStream(gPRTMatStream);
-			if (stream) {
+			if (stream != nullptr) {
 
 
 				MString mShadingCmd;
@@ -312,9 +311,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 
 				std::array<wchar_t, 512> buf;
 
-				for (unsigned int i = 0; i < stream->elementCount(); ++i)
-				{
-					adsk::Data::Handle sHandle = stream->element(i);
+				for (adsk::Data::Handle& sHandle : *stream) {
 					if (!sHandle.hasData()) continue;
 					
 					if (!sHandle.usesStructure(*fStructure)) continue;
@@ -322,24 +319,13 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					MaterialInfo matInfo(sHandle);
 
 					//material with same metadata already exists?
-					MItDependencyNodes it(MFn::kPluginHardwareShader);
 					MObject matchingMaterial = MObject::kNullObj;
-					while (!it.isDone())
-					{
-						MObject obj = it.thisNode();
-						MFnDependencyNode n(obj);
 
-						for (const auto& kv : existinMaterialInfos) {
-							if (matInfo.equals(kv.second)) {
-								matchingMaterial = kv.first;
-								break;
-							}
-						}
-
-						if (matchingMaterial != MObject::kNullObj)
+					for (const auto& kv : existingMaterialInfos) {
+						if (matInfo.equals(kv.second)) {
+							matchingMaterial = kv.first;
 							break;
-
-						it.next();
+						}
 					}
 
 					sHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str());
@@ -378,11 +364,11 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 
 					//create shadingnode and add metadata
 					MCHECK(MGlobal::executeCommand(shaderCmd, DBG));
-					MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader);
-					while (!itHwShaders.isDone())
+					MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
+					MCHECK(status);
+					for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders))
 					{
-						MObject obj = itHwShaders.thisNode();
-						MFnDependencyNode n(obj);
+						MFnDependencyNode n(hwShaderNode);
 
 						if (n.name() == shaderNameMstr) {
 							adsk::Data::Associations newMetadata;
@@ -397,7 +383,6 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 							n.setMetadata(newMetadata);
 							break;
 						}
-						itHwShaders.next();
 					}
 
 					mShadingCmd += "$shName = \""+ shaderNameMstr + "\";\n";

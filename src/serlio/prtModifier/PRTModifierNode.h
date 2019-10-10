@@ -32,7 +32,7 @@
 class PRTModifierNode : public polyModifierNode
 {
 public:
-	PRTModifierNode(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx), fPRTModifierAction(prtCtx) { }
+	PRTModifierNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx), fPRTModifierAction(prtCtx) { }
 
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
 	MStatus setDependentsDirty(const MPlug &plugBeingDirtied, MPlugArray &affectedPlugs) override;
@@ -46,7 +46,7 @@ public:
 	static MTypeId id;
 	static MObject mRandomSeed;
 
-	PRTContextUPtr& mPRTCtx;
+	const PRTContext& mPRTCtx;
 	PRTModifierAction fPRTModifierAction;
 };
 

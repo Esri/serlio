@@ -35,7 +35,7 @@ constexpr bool           ENABLE_LOG_FILE    = false;
 bool verifyMayaEncoder() {
     constexpr const wchar_t* ENC_ID_MAYA = L"MayaEncoder";
     const auto mayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
-    return mayaEncOpts.operator bool();
+	return static_cast<bool>(mayaEncOpts);
 }
 
 } // namespace
@@ -75,26 +75,23 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 	}
 	else {
         theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
-        mResolveMapCache = new ResolveMapCache(prtu::getProcessTempDir(SRL_TMP_PREFIX));
+        mResolveMapCache = std::make_unique<ResolveMapCache>(prtu::getProcessTempDir(SRL_TMP_PREFIX));
     }
 }
 
 PRTContext::~PRTContext() {
-	if (mResolveMapCache) { // TODO: smart ptr
-		delete mResolveMapCache;
-		mResolveMapCache = nullptr;
-	}
 
+	// the cache needs to be destructed before PRT, so reset them explicitely in the right order here
 	theCache.reset();
 	thePRT.reset();
 
-	if (ENABLE_LOG_CONSOLE && theLogHandler) {
+	if (ENABLE_LOG_CONSOLE && (theLogHandler != nullptr)) {
 		prt::removeLogHandler(theLogHandler);
 		theLogHandler->destroy();
 		theLogHandler = nullptr;
 	}
 
-	if (ENABLE_LOG_FILE && theFileLogHandler) {
+	if (ENABLE_LOG_FILE && (theFileLogHandler != nullptr)) {
 		prt::removeLogHandler(theFileLogHandler);
 		theFileLogHandler->destroy();
 		theFileLogHandler = nullptr;

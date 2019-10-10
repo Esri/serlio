@@ -53,17 +53,17 @@ void checkStringLength(const wchar_t *string, const size_t &maxStringLength) {
 }
 
 MIntArray toMayaIntArray(uint32_t const *a, size_t s) {
-	MIntArray mia(s, 0);
-	for (size_t i = 0; i < s; ++i)
+	MIntArray mia(static_cast<unsigned int>(s), 0);
+	for (unsigned int i = 0; i < s; ++i)
 		mia.set(a[i], i);
 	return mia;
 }
 
 MFloatPointArray toMayaFloatPointArray(double const *a, size_t s) {
 	assert(s % 3 == 0);
-	const size_t numPoints = s/3;
+	const unsigned int numPoints = static_cast<unsigned int>(s) / 3;
 	MFloatPointArray mfpa(numPoints);
-	for (size_t i = 0; i < numPoints; ++i) {
+	for (unsigned int i = 0; i < numPoints; ++i) {
 		mfpa.set(MFloatPoint(static_cast<float>(a[i * 3 + 0]),
 							 static_cast<float>(a[i * 3 + 1]),
 							 static_cast<float>(a[i * 3 + 2])), i);
@@ -108,7 +108,7 @@ void MayaCallbacks::addMesh(
 		double const* const* uvs, size_t const* uvsSizes,
 		uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
 		uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
-		uint32_t uvSetsCount,
+		size_t uvSetsCount,
 		const uint32_t* faceRanges, size_t faceRangesSize,
 		const prt::AttributeMap** materials,
 		const prt::AttributeMap** reports,
@@ -182,8 +182,8 @@ void MayaCallbacks::addMesh(
 		// guaranteed by MayaEncoder, see prtx::VertexNormalProcessor::SET_MISSING_TO_FACE_NORMALS
 
 		// convert to native maya normal layout
-		MVectorArray expandedNormals(vertexIndicesSize);
-		MIntArray faceList(vertexIndicesSize);
+		MVectorArray expandedNormals(static_cast<unsigned int>(vertexIndicesSize));
+		MIntArray faceList(static_cast<unsigned int>(vertexIndicesSize));
 
 		int indexCount = 0;
 		for (int i = 0; i < faceCountsSize; i++) {
@@ -204,9 +204,9 @@ void MayaCallbacks::addMesh(
 	outputMesh.copyInPlace(oMesh);
 
 	// create material metadata
-	unsigned int maxStringLength = 400;
-	unsigned int maxFloatArrayLength = 5;
-	unsigned int maxStringArrayLength = 2;
+	constexpr unsigned int maxStringLength = 400;
+	constexpr unsigned int maxFloatArrayLength = 5;
+	constexpr unsigned int maxStringArrayLength = 2;
 
 	adsk::Data::Structure* fStructure;	  // Structure to use for creation
 	fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
@@ -250,14 +250,11 @@ void MayaCallbacks::addMesh(
 
 			if (size > 0) {
 				for (unsigned int i=0; i<arrayLength; i++) {
-					size_t maxStringLengthTmp = maxStringLength;
-					char* tmp = new char[maxStringLength];
 					std::wstring keyToUse = key;
 					if (i>0)
 						keyToUse = key + std::to_wstring(i);
-					prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp, &maxStringLengthTmp);
-					fStructure->addMember(type, size, tmp);
-					delete tmp;
+					const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
+					fStructure->addMember(type, size, keyToUseNarrow.c_str());
 				}
 			}
 		}
@@ -288,8 +285,6 @@ void MayaCallbacks::addMesh(
 
 				const prt::AttributeMap* mat = materials[fri];
 
-				char* tmp = new char[maxStringLength];
-
 				size_t keyCount = 0;
 				wchar_t const* const* keys = mat->getKeys(&keyCount);
 
@@ -297,13 +292,11 @@ void MayaCallbacks::addMesh(
 
 					wchar_t const* key = keys[k];
 
-					size_t maxStringLengthTmp = maxStringLength;
-					prt::StringUtils::toOSNarrowFromUTF16(key, tmp, &maxStringLengthTmp);
+					const std::string keyNarrow = prtu::toOSNarrowFromUTF16(key);
 
-					if (!handle.setPositionByMemberName(tmp))
+					if (!handle.setPositionByMemberName(keyNarrow.c_str()))
 						continue;
 
-					maxStringLengthTmp = maxStringLength;
 					size_t arraySize = 0;
 
 					switch (mat->getType(key)) {
@@ -317,6 +310,7 @@ void MayaCallbacks::addMesh(
 						if (wcslen(str) == 0)
 							break;
 						checkStringLength(str, maxStringLength);
+						size_t maxStringLengthTmp = maxStringLength;
 						prt::StringUtils::toOSNarrowFromUTF16(str, (char*)handle.asUInt8(), &maxStringLengthTmp);
 						break;
 					}
@@ -354,14 +348,13 @@ void MayaCallbacks::addMesh(
 
 							if (i > 0) {
 								std::wstring keyToUse = key + std::to_wstring(i);
-								maxStringLengthTmp = maxStringLength;
-								prt::StringUtils::toOSNarrowFromUTF16(keyToUse.c_str(), tmp, &maxStringLengthTmp);
-								if (!handle.setPositionByMemberName(tmp))
+								const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
+								if (!handle.setPositionByMemberName(keyToUseNarrow.c_str()))
 									continue;
 							}
 
-							maxStringLengthTmp = maxStringLength;
 							checkStringLength(stringArray[i], maxStringLength);
+							size_t maxStringLengthTmp = maxStringLength;
 							prt::StringUtils::toOSNarrowFromUTF16(stringArray[i], (char*)handle.asUInt8(), &maxStringLengthTmp);
 						}
 						break;
@@ -374,15 +367,14 @@ void MayaCallbacks::addMesh(
 					}
 
 				}
-				delete tmp;
 
 
 
 				handle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str());
-				handle.asInt32()[0] = faceRanges[fri];
+				*handle.asInt32() = faceRanges[fri];
 
 				handle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str());
-				handle.asInt32()[0] = faceRanges[fri+1];
+				*handle.asInt32() = faceRanges[fri+1];
 
 				newStream.setElement(static_cast<adsk::Data::IndexCount>(fri), handle);
 
@@ -413,3 +405,23 @@ prt::Status MayaCallbacks::attrString(size_t /*isIndex*/, int32_t /*shapeID*/, c
 	mAttributeMapBuilder->setString(key, value);
 	return prt::STATUS_OK;
 }
+
+// PRT version >= 2.1
+#if PRT_VERSION_GTE(2, 1)
+
+prt::Status MayaCallbacks::attrBoolArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, const bool* values, size_t size) {
+	mAttributeMapBuilder->setBoolArray(key, values, size);
+	return prt::STATUS_OK;
+}
+
+prt::Status MayaCallbacks::attrFloatArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, const double* values, size_t size) {
+	mAttributeMapBuilder->setFloatArray(key, values, size);
+	return prt::STATUS_OK;
+}
+
+prt::Status MayaCallbacks::attrStringArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, const wchar_t* const* values, size_t size) {
+	mAttributeMapBuilder->setStringArray(key, values, size);
+	return prt::STATUS_OK;
+}
+
+#endif // PRT version >= 2.1

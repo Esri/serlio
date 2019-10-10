@@ -67,7 +67,7 @@ namespace UnitQuad {
 	const int32_t  seed = mu::computeSeed(vertices, vertexCount);
 }
 
-AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, ResolveMapSPtr resolveMap, CacheObjectUPtr& cache) {
+AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, const prt::ResolveMap& resolveMap, prt::CacheObject& cache) {
 	AttributeMapBuilderUPtr mayaCallbacksAttributeBuilder(prt::AttributeMapBuilder::create());
 	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, mayaCallbacksAttributeBuilder);
 
@@ -82,7 +82,7 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 		UnitQuad::faceCountsCount
 	);
 
-	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), UnitQuad::seed,L"", EMPTY_ATTRIBUTES.get(), resolveMap.get());
+	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), UnitQuad::seed, L"", EMPTY_ATTRIBUTES.get(), &resolveMap);
 
 	const InitialShapeUPtr shape(isb->createInitialShapeAndReset());
 	const InitialShapeNOPtrVector shapes = { shape.get() };
@@ -92,14 +92,14 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 	const AttributeMapNOPtrVector encOpts = { attrEncOpts.get() };
 	assert(encIDs.size() == encOpts.size());
 
-	prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(), &mayaCallbacks, cache.get(), nullptr);
+	prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(), &mayaCallbacks, &cache, nullptr);
 
 	return AttributeMapUPtr(mayaCallbacksAttributeBuilder->createAttributeMap());
 }
 
 } // namespace
 
-PRTModifierAction::PRTModifierAction(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) {
+PRTModifierAction::PRTModifierAction(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {
 	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
 
 	mMayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
@@ -117,7 +117,7 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 	std::list<MObject> rawAttrs;
 	std::list<MObject> ignoreList;
 
-	for (size_t i = 0, numAttrs = node.attributeCount(); i < numAttrs; i++) {
+	for (unsigned int i = 0, numAttrs = node.attributeCount(); i < numAttrs; i++) {
 		MStatus attrStat;
 		const MObject attrObj = node.attribute(i, &attrStat);
 		if (attrStat != MS::kSuccess)
@@ -132,19 +132,19 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 		// maya annoyance: color attributes automatically get per-component plugs/child attrs
 		if (attr.isUsedAsColor()) {
 			MFnCompoundAttribute compAttr(attrObj);
-			for (size_t ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
+			for (unsigned int ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
 				ignoreList.emplace_back(compAttr.child(ci));
 		}
 
 		rawAttrs.push_back(attrObj);
 	}
 
-	std::list<MObject> filteredAttrs;
-	for (const auto& a: rawAttrs) {
-		if (std::find(ignoreList.begin(), ignoreList.end(), a) == ignoreList.end())
-			filteredAttrs.push_back(a);
-	}
-	return filteredAttrs;
+	const auto isIgnored = [&ignoreList](const auto& attr) {
+		return std::find(ignoreList.begin(), ignoreList.end(), attr) != ignoreList.end();
+	};
+	rawAttrs.erase(std::remove_if(rawAttrs.begin(), rawAttrs.end(), isIgnored), rawAttrs.end());
+
+	return rawAttrs;
 }
 
 const RuleAttribute RULE_NOT_FOUND{};
@@ -175,7 +175,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 
 	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
 
-	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), mPRTCtx->theCache);
+	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache);
 	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
 
 	for (const auto& attrObj: cgaAttributes) {
@@ -275,12 +275,12 @@ void PRTModifierAction::setMesh(MObject& _inMesh, MObject& _outMesh)
 }
 
 ResolveMapSPtr PRTModifierAction::getResolveMap() {
-	ResolveMapCache::LookupResult lookupResult = mPRTCtx->mResolveMapCache->get(std::wstring(mRulePkg.asWChar()));
+	ResolveMapCache::LookupResult lookupResult = mPRTCtx.mResolveMapCache->get(std::wstring(mRulePkg.asWChar()));
 	ResolveMapSPtr resolveMap = lookupResult.first;
 	return resolveMap;
 }
 
-MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg) {
+MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& rulePkg) {
 	mRulePkg = rulePkg;
 
 	mEnums.clear();
@@ -307,7 +307,7 @@ MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg
 		return MS::kFailure;
 	}
 
-	RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI, mPRTCtx->theCache.get(), &infoStatus));
+	RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI, mPRTCtx.theCache.get(), &infoStatus));
 	if (!info || infoStatus != prt::STATUS_OK) {
 		LOG_ERR << "could not get rule file info from rule file " << mRuleFile;
 		return MS::kFailure;
@@ -316,7 +316,7 @@ MStatus PRTModifierAction::updateRuleFiles(MObject& node, const MString& rulePkg
 	mStartRule = prtu::detectStartRule(info);
 
 	if (node != MObject::kNullObj) {
-		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, getResolveMap(), mPRTCtx->theCache);
+		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache);
 		if (DBG) LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
@@ -343,17 +343,17 @@ MStatus PRTModifierAction::doIt()
 	iMeshFn.getPoints(vertices);
 	iMeshFn.getVertices(pcounts, pconnect);
 
-	std::vector<double> va(vertices.length()*3);
-	for (int i = static_cast<int>(vertices.length()); --i >= 0;) {
+	std::vector<double> va(vertices.length() * 3);
+	for (unsigned int i = 0; i < vertices.length(); ++i) {
 		va[i * 3 + 0] = vertices[i].x;
 		va[i * 3 + 1] = vertices[i].y;
 		va[i * 3 + 2] = vertices[i].z;
 	}
 
-	std::vector <uint32_t> ia(pconnect.length());
-	pconnect.get((int*)ia.data());
-	std::vector <uint32_t> ca(pcounts.length());
-	pcounts.get((int*)ca.data());
+	std::vector<uint32_t> ia(pconnect.length());
+	pconnect.get(reinterpret_cast<int*>(ia.data()));
+	std::vector<uint32_t> ca(pcounts.length());
+	pcounts.get(reinterpret_cast<int*>(ca.data()));
 
 	AttributeMapBuilderUPtr amb(prt::AttributeMapBuilder::create());
 	std::unique_ptr<MayaCallbacks> outputHandler(new MayaCallbacks(inMesh, outMesh, amb));
@@ -379,14 +379,14 @@ MStatus PRTModifierAction::doIt()
 		getResolveMap().get()
 	);
 
-	std::unique_ptr <const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
+	std::unique_ptr<const prt::InitialShape, PRTDestroyer> shape(isb->createInitialShapeAndReset());
 
 	const std::vector<const wchar_t*> encIDs = { ENC_ID_MAYA, ENC_ID_CGA_ERROR, ENC_ID_CGA_PRINT };
 	const AttributeMapNOPtrVector encOpts = { mMayaEncOpts.get(), mCGAErrorOptions.get(), mCGAPrintOptions.get() };
 	assert(encIDs.size() == encOpts.size());
 
 	InitialShapeNOPtrVector shapes = { shape.get() };
-	const prt::Status generateStatus = prt::generate(shapes.data(), shapes.size(), 0, encIDs.data(), encIDs.size(), encOpts.data(), outputHandler.get(), mPRTCtx->theCache.get(), 0);
+	const prt::Status generateStatus = prt::generate(shapes.data(), shapes.size(), 0, encIDs.data(), encIDs.size(), encOpts.data(), outputHandler.get(), mPRTCtx.theCache.get(), 0);
 	if (generateStatus != prt::STATUS_OK)
 		LOG_ERR << "prt generate failed: " << prt::getStatusDescription(generateStatus);
 
@@ -394,7 +394,7 @@ MStatus PRTModifierAction::doIt()
 }
 
 
-MStatus PRTModifierAction::createNodeAttributes(MObject& nodeObj, const prt::RuleFileInfo* info) {
+MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const prt::RuleFileInfo* info) {
 	MStatus stat;
 	MFnDependencyNode node(nodeObj, &stat);
 	MCHECK(stat);
@@ -570,7 +570,7 @@ void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 	std::list<MObject> attrToRemove;
 	std::list<MObject> ignoreList;
 
-	for (size_t i = 0; i < node.attributeCount(); i++) {
+	for (unsigned int i = 0; i < node.attributeCount(); i++) {
 		const MObject attrObj = node.attribute(i);
 		const MFnAttribute attr(attrObj);
 		const MString attrName = attr.name();
@@ -581,7 +581,7 @@ void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 
 		if (attr.isUsedAsColor()) {
 			MFnCompoundAttribute compAttr(attrObj);
-			for (size_t ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
+			for (unsigned int ci = 0, numChildren = compAttr.numChildren(); ci < numChildren; ci++)
 				ignoreList.emplace_back(compAttr.child(ci));
 		}
 

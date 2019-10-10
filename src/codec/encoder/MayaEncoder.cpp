@@ -44,6 +44,22 @@
 #include <set>
 #include <memory>
 
+// PRT version < 2.1
+#if ((PRT_VERSION_MAJOR <= 2) && ((PRT_VERSION_MAJOR < 2) || (PRT_VERSION_MINOR < 1)))
+using srl_log_fatal = log_wfatal;
+using srl_log_error = log_werror;
+using srl_log_warn = log_wwarn;
+using srl_log_info = log_winfo;
+using srl_log_debug = log_wdebug;
+using srl_log_trace = log_wtrace;
+#else
+using srl_log_fatal = log_fatal;
+using srl_log_error = log_error;
+using srl_log_warn = log_warn;
+using srl_log_info = log_info;
+using srl_log_debug = log_debug;
+using srl_log_trace = log_trace;
+#endif // PRT version < 2.1
 
 namespace {
 
@@ -194,12 +210,12 @@ void convertMaterialToAttributeMap(
 		const prtx::Material& prtxAttr,
 		const prtx::WStringVector& keys
 ) {
-	if (DBG) log_wdebug(L"-- converting material: %1%") % prtxAttr.name();
+	if (DBG) srl_log_debug(L"-- converting material: %1%") % prtxAttr.name();
 	for(const auto& key : keys) {
 		if (MATERIAL_ATTRIBUTE_BLACKLIST.count(key) > 0)
 			continue;
 
-	if (DBG) log_wdebug(L"   key: %1%") % key;
+	if (DBG) srl_log_debug(L"   key: %1%") % key;
 
 		switch(prtxAttr.getType(key)) {
 			case prt::Attributable::PT_BOOL:
@@ -267,7 +283,7 @@ void convertMaterialToAttributeMap(
 			}
 
 			default:
-			if (DBG) log_wdebug(L"ignored atttribute '%s' with type %d") % key % prtxAttr.getType(key);
+			if (DBG) srl_log_debug(L"ignored atttribute '%s' with type %d") % key % prtxAttr.getType(key);
 				break;
 		}
 	}
@@ -329,7 +345,7 @@ struct AttributeMapNOPtrVectorOwner {
 	AttributeMapNOPtrVector v;
 	~AttributeMapNOPtrVectorOwner() {
 		for (const auto& m: v) {
-			if (m) m->destroy();
+			if (m != nullptr) m->destroy();
 		}
 	}
 };
@@ -445,7 +461,7 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 				if (DBG) log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
 
 				// append uv vertex indices
-				for (uint32_t fi = 0, faceCount = faceUVCounts.size(); fi < faceCount; ++fi) {
+				for (uint32_t fi = 0, faceCount = static_cast<uint32_t>(faceUVCounts.size()); fi < faceCount; ++fi) {
 					const uint32_t* faceUVIdx0 = (numUVSets > 0) ? mesh->getFaceUVIndices(fi, 0) : EMPTY_IDX.data();
 					const uint32_t* faceUVIdx = (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVIndices(fi, uvSet) : faceUVIdx0;
 					const uint32_t faceUVCnt = faceUVCounts[fi];
@@ -454,7 +470,7 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries, 
 						sg.uvIndices[uvSet].push_back(uvIndexBases[uvSet] + faceUVIdx[vi]);
 				}
 
-				uvIndexBases[uvSet] += src.size() / 2u;
+				uvIndexBases[uvSet] += static_cast<uint32_t>(src.size()) / 2;
 			} // for all uv sets
 
 			// append counts and indices for vertices and vertex normals
@@ -485,9 +501,9 @@ MayaEncoder::MayaEncoder(const std::wstring& id, const prt::AttributeMap* option
 
 void MayaEncoder::init(prtx::GenerateContext&) {
 	prt::Callbacks* cb = getCallbacks();
-	if (DBG) log_wdebug(L"MayaEncoder::init: cb = %x") % (size_t)cb;
+	if (DBG) srl_log_debug(L"MayaEncoder::init: cb = %x") % (size_t)cb;
 	auto* oh = dynamic_cast<IMayaCallbacks*>(cb);
-	if (DBG) log_wdebug(L"                   oh = %x") % (size_t)oh;
+	if (DBG) srl_log_debug(L"                   oh = %x") % (size_t)oh;
 	if(oh == nullptr) throw prtx::StatusException(prt::STATUS_ILLEGAL_CALLBACK_OBJECT);
 }
 
@@ -614,7 +630,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 			reportAttrMaps.v.empty() ? nullptr : reportAttrMaps.v.data(),
 			shapeIDs.data());
 
-	if (DBG) log_wdebug(L"MayaEncoder::convertGeometry: end");
+	if (DBG) srl_log_debug(L"MayaEncoder::convertGeometry: end");
 }
 
 void MayaEncoder::finish(prtx::GenerateContext& /*context*/) {

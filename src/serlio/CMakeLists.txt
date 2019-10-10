@@ -18,7 +18,8 @@ add_library(${SERLIO_TARGET} SHARED
 		prtMaterial/PRTMaterialNode.cpp
 		util/Utilities.cpp
 		util/ResolveMapCache.cpp
-		util/MayaUtilities.cpp)
+		util/MayaUtilities.cpp
+		util/MItDependencyNodesWrapper.cpp)
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 	target_sources(${SERLIO_TARGET}
@@ -36,7 +37,8 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 			prtMaterial/PRTMaterialNode.h
 			util/Utilities.h
 			util/ResolveMapCache.h
-			util/MayaUtilities.h)
+			util/MayaUtilities.h
+			util/MItDependencyNodesWrapper.h)
 endif()
 
 set_target_properties(${SERLIO_TARGET} PROPERTIES

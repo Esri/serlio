@@ -70,6 +70,15 @@ public:
 	virtual prt::Status attrFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, double /*value*/) override;
 	virtual prt::Status attrString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, const wchar_t* /*value*/) override;
 
+// PRT version >= 2.1
+#if PRT_VERSION_GTE(2, 1)
+
+	prt::Status attrBoolArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, const bool* /*values*/, size_t /*size*/) override;
+	prt::Status attrFloatArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, const double* /*values*/, size_t /*size*/) override;
+	prt::Status attrStringArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, const wchar_t* const* /*values*/, size_t /*size*/) override;
+
+#endif // PRT version >= 2.1
+
 public:
 
 	virtual void addMesh(
@@ -82,12 +91,12 @@ public:
 		double const* const* uvs, size_t const* uvsSizes,
 		uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
 		uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
-		uint32_t uvSets,
+		size_t uvSets,
 		const uint32_t* faceRanges, size_t faceRangesSize,
 		const prt::AttributeMap** materials,
 		const prt::AttributeMap** reports,
 		const int32_t* shapeIDs
-	);
+	) override;
 
 private:
 	MObject                 outMeshObj;

@@ -55,6 +55,7 @@ set(CESDK_VERSION "cesdk_${PRT_VERSION_MAJOR}_${PRT_VERSION_MINOR}_${PRT_VERSION
 message(STATUS "Using prt_DIR = ${prt_DIR} with version ${PRT_VERSION_MAJOR}.${PRT_VERSION_MINOR}.${PRT_VERSION_MICRO}")
 
 function(srl_add_dependency_prt TGT)
+    target_compile_definitions(${TGT} PRIVATE -DPRT_VERSION_MAJOR=${PRT_VERSION_MAJOR} -DPRT_VERSION_MINOR=${PRT_VERSION_MINOR})
 	target_include_directories(${TGT} PRIVATE ${PRT_INCLUDE_PATH})
 	target_link_libraries(${TGT} PRIVATE ${PRT_LINK_LIBRARIES})
 endfunction()
