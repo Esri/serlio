@@ -309,18 +309,9 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($colorMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
 	}
 	else {
-		size_t tmpSize = buf.size();
-		sb.setVar(L"$mapNode", shadingGroupName + L"_color_map");
-		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.colormap.c_str(), buf.data(), &tmpSize));
-		sb.createTexture(L"$mapNode");
-		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-
-		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_color_map_trafo");
-		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		setUvTransformAttrs(sb, L"map1", matInfo.colormapTrafo);
-
-		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($colorMapBlendNode + \".input2\")");
+		std::wstring shaderName = shadingGroupName + L"_color_map";
+		std::wstring shaderNode = createMapShader(sb, matInfo.colormap, matInfo.colormapTrafo, shaderName, L"map1", false, false);
+		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($colorMapBlendNode + \".input2\")");
 	}
 
 	// bump map
@@ -332,22 +323,12 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($bumpValueNode + \".bumpValue\")", 0.0);
 	}
 	else {
-		size_t tmpSize = buf.size();
-		sb.setVar(L"$mapNode", shadingGroupName + L"_bump_map");
-		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.bumpMap.c_str(), buf.data(), &tmpSize));
-		sb.createTexture(L"$mapNode");
-		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
-		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
-
-		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_bump_map_trafo");
-		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		setUvTransformAttrs(sb, L"bumpMap", matInfo.bumpmapTrafo);
-		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
+		std::wstring shaderName = shadingGroupName + L"_bump_map";
+		std::wstring shaderNode = createMapShader(sb, matInfo.bumpMap, matInfo.bumpmapTrafo, shaderName, L"bumpMap", true, false);
 
 		sb.setVar(L"$bumpLuminanceNode", shadingGroupName + L"_bump_luminance");
 		sb.createShader(L"luminance", L"$bumpLuminanceNode");
-		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($bumpLuminanceNode + \".value\")");
+		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($bumpLuminanceNode + \".value\")");
 		sb.connectAttr(L"($bumpLuminanceNode + \".outValue\")", L"($bumpValueNode + \".bumpValue\")");
 	}
 
@@ -356,18 +337,9 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($dirtMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
 	}
 	else {
-		size_t tmpSize = buf.size();
-		sb.setVar(L"$mapNode", shadingGroupName + L"_dirt_map");
-		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.dirtmap.c_str(), buf.data(), &tmpSize));
-		sb.createTexture(L"$mapNode");
-		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-
-		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_dirt_map_trafo");
-		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		setUvTransformAttrs(sb, L"dirtMap", matInfo.dirtmapTrafo);
-
-		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($dirtMapBlendNode + \".input2\")");
+		std::wstring shaderName = shadingGroupName + L"_dirt_map";
+		std::wstring shaderNode = createMapShader(sb, matInfo.dirtmap, matInfo.dirtmapTrafo, shaderName, L"dirtMap", false, false);
+		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($dirtMapBlendNode + \".input2\")");
 	}
 
 	// reflectivity
@@ -389,18 +361,9 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($specularMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
 	}
 	else {
-		size_t tmpSize = buf.size();
-		sb.setVar(L"$mapNode", shadingGroupName + L"_specular_map");
-		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.specularMap.c_str(), buf.data(), &tmpSize));
-		sb.createTexture(L"$mapNode");
-		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-
-		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_specular_map_trafo");
-		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		setUvTransformAttrs(sb, L"specularMap", matInfo.specularmapTrafo);
-
-		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($specularMapBlendNode + \".input2\")");
+		std::wstring shaderName = shadingGroupName + L"_specular_map";
+		std::wstring shaderNode = createMapShader(sb, matInfo.specularMap, matInfo.specularmapTrafo, shaderName, L"specularMap", false, false);
+		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($specularMapBlendNode + \".input2\")");
 	}
 
 	// opacity/opacity map multiply node
@@ -418,40 +381,20 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($opacityMapBlendNode + \".input2R\")", 1.0);
 	}
 	else {
-		size_t tmpSize = buf.size();
-		sb.setVar(L"$mapNode", shadingGroupName + L"_opacity_map");
-		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.opacityMap.c_str(), buf.data(), &tmpSize));
-		sb.createTexture(L"$mapNode");
-		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-
-		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_opacity_map_trafo");
-		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		setUvTransformAttrs(sb, L"opacityMap", matInfo.opacitymapTrafo);
-
-		sb.connectAttr(L"($mapNode + \".outAlpha\")", L"($uvTrafoNode + \".passthroughR\")");
-		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($opacityMapBlendNode + \".input2R\")");
+		std::wstring shaderName = shadingGroupName + L"_opacity_map";
+		std::wstring shaderNode = createMapShader(sb, matInfo.opacityMap, matInfo.opacitymapTrafo, shaderName, L"opacityMap", false, true);
+		sb.connectAttr(L"(" + shaderNode + L" + \".outColorR\")", L"($opacityMapBlendNode + \".input2R\")");
 	}
 
 	// normal map
 	if (!matInfo.normalMap.empty()) {
-		size_t tmpSize = buf.size();
-		sb.setVar(L"$mapNode", shadingGroupName + L"_normal_map");
-		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.normalMap.c_str(), buf.data(), &tmpSize));
-		sb.createTexture(L"$mapNode");
-		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
-		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
-
-		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_normal_map_trafo");
-		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		setUvTransformAttrs(sb, L"normalMap", matInfo.normalmapTrafo);
-
-		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
+		std::wstring shaderName = shadingGroupName + L"_normal_map";
+		std::wstring shaderNode = createMapShader(sb, matInfo.normalMap, matInfo.normalmapTrafo, shaderName, L"normalMap", true, false);
 
 		sb.setVar(L"$normalMapConvertNode", shadingGroupName + L"_normal_map_convert");
 		sb.createShader(L"aiNormalMap", L"$normalMapConvertNode");
 		sb.setAttr(L"($normalMapConvertNode + \".colorToSigned\")", true);
-		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($normalMapConvertNode + \".input\")");
+		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($normalMapConvertNode + \".input\")");
 		sb.connectAttr(L"($normalMapConvertNode + \".outValue\")", L"($bumpValueNode + \".normalCamera\")");
 	}
 
@@ -471,18 +414,9 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($emissiveMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
 	}
 	else {
-		size_t tmpSize = buf.size();
-		sb.setVar(L"$mapNode", shadingGroupName + L"_emissive_map");
-		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.emissiveMap.c_str(), buf.data(), &tmpSize));
-		sb.createTexture(L"$mapNode");
-		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-
-		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_emissive_map_trafo");
-		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		setUvTransformAttrs(sb, L"emissiveMap", matInfo.emissivemapTrafo);
-
-		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
-		sb.connectAttr(L"($uvTrafoNode + \".outColor\")", L"($emissiveMapBlendNode + \".input2\")");
+		std::wstring shaderName = shadingGroupName + L"_emissive_map";
+		std::wstring shaderNode = createMapShader(sb, matInfo.emissiveMap, matInfo.emissivemapTrafo, shaderName, L"emissiveMap", false, false);
+		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($emissiveMapBlendNode + \".input2\")");
 	}
 
 	// roughness/roughness map multiply node
@@ -498,21 +432,11 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($roughnessMapBlendNode + \".input2R\")", 1.0);
 	}
 	else {
-		size_t tmpSize = buf.size();
-		sb.setVar(L"$mapNode", shadingGroupName + L"_roughness_map");
-		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.roughnessMap.c_str(), buf.data(), &tmpSize));
-		sb.createTexture(L"$mapNode");
-		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
-		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
-
-		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_roughness_map_trafo");
-		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		setUvTransformAttrs(sb, L"roughnessMap", matInfo.roughnessmapTrafo);
+		std::wstring shaderName = shadingGroupName + L"_roughness_map";
+		std::wstring shaderNode = createMapShader(sb, matInfo.roughnessMap, matInfo.roughnessmapTrafo, shaderName, L"roughnessMap", true, false);
 
 		// in PRT the roughness map only uses the green channel
-		sb.connectAttr(L"($mapNode + \".outColorG\")", L"($uvTrafoNode + \".passthroughR\")");
-		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($roughnessMapBlendNode + \".input2R\")");
+		sb.connectAttr(L"(" + shaderNode + L" + \".outColorG\")", L"($roughnessMapBlendNode + \".input2R\")");
 	}
 
 	// metallic/metallic map multiply node
@@ -528,21 +452,11 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 		sb.setAttr(L"($metallicMapBlendNode + \".input2R\")", 1.0);
 	}
 	else {
-		size_t tmpSize = buf.size();
-		sb.setVar(L"$mapNode", shadingGroupName + L"_metallic_map");
-		sb.setVar(L"$mapFile", prt::StringUtils::toUTF16FromOSNarrow(matInfo.metallicMap.c_str(), buf.data(), &tmpSize));
-		sb.createTexture(L"$mapNode");
-		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
-		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
-		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
-
-		sb.setVar(L"$uvTrafoNode", shadingGroupName + L"_metallic_map_trafo");
-		sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
-		setUvTransformAttrs(sb, L"metallicMap", matInfo.metallicmapTrafo);
+		std::wstring shaderName = shadingGroupName + L"_metallic_map";
+		std::wstring shaderNode = createMapShader(sb, matInfo.metallicMap, matInfo.metallicmapTrafo, shaderName, L"metallicMap", true, false);
 
 		// in PRT the metallic map only uses the blue channel
-		sb.connectAttr(L"($mapNode + \".outColorB\")", L"($uvTrafoNode + \".passthroughR\")");
-		sb.connectAttr(L"($uvTrafoNode + \".outColorR\")", L"($metallicMapBlendNode + \".input2R\")");
+		sb.connectAttr(L"(" + shaderNode + L" + \".outColorB\")", L"($metallicMapBlendNode + \".input2R\")");
 	}
 }
 
@@ -556,4 +470,28 @@ void ArnoldMaterialNode::setUvTransformAttrs(MELScriptBuilder& sb,
 	if (trafo.rw() != 0.0) {
 		LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
 	}
+}
+
+std::wstring ArnoldMaterialNode::createMapShader(MELScriptBuilder& sb, const std::string& mapFile, const MaterialTrafo& mapTrafo, const std::wstring& shaderName, const std::wstring& uvSet, const bool raw, const bool alpha) {
+	sb.setVar(L"$mapNode", shaderName);
+	sb.setVar(L"$mapFile", prtu::toUTF16FromOSNarrow(mapFile));
+	sb.createTexture(L"$mapNode");
+	sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+
+	if (raw) {
+		sb.setAttr(L"($mapNode + \".colorSpace\")", L"Raw");
+		sb.setAttr(L"($mapNode + \".ignoreColorSpaceFileRules\")", true);
+	}
+
+	sb.setVar(L"$uvTrafoNode", shaderName + L"_trafo");
+	sb.createShader(L"aiUvTransform", L"$uvTrafoNode");
+	setUvTransformAttrs(sb, uvSet, mapTrafo);
+
+	if (alpha) {
+		sb.connectAttr(L"($mapNode + \".outAlpha\")", L"($uvTrafoNode + \".passthroughR\")");
+	}
+	else {
+		sb.connectAttr(L"($mapNode + \".outColor\")", L"($uvTrafoNode + \".passthrough\")");
+	}
+	return L"$uvTrafoNode";
 }

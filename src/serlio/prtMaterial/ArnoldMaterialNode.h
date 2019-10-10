@@ -48,4 +48,12 @@ private:
 	void setUvTransformAttrs(MELScriptBuilder& sb,
 							 const std::wstring& uvSet,
 							 const MaterialTrafo& trafo);
+
+	std::wstring createMapShader(MELScriptBuilder& sb,
+								 const std::string& mapFile,
+								 const MaterialTrafo& mapTrafo,
+								 const std::wstring& shaderName,
+								 const std::wstring& uvSet,
+								 const bool raw,
+								 const bool alpha);
 };
