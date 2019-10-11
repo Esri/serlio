@@ -21,6 +21,8 @@
 
 #include "prtMaterial/MaterialInfo.h"
 
+#include "util/MayaUtilities.h"
+
 void MELScriptBuilder::setAttr(const std::wstring& attribute, const bool val) {
 	commandStream << "setAttr " << attribute << " " << (val ? 1 : 0) << ";\n";
 }
@@ -81,7 +83,12 @@ void MELScriptBuilder::createTexture(const std::wstring& textureName) {
 	commandStream << "shadingNode -asTexture -skipSelect -name " << textureName << " file;\n";
 }
 
+void MELScriptBuilder::executeSync() {
+	MCHECK(MGlobal::executeCommand(commandStream.str().c_str(), true));
+	commandStream.clear();
+}
+
 void MELScriptBuilder::execute() {
-	MGlobal::executeCommandOnIdle(commandStream.str().c_str(), true);
+	MCHECK(MGlobal::executeCommandOnIdle(commandStream.str().c_str(), true));
 	commandStream.clear();
 }

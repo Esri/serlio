@@ -59,6 +59,8 @@ public:
 
 	void createTexture(const std::wstring& textureName);
 
+	void executeSync();
+
 	void execute();
 
 private:

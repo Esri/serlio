@@ -36,6 +36,10 @@ public:
 
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
 
+	MPxNode::SchedulingType schedulingType() const noexcept override {
+		return SchedulingType::kGloballySerial;
+	}
+
 private:
 	void buildMaterialShaderScript(MELScriptBuilder& sb,
 								   const MaterialInfo& matInfo,

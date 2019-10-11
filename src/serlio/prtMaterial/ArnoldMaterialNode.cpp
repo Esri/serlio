@@ -228,10 +228,13 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 												   const int faceStart,
 												   const int faceEnd) {
 	std::array<wchar_t, 512> buf{};
+	MELScriptBuilder sbSync;
+	sbSync.setVar(L"$shaderNode", shaderName);
+	sbSync.createShader(L"aiStandardSurface", L"$shaderNode");
+	sbSync.executeSync();
 
 	sb.setVar(L"$shaderNode", shaderName);
 	sb.setVar(L"$shadingGroup", shadingGroupName);
-	sb.createShader(L"aiStandardSurface", L"$shaderNode");
 
 	// build shading group
 	sb.setsCreate(L"$shadingGroup");
