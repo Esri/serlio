@@ -19,9 +19,13 @@
 
 #pragma once
 
-#include "maya/MArrayIteratorTemplate.h"
+#include "maya/MTypes.h"
 
-#include <iterator>
+#if (MAYA_API_VERSION >= 20190000)
+
+#	include "maya/MArrayIteratorTemplate.h"
+
+#	include <iterator>
 
 namespace mu {
 
@@ -108,3 +112,5 @@ struct iterator_traits<OPENMAYA_MAJOR_NAMESPACE_SCHEMA::MArrayConstIteratorTempl
               OPENMAYA_MAJOR_NAMESPACE_SCHEMA::MArrayConstIteratorTemplate<ContainerType, ObjectTypeContained>> {};
 
 } // namespace std
+
+#endif // (MAYA_API_VERSION >= 20190000)
