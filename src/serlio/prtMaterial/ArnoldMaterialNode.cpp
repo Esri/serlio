@@ -149,10 +149,10 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	}
 
 	std::set<std::wstring> shaderNames;
-	MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
+	MItDependencyNodes itDependencyNodes(MFn::kInvalid, &status);
 	MCHECK(status);
-	for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders)) {
-		MFnDependencyNode fnDependencyNode(hwShaderNode, &status);
+	for (const auto& dependencyNode : MItDependencyNodesWrapper(itDependencyNodes)) {
+		MFnDependencyNode fnDependencyNode(dependencyNode, &status);
 		MCHECK(status);
 		MString shaderNodeName = fnDependencyNode.name(&status);
 		MCHECK(status);
