@@ -23,9 +23,9 @@
 
 #include "prtMaterial/MaterialInfo.h"
 
+#include "util/MArrayWrapper.h"
 #include "util/MELScriptBuilder.h"
 #include "util/MItDependencyNodesWrapper.h"
-#include "util/MPlugArrayWrapper.h"
 #include "util/MayaUtilities.h"
 
 #include "maya/MFnGenericAttribute.h"
@@ -107,7 +107,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		if (!connectedPlugs.length()) {
 			return MStatus::kFailure;
 		}
-		for (const auto& connectedPlug : makePlugArrayConstWrapper(connectedPlugs)) {
+		for (const auto& connectedPlug : mu::makeMArrayConstWrapper(connectedPlugs)) {
 			MFnDependencyNode connectedDepNode(connectedPlug.node(), &status);
 			MCHECK(status);
 			MObject connectedDepNodeObj = connectedDepNode.object(&status);
