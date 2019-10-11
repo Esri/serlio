@@ -19,7 +19,7 @@
 
 #include "prtModifier/PRTMesh.h"
 
-#include "util/MArrayIteratorTraits.h"
+#include "util/MArrayWrapper.h"
 #include "util/MayaUtilities.h"
 
 #include "maya/MFloatPointArray.h"
@@ -53,8 +53,10 @@ PRTMesh::PRTMesh(const MObject& mesh) {
 	meshFn.getVertices(vertexCount, vertexList);
 
 	faceCountsVec.reserve(vertexCount.length());
-	std::copy(vertexCount.begin(), vertexCount.end(), std::back_inserter(faceCountsVec));
+	const auto vertexCountWrapper = mu::makeMArrayConstWrapper(vertexCount);
+	std::copy(vertexCountWrapper.begin(), vertexCountWrapper.end(), std::back_inserter(faceCountsVec));
 
 	indicesVec.reserve(vertexList.length());
-	std::copy(vertexList.begin(), vertexList.end(), std::back_inserter(indicesVec));
+	const auto vertexListWrapper = mu::makeMArrayConstWrapper(vertexList);
+	std::copy(vertexListWrapper.begin(), vertexListWrapper.end(), std::back_inserter(indicesVec));
 }
