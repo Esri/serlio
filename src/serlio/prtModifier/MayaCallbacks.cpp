@@ -21,7 +21,7 @@
 #include "prtModifier/MayaCallbacks.h"
 #include "prtModifier/PRTModifierNode.h"
 
-#include "prtMaterial/PRTMaterialNode.h"
+#include "prtMaterial/MaterialInfo.h"
 
 #include "util/Utilities.h"
 #include "util/MayaUtilities.h"

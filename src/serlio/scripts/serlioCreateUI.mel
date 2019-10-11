@@ -79,6 +79,25 @@ global proc createPrtMaterialNode() {
 	}
 }
 
+global proc createArnoldMaterialNode() {
+	string $select[] = `ls -sl`;
+	string $initialShapes[] = collectInitialShapes($select);
+	
+	if(!(size($initialShapes))) {
+		confirmDialog -title "Missing selection" -message "Please select shapes first in order to create materials." -button "OK";
+		return;
+	}	
+	
+	for($node in $initialShapes) {
+		$prtMaterialName = `createNode serlioArnoldMaterial`;
+		$im =  `connectionInfo -sfd ($node +".inMesh")`;
+		if (size($im)>0) {
+			connectAttr -force ( $prtMaterialName + ".outMesh" ) ( $node + ".inMesh" );
+			connectAttr -force ( $im ) ( $prtMaterialName + ".inMesh" );
+		}
+	}
+}
+
 global proc createPrtMenu() {
 	global string $gMainWindow;
 	global string $gPrtMenu = "prtMenu"; 
@@ -91,6 +110,7 @@ global proc createPrtMenu() {
 		menuItem -divider true;
 		menuItem -label "Attach CityEngine Rule Package..."  -c "createPrtNode" -annotation "Attach a CGA rule package to a geometry";
 		menuItem -label "Create Materials"  -c "createPrtMaterialNode" -annotation "Create Materials";
+        menuItem -label "Create Arnold Materials" -c "createArnoldMaterialNode" -annotation "Create Arnold Materials";
 		setParent -m ..;
 	}
 }

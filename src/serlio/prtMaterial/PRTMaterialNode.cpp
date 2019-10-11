@@ -18,6 +18,9 @@
  */
 
 #include "prtMaterial/PRTMaterialNode.h"
+
+#include "prtMaterial/MaterialInfo.h"
+
 #include "prtModifier/PRTModifierAction.h"
 
 #include "util/Utilities.h"
@@ -39,13 +42,6 @@
 #include <set>
 #include <algorithm>
 #include <array>
-
-#ifdef _WIN32
-#	include <Windows.h>
-#else
-#	include <dlfcn.h>
-#endif
-
 
 namespace {
 
@@ -78,114 +74,6 @@ MStatus PRTMaterialNode::initialize()
 	attributeAffects(aInMesh, aOutMesh);
 
 	return MStatus::kSuccess;
-}
-
-MString MaterialInfo::toMString(const std::vector<double>& d, size_t size, size_t offset)
-{
-	MString colString;
-	for (size_t i = offset; i < d.size() && i < offset+size; i++)
-	{
-		colString += d[i];
-		colString += " ";
-	}
-	return colString;
-}
-
-std::string MaterialInfo::getTexture(adsk::Data::Handle sHandle, const std::string& texName)
-{
-	std::string r;
-	if (sHandle.setPositionByMemberName(texName.c_str()))
-		r = (char*)sHandle.asUInt8();
-	return r;
-}
-
-std::vector<double> MaterialInfo::getDoubleVector(adsk::Data::Handle sHandle, const std::string& name, size_t numElements)
-{
-	std::vector<double> r;
-	if (sHandle.setPositionByMemberName(name.c_str()))
-	{
-		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= numElements && (data != nullptr)) {
-			r.reserve(numElements);
-			std::copy(data, data + numElements, std::back_inserter(r));
-		}
-	}
-	return r;
-}
-
-double MaterialInfo::getDouble(adsk::Data::Handle sHandle, const std::string& name)
-{
-	if (sHandle.setPositionByMemberName(name.c_str()))
-	{
-		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= 1 && (data != nullptr)) {
-			return *data;
-		}
-	}
-	return NAN;
-}
-
-MaterialInfo::MaterialInfo(adsk::Data::Handle sHandle) {
-	bumpMap = getTexture(sHandle, "bumpMap");
-	colormap = getTexture(sHandle, "diffuseMap");
-	dirtmap = getTexture(sHandle, "diffuseMap1");
-	emissiveMap = getTexture(sHandle, "emissiveMap");
-	metallicMap = getTexture(sHandle, "metallicMap");
-	normalMap = getTexture(sHandle, "normalMap");
-	occlusionMap = getTexture(sHandle, "occlusionMap");
-	opacityMap = getTexture(sHandle, "opacityMap");
-	roughnessMap = getTexture(sHandle, "roughnessMap");
-	specularMap = getTexture(sHandle, "specularMap");
-
-	opacity = getDouble(sHandle, "opacity");
-	metallic = getDouble(sHandle, "metallic");
-	roughness = getDouble(sHandle, "roughness");
-
-	ambientColor = getDoubleVector(sHandle, "ambientColor", 3);
-	bumpmapTrafo = getDoubleVector(sHandle, "bumpmapTrafo", 5);
-	colormapTrafo = getDoubleVector(sHandle, "colormapTrafo", 5);
-	diffuseColor = getDoubleVector(sHandle, "diffuseColor", 3);
-	dirtmapTrafo = getDoubleVector(sHandle, "dirtmapTrafo", 5);
-	emissiveColor = getDoubleVector(sHandle, "emissiveColor", 3);
-	emissivemapTrafo = getDoubleVector(sHandle, "emissivemapTrafo", 5);
-	metallicmapTrafo = getDoubleVector(sHandle, "metallicmapTrafo", 5);
-	normalmapTrafo = getDoubleVector(sHandle, "normalmapTrafo", 5);
-	occlusionmapTrafo = getDoubleVector(sHandle, "occlusionmapTrafo", 5);
-	opacitymapTrafo = getDoubleVector(sHandle, "opacitymapTrafo", 5);
-	roughnessmapTrafo = getDoubleVector(sHandle, "roughnessmapTrafo", 5);
-	specularColor = getDoubleVector(sHandle, "specularColor", 3);
-	specularmapTrafo = getDoubleVector(sHandle, "specularmapTrafo", 5);
-}
-
-bool MaterialInfo::equals(const MaterialInfo& o) const {
-	return
-		bumpMap == o.bumpMap &&
-		colormap == o.colormap &&
-		dirtmap == o.dirtmap &&
-		emissiveMap == o.emissiveMap &&
-		metallicMap == o.metallicMap &&
-		normalMap == o.normalMap &&
-		occlusionMap == o.occlusionMap &&
-		opacityMap == o.opacityMap &&
-		roughnessMap == o.roughnessMap &&
-		specularMap == o.specularMap &&
-		opacity == o.opacity &&
-		metallic == o.metallic &&
-		roughness == o.roughness &&
-		ambientColor == o.ambientColor &&
-		bumpmapTrafo == o.bumpmapTrafo &&
-		colormapTrafo == o.colormapTrafo &&
-		diffuseColor == o.diffuseColor &&
-		dirtmapTrafo == o.dirtmapTrafo &&
-		emissiveColor == o.emissiveColor &&
-		emissivemapTrafo == o.emissivemapTrafo &&
-		metallicmapTrafo == o.metallicmapTrafo &&
-		normalmapTrafo == o.normalmapTrafo &&
-		occlusionmapTrafo == o.occlusionmapTrafo &&
-		opacitymapTrafo == o.opacitymapTrafo &&
-		roughnessmapTrafo == o.roughnessmapTrafo &&
-		specularColor == o.specularColor &&
-		specularmapTrafo == o.specularmapTrafo;
 }
 
 MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
@@ -397,38 +285,38 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					mShadingCmd += "shaderfx -sfxnode $shName -edit_stringlist $shadingNodeIndex blendmode "+ blendMode +";\n";
 
 					//ignored: ambientColor, specularColor
-					setAttribute(mShadingCmd, matInfo.diffuseColor, 3, "diffuse_color");
-					setAttribute(mShadingCmd, matInfo.emissiveColor, 3, "emissive_color");
-					setAttribute(mShadingCmd, matInfo.opacity, "opacity");
-					setAttribute(mShadingCmd, matInfo.roughness, "roughness");
-					setAttribute(mShadingCmd, matInfo.metallic, "metallic");
+					setAttribute(mShadingCmd, "diffuse_color", matInfo.diffuseColor);
+					setAttribute(mShadingCmd, "emissive_color", matInfo.emissiveColor);
+					setAttribute(mShadingCmd, "opacity", matInfo.opacity);
+					setAttribute(mShadingCmd, "roughness", matInfo.roughness);
+					setAttribute(mShadingCmd, "metallic", matInfo.metallic);
 
 					//ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
 					//shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
-					setAttribute(mShadingCmd, matInfo.colormapTrafo, 2, 3, "colormap_trafo_tuv");
-					setAttribute(mShadingCmd, matInfo.dirtmapTrafo, 2, 3, "dirtmap_trafo_tuv");
-					setAttribute(mShadingCmd, matInfo.emissivemapTrafo, 2, 3, "emissivemap_trafo_tuv");
-					setAttribute(mShadingCmd, matInfo.metallicmapTrafo, 2, 3, "metallicmap_trafo_tuv");
-					setAttribute(mShadingCmd, matInfo.normalmapTrafo, 2, 3, "normalmap_trafo_tuv");
-					setAttribute(mShadingCmd, matInfo.opacitymapTrafo, 2, 3, "opacitymap_trafo_tuv");
-					setAttribute(mShadingCmd, matInfo.roughnessmapTrafo, 2, 3, "roughnessmap_trafo_tuv");
+					setAttribute(mShadingCmd, "colormap_trafo_tuv", matInfo.colormapTrafo.tuv());
+					setAttribute(mShadingCmd, "dirtmap_trafo_tuv", matInfo.dirtmapTrafo.tuv());
+					setAttribute(mShadingCmd, "emissivemap_trafo_tuv", matInfo.emissivemapTrafo.tuv());
+					setAttribute(mShadingCmd, "metallicmap_trafo_tuv", matInfo.metallicmapTrafo.tuv());
+					setAttribute(mShadingCmd, "normalmap_trafo_tuv", matInfo.normalmapTrafo.tuv());
+					setAttribute(mShadingCmd, "opacitymap_trafo_tuv", matInfo.opacitymapTrafo.tuv());
+					setAttribute(mShadingCmd, "roughnessmap_trafo_tuv", matInfo.roughnessmapTrafo.tuv());
 
-					setAttribute(mShadingCmd, matInfo.colormapTrafo, 3, 0, "colormap_trafo_suvw");
-					setAttribute(mShadingCmd, matInfo.dirtmapTrafo, 3, 0, "dirtmap_trafo_suvw");
-					setAttribute(mShadingCmd, matInfo.emissivemapTrafo, 3, 0, "emissivemap_trafo_suvw");
-					setAttribute(mShadingCmd, matInfo.metallicmapTrafo, 3, 0, "metallicmap_trafo_suvw");
-					setAttribute(mShadingCmd, matInfo.normalmapTrafo, 3, 0, "normalmap_trafo_suvw");
-					setAttribute(mShadingCmd, matInfo.opacitymapTrafo, 3, 0, "opacitymap_trafo_suvw");
-					setAttribute(mShadingCmd, matInfo.roughnessmapTrafo, 3, 0, "roughnessmap_trafo_suvw");
+					setAttribute(mShadingCmd, "colormap_trafo_suvw", matInfo.colormapTrafo.suvw());
+					setAttribute(mShadingCmd, "dirtmap_trafo_suvw", matInfo.dirtmapTrafo.suvw());
+					setAttribute(mShadingCmd, "emissivemap_trafo_suvw", matInfo.emissivemapTrafo.suvw());
+					setAttribute(mShadingCmd, "metallicmap_trafo_suvw", matInfo.metallicmapTrafo.suvw());
+					setAttribute(mShadingCmd, "normalmap_trafo_suvw", matInfo.normalmapTrafo.suvw());
+					setAttribute(mShadingCmd, "opacitymap_trafo_suvw", matInfo.opacitymapTrafo.suvw());
+					setAttribute(mShadingCmd, "roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
 
 					//ignored: bumpMap, specularMap, occlusionmap
-					setTexture(mShadingCmd, matInfo.colormap, "color_map");
-					setTexture(mShadingCmd, matInfo.dirtmap, "dirt_map");
-					setTexture(mShadingCmd, matInfo.emissiveMap, "emissive_map");
-					setTexture(mShadingCmd, matInfo.metallicMap, "metallic_map");
-					setTexture(mShadingCmd, matInfo.normalMap, "normal_map");
-					setTexture(mShadingCmd, matInfo.roughnessMap, "roughness_map");
-					setTexture(mShadingCmd, matInfo.opacityMap, "opacity_map");
+					setTexture(mShadingCmd, "color_map", matInfo.colormap);
+					setTexture(mShadingCmd, "dirt_map", matInfo.dirtmap);
+					setTexture(mShadingCmd, "emissive_map", matInfo.emissiveMap);
+					setTexture(mShadingCmd, "metallic_map", matInfo.metallicMap);
+					setTexture(mShadingCmd, "normal_map", matInfo.normalMap);
+					setTexture(mShadingCmd, "roughness_map", matInfo.roughnessMap);
+					setTexture(mShadingCmd, "opacity_map", matInfo.opacityMap);
 
 					swprintf(buf.data(), buf.size()-1, L"sets -forceElement $sgName %ls.f[%d:%d];\n", MString(meshName).asWChar(), faceStart, faceEnd);
 					mShadingCmd += buf.data();
@@ -445,28 +333,31 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 	return status;
 }
 
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, const std::string& target)
-{
-	if (vec.size() >= elements) {
-		MString colString = MaterialInfo::toMString(vec, elements, 0);
-		mShadingCmd += "setAttr ($shName+\"."+ MString(target.c_str()) +"\") -type double"+ MString(std::to_string(elements).c_str()) + " " + colString + ";\n";
-	}
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const double val) {
+	mShadingCmd += ("setAttr ($shName + \"." + target + "\") " + std::to_string(val) + ";\n").c_str();
 }
 
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::vector<double>& vec, size_t elements, size_t offset, const std::string& target)
-{
-	if (vec.size()+offset >= elements) {
-		MString colString = MaterialInfo::toMString(vec, elements,offset);
-		mShadingCmd += "setAttr ($shName+\"." + MString(target.c_str()) + "\") -type double" + MString(std::to_string(elements).c_str()) + " " + colString + ";\n";
-	}
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2) {
+	mShadingCmd += ("setAttr ($shName + \"." + target + "\") -type double2 " + std::to_string(val1) + " " + std::to_string(val2) + ";\n").c_str();
 }
 
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, double vec, const std::string& target)
-{
-	mShadingCmd += "setAttr ($shName+\"." + MString(target.c_str()) + "\") " + MString(std::to_string(vec).c_str()) + ";\n";
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2, double const val3) {
+	mShadingCmd += ("setAttr ($shName + \"." + target + "\") -type double3 " + std::to_string(val1) + " " + std::to_string(val2) + " " + std::to_string(val3) + ";\n").c_str();
 }
 
-void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& tex, const std::string& target)
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 2>& val) {
+	setAttribute(mShadingCmd, target, val[0], val[1]);
+}
+
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 3>& val) {
+	setAttribute(mShadingCmd, target, val[0], val[1], val[2]);
+}
+
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const MaterialColor& color) {
+	setAttribute(mShadingCmd, target, color.r(), color.g(), color.b());
+}
+
+void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& target, const std::string& tex)
 {
 	if (tex.size() > 0) {
 		mShadingCmd += "$colormap = \"" + MString(tex.c_str()) + "\";\n";

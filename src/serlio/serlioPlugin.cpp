@@ -24,6 +24,7 @@
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/PRTModifierNode.h"
 
+#include "prtMaterial/ArnoldMaterialNode.h"
 #include "prtMaterial/PRTMaterialNode.h"
 
 #include "util/Utilities.h"
@@ -38,12 +39,13 @@
 namespace {
 	constexpr bool DBG = false;
 
-	constexpr const char* NODE_MODIFIER      = "serlio";
-	constexpr const char* NODE_MATERIAL      = "serlioMaterial";
-	constexpr const char* CMD_ASSIGN         = "serlioAssign";
-	constexpr const char* MEL_PROC_CREATE_UI = "serlioCreateUI";
-	constexpr const char* MEL_PROC_DELETE_UI = "serlioDeleteUI";
-	constexpr const char* SERLIO_VENDOR      = "Esri R&D Center Zurich";
+	constexpr const char* NODE_MODIFIER         = "serlio";
+	constexpr const char* NODE_MATERIAL         = "serlioMaterial";
+	constexpr const char* NODE_ARNOLD_MATERIAL  = "serlioArnoldMaterial";
+	constexpr const char* CMD_ASSIGN            = "serlioAssign";
+	constexpr const char* MEL_PROC_CREATE_UI    = "serlioCreateUI";
+	constexpr const char* MEL_PROC_DELETE_UI    = "serlioDeleteUI";
+	constexpr const char* SERLIO_VENDOR         = "Esri R&D Center Zurich";
 
 	// global PRT lifetime handler
 	PRTContextUPtr prtCtx;
@@ -94,6 +96,9 @@ MStatus initializePlugin(MObject obj) {
 	auto createMaterialNode = [](){ return (void*) new PRTMaterialNode(*prtCtx); };
 	MCHECK(plugin.registerNode(NODE_MATERIAL, PRTMaterialNode::id, createMaterialNode, &PRTMaterialNode::initialize));
 
+	auto createArnoldMaterialNode = []() { return (void*)new ArnoldMaterialNode(); };
+	MCHECK(plugin.registerNode(NODE_ARNOLD_MATERIAL, ArnoldMaterialNode::id, createArnoldMaterialNode, &ArnoldMaterialNode::initialize));
+
 	MCHECK(plugin.registerUI(MEL_PROC_CREATE_UI, MEL_PROC_DELETE_UI));
 
 	return MStatus::kSuccess;
@@ -110,6 +115,7 @@ MStatus uninitializePlugin(MObject obj) {
 		MCHECK(plugin.deregisterCommand(CMD_ASSIGN));
 		MCHECK(plugin.deregisterNode(PRTModifierNode::id));
 		MCHECK(plugin.deregisterNode(PRTMaterialNode::id));
+		MCHECK(plugin.deregisterNode(ArnoldMaterialNode::id));
 	}
 	return status;
 }

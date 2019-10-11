@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <maya/MObject.h>
+#include "maya/MObject.h"
 
 #include <iterator>
 #include <type_traits>
