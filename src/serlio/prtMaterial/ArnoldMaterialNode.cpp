@@ -143,14 +143,12 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		return MStatus::kSuccess;
 	}
 
-	//find all existing prt materials
 	const adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
 	if (fStructure == nullptr) {
 		return MStatus::kFailure;
 	}
 
 	std::set<std::wstring> shaderNames;
-	std::list<std::pair<const MObject, const MaterialInfo>> existingMaterialInfos;
 	MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
 	MCHECK(status);
 	for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders)) {
@@ -159,31 +157,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		MString shaderNodeName = fnDependencyNode.name(&status);
 		MCHECK(status);
 		shaderNames.insert(shaderNodeName.asWChar());
-
-		const adsk::Data::Associations* materialMetadata = fnDependencyNode.metadata(&status);
-		MCHECK(status);
-
-		if (materialMetadata == nullptr) {
-			continue;
-		}
-
-		adsk::Data::Associations materialAssociations(materialMetadata);
-		adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
-		if (matChannel == nullptr) {
-			continue;
-		}
-
-		adsk::Data::Stream* matStream = matChannel->findDataStream(gPRTMatStream);
-		if ((matStream == nullptr) || matStream->elementCount() != 1) {
-			continue;
-		}
-
-		adsk::Data::Handle matSHandle = matStream->element(0);
-		if (!matSHandle.usesStructure(*fStructure)) {
-			continue;
-		}
-
-		existingMaterialInfos.emplace_back(hwShaderNode, matSHandle);
 	}
 
 	MELScriptBuilder sb;
@@ -217,16 +190,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 		MaterialInfo matInfo(inMatStreamHandle);
 
-		//material with same metadata already exists?
-		auto matchingMatIt = std::find_if(existingMaterialInfos.begin(), existingMaterialInfos.end(), [&matInfo](auto& p) {
-			return matInfo.equals(p.second);
-		});
-
-		MObject matchingMaterial = MObject::kNullObj;
-		if (matchingMatIt != existingMaterialInfos.end()) {
-			matchingMaterial = matchingMatIt->first;
-		}
-
 		if (!inMatStreamHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str())) {
 			continue;
 		}
@@ -236,20 +199,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			continue;
 		}
 		const int faceEnd = *inMatStreamHandle.asInt32();
-
-		if (matchingMaterial != MObject::kNullObj) {
-			MFnDependencyNode matchingMaterialDependencyNode(matchingMaterial, &status);
-			MCHECK(status);
-			MString matchingMaterialNodeName = matchingMaterialDependencyNode.name(&status);
-			MCHECK(status);
-			std::wstring matchingMaterialName(matchingMaterialNodeName.asWChar());
-			const size_t idx = matchingMaterialName.find_last_of(L"Sh");
-			if (idx != std::wstring::npos) {
-				matchingMaterialName[idx] = L'g';
-			}
-			sb.setsAddFaceRange(matchingMaterialName, meshName.asWChar(), faceStart, faceEnd);
-			continue;
-		}
 
 		//get unique name
 		std::wstring shaderName(L"serlioGeneratedArnoldMaterialSh");
