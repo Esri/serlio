@@ -28,6 +28,8 @@
 #include "util/MayaUtilities.h"
 #include "util/MItDependencyNodesWrapper.h"
 
+#include "serlioPlugin.h"
+
 #include "prt/StringUtils.h"
 
 #include "maya/MGlobal.h"
@@ -50,7 +52,8 @@ constexpr bool DBG = false;
 
 } // namespace
 
-MTypeId PRTMaterialNode::id(PRT_MATERIAL_TYPE_ID);
+MTypeId PRTMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX,
+                            SerlioNodeIDs::STRINGRAY_MATERIAL_NODE);
 
 MObject	PRTMaterialNode::aInMesh;
 MObject PRTMaterialNode::aOutMesh;

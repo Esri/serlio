@@ -18,15 +18,16 @@
  */
 
 #include "prtMaterial/ArnoldMaterialNode.h"
-
-#include "prt/StringUtils.h"
-
 #include "prtMaterial/MaterialInfo.h"
 
 #include "util/MArrayWrapper.h"
 #include "util/MELScriptBuilder.h"
 #include "util/MItDependencyNodesWrapper.h"
 #include "util/MayaUtilities.h"
+
+#include "serlioPlugin.h"
+
+#include "prt/StringUtils.h"
 
 #include "maya/MFnGenericAttribute.h"
 #include "maya/MFnMesh.h"
@@ -41,7 +42,8 @@
 #include <list>
 #include <sstream>
 
-MTypeId ArnoldMaterialNode::id(0x12345);
+MTypeId ArnoldMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX,
+	                           SerlioNodeIDs::ARNOLD_MATERIAL_NODE);
 
 MObject ArnoldMaterialNode::aInMesh;
 MObject ArnoldMaterialNode::aOutMesh;
