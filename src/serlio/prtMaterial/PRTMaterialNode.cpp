@@ -23,7 +23,7 @@
 
 #include "prtModifier/PRTModifierAction.h"
 
-#include "util/MPlugArrayWrapper.h"
+#include "util/MArrayWrapper.h"
 #include "util/Utilities.h"
 #include "util/MayaUtilities.h"
 #include "util/MItDependencyNodesWrapper.h"
@@ -118,7 +118,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 		if (!connectedPlugs.length()) {
 			return MStatus::kFailure;
 		}
-		for (const auto& connectedPlug : makePlugArrayConstWrapper(connectedPlugs)) {
+		for (const auto& connectedPlug : mu::makeMArrayConstWrapper(connectedPlugs)) {
 			MFnDependencyNode connectedDepNode(connectedPlug.node(), &status);
 			MCHECK(status);
 			MObject connectedDepNodeObj = connectedDepNode.object(&status);
