@@ -25,29 +25,26 @@
 
 MItDependencyNodesWrapperIt::MItDependencyNodesWrapperIt(MItDependencyNodes& itDepNodes)
 	: itDepNodes(&itDepNodes) {
-	MStatus status;
-	const bool isDone = this->itDepNodes->isDone(&status);
-	MCHECK(status);
-	if (isDone) {
-		this->itDepNodes = nullptr;
-		return;
-	}
-	curObject = this->itDepNodes->thisNode(&status);
-	MCHECK(status);
+	updateCurrentObject();
 }
 
 MItDependencyNodesWrapperIt& MItDependencyNodesWrapperIt::operator++() {
+	MStatus status;
+	status = itDepNodes->next();
+	MCHECK(status);
+	updateCurrentObject();
+	return *this;
+}
+
+void MItDependencyNodesWrapperIt::updateCurrentObject() {
 	MStatus status;
 	const bool isDone = itDepNodes->isDone(&status);
 	MCHECK(status);
 	if (isDone) {
 		itDepNodes = nullptr;
+		return;
 	}
-	else {
-		status = itDepNodes->next();
-		MCHECK(status);
-		curObject = itDepNodes->thisNode(&status);
-		MCHECK(status);
-	}
-	return *this;
+	curObject = itDepNodes->thisNode(&status);
+	MCHECK(status);
 }
+
