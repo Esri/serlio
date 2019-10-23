@@ -59,6 +59,8 @@ public:
 	}
 
 private:
+	void updateCurrentObject();
+
 	MItDependencyNodes* itDepNodes;
 	MObject curObject;
 };
