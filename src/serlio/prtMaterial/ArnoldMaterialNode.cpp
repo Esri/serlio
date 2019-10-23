@@ -161,9 +161,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	MELScriptBuilder sb;
 
-	sb.python(L"import mtoa.ui.arnoldmenu as arnoldmenu");
-	sb.python(L"arnoldmenu.doCreatePhysicalSky()");
-
 	sb.declString(L"$shadingGroup");
 	sb.declString(L"$shaderNode");
 	sb.declString(L"$mapFile");

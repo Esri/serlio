@@ -23,6 +23,7 @@
 
 #include "prtModifier/PRTModifierAction.h"
 
+#include "util/MPlugArrayWrapper.h"
 #include "util/Utilities.h"
 #include "util/MayaUtilities.h"
 #include "util/MItDependencyNodesWrapper.h"
@@ -104,39 +105,41 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 	const adsk::Data::Associations* inputAssociations = inputMesh.metadata();
 
 	MStatus stat;
-	MString meshName;
-	bool    meshFound = false;
 
-	//find connected mesh node
-	for (MPlug plug(thisNode, aOutMesh); !(meshFound); ) {
-		MPlugArray plugs;
-		if (plug.connectedTo(plugs, false, true, &stat)) {
-			MCHECK(stat);
-			for (unsigned int p = 0; p < plugs.length(); p++) {
-				MFnDependencyNode node(plugs[p].node(), &stat);
-				if (node.object().hasFn(MFn::kMesh)) {
-					meshName = node.name();
-					meshFound = true;
-					break;
-				}
-				MCHECK(stat);
-				for (int pOut = static_cast<int>(node.attributeCount()); --pOut >= 0;) {
-					const MObject attr = node.attribute(pOut, &stat);
-					MCHECK(stat);
-					if (attr.apiType() == MFn::kGenericAttribute) {
-						const MPlug oPlug(node.object(), attr);
-						if (oPlug.isSource() && OUTPUT_GEOMETRY == oPlug.partialName()) {
-							plug = oPlug;
-							p = plugs.length();
-							break;
-						}
-					}
-				}
+	MString meshName;
+	bool meshFound = false;
+	bool searchEnded = false;
+
+	for (MPlug curPlug = plug; !searchEnded;) {
+		searchEnded = true;
+		MPlugArray connectedPlugs;
+		curPlug.connectedTo(connectedPlugs, false, true, &status);
+		MCHECK(status);
+		if (!connectedPlugs.length()) {
+			return MStatus::kFailure;
+		}
+		for (const auto& connectedPlug : makePlugArrayConstWrapper(connectedPlugs)) {
+			MFnDependencyNode connectedDepNode(connectedPlug.node(), &status);
+			MCHECK(status);
+			MObject connectedDepNodeObj = connectedDepNode.object(&status);
+			MCHECK(status);
+			if (connectedDepNodeObj.hasFn(MFn::kMesh)) {
+				meshName = connectedDepNode.name(&status);
+				MCHECK(status);
+				meshFound = true;
+				break;
+			}
+			if (connectedDepNodeObj.hasFn(MFn::kGroupParts)) {
+				curPlug = connectedDepNode.findPlug("outputGeometry", true, &status);
+				MCHECK(status);
+				searchEnded = false;
+				break;
 			}
 		}
-		else {
-			return MS::kFailure;
-		}
+	}
+
+	if (!meshFound) {
+		return MStatus::kSuccess;
 	}
 
 	if ((inputAssociations != nullptr) && meshFound)
