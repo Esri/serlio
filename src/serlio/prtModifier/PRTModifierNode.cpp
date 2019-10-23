@@ -107,6 +107,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
 			MObject oMesh = outputData.asMesh();
 
 			// Set the mesh object and component List on the factory
+			fPRTModifierAction.setMesh(iMesh, oMesh);
 
 			if (rulePkgData.asString() != currentRulePkgData.asString()) {
 				fPRTModifierAction.updateRuleFiles(thisMObject(), rulePkgData.asString());
@@ -115,8 +116,6 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
 			status = fPRTModifierAction.fillAttributesFromNode(thisMObject());
 			if (status != MStatus::kSuccess)
 				return status;
-
-			fPRTModifierAction.setMesh(iMesh, oMesh);
 
 			MDataHandle randomSeed = data.inputValue(mRandomSeed, &status);
 			fPRTModifierAction.setRandomSeed(randomSeed.asInt());

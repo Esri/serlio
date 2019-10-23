@@ -57,32 +57,24 @@ constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
 
 const AttributeMapUPtr EMPTY_ATTRIBUTES(AttributeMapBuilderUPtr(prt::AttributeMapBuilder::create())->createAttributeMap());
 
-namespace UnitQuad {
-	const double   vertices[] = { 0, 0, 0,  0, 0, 1,  1, 0, 1,  1, 0, 0 };
-	const size_t   vertexCount = 12;
-	const uint32_t indices[] = { 0, 1, 2, 3 };
-	const size_t   indexCount = 4;
-	const uint32_t faceCounts[] = { 4 };
-	const size_t   faceCountsCount = 1;
-	const int32_t  seed = mu::computeSeed(vertices, vertexCount);
-}
-
-AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, const prt::ResolveMap& resolveMap, prt::CacheObject& cache) {
+AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule, const prt::ResolveMap& resolveMap, prt::CacheObject& cache, const PRTMesh& prtMesh) {
 	AttributeMapBuilderUPtr mayaCallbacksAttributeBuilder(prt::AttributeMapBuilder::create());
 	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, mayaCallbacksAttributeBuilder);
 
 	InitialShapeBuilderUPtr isb(prt::InitialShapeBuilder::create());
 
 	isb->setGeometry(
-		UnitQuad::vertices,
-		UnitQuad::vertexCount,
-		UnitQuad::indices,
-		UnitQuad::indexCount,
-		UnitQuad::faceCounts,
-		UnitQuad::faceCountsCount
+		prtMesh.vertexCoords(),
+		prtMesh.vcCount(),
+		prtMesh.indices(),
+		prtMesh.indicesCount(),
+		prtMesh.faceCounts(),
+		prtMesh.faceCountsCount()
 	);
 
-	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), UnitQuad::seed, L"", EMPTY_ATTRIBUTES.get(), &resolveMap);
+	const int32_t seed = mu::computeSeed(prtMesh.vertexCoords(), prtMesh.vcCount());
+
+	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), seed, L"", EMPTY_ATTRIBUTES.get(), &resolveMap);
 
 	const InitialShapeUPtr shape(isb->createInitialShapeAndReset());
 	const InitialShapeNOPtrVector shapes = { shape.get() };
@@ -175,7 +167,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 
 	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
 
-	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache);
+	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache, *inPrtMesh);
 	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
 
 	for (const auto& attrObj: cgaAttributes) {
@@ -272,6 +264,8 @@ void PRTModifierAction::setMesh(MObject& _inMesh, MObject& _outMesh)
 {
 	inMesh = _inMesh;
 	outMesh = _outMesh;
+
+	inPrtMesh = std::make_unique<PRTMesh>(_inMesh);
 }
 
 ResolveMapSPtr PRTModifierAction::getResolveMap() {
@@ -316,7 +310,7 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	mStartRule = prtu::detectStartRule(info);
 
 	if (node != MObject::kNullObj) {
-		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache);
+		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *mPRTCtx.theCache, *inPrtMesh);
 		if (DBG) LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
@@ -333,39 +327,17 @@ MStatus PRTModifierAction::doIt()
 {
 	MStatus status;
 
-	// Get access to the mesh's function set
-	const MFnMesh iMeshFn(inMesh);
-
-	MFloatPointArray vertices;
-	MIntArray        pcounts;
-	MIntArray        pconnect;
-
-	iMeshFn.getPoints(vertices);
-	iMeshFn.getVertices(pcounts, pconnect);
-
-	std::vector<double> va(vertices.length() * 3);
-	for (unsigned int i = 0; i < vertices.length(); ++i) {
-		va[i * 3 + 0] = vertices[i].x;
-		va[i * 3 + 1] = vertices[i].y;
-		va[i * 3 + 2] = vertices[i].z;
-	}
-
-	std::vector<uint32_t> ia(pconnect.length());
-	pconnect.get(reinterpret_cast<int*>(ia.data()));
-	std::vector<uint32_t> ca(pcounts.length());
-	pcounts.get(reinterpret_cast<int*>(ca.data()));
-
 	AttributeMapBuilderUPtr amb(prt::AttributeMapBuilder::create());
 	std::unique_ptr<MayaCallbacks> outputHandler(new MayaCallbacks(inMesh, outMesh, amb));
 
 	InitialShapeBuilderUPtr isb(prt::InitialShapeBuilder::create());
-	prt::Status setGeoStatus = isb->setGeometry(
-		va.data(),
-		va.size(),
-		ia.data(),
-		ia.size(),
-		ca.data(),
-		ca.size()
+	const prt::Status setGeoStatus = isb->setGeometry(
+		inPrtMesh->vertexCoords(),
+		inPrtMesh->vcCount(),
+		inPrtMesh->indices(),
+		inPrtMesh->indicesCount(),
+		inPrtMesh->faceCounts(),
+		inPrtMesh->faceCountsCount()
 	);
 	if (setGeoStatus != prt::STATUS_OK)
 		LOG_ERR << "InitialShapeBuilder setGeometry failed status = " << prt::getStatusDescription(setGeoStatus);

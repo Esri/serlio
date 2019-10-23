@@ -9,6 +9,7 @@ add_library(${SERLIO_TARGET} SHARED
 		PRTContext.cpp
 		prtModifier/MayaCallbacks.cpp
 		prtModifier/RuleAttributes.cpp
+		prtModifier/PRTMesh.cpp
 		prtModifier/PRTModifierAction.cpp
 		prtModifier/PRTModifierCommand.cpp
 		prtModifier/PRTModifierNode.cpp
@@ -31,6 +32,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 			PRTContext.h
 			prtModifier/MayaCallbacks.h
 			prtModifier/RuleAttributes.h
+			prtModifier/PRTMesh.h
 			prtModifier/PRTModifierAction.h
 			prtModifier/PRTModifierCommand.h
 			prtModifier/PRTModifierNode.h
@@ -43,9 +45,10 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 			util/Utilities.h
 			util/ResolveMapCache.h
 			util/MayaUtilities.h
+			util/MArrayIteratorTraits.h
+			util/MArrayWrapper.h
 			util/MELScriptBuilder.h
-			util/MItDependencyNodesWrapper.h
-			util/MPlugArrayWrapper.h)
+			util/MItDependencyNodesWrapper.h)
 endif()
 
 set_target_properties(${SERLIO_TARGET} PROPERTIES

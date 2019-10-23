@@ -179,9 +179,9 @@ MStatus PRTModifierCommand::directModifier(MObject mesh)
 	MStatus status;
 	PRTModifierAction fPRTModifierAction(*mPRTCtx);
 
+	fPRTModifierAction.setMesh(mesh, mesh);
 	fPRTModifierAction.setRandomSeed(mInitialSeed);
 	fPRTModifierAction.updateRuleFiles(MObject::kNullObj, mRulePkg);
-	fPRTModifierAction.setMesh(mesh, mesh);
 
 	// Now, perform the PRT action
 	status = fPRTModifierAction.doIt();
