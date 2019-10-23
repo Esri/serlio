@@ -26,34 +26,34 @@
 class PRTMesh {
 
 private:
-	std::vector<double> vertexCoordsVec;
-	std::vector<uint32_t> indicesVec;
-	std::vector<uint32_t> faceCountsVec;
+	std::vector<double> mVertexCoordsVec;
+	std::vector<uint32_t> mIndicesVec;
+	std::vector<uint32_t> mFaceCountsVec;
 
 public:
 	PRTMesh(const MObject& mesh);
 
 	const double* vertexCoords() const noexcept {
-		return vertexCoordsVec.data();
+		return mVertexCoordsVec.data();
 	}
 
 	size_t vcCount() const noexcept {
-		return vertexCoordsVec.size();
+		return mVertexCoordsVec.size();
 	}
 
 	const uint32_t* indices() const noexcept {
-		return indicesVec.data();
+		return mIndicesVec.data();
 	}
 
 	size_t indicesCount() const noexcept {
-		return indicesVec.size();
+		return mIndicesVec.size();
 	}
 
 	const uint32_t* faceCounts() const noexcept {
-		return faceCountsVec.data();
+		return mFaceCountsVec.data();
 	}
 
 	size_t faceCountsCount() const noexcept {
-		return faceCountsVec.size();
+		return mFaceCountsVec.size();
 	}
 };

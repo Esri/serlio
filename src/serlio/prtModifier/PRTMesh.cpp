@@ -40,11 +40,11 @@ PRTMesh::PRTMesh(const MObject& mesh) {
 	meshFn.getPoints(vertexArray);
 
 	const size_t vertexArrayLength = vertexArray.length();
-	vertexCoordsVec.reserve(vertexArrayLength);
+	mVertexCoordsVec.reserve(vertexArrayLength);
 	for (unsigned int i = 0; i < vertexArrayLength; ++i) {
-		vertexCoordsVec.push_back(vertexArray[i].x);
-		vertexCoordsVec.push_back(vertexArray[i].y);
-		vertexCoordsVec.push_back(vertexArray[i].z);
+		mVertexCoordsVec.push_back(vertexArray[i].x);
+		mVertexCoordsVec.push_back(vertexArray[i].y);
+		mVertexCoordsVec.push_back(vertexArray[i].z);
 	}
 
 	// faces
@@ -52,11 +52,11 @@ PRTMesh::PRTMesh(const MObject& mesh) {
 	MIntArray vertexList;
 	meshFn.getVertices(vertexCount, vertexList);
 
-	faceCountsVec.reserve(vertexCount.length());
+	mFaceCountsVec.reserve(vertexCount.length());
 	const auto vertexCountWrapper = mu::makeMArrayConstWrapper(vertexCount);
-	std::copy(vertexCountWrapper.begin(), vertexCountWrapper.end(), std::back_inserter(faceCountsVec));
+	std::copy(vertexCountWrapper.begin(), vertexCountWrapper.end(), std::back_inserter(mFaceCountsVec));
 
-	indicesVec.reserve(vertexList.length());
+	mIndicesVec.reserve(vertexList.length());
 	const auto vertexListWrapper = mu::makeMArrayConstWrapper(vertexList);
-	std::copy(vertexListWrapper.begin(), vertexListWrapper.end(), std::back_inserter(indicesVec));
+	std::copy(vertexListWrapper.begin(), vertexListWrapper.end(), std::back_inserter(mIndicesVec));
 }
