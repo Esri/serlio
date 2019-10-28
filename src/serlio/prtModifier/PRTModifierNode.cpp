@@ -22,6 +22,8 @@
 #include "util/Utilities.h"
 #include "util/MayaUtilities.h"
 
+#include "serlioPlugin.h"
+
 #include "maya/MDataHandle.h"
 #include "maya/MFnTypedAttribute.h"
 #include "maya/MFnMeshData.h"
@@ -42,7 +44,8 @@ namespace {
 }
 
 // Unique Node TypeId
-MTypeId PRTModifierNode::id(0x00085000);
+MTypeId PRTModifierNode::id(SerlioNodeIDs::SERLIO_PREFIX,
+                            SerlioNodeIDs::PRT_GEOMETRY_NODE);
 MObject PRTModifierNode::rulePkg;
 MObject PRTModifierNode::currentRulePkg;
 MObject PRTModifierNode::mRandomSeed;

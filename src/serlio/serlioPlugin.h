@@ -19,12 +19,24 @@
 
 #pragma once
 
+#include <cstdint>
+
 #ifdef _WIN32
-#	ifdef SRL_TEST_EXPORTS
-#		define SRL_TEST_EXPORTS_API __declspec(dllexport)
-#	else
-#		define SRL_TEST_EXPORTS_API
-#	endif
+#   ifdef SRL_TEST_EXPORTS
+#      define SRL_TEST_EXPORTS_API __declspec(dllexport)
+#   else
+#      define SRL_TEST_EXPORTS_API
+#   endif
 #else
-#	define SRL_TEST_EXPORTS_API __attribute__ ((visibility ("default")))
+#   define SRL_TEST_EXPORTS_API __attribute__ ((visibility ("default")))
 #endif
+
+namespace SerlioNodeIDs {
+
+// our registered node id range is: 0x00132980 - 0x001329bf
+constexpr std::uint32_t SERLIO_PREFIX           = 0x00132980;
+constexpr std::uint32_t PRT_GEOMETRY_NODE       = 0x5;
+constexpr std::uint32_t STRINGRAY_MATERIAL_NODE = 0xA;
+constexpr std::uint32_t ARNOLD_MATERIAL_NODE    = 0xF;
+
+} // namespace SerlioNodeIDs

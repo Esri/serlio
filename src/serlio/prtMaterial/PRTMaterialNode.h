@@ -33,8 +33,6 @@
 #include <algorithm>
 
 
-#define PRT_MATERIAL_TYPE_ID 0x8667b
-
 class MaterialColor;
 
 class PRTMaterialNode : public MPxNode {
