@@ -27,7 +27,6 @@
 #include <memory>
 #include <vector>
 
-
 struct SRL_TEST_EXPORTS_API PRTContext final {
 	explicit PRTContext(const std::vector<std::wstring>& addExtDirs = {});
 	PRTContext(const PRTContext&) = delete;
@@ -37,14 +36,16 @@ struct SRL_TEST_EXPORTS_API PRTContext final {
 	~PRTContext();
 
 	ResolveMapSPtr getResolveMap(const std::wstring& rpk);
-	bool isAlive() const { return static_cast<bool>(thePRT); }
+	bool isAlive() const {
+		return static_cast<bool>(thePRT);
+	}
 
-	const std::wstring      mPluginRootPath; // the path where serlio dso resides
-	ObjectUPtr              thePRT;
-	CacheObjectUPtr         theCache;
+	const std::wstring mPluginRootPath; // the path where serlio dso resides
+	ObjectUPtr thePRT;
+	CacheObjectUPtr theCache;
 	prt::ConsoleLogHandler* theLogHandler = nullptr;
-	prt::FileLogHandler*    theFileLogHandler = nullptr;
-	ResolveMapCacheUPtr     mResolveMapCache;
+	prt::FileLogHandler* theFileLogHandler = nullptr;
+	ResolveMapCacheUPtr mResolveMapCache;
 };
 
 using PRTContextUPtr = std::unique_ptr<PRTContext>;

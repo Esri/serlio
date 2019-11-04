@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 #pragma once
 
 #include "util/Utilities.h"
@@ -25,57 +24,84 @@
 #include "prt/API.h"
 #include "prt/LogHandler.h"
 
-#include <string>
-#include <vector>
+#include <iostream>
 #include <iterator>
+#include <memory>
 #include <ostream>
 #include <sstream>
-#include <iostream>
-#include <memory>
-
+#include <string>
+#include <vector>
 
 namespace logging {
 
-struct Logger { };
+struct Logger {};
 
-const std::string LEVELS[] = { "trace", "debug", "info", "warning", "error", "fatal" };
-const std::wstring WLEVELS[] = { L"trace", L"debug", L"info", L"warning", L"error", L"fatal" };
+const std::string LEVELS[] = {"trace", "debug", "info", "warning", "error", "fatal"};
+const std::wstring WLEVELS[] = {L"trace", L"debug", L"info", L"warning", L"error", L"fatal"};
 
 // log to std streams
-template<prt::LogLevel L> struct StreamLogger : Logger {
-	explicit StreamLogger(std::wostream& out = std::wcout) : Logger(), mOut(out) { mOut << prefix(); }
-	virtual ~StreamLogger() { mOut << std::endl; }
-	StreamLogger<L>& operator<<(std::wostream&(*x)(std::wostream&)) { mOut << x; return *this; }
-	StreamLogger<L>& operator<<(const std::string& x) { std::copy(x.begin(), x.end(), std::ostream_iterator<char, wchar_t>(mOut)); return *this; }
-	template<typename T> StreamLogger<L>& operator<<(const T& x) { mOut << x; return *this; }
-	static std::wstring prefix() { return L"[" + WLEVELS[L] + L"] "; }
+template <prt::LogLevel L>
+struct StreamLogger : Logger {
+	explicit StreamLogger(std::wostream& out = std::wcout) : Logger(), mOut(out) {
+		mOut << prefix();
+	}
+	virtual ~StreamLogger() {
+		mOut << std::endl;
+	}
+	StreamLogger<L>& operator<<(std::wostream& (*x)(std::wostream&)) {
+		mOut << x;
+		return *this;
+	}
+	StreamLogger<L>& operator<<(const std::string& x) {
+		std::copy(x.begin(), x.end(), std::ostream_iterator<char, wchar_t>(mOut));
+		return *this;
+	}
+	template <typename T>
+	StreamLogger<L>& operator<<(const T& x) {
+		mOut << x;
+		return *this;
+	}
+	static std::wstring prefix() {
+		return L"[" + WLEVELS[L] + L"] ";
+	}
 	std::wostream& mOut;
 };
 
 // log through the prt logger
-template<prt::LogLevel L> struct PRTLogger : Logger {
-	PRTLogger() : Logger() { }
-	virtual ~PRTLogger() { prt::log(wstr.str().c_str(), L); }
-	PRTLogger<L>& operator<<(std::wostream&(*x)(std::wostream&)) { wstr << x;  return *this; }
+template <prt::LogLevel L>
+struct PRTLogger : Logger {
+	PRTLogger() : Logger() {}
+	virtual ~PRTLogger() {
+		prt::log(wstr.str().c_str(), L);
+	}
+	PRTLogger<L>& operator<<(std::wostream& (*x)(std::wostream&)) {
+		wstr << x;
+		return *this;
+	}
 	PRTLogger<L>& operator<<(const std::string& x) {
 		wstr << prtu::toUTF16FromOSNarrow(x);
 		return *this;
 	}
-	template<typename T> PRTLogger<L>& operator<<(const std::vector<T>& v) {
+	template <typename T>
+	PRTLogger<L>& operator<<(const std::vector<T>& v) {
 		wstr << L"[ ";
-		for (const T& x: v) {
+		for (const T& x : v) {
 			wstr << x << L" ";
 		}
 		wstr << L"]";
 		return *this;
 	}
-	template<typename T> PRTLogger<L>& operator<<(const T& x) { wstr << x; return *this; }
+	template <typename T>
+	PRTLogger<L>& operator<<(const T& x) {
+		wstr << x;
+		return *this;
+	}
 	std::wostringstream wstr;
 };
 
 class LogHandler : public prt::LogHandler {
 public:
-	explicit LogHandler(const std::wstring& name) : mName(name) { }
+	explicit LogHandler(const std::wstring& name) : mName(name) {}
 
 	void handleLogEvent(const wchar_t* msg, prt::LogLevel) override {
 		std::wcout << L"[" << mName << L"] " << msg << std::endl;
@@ -101,11 +127,10 @@ private:
 
 using LogHandlerPtr = std::unique_ptr<LogHandler>;
 
-} // namespace log
-
+} // namespace logging
 
 // switch logger here
-template<prt::LogLevel L>
+template <prt::LogLevel L>
 using LT = logging::PRTLogger<L>;
 
 using _LOG_DBG = LT<prt::LOG_DEBUG>;

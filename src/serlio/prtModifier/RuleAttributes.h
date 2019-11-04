@@ -23,13 +23,13 @@
 
 #include "prt/Annotation.h"
 
-#include <string>
 #include <limits>
-#include <vector>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace prt {
-	class RuleFileInfo;
+class RuleFileInfo;
 }
 
 constexpr const wchar_t* ANNOT_RANGE = L"@Range";
@@ -45,26 +45,27 @@ constexpr int ORDER_FIRST = std::numeric_limits<int>::min();
 constexpr int ORDER_NONE = std::numeric_limits<int>::max();
 
 using AttributeGroup = std::vector<std::wstring>;
-using AttributeGroupOrder = std::map<AttributeGroup,int>;
+using AttributeGroupOrder = std::map<AttributeGroup, int>;
 
 struct RuleAttribute {
-	std::wstring   fqName;        // fully qualified rule name (i.e. including style prefix)
-	std::wstring   mayaBriefName; // see Maya MFnAttribute create() method
-	std::wstring   mayaFullName;  // "
-	std::wstring   mayaNiceName;  // see Maya MFnAtribute setNiceNameOverride() method
+	std::wstring fqName;        // fully qualified rule name (i.e. including style prefix)
+	std::wstring mayaBriefName; // see Maya MFnAttribute create() method
+	std::wstring mayaFullName;  // "
+	std::wstring mayaNiceName;  // see Maya MFnAtribute setNiceNameOverride() method
 	prt::AnnotationArgumentType mType;
 
-	AttributeGroup groups;        // groups can be nested
-	int            order      = ORDER_NONE;
-	int            groupOrder = ORDER_NONE;
+	AttributeGroup groups; // groups can be nested
+	int order = ORDER_NONE;
+	int groupOrder = ORDER_NONE;
 
-	std::wstring   ruleFile;
-	bool           memberOfStartRuleFile = false;
+	std::wstring ruleFile;
+	bool memberOfStartRuleFile = false;
 };
 
 using RuleAttributes = std::vector<RuleAttribute>;
 
-SRL_TEST_EXPORTS_API RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo);
+SRL_TEST_EXPORTS_API RuleAttributes getRuleAttributes(const std::wstring& ruleFile,
+                                                      const prt::RuleFileInfo* ruleFileInfo);
 AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes);
 void sortRuleAttributes(RuleAttributes& ra);
 std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap);

@@ -24,27 +24,27 @@
 #include "prtModifier/PRTModifierAction.h"
 
 #include "util/MArrayWrapper.h"
-#include "util/Utilities.h"
-#include "util/MayaUtilities.h"
 #include "util/MItDependencyNodesWrapper.h"
+#include "util/MayaUtilities.h"
+#include "util/Utilities.h"
 
 #include "serlioPlugin.h"
 
 #include "prt/StringUtils.h"
 
-#include "maya/MGlobal.h"
-#include "maya/MObject.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnTypedAttribute.h"
+#include "maya/MGlobal.h"
 #include "maya/MItDependencyNodes.h"
-#include "maya/adskDataStream.h"
+#include "maya/MObject.h"
 #include "maya/adskDataAssociations.h"
+#include "maya/adskDataStream.h"
 
-#include <cstdio>
-#include <sstream>
-#include <set>
 #include <algorithm>
 #include <array>
+#include <cstdio>
+#include <set>
+#include <sstream>
 
 namespace {
 
@@ -52,16 +52,14 @@ constexpr bool DBG = false;
 
 } // namespace
 
-MTypeId PRTMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX,
-                            SerlioNodeIDs::STRINGRAY_MATERIAL_NODE);
+MTypeId PRTMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::STRINGRAY_MATERIAL_NODE);
 
-MObject	PRTMaterialNode::aInMesh;
+MObject PRTMaterialNode::aInMesh;
 MObject PRTMaterialNode::aOutMesh;
 MString PRTMaterialNode::sfxFile;
 const MString OUTPUT_GEOMETRY = MString("og");
 
-MStatus PRTMaterialNode::initialize()
-{
+MStatus PRTMaterialNode::initialize() {
 	MStatus status;
 
 	MFnTypedAttribute tAttr;
@@ -80,10 +78,8 @@ MStatus PRTMaterialNode::initialize()
 	return MStatus::kSuccess;
 }
 
-MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
-{
+MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block) {
 	MStatus status = MS::kSuccess;
-
 
 	MObject thisNode = thisMObject();
 
@@ -145,12 +141,11 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 		return MStatus::kSuccess;
 	}
 
-	if ((inputAssociations != nullptr) && meshFound)
-	{
+	if ((inputAssociations != nullptr) && meshFound) {
 		adsk::Data::Associations outputAssociations(inputMesh.metadata(&status));
 		MCHECK(status);
 
-		//find all existing prt materials
+		// find all existing prt materials
 		adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
 		std::set<std::string> shaderNames;
 		std::list<std::pair<const MObject, const MaterialInfo>> existingMaterialInfos;
@@ -173,10 +168,11 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 				continue;
 			}
 
-			adsk::Data::Stream*	matStream = matChannel->findDataStream(gPRTMatStream);
+			adsk::Data::Stream* matStream = matChannel->findDataStream(gPRTMatStream);
 			if ((matStream != nullptr) && matStream->elementCount() == 1) {
 				adsk::Data::Handle matSHandle = matStream->element(0);
-				if (!matSHandle.usesStructure(*fStructure)) continue;
+				if (!matSHandle.usesStructure(*fStructure))
+					continue;
 				auto p = std::pair<const MObject, const MaterialInfo>(hwShaderNode, matSHandle);
 				existingMaterialInfos.push_back(p);
 			}
@@ -192,9 +188,8 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 
 		adsk::Data::Channel* channel = outputAssociations.findChannel(gPRTMatChannel);
 		if (channel != nullptr) {
-			adsk::Data::Stream*	stream = channel->findDataStream(gPRTMatStream);
+			adsk::Data::Stream* stream = channel->findDataStream(gPRTMatStream);
 			if (stream != nullptr) {
-
 
 				MString mShadingCmd;
 				mShadingCmd += "string $sgName;\n";
@@ -206,13 +201,15 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 				std::array<wchar_t, 512> buf;
 
 				for (adsk::Data::Handle& sHandle : *stream) {
-					if (!sHandle.hasData()) continue;
-					
-					if (!sHandle.usesStructure(*fStructure)) continue;
+					if (!sHandle.hasData())
+						continue;
+
+					if (!sHandle.usesStructure(*fStructure))
+						continue;
 
 					MaterialInfo matInfo(sHandle);
 
-					//material with same metadata already exists?
+					// material with same metadata already exists?
 					MObject matchingMaterial = MObject::kNullObj;
 
 					for (const auto& kv : existingMaterialInfos) {
@@ -233,12 +230,13 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 						size_t idx = matName.find_last_of(L"Sh");
 						if (idx != std::wstring::npos)
 							matName[idx] = L'g';
-						swprintf(buf.data(), buf.size()-1, L"sets -forceElement %ls %ls.f[%d:%d];\n", matName.c_str(), MString(meshName).asWChar(), faceStart, faceEnd);
+						swprintf(buf.data(), buf.size() - 1, L"sets -forceElement %ls %ls.f[%d:%d];\n", matName.c_str(),
+						         MString(meshName).asWChar(), faceStart, faceEnd);
 						mShadingCmd += buf.data();
 						continue;
 					}
 
-					//get unique name
+					// get unique name
 					std::string shaderName = "serlioGeneratedMaterialSh";
 					std::string shadingGroupName = "serlioGeneratedMaterialSg";
 
@@ -256,12 +254,11 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					MString shaderCmd = "shadingNode -asShader StingrayPBS -n " + shaderNameMstr + " -ss;\n";
 					shaderCmd += "shaderfx -sfxnode \"" + shaderNameMstr + "\" -loadGraph  \"" + sfxFile + "\";\n";
 
-					//create shadingnode and add metadata
+					// create shadingnode and add metadata
 					MCHECK(MGlobal::executeCommand(shaderCmd, DBG));
 					MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
 					MCHECK(status);
-					for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders))
-					{
+					for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders)) {
 						MFnDependencyNode n(hwShaderNode);
 
 						if (n.name() == shaderNameMstr) {
@@ -279,26 +276,28 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 						}
 					}
 
-					mShadingCmd += "$shName = \""+ shaderNameMstr + "\";\n";
-					mShadingCmd += "$sgName = \""+ shadingGroupNameMstr +"\";\n";
+					mShadingCmd += "$shName = \"" + shaderNameMstr + "\";\n";
+					mShadingCmd += "$sgName = \"" + shadingGroupNameMstr + "\";\n";
 
 					mShadingCmd += "sets -empty -renderable true -noSurfaceShader true -name $sgName;\n";
 					mShadingCmd += "setAttr ($shName+\".initgraph\") true;\n";
 					mShadingCmd += "connectAttr -force ($shName + \".outColor\") ($sgName + \".surfaceShader\");\n";
 
-					MString blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? "0": "1";
-					mShadingCmd += "$shadingNodeIndex = `shaderfx -sfxnode $shName -getNodeIDByName \"Standard_Base\"`;\n";
-					mShadingCmd += "shaderfx -sfxnode $shName -edit_stringlist $shadingNodeIndex blendmode "+ blendMode +";\n";
+					MString blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? "0" : "1";
+					mShadingCmd +=
+					        "$shadingNodeIndex = `shaderfx -sfxnode $shName -getNodeIDByName \"Standard_Base\"`;\n";
+					mShadingCmd += "shaderfx -sfxnode $shName -edit_stringlist $shadingNodeIndex blendmode " +
+					               blendMode + ";\n";
 
-					//ignored: ambientColor, specularColor
+					// ignored: ambientColor, specularColor
 					setAttribute(mShadingCmd, "diffuse_color", matInfo.diffuseColor);
 					setAttribute(mShadingCmd, "emissive_color", matInfo.emissiveColor);
 					setAttribute(mShadingCmd, "opacity", matInfo.opacity);
 					setAttribute(mShadingCmd, "roughness", matInfo.roughness);
 					setAttribute(mShadingCmd, "metallic", matInfo.metallic);
 
-					//ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
-					//shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
+					// ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
+					// shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
 					setAttribute(mShadingCmd, "colormap_trafo_tuv", matInfo.colormapTrafo.tuv());
 					setAttribute(mShadingCmd, "dirtmap_trafo_tuv", matInfo.dirtmapTrafo.tuv());
 					setAttribute(mShadingCmd, "emissivemap_trafo_tuv", matInfo.emissivemapTrafo.tuv());
@@ -315,7 +314,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					setAttribute(mShadingCmd, "opacitymap_trafo_suvw", matInfo.opacitymapTrafo.suvw());
 					setAttribute(mShadingCmd, "roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
 
-					//ignored: bumpMap, specularMap, occlusionmap
+					// ignored: bumpMap, specularMap, occlusionmap
 					setTexture(mShadingCmd, "color_map", matInfo.colormap);
 					setTexture(mShadingCmd, "dirt_map", matInfo.dirtmap);
 					setTexture(mShadingCmd, "emissive_map", matInfo.emissiveMap);
@@ -324,12 +323,12 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block)
 					setTexture(mShadingCmd, "roughness_map", matInfo.roughnessMap);
 					setTexture(mShadingCmd, "opacity_map", matInfo.opacityMap);
 
-					swprintf(buf.data(), buf.size()-1, L"sets -forceElement $sgName %ls.f[%d:%d];\n", MString(meshName).asWChar(), faceStart, faceEnd);
+					swprintf(buf.data(), buf.size() - 1, L"sets -forceElement $sgName %ls.f[%d:%d];\n",
+					         MString(meshName).asWChar(), faceStart, faceEnd);
 					mShadingCmd += buf.data();
 				}
 
 				MCHECK(MGlobal::executeCommandOnIdle(mShadingCmd, DBG));
-
 			}
 		}
 
@@ -343,12 +342,18 @@ void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& targ
 	mShadingCmd += ("setAttr ($shName + \"." + target + "\") " + std::to_string(val) + ";\n").c_str();
 }
 
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2) {
-	mShadingCmd += ("setAttr ($shName + \"." + target + "\") -type double2 " + std::to_string(val1) + " " + std::to_string(val2) + ";\n").c_str();
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const double val1,
+                                   double const val2) {
+	mShadingCmd += ("setAttr ($shName + \"." + target + "\") -type double2 " + std::to_string(val1) + " " +
+	                std::to_string(val2) + ";\n")
+	                       .c_str();
 }
 
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2, double const val3) {
-	mShadingCmd += ("setAttr ($shName + \"." + target + "\") -type double3 " + std::to_string(val1) + " " + std::to_string(val2) + " " + std::to_string(val3) + ";\n").c_str();
+void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const double val1,
+                                   double const val2, double const val3) {
+	mShadingCmd += ("setAttr ($shName + \"." + target + "\") -type double3 " + std::to_string(val1) + " " +
+	                std::to_string(val2) + " " + std::to_string(val3) + ";\n")
+	                       .c_str();
 }
 
 void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 2>& val) {
@@ -363,19 +368,19 @@ void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& targ
 	setAttribute(mShadingCmd, target, color.r(), color.g(), color.b());
 }
 
-void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& target, const std::string& tex)
-{
+void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& target, const std::string& tex) {
 	if (tex.size() > 0) {
 		mShadingCmd += "$colormap = \"" + MString(tex.c_str()) + "\";\n";
 		mShadingCmd += "$nodeName = $sgName +\"" + MString(target.c_str()) + "\";\n";
 		mShadingCmd += "shadingNode -asTexture file -n $nodeName -ss;\n";
-		mShadingCmd += R"foo(setAttr($nodeName + ".fileTextureName") -type "string" $colormap ;)foo" "\n";
+		mShadingCmd += R"foo(setAttr($nodeName + ".fileTextureName") -type "string" $colormap ;)foo"
+		               "\n";
 
-		mShadingCmd += R"foo(connectAttr -force ($nodeName + ".outColor") ($shName + ".TEX_)foo" + MString(target.c_str()) +"\");\n";
-		mShadingCmd += "setAttr ($shName+\".use_"+ MString(target.c_str())+"\") 1;\n";
+		mShadingCmd += R"foo(connectAttr -force ($nodeName + ".outColor") ($shName + ".TEX_)foo" +
+		               MString(target.c_str()) + "\");\n";
+		mShadingCmd += "setAttr ($shName+\".use_" + MString(target.c_str()) + "\") 1;\n";
 	}
 	else {
 		mShadingCmd += "setAttr ($shName+\".use_" + MString(target.c_str()) + "\") 0;\n";
 	}
 }
-

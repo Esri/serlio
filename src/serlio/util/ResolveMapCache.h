@@ -21,15 +21,14 @@
 
 #include "util/Utilities.h"
 
-#include <map>
 #include <chrono>
-
+#include <map>
 
 class ResolveMapCache {
 public:
 	using KeyType = std::wstring;
 
-	explicit ResolveMapCache(const std::wstring& unpackPath) : mRPKUnpackPath{unpackPath} { }
+	explicit ResolveMapCache(const std::wstring& unpackPath) : mRPKUnpackPath{unpackPath} {}
 	ResolveMapCache(const ResolveMapCache&) = delete;
 	ResolveMapCache(ResolveMapCache&&) = delete;
 	ResolveMapCache& operator=(ResolveMapCache const&) = delete;

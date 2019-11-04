@@ -53,7 +53,8 @@ public:
 
 	void setsCreate(const std::wstring& setName);
 
-	void setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, const int faceStart, const int faceEnd);
+	void setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, const int faceStart,
+	                      const int faceEnd);
 
 	void createShader(const std::wstring& shaderType, const std::wstring& shaderName);
 

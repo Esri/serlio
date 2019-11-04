@@ -42,8 +42,7 @@
 #include <list>
 #include <sstream>
 
-MTypeId ArnoldMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX,
-	                           SerlioNodeIDs::ARNOLD_MATERIAL_NODE);
+MTypeId ArnoldMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::ARNOLD_MATERIAL_NODE);
 
 MObject ArnoldMaterialNode::aInMesh;
 MObject ArnoldMaterialNode::aOutMesh;
@@ -199,7 +198,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		}
 		const int faceEnd = *inMatStreamHandle.asInt32();
 
-		//get unique name
+		// get unique name
 		std::wstring shaderName(L"serlioGeneratedArnoldMaterialSh");
 		std::wstring shadingGroupName(L"serlioGeneratedArnoldMaterialSg");
 
@@ -219,13 +218,10 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	return MStatus::kSuccess;
 }
 
-void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
-												   const MaterialInfo& matInfo,
-												   const std::wstring& shaderName,
-												   const std::wstring& shadingGroupName,
-												   const std::wstring& meshName,
-												   const int faceStart,
-												   const int faceEnd) {
+void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+                                                   const std::wstring& shaderName, const std::wstring& shadingGroupName,
+                                                   const std::wstring& meshName, const int faceStart,
+                                                   const int faceEnd) {
 	MELScriptBuilder sbSync;
 	sbSync.setVar(L"$shaderNode", shaderName);
 	sbSync.createShader(L"aiStandardSurface", L"$shaderNode");
@@ -260,7 +256,8 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	}
 	else {
 		std::wstring shaderName = shadingGroupName + L"_color_map";
-		std::wstring shaderNode = createMapShader(sb, matInfo.colormap, matInfo.colormapTrafo, shaderName, L"map1", false, false);
+		std::wstring shaderNode =
+		        createMapShader(sb, matInfo.colormap, matInfo.colormapTrafo, shaderName, L"map1", false, false);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($colorMapBlendNode + \".input2\")");
 	}
 
@@ -274,7 +271,8 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	}
 	else {
 		std::wstring shaderName = shadingGroupName + L"_bump_map";
-		std::wstring shaderNode = createMapShader(sb, matInfo.bumpMap, matInfo.bumpmapTrafo, shaderName, L"bumpMap", true, false);
+		std::wstring shaderNode =
+		        createMapShader(sb, matInfo.bumpMap, matInfo.bumpmapTrafo, shaderName, L"bumpMap", true, false);
 
 		sb.setVar(L"$bumpLuminanceNode", shadingGroupName + L"_bump_luminance");
 		sb.createShader(L"luminance", L"$bumpLuminanceNode");
@@ -288,7 +286,8 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	}
 	else {
 		std::wstring shaderName = shadingGroupName + L"_dirt_map";
-		std::wstring shaderNode = createMapShader(sb, matInfo.dirtmap, matInfo.dirtmapTrafo, shaderName, L"dirtMap", false, false);
+		std::wstring shaderNode =
+		        createMapShader(sb, matInfo.dirtmap, matInfo.dirtmapTrafo, shaderName, L"dirtMap", false, false);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($dirtMapBlendNode + \".input2\")");
 	}
 
@@ -312,7 +311,8 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	}
 	else {
 		std::wstring shaderName = shadingGroupName + L"_specular_map";
-		std::wstring shaderNode = createMapShader(sb, matInfo.specularMap, matInfo.specularmapTrafo, shaderName, L"specularMap", false, false);
+		std::wstring shaderNode = createMapShader(sb, matInfo.specularMap, matInfo.specularmapTrafo, shaderName,
+		                                          L"specularMap", false, false);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($specularMapBlendNode + \".input2\")");
 	}
 
@@ -332,14 +332,16 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	}
 	else {
 		std::wstring shaderName = shadingGroupName + L"_opacity_map";
-		std::wstring shaderNode = createMapShader(sb, matInfo.opacityMap, matInfo.opacitymapTrafo, shaderName, L"opacityMap", false, true);
+		std::wstring shaderNode = createMapShader(sb, matInfo.opacityMap, matInfo.opacitymapTrafo, shaderName,
+		                                          L"opacityMap", false, true);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColorR\")", L"($opacityMapBlendNode + \".input2R\")");
 	}
 
 	// normal map
 	if (!matInfo.normalMap.empty()) {
 		std::wstring shaderName = shadingGroupName + L"_normal_map";
-		std::wstring shaderNode = createMapShader(sb, matInfo.normalMap, matInfo.normalmapTrafo, shaderName, L"normalMap", true, false);
+		std::wstring shaderNode =
+		        createMapShader(sb, matInfo.normalMap, matInfo.normalmapTrafo, shaderName, L"normalMap", true, false);
 
 		sb.setVar(L"$normalMapConvertNode", shadingGroupName + L"_normal_map_convert");
 		sb.createShader(L"aiNormalMap", L"$normalMapConvertNode");
@@ -365,7 +367,8 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	}
 	else {
 		std::wstring shaderName = shadingGroupName + L"_emissive_map";
-		std::wstring shaderNode = createMapShader(sb, matInfo.emissiveMap, matInfo.emissivemapTrafo, shaderName, L"emissiveMap", false, false);
+		std::wstring shaderNode = createMapShader(sb, matInfo.emissiveMap, matInfo.emissivemapTrafo, shaderName,
+		                                          L"emissiveMap", false, false);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($emissiveMapBlendNode + \".input2\")");
 	}
 
@@ -383,7 +386,8 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	}
 	else {
 		std::wstring shaderName = shadingGroupName + L"_roughness_map";
-		std::wstring shaderNode = createMapShader(sb, matInfo.roughnessMap, matInfo.roughnessmapTrafo, shaderName, L"roughnessMap", true, false);
+		std::wstring shaderNode = createMapShader(sb, matInfo.roughnessMap, matInfo.roughnessmapTrafo, shaderName,
+		                                          L"roughnessMap", true, false);
 
 		// in PRT the roughness map only uses the green channel
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColorG\")", L"($roughnessMapBlendNode + \".input2R\")");
@@ -403,16 +407,16 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb,
 	}
 	else {
 		std::wstring shaderName = shadingGroupName + L"_metallic_map";
-		std::wstring shaderNode = createMapShader(sb, matInfo.metallicMap, matInfo.metallicmapTrafo, shaderName, L"metallicMap", true, false);
+		std::wstring shaderNode = createMapShader(sb, matInfo.metallicMap, matInfo.metallicmapTrafo, shaderName,
+		                                          L"metallicMap", true, false);
 
 		// in PRT the metallic map only uses the blue channel
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColorB\")", L"($metallicMapBlendNode + \".input2R\")");
 	}
 }
 
-void ArnoldMaterialNode::setUvTransformAttrs(MELScriptBuilder& sb,
-											 const std::wstring& uvSet,
-											 const MaterialTrafo& trafo) {
+void ArnoldMaterialNode::setUvTransformAttrs(MELScriptBuilder& sb, const std::wstring& uvSet,
+                                             const MaterialTrafo& trafo) {
 	sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"" + uvSet + L"\"");
 	sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
 	sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / trafo.su(), 1.0 / trafo.sv());
@@ -422,7 +426,9 @@ void ArnoldMaterialNode::setUvTransformAttrs(MELScriptBuilder& sb,
 	}
 }
 
-std::wstring ArnoldMaterialNode::createMapShader(MELScriptBuilder& sb, const std::string& mapFile, const MaterialTrafo& mapTrafo, const std::wstring& shaderName, const std::wstring& uvSet, const bool raw, const bool alpha) {
+std::wstring ArnoldMaterialNode::createMapShader(MELScriptBuilder& sb, const std::string& mapFile,
+                                                 const MaterialTrafo& mapTrafo, const std::wstring& shaderName,
+                                                 const std::wstring& uvSet, const bool raw, const bool alpha) {
 	sb.setVar(L"$mapNode", shaderName);
 	sb.setVar(L"$mapFile", prtu::toUTF16FromOSNarrow(mapFile));
 	sb.createTexture(L"$mapNode");

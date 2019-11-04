@@ -123,31 +123,34 @@ MaterialInfo::MaterialInfo(adsk::Data::Handle sHandle) {
 }
 
 bool MaterialInfo::equals(const MaterialInfo& o) const {
-	return bumpMap == o.bumpMap &&
-		   colormap == o.colormap &&
-		   dirtmap == o.dirtmap &&
-		   emissiveMap == o.emissiveMap &&
-		   metallicMap == o.metallicMap &&
-		   normalMap == o.normalMap &&
-		   occlusionMap == o.occlusionMap &&
-		   opacityMap == o.opacityMap &&
-		   roughnessMap == o.roughnessMap &&
-		   specularMap == o.specularMap &&
-		   opacity == o.opacity &&
-		   metallic == o.metallic &&
-		   roughness == o.roughness &&
-		   ambientColor == o.ambientColor &&
-		   bumpmapTrafo == o.bumpmapTrafo &&
-		   colormapTrafo == o.colormapTrafo &&
-		   diffuseColor == o.diffuseColor &&
-		   dirtmapTrafo == o.dirtmapTrafo &&
-		   emissiveColor == o.emissiveColor &&
-		   emissivemapTrafo == o.emissivemapTrafo &&
-		   metallicmapTrafo == o.metallicmapTrafo &&
-		   normalmapTrafo == o.normalmapTrafo &&
-		   occlusionmapTrafo == o.occlusionmapTrafo &&
-		   opacitymapTrafo == o.opacitymapTrafo &&
-		   roughnessmapTrafo == o.roughnessmapTrafo &&
-		   specularColor == o.specularColor &&
-		   specularmapTrafo == o.specularmapTrafo;
+	// clang-format off
+	return
+	        bumpMap == o.bumpMap &&
+	        colormap == o.colormap &&
+	        dirtmap == o.dirtmap &&
+	        emissiveMap == o.emissiveMap &&
+	        metallicMap == o.metallicMap &&
+	        normalMap == o.normalMap &&
+	        occlusionMap == o.occlusionMap &&
+	        opacityMap == o.opacityMap &&
+	        roughnessMap == o.roughnessMap &&
+	        specularMap == o.specularMap &&
+	        opacity == o.opacity &&
+	        metallic == o.metallic &&
+	        roughness == o.roughness &&
+	        ambientColor == o.ambientColor &&
+	        bumpmapTrafo == o.bumpmapTrafo &&
+	        colormapTrafo == o.colormapTrafo &&
+	        diffuseColor == o.diffuseColor &&
+	        dirtmapTrafo == o.dirtmapTrafo &&
+	        emissiveColor == o.emissiveColor &&
+	        emissivemapTrafo == o.emissivemapTrafo &&
+	        metallicmapTrafo == o.metallicmapTrafo &&
+	        normalmapTrafo == o.normalmapTrafo &&
+	        occlusionmapTrafo == o.occlusionmapTrafo &&
+	        opacitymapTrafo == o.opacitymapTrafo &&
+	        roughnessmapTrafo == o.roughnessmapTrafo &&
+	        specularColor == o.specularColor &&
+	        specularmapTrafo == o.specularmapTrafo;
+	// clang-format on
 }

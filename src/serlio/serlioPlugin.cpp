@@ -27,43 +27,41 @@
 #include "prtMaterial/ArnoldMaterialNode.h"
 #include "prtMaterial/PRTMaterialNode.h"
 
-#include "util/Utilities.h"
-#include "util/MayaUtilities.h"
 #include "util/LogHandler.h"
+#include "util/MayaUtilities.h"
+#include "util/Utilities.h"
 
 #include "maya/MFnPlugin.h"
-#include "maya/MSceneMessage.h"
 #include "maya/MGlobal.h"
-
+#include "maya/MSceneMessage.h"
 
 namespace {
-	constexpr bool DBG = false;
+constexpr bool DBG = false;
 
-	constexpr const char* NODE_MODIFIER         = "serlio";
-	constexpr const char* NODE_MATERIAL         = "serlioMaterial";
-	constexpr const char* NODE_ARNOLD_MATERIAL  = "serlioArnoldMaterial";
-	constexpr const char* CMD_ASSIGN            = "serlioAssign";
-	constexpr const char* MEL_PROC_CREATE_UI    = "serlioCreateUI";
-	constexpr const char* MEL_PROC_DELETE_UI    = "serlioDeleteUI";
-	constexpr const char* SERLIO_VENDOR         = "Esri R&D Center Zurich";
+constexpr const char* NODE_MODIFIER = "serlio";
+constexpr const char* NODE_MATERIAL = "serlioMaterial";
+constexpr const char* NODE_ARNOLD_MATERIAL = "serlioArnoldMaterial";
+constexpr const char* CMD_ASSIGN = "serlioAssign";
+constexpr const char* MEL_PROC_CREATE_UI = "serlioCreateUI";
+constexpr const char* MEL_PROC_DELETE_UI = "serlioDeleteUI";
+constexpr const char* SERLIO_VENDOR = "Esri R&D Center Zurich";
 
-	// global PRT lifetime handler
-	PRTContextUPtr prtCtx;
+// global PRT lifetime handler
+PRTContextUPtr prtCtx;
 
-	MStatus checkRequiredPluginDependencies() {
-		const std::vector<MString> dependencies = { "shaderFXPlugin" };
-		for (const auto& d: dependencies) {
-			auto p = MFnPlugin::findPlugin(d);
-			if (p.isNull()) {
-				MGlobal::displayError("Serlio: the required dependency '" + d + "' is not loaded, please activate it!");
-				return MStatus::kFailure;
-			}
+MStatus checkRequiredPluginDependencies() {
+	const std::vector<MString> dependencies = {"shaderFXPlugin"};
+	for (const auto& d : dependencies) {
+		auto p = MFnPlugin::findPlugin(d);
+		if (p.isNull()) {
+			MGlobal::displayError("Serlio: the required dependency '" + d + "' is not loaded, please activate it!");
+			return MStatus::kFailure;
 		}
-		return MStatus::kSuccess;
 	}
+	return MStatus::kSuccess;
+}
 
 } // namespace
-
 
 // called when the plug-in is loaded into Maya.
 MStatus initializePlugin(MObject obj) {
@@ -87,17 +85,18 @@ MStatus initializePlugin(MObject obj) {
 	// TODO: extract string literals
 	MFnPlugin plugin(obj, SERLIO_VENDOR, SRL_VERSION);
 
-	auto createModifierCommand = [](){ return (void*) new PRTModifierCommand(prtCtx); };
+	auto createModifierCommand = []() { return (void*)new PRTModifierCommand(prtCtx); };
 	MCHECK(plugin.registerCommand(CMD_ASSIGN, createModifierCommand));
 
-	auto createModifierNode = [](){ return (void*) new PRTModifierNode(*prtCtx); };
+	auto createModifierNode = []() { return (void*)new PRTModifierNode(*prtCtx); };
 	MCHECK(plugin.registerNode(NODE_MODIFIER, PRTModifierNode::id, createModifierNode, PRTModifierNode::initialize));
 
-	auto createMaterialNode = [](){ return (void*) new PRTMaterialNode(*prtCtx); };
+	auto createMaterialNode = []() { return (void*)new PRTMaterialNode(*prtCtx); };
 	MCHECK(plugin.registerNode(NODE_MATERIAL, PRTMaterialNode::id, createMaterialNode, &PRTMaterialNode::initialize));
 
 	auto createArnoldMaterialNode = []() { return (void*)new ArnoldMaterialNode(); };
-	MCHECK(plugin.registerNode(NODE_ARNOLD_MATERIAL, ArnoldMaterialNode::id, createArnoldMaterialNode, &ArnoldMaterialNode::initialize));
+	MCHECK(plugin.registerNode(NODE_ARNOLD_MATERIAL, ArnoldMaterialNode::id, createArnoldMaterialNode,
+	                           &ArnoldMaterialNode::initialize));
 
 	MCHECK(plugin.registerUI(MEL_PROC_CREATE_UI, MEL_PROC_DELETE_UI));
 

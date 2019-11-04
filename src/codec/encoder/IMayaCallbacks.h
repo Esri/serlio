@@ -21,16 +21,13 @@
 
 #include "prt/Callbacks.h"
 
-
 constexpr const wchar_t* ENCODER_ID_Maya = L"MayaEncoder";
 constexpr const wchar_t* EO_EMIT_ATTRIBUTES = L"emitAttributes";
-constexpr const wchar_t* EO_EMIT_MATERIALS  = L"emitMaterials";
-constexpr const wchar_t* EO_EMIT_REPORTS    = L"emitReports";
-
+constexpr const wchar_t* EO_EMIT_MATERIALS = L"emitMaterials";
+constexpr const wchar_t* EO_EMIT_REPORTS = L"emitReports";
 
 class IMayaCallbacks : public prt::Callbacks {
 public:
-
 	virtual ~IMayaCallbacks() override = default;
 
 	/**
@@ -47,26 +44,28 @@ public:
 	 * @param uvsSizes lengths of uv arrays per uv set
 	 * @param uvSetsCount number of uv sets
 	 * @param faceRanges ranges for materials and reports
-	 * @param materials contains faceRangesSize-1 attribute maps (all materials must have an identical set of keys and types)
+	 * @param materials contains faceRangesSize-1 attribute maps (all materials must have an identical set of keys and
+	 * types)
 	 * @param reports contains faceRangesSize-1 attribute maps
 	 * @param shapeIDs shape ids per face, contains faceRangesSize-1 values
 	 */
-	virtual void addMesh(
-			const wchar_t* name,
-			const double* vtx, size_t vtxSize,
-			const double* nrm, size_t nrmSize,
-			const uint32_t* faceCounts, size_t faceCountsSize,
-			const uint32_t* vertexIndices, size_t vertexIndicesSize,
-			const uint32_t* normalIndices, size_t normalIndicesSize,
+	// clang-format off
+	virtual void addMesh(const wchar_t* name,
+	                     const double* vtx, size_t vtxSize,
+	                     const double* nrm, size_t nrmSize,
+	                     const uint32_t* faceCounts, size_t faceCountsSize,
+	                     const uint32_t* vertexIndices, size_t vertexIndicesSize,
+	                     const uint32_t* normalIndices, size_t normalIndicesSize,
 
-			double const* const* uvs, size_t const* uvsSizes,
-			uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
-			uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
-			size_t uvSets,
+	                     double const* const* uvs, size_t const* uvsSizes,
+	                     uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
+	                     uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
+	                     size_t uvSets,
 
-			const uint32_t* faceRanges, size_t faceRangesSize,
-			const prt::AttributeMap** materials,
-			const prt::AttributeMap** reports,
-			const int32_t* shapeIDs
+	                     const uint32_t* faceRanges, size_t faceRangesSize,
+	                     const prt::AttributeMap** materials,
+	                     const prt::AttributeMap** reports,
+	                     const int32_t* shapeIDs
 	) = 0;
+	// clang-format on
 };

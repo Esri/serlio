@@ -25,19 +25,17 @@
 #include "prtModifier/PRTModifierAction.h"
 
 #include "maya/MObject.h"
-#include "maya/MTypeId.h"
 #include "maya/MStatus.h"
+#include "maya/MTypeId.h"
 
-
-class PRTModifierNode : public polyModifierNode
-{
+class PRTModifierNode : public polyModifierNode {
 public:
-	PRTModifierNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx), fPRTModifierAction(prtCtx) { }
+	PRTModifierNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx), fPRTModifierAction(prtCtx) {}
 
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
-	MStatus setDependentsDirty(const MPlug &plugBeingDirtied, MPlugArray &affectedPlugs) override;
+	MStatus setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) override;
 
-	static  MStatus initialize();
+	static MStatus initialize();
 
 public:
 	// non-dynamic node attributes
@@ -49,4 +47,3 @@ public:
 	const PRTContext& mPRTCtx;
 	PRTModifierAction fPRTModifierAction;
 };
-
