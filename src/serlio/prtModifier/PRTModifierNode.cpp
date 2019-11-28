@@ -19,33 +19,30 @@
 
 #include "prtModifier/PRTModifierNode.h"
 
-#include "util/Utilities.h"
 #include "util/MayaUtilities.h"
+#include "util/Utilities.h"
 
 #include "serlioPlugin.h"
 
 #include "maya/MDataHandle.h"
-#include "maya/MFnTypedAttribute.h"
 #include "maya/MFnMeshData.h"
-#include "maya/MFnStringData.h"
 #include "maya/MFnNumericAttribute.h"
+#include "maya/MFnStringData.h"
+#include "maya/MFnTypedAttribute.h"
 
-
-#define MCheckStatus(status,message) \
-	if( MStatus::kSuccess != status ) { \
-		cerr << message << "\n"; \
-		return status; \
+#define MCheckStatus(status, message)                                                                                  \
+	if (MStatus::kSuccess != status) {                                                                                 \
+		cerr << message << "\n";                                                                                       \
+		return status;                                                                                                 \
 	}
 
-
 namespace {
-	const MString NAME_RULE_PKG = "Rule_Package";
-	const MString NAME_RANDOM_SEED = "Random_Seed";
-}
+const MString NAME_RULE_PKG = "Rule_Package";
+const MString NAME_RANDOM_SEED = "Random_Seed";
+} // namespace
 
 // Unique Node TypeId
-MTypeId PRTModifierNode::id(SerlioNodeIDs::SERLIO_PREFIX,
-                            SerlioNodeIDs::PRT_GEOMETRY_NODE);
+MTypeId PRTModifierNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::PRT_GEOMETRY_NODE);
 MObject PRTModifierNode::rulePkg;
 MObject PRTModifierNode::currentRulePkg;
 MObject PRTModifierNode::mRandomSeed;
@@ -59,8 +56,7 @@ MStatus PRTModifierNode::setDependentsDirty(const MPlug& /*plugBeingDirtied*/, M
 
 // This method computes the value of the given output plug based
 // on the values of the input attributes. Based on the Maya example splitUvCmd
-MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
-{
+MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 	MStatus status = MS::kSuccess;
 
 	MDataHandle stateData = data.outputValue(state, &status);
@@ -68,12 +64,11 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
 
 	// Check for the HasNoEffect/PassThrough flag on the node.
 	// (stateData is an enumeration standard in all depend nodes)
-	// 
+	//
 	// (0 = Normal)
 	// (1 = HasNoEffect/PassThrough)
 	// (2 = Blocking)
-	if (stateData.asShort() == 1)
-	{
+	if (stateData.asShort() == 1) {
 		MDataHandle inputData = data.inputValue(inMesh, &status);
 		MCheckStatus(status, "ERROR getting inMesh");
 
@@ -83,13 +78,11 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
 		// Simply redirect the inMesh to the outMesh for the PassThrough effect
 		outputData.set(inputData.asMesh());
 	}
-	else
-	{
-		// Check which output attribute we have been asked to 
-		// compute. If this node doesn't know how to compute it, 
+	else {
+		// Check which output attribute we have been asked to
+		// compute. If this node doesn't know how to compute it,
 		// we must return MS::kUnknownParameter
-		if (plug == outMesh)
-		{
+		if (plug == outMesh) {
 			MDataHandle inputData = data.inputValue(inMesh, &status);
 			MCheckStatus(status, "ERROR getting inMesh");
 
@@ -131,8 +124,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
 			// Mark the output mesh as clean
 			outputData.setClean();
 		}
-		else
-		{
+		else {
 			status = MS::kUnknownParameter;
 		}
 	}
@@ -143,21 +135,20 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data)
 MStatus PRTModifierNode::initialize()
 // Description:
 //  This method is called to create and initialize all of the attributes
-//  and attribute dependencies for this node type.  This is only called 
+//  and attribute dependencies for this node type.  This is only called
 //  once when the node type is registered with Maya.
 //
 // Return Values:
 //  MS::kSuccess
 //  MS::kFailure
 {
-	MStatus				status;
+	MStatus status;
 
 	MFnTypedAttribute attrFn;
 	MFnEnumAttribute enumFn;
 
-
 	inMesh = attrFn.create("inMesh", "im", MFnMeshData::kMesh);
-	attrFn.setStorable(true);	// To be stored during file-save
+	attrFn.setStorable(true); // To be stored during file-save
 
 	// Attribute is read-only because it is an output attribute
 	outMesh = attrFn.create("outMesh", "om", MFnMeshData::kMesh);
@@ -167,14 +158,12 @@ MStatus PRTModifierNode::initialize()
 	// Add the attributes we have created to the node
 
 	status = addAttribute(inMesh);
-	if (!status)
-	{
+	if (!status) {
 		status.perror("addAttribute");
 		return status;
 	}
 	status = addAttribute(outMesh);
-	if (!status)
-	{
+	if (!status) {
 		status.perror("addAttribute");
 		return status;
 	}
@@ -183,7 +172,6 @@ MStatus PRTModifierNode::initialize()
 	MStatus stat;
 	MFnStringData stringData;
 	MFnTypedAttribute fAttr;
-
 
 	rulePkg = fAttr.create(NAME_RULE_PKG, "rulePkg", MFnData::kString, stringData.create(&stat2), &stat);
 	MCHECK(stat2);
@@ -205,7 +193,8 @@ MStatus PRTModifierNode::initialize()
 	MCHECK(addAttribute(mRandomSeed));
 	MCHECK(attributeAffects(mRandomSeed, outMesh));
 
-	currentRulePkg = fAttr.create("current"+NAME_RULE_PKG, "currentRulePkg", MFnData::kString, stringData.create(&stat2), &stat);
+	currentRulePkg = fAttr.create("current" + NAME_RULE_PKG, "currentRulePkg", MFnData::kString,
+	                              stringData.create(&stat2), &stat);
 	MCHECK(stat2);
 	MCHECK(stat);
 	MCHECK(fAttr.setCached(true));
@@ -219,12 +208,10 @@ MStatus PRTModifierNode::initialize()
 	// then be recomputed the next time the value of the output is requested.
 	//
 	status = attributeAffects(inMesh, outMesh);
-	if (!status)
-	{
+	if (!status) {
 		status.perror("attributeAffects");
 		return status;
 	}
 
 	return MS::kSuccess;
-
 }

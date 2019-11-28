@@ -23,8 +23,7 @@
 
 #include "maya/MItDependencyNodes.h"
 
-MItDependencyNodesWrapperIt::MItDependencyNodesWrapperIt(MItDependencyNodes& itDepNodes)
-	: itDepNodes(&itDepNodes) {
+MItDependencyNodesWrapperIt::MItDependencyNodesWrapperIt(MItDependencyNodes& itDepNodes) : itDepNodes(&itDepNodes) {
 	updateCurrentObject();
 }
 
@@ -47,4 +46,3 @@ void MItDependencyNodesWrapperIt::updateCurrentObject() {
 	curObject = itDepNodes->thisNode(&status);
 	MCHECK(status);
 }
-

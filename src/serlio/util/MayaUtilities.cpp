@@ -2,7 +2,6 @@
 
 #include <memory>
 
-
 namespace mu {
 
 int32_t computeSeed(const MFloatPoint& p) {
@@ -36,7 +35,8 @@ int32_t computeSeed(const double* vertices, size_t count) {
 
 void statusCheck(MStatus status, const char* file, int line) {
 	if (MS::kSuccess != status) {
-		LOG_ERR << "maya status error at " << file << ":" << line << ": " << status.errorString().asChar() << " (code " << status.statusCode() << ")";
+		LOG_ERR << "maya status error at " << file << ":" << line << ": " << status.errorString().asChar() << " (code "
+		        << status.statusCode() << ")";
 	}
 }
 

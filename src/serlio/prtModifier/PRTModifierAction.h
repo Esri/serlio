@@ -19,25 +19,24 @@
 
 #pragma once
 
+#include "PRTContext.h"
 #include "polyModifier/polyModifierFty.h"
 #include "prtModifier/PRTMesh.h"
 #include "prtModifier/RuleAttributes.h"
 #include "util/Utilities.h"
-#include "PRTContext.h"
 
 #include "prt/API.h"
 
+#include "maya/MDoubleArray.h"
+#include "maya/MFnEnumAttribute.h"
+#include "maya/MIntArray.h"
 #include "maya/MObject.h"
+#include "maya/MPlugArray.h"
 #include "maya/MString.h"
 #include "maya/MStringArray.h"
-#include "maya/MIntArray.h"
-#include "maya/MDoubleArray.h"
-#include "maya/MPlugArray.h"
-#include "maya/MFnEnumAttribute.h"
 
-#include <map>
 #include <list>
-
+#include <map>
 
 class PRTModifierAction;
 
@@ -47,18 +46,17 @@ class PRTModifierEnum {
 public:
 	PRTModifierEnum() = default;
 
-	MStatus fill(const prt::Annotation*  annot);
+	MStatus fill(const prt::Annotation* annot);
 
 public:
-	MFnEnumAttribute        mAttr;
+	MFnEnumAttribute mAttr;
 
 private:
-	MStringArray            mSVals;
-	MDoubleArray            mFVals;
-	MIntArray               mBVals;
-	bool                    mRestricted;
+	MStringArray mSVals;
+	MDoubleArray mFVals;
+	MIntArray mBVals;
+	bool mRestricted;
 }; // class PRTModifierEnum
-
 
 class PRTModifierAction : public polyModifierFty {
 	friend class PRTModifierEnum;
@@ -69,15 +67,17 @@ public:
 	MStatus updateRuleFiles(const MObject& node, const MString& rulePkg);
 	MStatus fillAttributesFromNode(const MObject& node);
 	void setMesh(MObject& _inMesh, MObject& _outMesh);
-	void setRandomSeed(int32_t randomSeed) { mRandomSeed = randomSeed; };
+	void setRandomSeed(int32_t randomSeed) {
+		mRandomSeed = randomSeed;
+	};
 
 	// polyModifierFty inherited methods
-	MStatus		doIt() override;
+	MStatus doIt() override;
 
 private:
 	const PRTContext& mPRTCtx;
 
-	//init in PRTModifierAction::PRTModifierAction()
+	// init in PRTModifierAction::PRTModifierAction()
 	AttributeMapUPtr mMayaEncOpts;
 	AttributeMapUPtr mCGAPrintOptions;
 	AttributeMapUPtr mCGAErrorOptions;
@@ -90,33 +90,42 @@ private:
 	std::unique_ptr<PRTMesh> inPrtMesh;
 
 	// Set in updateRuleFiles(rulePkg)
-	MString                       mRulePkg;
-	std::wstring                  mRuleFile;
-	std::wstring                  mStartRule;
-	const std::wstring            mRuleStyle = L"Default"; // Serlio atm only supports the "Default" style
-	int32_t                       mRandomSeed;
-	RuleAttributes                mRuleAttributes; // TODO: could be cached together with ResolveMap
+	MString mRulePkg;
+	std::wstring mRuleFile;
+	std::wstring mStartRule;
+	const std::wstring mRuleStyle = L"Default"; // Serlio atm only supports the "Default" style
+	int32_t mRandomSeed;
+	RuleAttributes mRuleAttributes; // TODO: could be cached together with ResolveMap
 
 	ResolveMapSPtr getResolveMap();
 
-	//init in fillAttributesFromNode()
+	// init in fillAttributesFromNode()
 	AttributeMapUPtr mGenerateAttrs;
 
 	std::list<PRTModifierEnum> mEnums;
-//	std::map<std::wstring, std::wstring> mBriefName2prtAttr;
+	//	std::map<std::wstring, std::wstring> mBriefName2prtAttr;
 	MStatus createNodeAttributes(const MObject& node, const prt::RuleFileInfo* info);
 	void removeUnusedAttribs(MFnDependencyNode& node);
 
-	static MStatus  addParameter(MFnDependencyNode & node, MObject & attr, MFnAttribute& tAttr);
-	static MStatus  addBoolParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name, bool defaultValue);
-	static MStatus  addFloatParameter(MFnDependencyNode & node, MObject & attr, const RuleAttribute& name, double defaultValue, double min, double max);
-	static MStatus  addStrParameter(MFnDependencyNode & node, MObject & attr, const RuleAttribute& name, const MString & defaultValue);
-	static MStatus  addFileParameter(MFnDependencyNode & node, MObject & attr, const RuleAttribute& name, const MString & defaultValue, const std::wstring& ext);
-	static MStatus  addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const RuleAttribute& name, bool defaultValue, PRTModifierEnum & e);
-	static MStatus  addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const RuleAttribute& name, double defaultValue, PRTModifierEnum & e);
-	static MStatus  addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const RuleAttribute& name, MString defaultValue, PRTModifierEnum & e);
-	static MStatus  addEnumParameter(const prt::Annotation* annot, MFnDependencyNode & node, MObject & attr, const RuleAttribute& name, short defaultValue, PRTModifierEnum & e);
-	static MStatus  addColorParameter(MFnDependencyNode & node, MObject & attr, const RuleAttribute& name, const MString& defaultValue);
-	template<typename T> static T getPlugValueAndRemoveAttr(MFnDependencyNode & node, const MString & briefName, const T & defaultValue);
+	static MStatus addParameter(MFnDependencyNode& node, MObject& attr, MFnAttribute& tAttr);
+	static MStatus addBoolParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
+	                                bool defaultValue);
+	static MStatus addFloatParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
+	                                 double defaultValue, double min, double max);
+	static MStatus addStrParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
+	                               const MString& defaultValue);
+	static MStatus addFileParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
+	                                const MString& defaultValue, const std::wstring& ext);
+	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
+	                                const RuleAttribute& name, bool defaultValue, PRTModifierEnum& e);
+	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
+	                                const RuleAttribute& name, double defaultValue, PRTModifierEnum& e);
+	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
+	                                const RuleAttribute& name, MString defaultValue, PRTModifierEnum& e);
+	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
+	                                const RuleAttribute& name, short defaultValue, PRTModifierEnum& e);
+	static MStatus addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
+	                                 const MString& defaultValue);
+	template <typename T>
+	static T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, const T& defaultValue);
 };
-

@@ -19,13 +19,13 @@
 
 #pragma once
 
-#include "polyModifier/polyModifierCmd.h"
 #include "PRTContext.h"
+#include "polyModifier/polyModifierCmd.h"
 
-// based on the splitUVCommand and meshOpCommand Maya example . 
+// based on the splitUVCommand and meshOpCommand Maya example .
 class PRTModifierCommand : public polyModifierCmd {
 public:
-	PRTModifierCommand(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) { }
+	PRTModifierCommand(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) {}
 
 	bool isUndoable() const override;
 
@@ -42,4 +42,3 @@ private:
 	MString mRulePkg;
 	int32_t mInitialSeed = 0;
 };
-

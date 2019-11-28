@@ -21,30 +21,24 @@
 #include "prtModifier/PRTModifierNode.h"
 #include "util/MayaUtilities.h"
 
-#include "maya/MItSelectionList.h"
-#include "maya/MGlobal.h"
 #include "maya/MArgList.h"
-#include "maya/MFnMesh.h"
 #include "maya/MFloatPointArray.h"
+#include "maya/MFnMesh.h"
+#include "maya/MGlobal.h"
+#include "maya/MItSelectionList.h"
 
-
-
-bool PRTModifierCommand::isUndoable() const
-{
+bool PRTModifierCommand::isUndoable() const {
 	return true;
 }
 
 // implements the MEL PRT command, based on the Maya example splitUvCmd
-MStatus PRTModifierCommand::doIt(const MArgList& argList)
-{
+MStatus PRTModifierCommand::doIt(const MArgList& argList) {
 	MStatus status;
 
-	if (argList.length() == 1)
-	{
+	if (argList.length() == 1) {
 		mRulePkg = argList.asString(0);
 	}
-	else
-	{
+	else {
 		cerr << "Expecting one parameter: the rpk name path" << endl;
 		displayError(" Expecting one parameter: the operation type.");
 		return MS::kFailure;
@@ -59,15 +53,13 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList)
 	bool found = false;
 	bool foundMultiple = false;
 
-	for (; !selListIter.isDone(); selListIter.next())
-	{
+	for (; !selListIter.isDone(); selListIter.next()) {
 		MDagPath dagPath;
 		MObject component;
 		selListIter.getDagPath(dagPath, component);
 
-		if (!found)
-		{
-			// Ensure that this DAG path will point to the shape 
+		if (!found) {
+			// Ensure that this DAG path will point to the shape
 			// of our object. Set the DAG path for the polyModifierCmd.
 			if (dagPath.extendToShape() == MStatus::kSuccess) {
 				setMeshNode(dagPath);
@@ -78,15 +70,12 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList)
 				found = true;
 			}
 		}
-		else
-		{
+		else {
 			foundMultiple = true;
 			break;
 		}
-
 	}
-	if (foundMultiple)
-	{
+	if (foundMultiple) {
 		displayWarning("Found more than one object with selected components.");
 		displayWarning("Only operating on first found object.");
 	}
@@ -95,8 +84,7 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList)
 	//
 	setModifierNodeType(PRTModifierNode::id);
 
-	if (found)
-	{
+	if (found) {
 		MFnMesh meshFn(getMeshNode());
 
 		MFloatPointArray vertices;
@@ -107,59 +95,48 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList)
 		// to handle the operation.
 		status = doModifyPoly();
 
-		if (status == MS::kSuccess)
-		{
+		if (status == MS::kSuccess) {
 			setResult("PRT command succeeded!");
 		}
-		else
-		{
+		else {
 			displayError("PRT command failed!");
 		}
 	}
-	else
-	{
-		displayError(
-			"PRT command failed: Unable to find selected components");
+	else {
+		displayError("PRT command failed: Unable to find selected components");
 		status = MS::kFailure;
 	}
 
 	return status;
 }
 
-MStatus PRTModifierCommand::redoIt()
-{
+MStatus PRTModifierCommand::redoIt() {
 	MStatus status;
 	status = redoModifyPoly();
 
-	if (status == MS::kSuccess)
-	{
+	if (status == MS::kSuccess) {
 		setResult("PRT command succeeded!");
 	}
-	else
-	{
+	else {
 		displayError("PRT command failed!");
 	}
 
 	return status;
 }
 
-MStatus PRTModifierCommand::undoIt()
-{
+MStatus PRTModifierCommand::undoIt() {
 	MStatus status;
 	status = undoModifyPoly();
-	if (status == MS::kSuccess)
-	{
+	if (status == MS::kSuccess) {
 		setResult("PRT undo succeeded!");
 	}
-	else
-	{
+	else {
 		setResult("PRT undo failed!");
 	}
 	return status;
 }
 
-MStatus PRTModifierCommand::initModifierNode(MObject modifierNode)
-{
+MStatus PRTModifierCommand::initModifierNode(MObject modifierNode) {
 	MStatus status;
 	MFnDependencyNode depNodeFn(modifierNode);
 
@@ -174,8 +151,7 @@ MStatus PRTModifierCommand::initModifierNode(MObject modifierNode)
 	return status;
 }
 
-MStatus PRTModifierCommand::directModifier(MObject mesh)
-{
+MStatus PRTModifierCommand::directModifier(MObject mesh) {
 	MStatus status;
 	PRTModifierAction fPRTModifierAction(*mPRTCtx);
 
@@ -188,5 +164,3 @@ MStatus PRTModifierCommand::directModifier(MObject mesh)
 
 	return status;
 }
-
-

@@ -21,25 +21,23 @@
 
 #include "util/LogHandler.h"
 
-
 namespace {
 
 constexpr bool DBG = false;
 
-constexpr const wchar_t* SRL_TMP_PREFIX     = L"serlio_";
-constexpr const wchar_t* PRT_EXT_SUBDIR     = L"ext";
-constexpr prt::LogLevel  PRT_LOG_LEVEL      = prt::LOG_INFO;
-constexpr bool           ENABLE_LOG_CONSOLE = true;
-constexpr bool           ENABLE_LOG_FILE    = false;
+constexpr const wchar_t* SRL_TMP_PREFIX = L"serlio_";
+constexpr const wchar_t* PRT_EXT_SUBDIR = L"ext";
+constexpr prt::LogLevel PRT_LOG_LEVEL = prt::LOG_INFO;
+constexpr bool ENABLE_LOG_CONSOLE = true;
+constexpr bool ENABLE_LOG_FILE = false;
 
 bool verifyMayaEncoder() {
-    constexpr const wchar_t* ENC_ID_MAYA = L"MayaEncoder";
-    const auto mayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
+	constexpr const wchar_t* ENC_ID_MAYA = L"MayaEncoder";
+	const auto mayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
 	return static_cast<bool>(mayaEncOpts);
 }
 
 } // namespace
-
 
 PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRootPath(prtu::getPluginRoot()) {
 	if (ENABLE_LOG_CONSOLE) {
@@ -49,15 +47,18 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 
 	if (ENABLE_LOG_FILE) {
 		const std::wstring logPath = mPluginRootPath + prtu::getDirSeparator<wchar_t>() + L"serlio.log";
-		theFileLogHandler = prt::FileLogHandler::create(prt::LogHandler::ALL, prt::LogHandler::ALL_COUNT, logPath.c_str());
+		theFileLogHandler =
+		        prt::FileLogHandler::create(prt::LogHandler::ALL, prt::LogHandler::ALL_COUNT, logPath.c_str());
 		prt::addLogHandler(theFileLogHandler);
 	}
 
-	if (DBG) LOG_DBG << "initialized prt logger, plugin root path is " << mPluginRootPath;
+	if (DBG)
+		LOG_DBG << "initialized prt logger, plugin root path is " << mPluginRootPath;
 
-	std::vector<std::wstring> extensionPaths = { mPluginRootPath + PRT_EXT_SUBDIR };
+	std::vector<std::wstring> extensionPaths = {mPluginRootPath + PRT_EXT_SUBDIR};
 	extensionPaths.insert(extensionPaths.end(), addExtDirs.begin(), addExtDirs.end());
-	if (DBG) LOG_DBG << "looking for prt extensions at\n" << extensionPaths;
+	if (DBG)
+		LOG_DBG << "looking for prt extensions at\n" << extensionPaths;
 
 	prt::Status status = prt::STATUS_UNSPECIFIED_ERROR;
 	const auto extensionPathPtrs = prtu::toPtrVec(extensionPaths);
@@ -65,18 +66,18 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 
 	// early sanity check for maya encoder
 	if (!verifyMayaEncoder()) {
-        LOG_FTL << "Unable to load Maya encoder extension!";
-        status = prt::STATUS_ENCODER_NOT_FOUND;
-    }
+		LOG_FTL << "Unable to load Maya encoder extension!";
+		status = prt::STATUS_ENCODER_NOT_FOUND;
+	}
 
 	if (!thePRT || status != prt::STATUS_OK) {
-        LOG_FTL << "Could not initialize PRT: " << prt::getStatusDescription(status);
-        thePRT.reset();
+		LOG_FTL << "Could not initialize PRT: " << prt::getStatusDescription(status);
+		thePRT.reset();
 	}
 	else {
-        theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
-        mResolveMapCache = std::make_unique<ResolveMapCache>(prtu::getProcessTempDir(SRL_TMP_PREFIX));
-    }
+		theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
+		mResolveMapCache = std::make_unique<ResolveMapCache>(prtu::getProcessTempDir(SRL_TMP_PREFIX));
+	}
 }
 
 PRTContext::~PRTContext() {

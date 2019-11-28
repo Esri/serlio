@@ -17,16 +17,15 @@
  * limitations under the License.
  */
 
-#include "prtModifier/RuleAttributes.h"
-#include "util/Utilities.h"
-#include "util/LogHandler.h"
 #include "PRTContext.h"
+#include "prtModifier/RuleAttributes.h"
+#include "util/LogHandler.h"
+#include "util/Utilities.h"
 
 #define CATCH_CONFIG_RUNNER
 #include "catch.hpp"
 
 #include <sstream>
-
 
 namespace {
 
@@ -36,20 +35,21 @@ const std::wstring testDataPath = prtu::toUTF16FromOSNarrow(TEST_DATA_PATH);
 } // namespace
 
 namespace std {
-	// inject comparison for AttributeProperties into std namespace so STL algos can find it
-	bool operator==(const RuleAttribute& a, const RuleAttribute& b) {
-		return (a.order == b.order)
-			&& (a.groupOrder == b.groupOrder)
-			&& (a.fqName == b.fqName)
-			&& (a.mayaBriefName == b.mayaBriefName)
-			&& (a.mayaFullName == b.mayaFullName)
-			&& (a.mayaNiceName == b.mayaNiceName)
-			&& (a.ruleFile == b.ruleFile)
-			&& (a.groups == b.groups)
-			&& (a.memberOfStartRuleFile == b.memberOfStartRuleFile);
-	}
+// inject comparison for AttributeProperties into std namespace so STL algos can find it
+bool operator==(const RuleAttribute& a, const RuleAttribute& b) {
+	// clang-format off
+	return (a.order == b.order)
+	        && (a.groupOrder == b.groupOrder)
+	        && (a.fqName == b.fqName)
+	        && (a.mayaBriefName == b.mayaBriefName)
+	        && (a.mayaFullName == b.mayaFullName)
+	        && (a.mayaNiceName == b.mayaNiceName)
+	        && (a.ruleFile == b.ruleFile)
+	        && (a.groups == b.groups)
+	        && (a.memberOfStartRuleFile == b.memberOfStartRuleFile);
+	// clang-format on
+}
 } // namespace std
-
 
 TEST_CASE("get rule style") {
 	SECTION("standard") {
@@ -128,7 +128,7 @@ TEST_CASE("default attribute values") {
 
 	RuleAttributes ruleAttrs = getRuleAttributes(ruleFile, ruleInfo.get());
 
-	for (const auto& ap: ruleAttrs) {
+	for (const auto& ap : ruleAttrs) {
 		LOG_DBG << ap.fqName;
 	}
 
@@ -136,31 +136,31 @@ TEST_CASE("default attribute values") {
 }
 
 const AttributeGroup AG_NONE = {};
-const AttributeGroup AG_A    = { L"a"};
-const AttributeGroup AG_AK   = { L"a", L"k" };
-const AttributeGroup AG_B    = { L"b"};
-const AttributeGroup AG_BK   = { L"b", L"k" };
-const AttributeGroup AG_BKP  = { L"b", L"k", L"p" };
+const AttributeGroup AG_A = {L"a"};
+const AttributeGroup AG_AK = {L"a", L"k"};
+const AttributeGroup AG_B = {L"b"};
+const AttributeGroup AG_BK = {L"b", L"k"};
+const AttributeGroup AG_BKP = {L"b", L"k", L"p"};
 
 RuleAttribute getAttr(std::wstring fqName, AttributeGroup ag, int o, int go, std::wstring rf, bool sr) {
-	return RuleAttribute{ fqName, L"", L"", L"", prt::AAT_UNKNOWN, ag, o, go, rf, sr };
+	return RuleAttribute{fqName, L"", L"", L"", prt::AAT_UNKNOWN, ag, o, go, rf, sr};
 }
 
 TEST_CASE("global group order") {
-	const RuleAttribute A = getAttr(L"style$A", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", true );
-	const RuleAttribute B = getAttr(L"style$B", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", true );
-	const RuleAttribute C = getAttr(L"style$C", AG_BKP, ORDER_NONE, 10, L"foo", true );
-	const RuleAttribute D = getAttr(L"style$D", AG_A, ORDER_NONE, 20, L"foo", true );
-	const RuleAttribute E = getAttr(L"style$E", AG_AK, ORDER_NONE, ORDER_NONE, L"foo", true );
+	const RuleAttribute A = getAttr(L"style$A", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", true);
+	const RuleAttribute B = getAttr(L"style$B", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", true);
+	const RuleAttribute C = getAttr(L"style$C", AG_BKP, ORDER_NONE, 10, L"foo", true);
+	const RuleAttribute D = getAttr(L"style$D", AG_A, ORDER_NONE, 20, L"foo", true);
+	const RuleAttribute E = getAttr(L"style$E", AG_AK, ORDER_NONE, ORDER_NONE, L"foo", true);
 
-	const RuleAttributes inp = { A, B, C, D, E };
+	const RuleAttributes inp = {A, B, C, D, E};
 	const AttributeGroupOrder ago = getGlobalGroupOrder(inp);
-	CHECK(ago.size()     == 5);
+	CHECK(ago.size() == 5);
 	CHECK(ago.at(AG_BKP) == 10);
-	CHECK(ago.at(AG_BK)  == 10);
-	CHECK(ago.at(AG_B)   == 10);
-	CHECK(ago.at(AG_AK)  == ORDER_NONE);
-	CHECK(ago.at(AG_A)   == 20);
+	CHECK(ago.at(AG_BK) == 10);
+	CHECK(ago.at(AG_B) == 10);
+	CHECK(ago.at(AG_AK) == ORDER_NONE);
+	CHECK(ago.at(AG_A) == 20);
 }
 
 TEST_CASE("rule attribute sorting") {
@@ -169,8 +169,8 @@ TEST_CASE("rule attribute sorting") {
 		const RuleAttribute A = getAttr(L"style$A", AG_NONE, ORDER_NONE, ORDER_NONE, L"bar", true);
 		const RuleAttribute B = getAttr(L"style$B", AG_NONE, ORDER_NONE, ORDER_NONE, L"foo", false);
 
-		RuleAttributes inp = { B, A };
-		const RuleAttributes exp = { A, B };
+		RuleAttributes inp = {B, A};
+		const RuleAttributes exp = {A, B};
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
@@ -179,73 +179,73 @@ TEST_CASE("rule attribute sorting") {
 		const RuleAttribute A = getAttr(L"style$A", AG_NONE, ORDER_NONE, ORDER_NONE, L"bar", false);
 		const RuleAttribute B = getAttr(L"style$B", AG_NONE, ORDER_NONE, ORDER_NONE, L"foo", true);
 
-		RuleAttributes inp = { B, A };
-		const RuleAttributes exp = { B, A };
+		RuleAttributes inp = {B, A};
+		const RuleAttributes exp = {B, A};
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("group order") {
-		const RuleAttribute A = getAttr(L"style$A", { L"foo" }, ORDER_NONE, 0, L"foo", true);
-		const RuleAttribute B = getAttr(L"style$B", { L"foo" }, ORDER_NONE, 1, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo"}, ORDER_NONE, 0, L"foo", true);
+		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, 1, L"foo", true);
 
-		RuleAttributes inp = { B, A };
-		const RuleAttributes exp = { A, B };
+		RuleAttributes inp = {B, A};
+		const RuleAttributes exp = {A, B};
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups") {
-		const RuleAttribute A = getAttr(L"style$A", { L"foo", L"bar" }, ORDER_NONE, ORDER_NONE, L"bar", true);
-		const RuleAttribute B = getAttr(L"style$B", { L"foo" }, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"bar", true);
+		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", true);
 
-		RuleAttributes inp = { A, B };
-		const RuleAttributes exp = { B, A };
+		RuleAttributes inp = {A, B};
+		const RuleAttributes exp = {B, A};
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups disjunct") {
-		const RuleAttribute A = getAttr(L"style$A", { L"foo1", L"bar" }, ORDER_NONE, ORDER_NONE, L"bar", true);
-		const RuleAttribute B = getAttr(L"style$B", { L"foo" }, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo1", L"bar"}, ORDER_NONE, ORDER_NONE, L"bar", true);
+		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", true);
 
-		RuleAttributes inp = { A, B };
-		const RuleAttributes exp = { B, A };
+		RuleAttributes inp = {A, B};
+		const RuleAttributes exp = {B, A};
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups on same level") {
-		const RuleAttribute A = getAttr(L"style$A", { L"foo", L"bar" }, ORDER_NONE, ORDER_NONE, L"foo", true);
-		const RuleAttribute B = getAttr(L"style$B", { L"foo" }, ORDER_NONE, ORDER_NONE, L"foo", true);
-		const RuleAttribute C = getAttr(L"style$C", { L"foo", L"baz" }, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute C = getAttr(L"style$C", {L"foo", L"baz"}, ORDER_NONE, ORDER_NONE, L"foo", true);
 
-		RuleAttributes inp = { C, A, B };
-		const RuleAttributes exp = { B, A, C };
+		RuleAttributes inp = {C, A, B};
+		const RuleAttributes exp = {B, A, C};
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("nested groups with group order") {
-		const RuleAttribute A = getAttr(L"style$A", { L"foo", L"bar" }, ORDER_NONE, ORDER_NONE, L"foo", true);
-		const RuleAttribute B = getAttr(L"style$B", { L"foo" }, ORDER_NONE, ORDER_NONE, L"foo", true);
-		const RuleAttribute C = getAttr(L"style$C", { L"foo", L"baz" }, ORDER_NONE, 0, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute C = getAttr(L"style$C", {L"foo", L"baz"}, ORDER_NONE, 0, L"foo", true);
 
-		RuleAttributes inp = { C, A, B };
-		const RuleAttributes exp = { B, C, A };
+		RuleAttributes inp = {C, A, B};
+		const RuleAttributes exp = {B, C, A};
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("all properties") {
-		const RuleAttribute A = getAttr(L"style$A", { L"First1", L"Second1", L"Third1" }, ORDER_NONE, 0, L"foo", true);
-		const RuleAttribute B = getAttr(L"style$B", { L"First" }, ORDER_NONE, 3, L"foo", true);
-		const RuleAttribute C = getAttr(L"style$C", { L"First",  L"Second" }, 0, 2, L"foo", true);
-		const RuleAttribute D = getAttr(L"style$D", { L"First",  L"Second" }, 1, 2, L"foo", true);
-		const RuleAttribute E = getAttr(L"style$E", { L"First",  L"Second",  L"Third" }, ORDER_NONE, 1, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", {L"First1", L"Second1", L"Third1"}, ORDER_NONE, 0, L"foo", true);
+		const RuleAttribute B = getAttr(L"style$B", {L"First"}, ORDER_NONE, 3, L"foo", true);
+		const RuleAttribute C = getAttr(L"style$C", {L"First", L"Second"}, 0, 2, L"foo", true);
+		const RuleAttribute D = getAttr(L"style$D", {L"First", L"Second"}, 1, 2, L"foo", true);
+		const RuleAttribute E = getAttr(L"style$E", {L"First", L"Second", L"Third"}, ORDER_NONE, 1, L"foo", true);
 
-		RuleAttributes inp = { B, A, C, D, E };
-		const RuleAttributes exp = { A, B, C, D, E };
+		RuleAttributes inp = {B, A, C, D, E};
+		const RuleAttributes exp = {A, B, C, D, E};
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
@@ -259,24 +259,24 @@ TEST_CASE("rule attribute sorting") {
 		const RuleAttribute D = getAttr(L"style$D", AG_A, ORDER_NONE, 20, L"foo", true);
 		const RuleAttribute E = getAttr(L"style$E", AG_AK, ORDER_NONE, ORDER_NONE, L"foo", true);
 
-		RuleAttributes inp = { A, B, C, D, E };
-		const RuleAttributes exp = { A, B, C, D, E };
+		RuleAttributes inp = {A, B, C, D, E};
+		const RuleAttributes exp = {A, B, C, D, E};
 		sortRuleAttributes(inp);
 		CHECK(inp == exp);
 	}
 }
 
 TEST_CASE("join") {
-	const std::vector<std::wstring> input1 = { L"foo" };
+	const std::vector<std::wstring> input1 = {L"foo"};
 	CHECK(join<wchar_t>(input1, L" ") == L"foo");
 
-	const std::vector<std::wstring> input2 = { L"foo", L"bar", L"baz" };
+	const std::vector<std::wstring> input2 = {L"foo", L"bar", L"baz"};
 	CHECK(join<wchar_t>(input2, L" ") == L"foo bar baz");
 	CHECK(join<wchar_t>(input2, L";") == L"foo;bar;baz");
 	CHECK(join<wchar_t>(input2, L"") == L"foobarbaz");
 	CHECK(join<wchar_t>(input2) == L"foobarbaz");
 
-	const std::vector<std::wstring> input3 = { };
+	const std::vector<std::wstring> input3 = {};
 	CHECK(join<wchar_t>(input3, L" ") == L"");
 }
 
@@ -295,18 +295,17 @@ TEST_CASE("toFileURI") {
 #endif
 }
 
-
 // we use a custom main function to manage PRT lifetime
-int main( int argc, char* argv[] ) {
+int main(int argc, char* argv[]) {
 	const std::vector<std::wstring> addExtDirs = {
-		prtu::toUTF16FromOSNarrow(SERLIO_CODEC_PATH) // set to absolute path to serlio encoder lib via cmake
+	        prtu::toUTF16FromOSNarrow(SERLIO_CODEC_PATH) // set to absolute path to serlio encoder lib via cmake
 	};
 
 	prtCtx.reset(new PRTContext(addExtDirs));
 	if (!prtCtx->isAlive())
 		return 1;
 
-	int result = Catch::Session().run( argc, argv );
+	int result = Catch::Session().run(argc, argv);
 	prtCtx.reset();
 
 	return result;

@@ -21,21 +21,20 @@
 
 #include "CodecMain.h"
 
-#include "prtx/ResolveMap.h"
+#include "prtx/EncodePreparator.h"
 #include "prtx/Encoder.h"
 #include "prtx/EncoderFactory.h"
 #include "prtx/EncoderInfoBuilder.h"
 #include "prtx/PRTUtils.h"
+#include "prtx/ResolveMap.h"
 #include "prtx/Singleton.h"
-#include "prtx/EncodePreparator.h"
 
 #include "prt/ContentType.h"
 #include "prt/InitialShape.h"
 
-#include <string>
 #include <iostream>
 #include <stdexcept>
-
+#include <string>
 
 class IMayaCallbacks;
 
@@ -51,16 +50,14 @@ public:
 
 private:
 	void convertGeometry(const prtx::InitialShape& initialShape,
-	                     const prtx::EncodePreparator::InstanceVector& instances,
-	                     IMayaCallbacks* callbacks);
+	                     const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* callbacks);
 };
-
 
 class MayaEncoderFactory : public prtx::EncoderFactory, public prtx::Singleton<MayaEncoderFactory> {
 public:
 	static MayaEncoderFactory* createInstance();
 
-	explicit MayaEncoderFactory(const prt::EncoderInfo* info) : prtx::EncoderFactory(info) { }
+	explicit MayaEncoderFactory(const prt::EncoderInfo* info) : prtx::EncoderFactory(info) {}
 	~MayaEncoderFactory() override = default;
 
 	MayaEncoder* create(const prt::AttributeMap* options, prt::Callbacks* callbacks) const override {

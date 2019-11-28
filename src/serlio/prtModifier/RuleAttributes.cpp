@@ -19,17 +19,16 @@
 
 #include "prtModifier/RuleAttributes.h"
 
-#include "util/Utilities.h"
 #include "util/LogHandler.h"
+#include "util/Utilities.h"
 
 #include "prt/Annotation.h"
 
-#include <string>
-#include <ostream>
-#include <vector>
 #include <algorithm>
 #include <cassert>
-
+#include <ostream>
+#include <string>
+#include <vector>
 
 namespace {
 
@@ -57,7 +56,6 @@ std::wstring getNiceName(const std::wstring& fqAttrName) {
 }
 
 } // namespace
-
 
 RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
 	RuleAttributes ra;
@@ -100,19 +98,18 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 			const wchar_t* anName = an->getName();
 			if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
 				hidden = true;
-			else if (!(std::wcscmp(anName, ANNOT_ORDER)))
-			{
+			else if (!(std::wcscmp(anName, ANNOT_ORDER))) {
 				if (an->getNumArguments() >= 1 && an->getArgument(0)->getType() == prt::AAT_FLOAT) {
 					p.order = static_cast<int>(an->getArgument(0)->getFloat());
 				}
 			}
-			else if (!(std::wcscmp(anName, ANNOT_GROUP)))
-			{
+			else if (!(std::wcscmp(anName, ANNOT_GROUP))) {
 				for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
 					if (an->getArgument(argIdx)->getType() == prt::AAT_STR) {
 						p.groups.push_back(an->getArgument(argIdx)->getStr());
 					}
-					else if (argIdx == an->getNumArguments() - 1 && an->getArgument(argIdx)->getType() == prt::AAT_FLOAT) {
+					else if (argIdx == an->getNumArguments() - 1 &&
+					         an->getArgument(argIdx)->getType() == prt::AAT_FLOAT) {
 						p.groupOrder = static_cast<int>(an->getArgument(argIdx)->getFloat());
 					}
 				}
@@ -126,7 +123,8 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 			p.groupOrder = ORDER_FIRST;
 
 		ra.push_back(p);
-		if (DBG) LOG_DBG << p;
+		if (DBG)
+			LOG_DBG << p;
 	}
 
 	return ra;
@@ -134,7 +132,7 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 
 AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes) {
 	AttributeGroupOrder globalGroupOrder;
-	for (const auto& attribute: ruleAttributes) {
+	for (const auto& attribute : ruleAttributes) {
 		for (auto it = std::rbegin(attribute.groups); it != std::rend(attribute.groups); ++it) {
 			std::vector<std::wstring> g(it, std::rend(attribute.groups));
 			std::reverse(g.begin(), g.end());
@@ -182,14 +180,17 @@ void sortRuleAttributes(RuleAttributes& ra) {
 	auto firstDifferentGroupInA = [](const RuleAttribute& a, const RuleAttribute& b) {
 		assert(a.groups.size() == b.groups.size());
 		size_t i = 0;
-		while ((i < a.groups.size()) && (a.groups[i] == b.groups[i])) { i++; }
+		while ((i < a.groups.size()) && (a.groups[i] == b.groups[i])) {
+			i++;
+		}
 		return a.groups[i];
 	};
 
 	const AttributeGroupOrder globalGroupOrder = getGlobalGroupOrder(ra);
-	if (DBG) LOG_DBG << "globalGroupOrder:\n" << globalGroupOrder;
+	if (DBG)
+		LOG_DBG << "globalGroupOrder:\n" << globalGroupOrder;
 
-	auto getGroupOrder = [&globalGroupOrder](const RuleAttribute& ap){
+	auto getGroupOrder = [&globalGroupOrder](const RuleAttribute& ap) {
 		const auto it = globalGroupOrder.find(ap.groups);
 		return (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
 	};
@@ -242,11 +243,9 @@ std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap) {
 			ostr << order;
 		return ostr.str();
 	};
-	ostr << L"RuleAttribute '" << ap.fqName << L"':"
-	     << L" order = " << orderVal(ap.order)
-	     << L", groupOrder = " << orderVal(ap.groupOrder)
-	     << L", ruleFile = '" << ap.ruleFile << L"'"
-	     << L", groups = [ " << join<wchar_t>(ap.groups, L" ") << L" ]\n";
+	ostr << L"RuleAttribute '" << ap.fqName << L"':" << L" order = " << orderVal(ap.order) << L", groupOrder = "
+	     << orderVal(ap.groupOrder) << L", ruleFile = '" << ap.ruleFile << L"'" << L", groups = [ "
+	     << join<wchar_t>(ap.groups, L" ") << L" ]\n";
 	return ostr;
 }
 
@@ -258,7 +257,7 @@ std::ostream& operator<<(std::ostream& ostr, const RuleAttribute& ap) {
 }
 
 std::wostream& operator<<(std::wostream& wostr, const AttributeGroupOrder& ago) {
-	for (const auto& i: ago) {
+	for (const auto& i : ago) {
 		wostr << L"[ " << join<wchar_t>(i.first, L" ") << L"] = " << i.second << L"\n";
 	}
 	return wostr;

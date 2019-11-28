@@ -41,23 +41,13 @@ public:
 	}
 
 private:
-	void buildMaterialShaderScript(MELScriptBuilder& sb,
-								   const MaterialInfo& matInfo,
-								   const std::wstring& shaderName,
-								   const std::wstring& shadingGroupName,
-								   const std::wstring& meshName,
-								   const int faceStart,
-								   const int faceEnd);
+	void buildMaterialShaderScript(MELScriptBuilder& sb, const MaterialInfo& matInfo, const std::wstring& shaderName,
+	                               const std::wstring& shadingGroupName, const std::wstring& meshName,
+	                               const int faceStart, const int faceEnd);
 
-	void setUvTransformAttrs(MELScriptBuilder& sb,
-							 const std::wstring& uvSet,
-							 const MaterialTrafo& trafo);
+	void setUvTransformAttrs(MELScriptBuilder& sb, const std::wstring& uvSet, const MaterialTrafo& trafo);
 
-	std::wstring createMapShader(MELScriptBuilder& sb,
-								 const std::string& mapFile,
-								 const MaterialTrafo& mapTrafo,
-								 const std::wstring& shaderName,
-								 const std::wstring& uvSet,
-								 const bool raw,
-								 const bool alpha);
+	std::wstring createMapShader(MELScriptBuilder& sb, const std::string& mapFile, const MaterialTrafo& mapTrafo,
+	                             const std::wstring& shaderName, const std::wstring& uvSet, const bool raw,
+	                             const bool alpha);
 };

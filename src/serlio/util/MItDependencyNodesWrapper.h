@@ -33,8 +33,7 @@ public:
 	typedef value_type* pointer;
 	typedef value_type& reference;
 
-	MItDependencyNodesWrapperIt() noexcept
-		: itDepNodes(nullptr) {}
+	MItDependencyNodesWrapperIt() noexcept : itDepNodes(nullptr) {}
 
 	MItDependencyNodesWrapperIt(MItDependencyNodes& itDepNodes);
 
@@ -68,8 +67,7 @@ private:
 class MItDependencyNodesWrapper {
 
 public:
-	MItDependencyNodesWrapper(MItDependencyNodes& itDepNodes) noexcept
-		: itDepNodes(itDepNodes) {}
+	MItDependencyNodesWrapper(MItDependencyNodes& itDepNodes) noexcept : itDepNodes(itDepNodes) {}
 
 	// don't allow copy or move, as this is only a thin wrapper around MItDependencyNodes
 	// and therefore should be recreated instead if needed

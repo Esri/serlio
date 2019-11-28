@@ -71,8 +71,10 @@ void MELScriptBuilder::setsCreate(const std::wstring& setName) {
 	commandStream << "sets -empty -renderable true -noSurfaceShader true -name " << setName << ";\n";
 }
 
-void MELScriptBuilder::setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, const int faceStart, const int faceEnd) {
-	commandStream << "sets -forceElement " << setName << " " << meshName << ".f[" << faceStart << ":" << faceEnd << "];\n";
+void MELScriptBuilder::setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, const int faceStart,
+                                        const int faceEnd) {
+	commandStream << "sets -forceElement " << setName << " " << meshName << ".f[" << faceStart << ":" << faceEnd
+	              << "];\n";
 }
 
 void MELScriptBuilder::createShader(const std::wstring& shaderType, const std::wstring& shaderName) {

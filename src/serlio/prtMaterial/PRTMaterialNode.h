@@ -17,21 +17,19 @@
  * limitations under the License.
  */
 
-
 #pragma once
 
-#include "prtModifier/MayaCallbacks.h"
 #include "PRTContext.h"
+#include "prtModifier/MayaCallbacks.h"
 
-#include "maya/MString.h"
 #include "maya/MPxNode.h"
+#include "maya/MString.h"
 #include "maya/adskDataHandle.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <vector>
-#include <algorithm>
-
 
 class MaterialColor;
 
@@ -39,19 +37,20 @@ class PRTMaterialNode : public MPxNode {
 public:
 	PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {}
 
-	static  MStatus     initialize();
+	static MStatus initialize();
 
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
 
-	static MTypeId  id;
-	static  MObject aInMesh;
-	static  MObject aOutMesh;
+	static MTypeId id;
+	static MObject aInMesh;
+	static MObject aOutMesh;
 
 private:
 	static void setTexture(MString& mShadingCmd, const std::string& tex, const std::string& target);
 	static void setAttribute(MString& mShadingCmd, const std::string& target, const double val);
 	static void setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2);
-	static void setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2, double const val3);
+	static void setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2,
+	                         double const val3);
 	static void setAttribute(MString& mShadingCmd, const std::string& target, const MaterialColor& color);
 	static void setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 2>& val);
 	static void setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 3>& val);
