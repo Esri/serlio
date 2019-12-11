@@ -19,6 +19,7 @@
 
 #include "prtMaterial/ArnoldMaterialNode.h"
 #include "prtMaterial/MaterialInfo.h"
+#include "prtMaterial/MaterialUtils.h"
 
 #include "util/MArrayWrapper.h"
 #include "util/MELScriptBuilder.h"
@@ -97,39 +98,9 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	}
 
 	MString meshName;
-	bool meshFound = false;
-	bool searchEnded = false;
-
-	for (MPlug curPlug = plug; !searchEnded;) {
-		searchEnded = true;
-		MPlugArray connectedPlugs;
-		curPlug.connectedTo(connectedPlugs, false, true, &status);
-		MCHECK(status);
-		if (!connectedPlugs.length()) {
-			return MStatus::kFailure;
-		}
-		for (const auto& connectedPlug : mu::makeMArrayConstWrapper(connectedPlugs)) {
-			MFnDependencyNode connectedDepNode(connectedPlug.node(), &status);
-			MCHECK(status);
-			MObject connectedDepNodeObj = connectedDepNode.object(&status);
-			MCHECK(status);
-			if (connectedDepNodeObj.hasFn(MFn::kMesh)) {
-				meshName = connectedDepNode.name(&status);
-				MCHECK(status);
-				meshFound = true;
-				break;
-			}
-			if (connectedDepNodeObj.hasFn(MFn::kGroupParts)) {
-				curPlug = connectedDepNode.findPlug("outputGeometry", true, &status);
-				MCHECK(status);
-				searchEnded = false;
-				break;
-			}
-		}
-	}
-
-	if (!meshFound) {
-		return MStatus::kSuccess;
+	MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
+	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0) {
+		return meshNameStatus;
 	}
 
 	adsk::Data::Associations inAssociations(inMetadata);
