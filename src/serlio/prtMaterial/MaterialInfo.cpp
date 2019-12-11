@@ -154,3 +154,71 @@ bool MaterialInfo::equals(const MaterialInfo& o) const {
 	        specularmapTrafo == o.specularmapTrafo;
 	// clang-format on
 }
+
+bool MaterialInfo::operator<(const MaterialInfo& rhs) const {
+	// clang-format off
+	{ int c = bumpMap.compare(rhs.bumpMap);           if (c != 0) return (c < 0); }
+	{ int c = colormap.compare(rhs.colormap);         if (c != 0) return (c < 0); }
+	{ int c = dirtmap.compare(rhs.dirtmap);           if (c != 0) return (c < 0); }
+	{ int c = emissiveMap.compare(rhs.emissiveMap);   if (c != 0) return (c < 0); }
+	{ int c = metallicMap.compare(rhs.metallicMap);   if (c != 0) return (c < 0); }
+	{ int c = normalMap.compare(rhs.normalMap);       if (c != 0) return (c < 0); }
+	{ int c = occlusionMap.compare(rhs.occlusionMap); if (c != 0) return (c < 0); }
+	{ int c = opacityMap.compare(rhs.opacityMap);     if (c != 0) return (c < 0); }
+	{ int c = roughnessMap.compare(rhs.roughnessMap); if (c != 0) return (c < 0); }
+	{ int c = specularMap.compare(rhs.specularMap);   if (c != 0) return (c < 0); }
+
+	if (opacity > rhs.opacity) return false;
+	if (opacity < rhs.opacity) return true;
+
+	if (metallic > rhs.metallic) return false;
+	if (metallic < rhs.metallic) return true;
+
+	if (roughness > rhs.roughness) return false;
+	if (roughness < rhs.roughness) return true;
+
+	if (ambientColor > rhs.ambientColor) return false;
+	if (ambientColor < rhs.ambientColor) return true;
+
+	if (diffuseColor > rhs.diffuseColor) return false;
+	if (diffuseColor < rhs.diffuseColor) return true;
+
+	if (emissiveColor > rhs.emissiveColor) return false;
+	if (emissiveColor < rhs.emissiveColor) return true;
+
+	if (specularColor > rhs.specularColor) return false;
+	if (specularColor < rhs.specularColor) return true;
+
+	if (specularmapTrafo > rhs.specularmapTrafo) return false;
+	if (specularmapTrafo < rhs.specularmapTrafo) return true;
+
+	if (bumpmapTrafo > rhs.bumpmapTrafo) return false;
+	if (bumpmapTrafo < rhs.bumpmapTrafo) return true;
+
+	if (dirtmapTrafo > rhs.dirtmapTrafo) return false;
+	if (dirtmapTrafo < rhs.dirtmapTrafo) return true;
+
+	if (emissivemapTrafo > rhs.emissivemapTrafo) return false;
+	if (emissivemapTrafo < rhs.emissivemapTrafo) return true;
+
+	if (metallicmapTrafo > rhs.metallicmapTrafo) return false;
+	if (metallicmapTrafo < rhs.metallicmapTrafo) return true;
+
+	if (normalmapTrafo > rhs.normalmapTrafo) return false;
+	if (normalmapTrafo < rhs.normalmapTrafo) return true;
+
+	if (occlusionmapTrafo > rhs.occlusionmapTrafo) return false;
+	if (occlusionmapTrafo < rhs.occlusionmapTrafo) return true;
+
+	if (opacitymapTrafo > rhs.opacitymapTrafo) return false;
+	if (opacitymapTrafo < rhs.opacitymapTrafo) return true;
+
+	if (roughnessmapTrafo > rhs.roughnessmapTrafo) return false;
+	if (roughnessmapTrafo < rhs.roughnessmapTrafo) return true;
+
+	if (specularmapTrafo > rhs.specularmapTrafo) return false;
+	if (specularmapTrafo < rhs.specularmapTrafo) return true;
+	// clang-format on
+
+	return false; // equality
+}

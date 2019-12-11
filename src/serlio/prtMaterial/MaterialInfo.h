@@ -30,12 +30,43 @@ const std::string gPRTMatStream = "prtMaterialStream";
 const std::string gPRTMatMemberFaceStart = "faceIndexStart";
 const std::string gPRTMatMemberFaceEnd = "faceIndexEnd";
 
+template <typename T>
+bool operator<(const T& lhs, const T& rhs) noexcept {
+	if (lhs.size() > rhs.size())
+		return false;
+
+	if (lhs.size() == rhs.size())
+		for (size_t i = 0; i < lhs.size(); i++)
+			if (lhs.at(i) >= rhs.at(i))
+				return false;
+
+	return true;
+}
+
+template <typename T>
+bool operator>(const T& lhs, const T& rhs) noexcept {
+	if (lhs.size() < rhs.size())
+		return false;
+
+	if (lhs.size() == rhs.size())
+		for (size_t i = 0; i < lhs.size(); i++)
+			if (lhs.at(i) <= rhs.at(i))
+				return false;
+
+	return true;
+}
+
 class MaterialColor : private std::array<double, 3> {
 
 public:
 	double r() const noexcept;
 	double g() const noexcept;
 	double b() const noexcept;
+
+	template <typename T>
+	friend bool operator<(const T& lhs, const T& rhs) noexcept;
+	template <typename T>
+	friend bool operator>(const T& lhs, const T& rhs) noexcept;
 
 private:
 	friend class MaterialInfo;
@@ -52,6 +83,11 @@ public:
 
 	std::array<double, 2> tuv() const noexcept;
 	std::array<double, 3> suvw() const noexcept;
+
+	template <typename T>
+	friend bool operator<(const T& lhs, const T& rhs) noexcept;
+	template <typename T>
+	friend bool operator>(const T& lhs, const T& rhs) noexcept;
 
 private:
 	friend class MaterialInfo;
@@ -93,6 +129,8 @@ public:
 	MaterialTrafo roughnessmapTrafo;
 
 	bool equals(const MaterialInfo& o) const;
+
+	bool operator<(const MaterialInfo& rhs) const;
 
 private:
 	static std::string getTexture(adsk::Data::Handle& sHandle, const std::string& texName);
