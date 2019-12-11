@@ -120,10 +120,15 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		return MStatus::kFailure;
 	}
 
+	const MString ARNOLD_SURFACE_SHADER("aiStandardSurface");
+	MaterialUtils::MaterialCache matCache =
+	        MaterialUtils::getMaterialsByStructure(gPRTMatStructure, MFn::kPluginDependNode, ARNOLD_SURFACE_SHADER);
+
 	std::set<std::wstring> shaderNames;
 	MItDependencyNodes itDependencyNodes(MFn::kInvalid, &status);
 	MCHECK(status);
 	for (const auto& dependencyNode : MItDependencyNodesWrapper(itDependencyNodes)) {
+		// TODO: filter aiSurfaceShader
 		MFnDependencyNode fnDependencyNode(dependencyNode, &status);
 		MCHECK(status);
 		MString shaderNodeName = fnDependencyNode.name(&status);
@@ -169,6 +174,22 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		}
 		const int faceEnd = *inMatStreamHandle.asInt32();
 
+		// check for existing material/shader with same material info
+		auto matIt = matCache.find(matInfo);
+		if (matIt != matCache.end()) {
+			MObject matchingMaterial = matIt->second;
+			std::wstring matName(MFnDependencyNode(matchingMaterial).name().asWChar());
+
+			// very bad hack: get shading group from shading node
+			// TODO: we should assign the metadata to the shading group instead
+			size_t idx = matName.find_last_of(L"Sh");
+			if (idx != std::wstring::npos)
+				matName[idx] = L'g';
+
+			sb.setsAddFaceRange(matName, MString(meshName).asWChar(), faceStart, faceEnd);
+			continue;
+		}
+
 		// get unique name
 		std::wstring shaderName(L"serlioGeneratedArnoldMaterialSh");
 		std::wstring shadingGroupName(L"serlioGeneratedArnoldMaterialSg");
@@ -182,6 +203,9 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		shaderNames.insert(shaderName);
 
 		buildMaterialShaderScript(sb, matInfo, shaderName, shadingGroupName, meshName.asWChar(), faceStart, faceEnd);
+
+		// making use of buildMaterialShaderScript side effect: shading node is created
+		MaterialUtils::assignMaterialMetadata(fStructure, inMatStreamHandle, shaderName);
 	}
 
 	sb.execute();
