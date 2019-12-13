@@ -120,12 +120,13 @@ private:
 
 	template <size_t N>
 	static void getDoubleArray(std::array<double, N>& array, adsk::Data::Handle& sHandle, const std::string& name) {
-		array.fill(0.0);
 		if (sHandle.setPositionByMemberName(name.c_str())) {
 			double* data = sHandle.asDouble();
 			if (sHandle.dataLength() >= N && data) {
 				std::copy(data, data + N, array.begin());
+				return;
 			}
 		}
+		array.fill(0.0);
 	}
 };
