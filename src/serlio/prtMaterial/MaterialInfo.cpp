@@ -22,35 +22,47 @@
 #include <cmath>
 
 double MaterialColor::r() const noexcept {
-	return (*this)[0];
+	return data[0];
 }
 
 double MaterialColor::g() const noexcept {
-	return (*this)[1];
+	return data[1];
 }
 
 double MaterialColor::b() const noexcept {
-	return (*this)[2];
+	return data[2];
+}
+
+bool MaterialColor::operator==(const MaterialColor& other) const noexcept {
+	return this->data == other.data;
+}
+
+bool MaterialColor::operator<(const MaterialColor& rhs) const noexcept {
+	return this->data < rhs.data;
+}
+
+bool MaterialColor::operator>(const MaterialColor& rhs) const noexcept {
+	return rhs < *this;
 }
 
 double MaterialTrafo::su() const noexcept {
-	return (*this)[0];
+	return data[0];
 }
 
 double MaterialTrafo::sv() const noexcept {
-	return (*this)[1];
+	return data[1];
 }
 
 double MaterialTrafo::tu() const noexcept {
-	return (*this)[2];
+	return data[2];
 }
 
 double MaterialTrafo::tv() const noexcept {
-	return (*this)[3];
+	return data[3];
 }
 
 double MaterialTrafo::rw() const noexcept {
-	return (*this)[4];
+	return data[4];
 }
 
 std::array<double, 2> MaterialTrafo::tuv() const noexcept {
@@ -61,15 +73,27 @@ std::array<double, 3> MaterialTrafo::suvw() const noexcept {
 	return {su(), sv(), rw()};
 }
 
+bool MaterialTrafo::operator==(const MaterialTrafo& other) const noexcept {
+	return this->data == other.data;
+}
+
+bool MaterialTrafo::operator<(const MaterialTrafo& rhs) const noexcept {
+	return this->data < rhs.data;
+}
+
+bool MaterialTrafo::operator>(const MaterialTrafo& rhs) const noexcept {
+	return rhs < *this;
+}
+
 MaterialColor MaterialInfo::getColor(adsk::Data::Handle& sHandle, const std::string& name) {
 	MaterialColor color;
-	getDoubleArray(color, sHandle, name);
+	getDoubleArray(color.data, sHandle, name);
 	return color;
 }
 
 MaterialTrafo MaterialInfo::getTrafo(adsk::Data::Handle& sHandle, const std::string& name) {
 	MaterialTrafo trafo;
-	getDoubleArray(trafo, sHandle, name);
+	getDoubleArray(trafo.data, sHandle, name);
 	return trafo;
 }
 
