@@ -216,7 +216,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb, const MaterialInfo& matInfo,
                                                    const std::wstring& shaderName, const std::wstring& shadingGroupName,
                                                    const std::wstring& meshName, const int faceStart,
-                                                   const int faceEnd) {
+                                                   const int faceEnd) const {
 	MELScriptBuilder sbSync;
 	sbSync.setVar(L"$shaderNode", shaderName);
 	sbSync.createShader(L"aiStandardSurface", L"$shaderNode");
@@ -411,7 +411,7 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb, const M
 }
 
 void ArnoldMaterialNode::setUvTransformAttrs(MELScriptBuilder& sb, const std::wstring& uvSet,
-                                             const MaterialTrafo& trafo) {
+                                             const MaterialTrafo& trafo) const {
 	sb.setAttr(L"($uvTrafoNode + \".uvset\")", L"\"" + uvSet + L"\"");
 	sb.setAttr(L"($uvTrafoNode + \".pivotFrame\")", 0.0, 0.0);
 	sb.setAttr(L"($uvTrafoNode + \".scaleFrame\")", 1.0 / trafo.su(), 1.0 / trafo.sv());
@@ -423,7 +423,7 @@ void ArnoldMaterialNode::setUvTransformAttrs(MELScriptBuilder& sb, const std::ws
 
 std::wstring ArnoldMaterialNode::createMapShader(MELScriptBuilder& sb, const std::string& mapFile,
                                                  const MaterialTrafo& mapTrafo, const std::wstring& shaderName,
-                                                 const std::wstring& uvSet, const bool raw, const bool alpha) {
+                                                 const std::wstring& uvSet, const bool raw, const bool alpha) const {
 	sb.setVar(L"$mapNode", shaderName);
 	sb.setVar(L"$mapFile", prtu::toUTF16FromOSNarrow(mapFile));
 	sb.createTexture(L"$mapNode");
