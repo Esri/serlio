@@ -120,15 +120,12 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		return MStatus::kFailure;
 	}
 
-	const MString ARNOLD_SURFACE_SHADER("aiStandardSurface");
-	MaterialUtils::MaterialCache matCache =
-	        MaterialUtils::getMaterialsByStructure(gPRTMatStructure, MFn::kPluginDependNode, ARNOLD_SURFACE_SHADER);
+	const MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(fStructure);
 
 	std::set<std::wstring> shaderNames;
-	MItDependencyNodes itDependencyNodes(MFn::kInvalid, &status);
+	MItDependencyNodes itDependencyNodes(MFn::kShadingEngine, &status);
 	MCHECK(status);
 	for (const auto& dependencyNode : MItDependencyNodesWrapper(itDependencyNodes)) {
-		// TODO: filter aiSurfaceShader
 		MFnDependencyNode fnDependencyNode(dependencyNode, &status);
 		MCHECK(status);
 		MString shaderNodeName = fnDependencyNode.name(&status);
@@ -177,15 +174,8 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		// check for existing material/shader with same material info
 		auto matIt = matCache.find(matInfo);
 		if (matIt != matCache.end()) {
-			MObject matchingMaterial = matIt->second;
-			std::wstring matName(MFnDependencyNode(matchingMaterial).name().asWChar());
-
-			// very bad hack: get shading group from shading node
-			// TODO: we should assign the metadata to the shading group instead
-			size_t idx = matName.find_last_of(L"Sh");
-			if (idx != std::wstring::npos)
-				matName[idx] = L'g';
-
+			MObject matchingShadingGroup = matIt->second;
+			std::wstring matName(MFnDependencyNode(matchingShadingGroup).name().asWChar());
 			sb.setsAddFaceRange(matName, MString(meshName).asWChar(), faceStart, faceEnd);
 			continue;
 		}
@@ -205,7 +195,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		buildMaterialShaderScript(sb, matInfo, shaderName, shadingGroupName, meshName.asWChar(), faceStart, faceEnd);
 
 		// making use of buildMaterialShaderScript side effect: shading node is created
-		MaterialUtils::assignMaterialMetadata(fStructure, inMatStreamHandle, shaderName);
+		MaterialUtils::assignMaterialMetadata(fStructure, inMatStreamHandle, shadingGroupName);
 	}
 
 	sb.execute();
@@ -217,16 +207,19 @@ void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb, const M
                                                    const std::wstring& shaderName, const std::wstring& shadingGroupName,
                                                    const std::wstring& meshName, const int faceStart,
                                                    const int faceEnd) const {
+	// synchronously create shading group
+	// TODO: pull this out
 	MELScriptBuilder sbSync;
-	sbSync.setVar(L"$shaderNode", shaderName);
-	sbSync.createShader(L"aiStandardSurface", L"$shaderNode");
+	sbSync.setVar(L"$shadingGroup", shadingGroupName);
+	sbSync.setsCreate(L"$shadingGroup");
 	sbSync.executeSync();
 
+	// create shader
 	sb.setVar(L"$shaderNode", shaderName);
 	sb.setVar(L"$shadingGroup", shadingGroupName);
+	sb.createShader(L"aiStandardSurface", L"$shaderNode");
 
-	// build shading group
-	sb.setsCreate(L"$shadingGroup");
+	// connect to shading group
 	sb.setsAddFaceRange(L"$shadingGroup", meshName, faceStart, faceEnd);
 	sb.connectAttr(L"($shaderNode + \".outColor\")", L"($shadingGroup + \".surfaceShader\")");
 

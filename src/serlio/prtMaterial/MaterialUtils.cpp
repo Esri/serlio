@@ -45,19 +45,14 @@ MStatus getMeshName(MString& meshName, const MPlug& plug) {
 	return MStatus::kSuccess;
 }
 
-MaterialCache getMaterialsByStructure(const std::string& structureName, MFn::Type nodeFilter, const MString& typeName) {
-	adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(structureName.c_str());
-
+MaterialCache getMaterialsByStructure(const adsk::Data::Structure* materialStructure) {
 	MaterialCache existingMaterialInfos;
 
 	MStatus status;
-	MItDependencyNodes shaderIt(nodeFilter, &status);
+	MItDependencyNodes shaderIt(MFn::kShadingEngine, &status);
 	MCHECK(status);
 	for (const auto& nodeObj : MItDependencyNodesWrapper(shaderIt)) {
 		MFnDependencyNode node(nodeObj);
-		LOG_DBG << node.typeName().asChar();
-		if (node.typeName() != typeName)
-			continue;
 
 		const adsk::Data::Associations* materialMetadata = node.metadata(&status);
 		MCHECK(status);
@@ -76,7 +71,7 @@ MaterialCache getMaterialsByStructure(const std::string& structureName, MFn::Typ
 		adsk::Data::Stream* matStream = matChannel->findDataStream(gPRTMatStream);
 		if ((matStream != nullptr) && matStream->elementCount() == 1) {
 			adsk::Data::Handle matSHandle = matStream->element(0);
-			if (!matSHandle.usesStructure(*fStructure))
+			if (!matSHandle.usesStructure(*materialStructure))
 				continue;
 			existingMaterialInfos.emplace(matSHandle, nodeObj);
 		}
@@ -86,14 +81,14 @@ MaterialCache getMaterialsByStructure(const std::string& structureName, MFn::Typ
 }
 
 void assignMaterialMetadata(const adsk::Data::Structure* materialStructure, const adsk::Data::Handle& streamHandle,
-                            const std::wstring& shaderName) {
+                            const std::wstring& shadingGroupName) {
 	MStatus status;
-	MItDependencyNodes nodeIt(MFn::kInvalid, &status);
+	MItDependencyNodes nodeIt(MFn::kShadingEngine, &status);
 	MCHECK(status);
 
 	for (const auto& nodeObj : MItDependencyNodesWrapper(nodeIt)) {
 		MFnDependencyNode node(nodeObj);
-		if (std::wcscmp(node.name().asWChar(), shaderName.c_str()) == 0) {
+		if (std::wcscmp(node.name().asWChar(), shadingGroupName.c_str()) == 0) {
 			// TODO: pull out of loop?
 			adsk::Data::Associations newMetadata;
 			adsk::Data::Channel newChannel = newMetadata.channel(gPRTMatChannel);

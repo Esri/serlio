@@ -13,9 +13,9 @@ namespace MaterialUtils {
 MStatus getMeshName(MString& meshName, const MPlug& plug);
 
 using MaterialCache = std::map<MaterialInfo, MObject>;
-MaterialCache getMaterialsByStructure(const std::string& structureName, MFn::Type nodeFilter, const MString& typeName);
+MaterialCache getMaterialsByStructure(const adsk::Data::Structure* materialStructure);
 
 void assignMaterialMetadata(const adsk::Data::Structure* materialStructure, const adsk::Data::Handle& streamHandle,
-                            const std::wstring& shaderName);
+                            const std::wstring& shadingGroupName);
 
 } // namespace MaterialUtils
