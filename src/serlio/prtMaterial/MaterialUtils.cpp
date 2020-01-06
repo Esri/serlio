@@ -9,6 +9,24 @@
 #include "maya/adskDataAssociations.h"
 #include "maya/adskDataStream.h"
 
+namespace {
+
+MObject findNamedObject(const std::wstring& name, MFn::Type fnType) {
+	MStatus status;
+	MItDependencyNodes nodeIt(fnType, &status);
+	MCHECK(status);
+
+	for (const auto& nodeObj : MItDependencyNodesWrapper(nodeIt)) {
+		MFnDependencyNode node(nodeObj);
+		if (std::wcscmp(node.name().asWChar(), name.c_str()) == 0)
+			return nodeObj;
+	}
+
+	return MObject::kNullObj;
+}
+
+} // namespace
+
 namespace MaterialUtils {
 
 MStatus getMeshName(MString& meshName, const MPlug& plug) {
@@ -81,27 +99,19 @@ MaterialCache getMaterialsByStructure(const adsk::Data::Structure* materialStruc
 }
 
 void assignMaterialMetadata(const adsk::Data::Structure* materialStructure, const adsk::Data::Handle& streamHandle,
-                            const std::wstring& shadingGroupName) {
-	MStatus status;
-	MItDependencyNodes nodeIt(MFn::kShadingEngine, &status);
-	MCHECK(status);
+                            const std::wstring& shadingEngineName) {
+	MObject shadingEngineObj = findNamedObject(shadingEngineName, MFn::kShadingEngine);
+	MFnDependencyNode shadingEngine(shadingEngineObj);
 
-	for (const auto& nodeObj : MItDependencyNodesWrapper(nodeIt)) {
-		MFnDependencyNode node(nodeObj);
-		if (std::wcscmp(node.name().asWChar(), shadingGroupName.c_str()) == 0) {
-			// TODO: pull out of loop?
-			adsk::Data::Associations newMetadata;
-			adsk::Data::Channel newChannel = newMetadata.channel(gPRTMatChannel);
-			adsk::Data::Stream newStream(*materialStructure, gPRTMatStream);
-			newChannel.setDataStream(newStream);
-			newMetadata.setChannel(newChannel);
-			adsk::Data::Handle handle(streamHandle);
-			handle.makeUnique();
-			newStream.setElement(0, handle);
-			node.setMetadata(newMetadata);
-			break;
-		}
-	}
+	adsk::Data::Associations newMetadata;
+	adsk::Data::Channel newChannel = newMetadata.channel(gPRTMatChannel);
+	adsk::Data::Stream newStream(*materialStructure, gPRTMatStream);
+	newChannel.setDataStream(newStream);
+	newMetadata.setChannel(newChannel);
+	adsk::Data::Handle handle(streamHandle);
+	handle.makeUnique();
+	newStream.setElement(0, handle);
+	shadingEngine.setMetadata(newMetadata);
 }
 
 } // namespace MaterialUtils

@@ -16,6 +16,6 @@ using MaterialCache = std::map<MaterialInfo, MObject>;
 MaterialCache getMaterialsByStructure(const adsk::Data::Structure* materialStructure);
 
 void assignMaterialMetadata(const adsk::Data::Structure* materialStructure, const adsk::Data::Handle& streamHandle,
-                            const std::wstring& shadingGroupName);
+                            const std::wstring& shadingEngineName);
 
 } // namespace MaterialUtils
