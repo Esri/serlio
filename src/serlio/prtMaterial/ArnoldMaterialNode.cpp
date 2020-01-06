@@ -122,36 +122,36 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (inMatStream == nullptr)
 		return MStatus::kSuccess;
 
-	const adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
-	if (fStructure == nullptr)
+	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
+	if (materialStructure == nullptr)
 		return MStatus::kFailure;
 
-	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(fStructure);
+	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(materialStructure);
 	MaterialNameSource nameSource;
 
-	MELScriptBuilder sb;
-	sb.declString(L"$shadingGroup");
-	sb.declString(L"$shaderNode");
-	sb.declString(L"$mapFile");
-	sb.declString(L"$mapNode");
-	sb.declString(L"$bumpLuminanceNode");
-	sb.declString(L"$bumpValueNode");
-	sb.declString(L"$displacementNode");
-	sb.declString(L"$normalMapConvertNode");
-	sb.declString(L"$colorMapBlendNode");
-	sb.declString(L"$dirtMapBlendNode");
-	sb.declString(L"$opacityMapBlendNode");
-	sb.declString(L"$specularMapBlendNode");
-	sb.declString(L"$emissiveMapBlendNode");
-	sb.declString(L"$roughnessMapBlendNode");
-	sb.declString(L"$metallicMapBlendNode");
-	sb.declString(L"$uvTrafoNode");
+	MELScriptBuilder scriptBuilder;
+	scriptBuilder.declString(L"$shadingGroup");
+	scriptBuilder.declString(L"$shaderNode");
+	scriptBuilder.declString(L"$mapFile");
+	scriptBuilder.declString(L"$mapNode");
+	scriptBuilder.declString(L"$bumpLuminanceNode");
+	scriptBuilder.declString(L"$bumpValueNode");
+	scriptBuilder.declString(L"$displacementNode");
+	scriptBuilder.declString(L"$normalMapConvertNode");
+	scriptBuilder.declString(L"$colorMapBlendNode");
+	scriptBuilder.declString(L"$dirtMapBlendNode");
+	scriptBuilder.declString(L"$opacityMapBlendNode");
+	scriptBuilder.declString(L"$specularMapBlendNode");
+	scriptBuilder.declString(L"$emissiveMapBlendNode");
+	scriptBuilder.declString(L"$roughnessMapBlendNode");
+	scriptBuilder.declString(L"$metallicMapBlendNode");
+	scriptBuilder.declString(L"$uvTrafoNode");
 
 	for (adsk::Data::Handle& inMatStreamHandle : *inMatStream) {
 		if (!inMatStreamHandle.hasData())
 			continue;
 
-		if (!inMatStreamHandle.usesStructure(*fStructure))
+		if (!inMatStreamHandle.usesStructure(*materialStructure))
 			continue;
 
 		if (!inMatStreamHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str()))
@@ -162,29 +162,27 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			continue;
 		const int faceEnd = *inMatStreamHandle.asInt32();
 
-		std::wstring shadingEngineName;
-		MaterialInfo matInfo(inMatStreamHandle);
-		auto matIt = matCache.find(matInfo);
-		if (matIt != matCache.end()) {
-			assert(matInfo.equals(matIt->first));
-			shadingEngineName = matIt->second;
-		}
-		else {
+		auto createShadingEngine = [this, &nameSource, &materialStructure, &scriptBuilder,
+		                            &inMatStreamHandle](const MaterialInfo& matInfo) {
 			auto newMaterialName = nameSource.getUniqueName(MATERIAL_BASE_NAME);
-			shadingEngineName = newMaterialName.first;
+			const std::wstring& shadingEngineName = newMaterialName.first;
 			const std::wstring& shaderName = newMaterialName.second;
 
 			synchronouslyCreateShadingEngine(shadingEngineName);
-			MaterialUtils::assignMaterialMetadata(fStructure, inMatStreamHandle, shadingEngineName);
-			appendToMaterialScriptBuilder(sb, matInfo, shaderName, shadingEngineName);
-			matCache.emplace(matInfo, shadingEngineName);
+			MaterialUtils::assignMaterialMetadata(materialStructure, inMatStreamHandle, shadingEngineName);
+			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderName, shadingEngineName);
 			LOG_INF << "new arnold shading engine: " << shadingEngineName << " (surface shader: " << shaderName << ")";
-		}
-		sb.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceStart, faceEnd);
+
+			return shadingEngineName;
+		};
+
+		MaterialInfo matInfo(inMatStreamHandle);
+		std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
+		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceStart, faceEnd);
 		LOG_INF << "assigned arnold shading engine (" << faceStart << ":" << faceEnd << "): " << shadingEngineName;
 	}
 
-	sb.execute();
+	scriptBuilder.execute();
 
 	return MStatus::kSuccess;
 }

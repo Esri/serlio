@@ -247,3 +247,13 @@ std::basic_string<C> join(Container const& container, const std::basic_string<C>
 #elif defined(_MSC_VER)
 #	define MAYBE_UNUSED // [[maybe_unused]] would require /std:c++latest i.e. C++17
 #endif
+
+template <typename M, typename F, typename... ARGS>
+auto getCachedValue(M& cache, const typename M::key_type& key, F valueFunc, ARGS&&... valueFuncArgs) {
+	auto p = cache.find(key);
+	if (p == cache.end()) {
+		auto value = valueFunc(valueFuncArgs...);
+		p = cache.emplace(key, value).first;
+	}
+	return p->second;
+}
