@@ -162,28 +162,26 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			continue;
 		const int faceEnd = *inMatStreamHandle.asInt32();
 
-		// check for existing material/shader with same material info
+		std::wstring shadingEngineName;
 		MaterialInfo matInfo(inMatStreamHandle);
 		auto matIt = matCache.find(matInfo);
 		if (matIt != matCache.end()) {
 			assert(matInfo.equals(matIt->first));
-			std::wstring matName = matIt->second;
-			sb.setsAddFaceRange(matName, MString(meshName).asWChar(), faceStart,
-			                    faceEnd); // TODO: deduplicate with appendToMaterialScriptBuilder
-			LOG_INF << "reused arnold material (" << faceStart << ":" << faceEnd << "): " << matName;
-			continue;
+			shadingEngineName = matIt->second;
 		}
+		else {
+			auto newMaterialName = nameSource.getUniqueName(MATERIAL_BASE_NAME);
+			shadingEngineName = newMaterialName.first;
+			const std::wstring& shaderName = newMaterialName.second;
 
-		auto newMaterialName = nameSource.getUniqueName(MATERIAL_BASE_NAME);
-		const std::wstring& shadingEngineName = newMaterialName.first;
-		const std::wstring& shaderName = newMaterialName.second;
-
-		synchronouslyCreateShadingEngine(shadingEngineName);
-		MaterialUtils::assignMaterialMetadata(fStructure, inMatStreamHandle, shadingEngineName);
-		appendToMaterialScriptBuilder(sb, matInfo, shaderName, shadingEngineName, meshName.asWChar(), faceStart,
-		                              faceEnd);
-		matCache.emplace(matInfo, shadingEngineName);
-		LOG_INF << "new arnold material: " << shadingEngineName << " (" << shaderName << ")";
+			synchronouslyCreateShadingEngine(shadingEngineName);
+			MaterialUtils::assignMaterialMetadata(fStructure, inMatStreamHandle, shadingEngineName);
+			appendToMaterialScriptBuilder(sb, matInfo, shaderName, shadingEngineName);
+			matCache.emplace(matInfo, shadingEngineName);
+			LOG_INF << "new arnold shading engine: " << shadingEngineName << " (surface shader: " << shaderName << ")";
+		}
+		sb.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceStart, faceEnd);
+		LOG_INF << "assigned arnold shading engine (" << faceStart << ":" << faceEnd << "): " << shadingEngineName;
 	}
 
 	sb.execute();
@@ -193,16 +191,13 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
                                                        const std::wstring& shaderName,
-                                                       const std::wstring& shadingGroupName,
-                                                       const std::wstring& meshName, const int faceStart,
-                                                       const int faceEnd) const {
+                                                       const std::wstring& shadingGroupName) const {
 	// create shader
 	sb.setVar(L"$shaderNode", shaderName);
 	sb.setVar(L"$shadingGroup", shadingGroupName);
 	sb.createShader(L"aiStandardSurface", L"$shaderNode");
 
 	// connect to shading group
-	sb.setsAddFaceRange(L"$shadingGroup", meshName, faceStart, faceEnd);
 	sb.connectAttr(L"($shaderNode + \".outColor\")", L"($shadingGroup + \".surfaceShader\")");
 
 	sb.setAttr(L"($shaderNode + \".base\")", 1.0);
