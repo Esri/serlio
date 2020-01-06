@@ -39,6 +39,7 @@
 #include "maya/adskDataStream.h"
 #include "maya/adskDataStructure.h"
 
+#include <cassert>
 #include <set>
 #include <sstream>
 
@@ -85,9 +86,8 @@ MStatus ArnoldMaterialNode::initialize() {
 }
 
 MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
-	if (plug != aOutMesh) {
+	if (plug != aOutMesh)
 		return MStatus::kUnknownParameter;
-	}
 
 	MStatus status;
 
@@ -105,32 +105,26 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	const adsk::Data::Associations* inMetadata = inMesh.metadata(&status);
 	MCHECK(status);
-	if (inMetadata == nullptr) {
+	if (inMetadata == nullptr)
 		return MStatus::kSuccess;
-	}
 
 	MString meshName;
 	MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
-	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0) {
+	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
 		return meshNameStatus;
-	}
 
 	adsk::Data::Associations inAssociations(inMetadata);
 	adsk::Data::Channel* inMatChannel = inAssociations.findChannel(gPRTMatChannel);
-
-	if (inMatChannel == nullptr) {
+	if (inMatChannel == nullptr)
 		return MStatus::kSuccess;
-	}
 
 	adsk::Data::Stream* inMatStream = inMatChannel->findDataStream(gPRTMatStream);
-	if (inMatStream == nullptr) {
+	if (inMatStream == nullptr)
 		return MStatus::kSuccess;
-	}
 
 	const adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
-	if (fStructure == nullptr) {
+	if (fStructure == nullptr)
 		return MStatus::kFailure;
-	}
 
 	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(fStructure);
 	MaterialNameSource nameSource;
@@ -160,8 +154,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		if (!inMatStreamHandle.usesStructure(*fStructure))
 			continue;
 
-		MaterialInfo matInfo(inMatStreamHandle);
-
 		if (!inMatStreamHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str()))
 			continue;
 		const int faceStart = *inMatStreamHandle.asInt32();
@@ -171,11 +163,14 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		const int faceEnd = *inMatStreamHandle.asInt32();
 
 		// check for existing material/shader with same material info
+		MaterialInfo matInfo(inMatStreamHandle);
 		auto matIt = matCache.find(matInfo);
 		if (matIt != matCache.end()) {
+			assert(matInfo.equals(matIt->first));
 			std::wstring matName = matIt->second;
-			LOG_INF << "reusing arnold material: " << matName;
-			sb.setsAddFaceRange(matName, MString(meshName).asWChar(), faceStart, faceEnd);
+			sb.setsAddFaceRange(matName, MString(meshName).asWChar(), faceStart,
+			                    faceEnd); // TODO: deduplicate with appendToMaterialScriptBuilder
+			LOG_INF << "reused arnold material (" << faceStart << ":" << faceEnd << "): " << matName;
 			continue;
 		}
 
