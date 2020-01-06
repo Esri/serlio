@@ -12,7 +12,7 @@ namespace MaterialUtils {
 
 MStatus getMeshName(MString& meshName, const MPlug& plug);
 
-using MaterialCache = std::map<MaterialInfo, MObject>;
+using MaterialCache = std::map<MaterialInfo, std::wstring>;
 MaterialCache getMaterialsByStructure(const adsk::Data::Structure* materialStructure);
 
 void assignMaterialMetadata(const adsk::Data::Structure* materialStructure, const adsk::Data::Handle& streamHandle,

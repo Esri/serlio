@@ -132,8 +132,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		return MStatus::kFailure;
 	}
 
-	const MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(fStructure);
-
+	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(fStructure);
 	MaterialNameSource nameSource;
 
 	MELScriptBuilder sb;
@@ -174,8 +173,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		// check for existing material/shader with same material info
 		auto matIt = matCache.find(matInfo);
 		if (matIt != matCache.end()) {
-			MObject matchingShadingGroup = matIt->second;
-			std::wstring matName(MFnDependencyNode(matchingShadingGroup).name().asWChar());
+			std::wstring matName = matIt->second;
 			LOG_INF << "reusing arnold material: " << matName;
 			sb.setsAddFaceRange(matName, MString(meshName).asWChar(), faceStart, faceEnd);
 			continue;
@@ -189,6 +187,8 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		MaterialUtils::assignMaterialMetadata(fStructure, inMatStreamHandle, shadingEngineName);
 		appendToMaterialScriptBuilder(sb, matInfo, shaderName, shadingEngineName, meshName.asWChar(), faceStart,
 		                              faceEnd);
+		matCache.emplace(matInfo, shadingEngineName);
+		LOG_INF << "new arnold material: " << shadingEngineName << " (" << shaderName << ")";
 	}
 
 	sb.execute();

@@ -88,10 +88,10 @@ MaterialCache getMaterialsByStructure(const adsk::Data::Structure* materialStruc
 
 		adsk::Data::Stream* matStream = matChannel->findDataStream(gPRTMatStream);
 		if ((matStream != nullptr) && matStream->elementCount() == 1) {
-			adsk::Data::Handle matSHandle = matStream->element(0);
+			const adsk::Data::Handle matSHandle = matStream->element(0);
 			if (!matSHandle.usesStructure(*materialStructure))
 				continue;
-			existingMaterialInfos.emplace(matSHandle, nodeObj);
+			existingMaterialInfos.emplace(matSHandle, node.name().asWChar());
 		}
 	}
 
