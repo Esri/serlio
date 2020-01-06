@@ -19,11 +19,11 @@
 
 #include "prtMaterial/ArnoldMaterialNode.h"
 #include "prtMaterial/MaterialInfo.h"
+#include "prtMaterial/MaterialNameSource.h"
 #include "prtMaterial/MaterialUtils.h"
 
 #include "util/MArrayWrapper.h"
 #include "util/MELScriptBuilder.h"
-#include "util/MItDependencyNodesWrapper.h"
 #include "util/MayaUtilities.h"
 
 #include "serlioPlugin.h"
@@ -34,14 +34,26 @@
 #include "maya/MFnMesh.h"
 #include "maya/MFnTypedAttribute.h"
 #include "maya/MGlobal.h"
-#include "maya/MItDependencyNodes.h"
 #include "maya/MPlugArray.h"
 #include "maya/adskDataAssociations.h"
 #include "maya/adskDataStream.h"
 #include "maya/adskDataStructure.h"
 
-#include <list>
+#include <set>
 #include <sstream>
+
+namespace {
+
+const std::wstring MATERIAL_BASE_NAME(L"serlioGeneratedArnoldMaterial");
+
+void synchronouslyCreateShadingEngine(const std::wstring& shadingEngineName) {
+	MELScriptBuilder sbSync;
+	sbSync.setVar(L"$shadingGroup", shadingEngineName);
+	sbSync.setsCreate(L"$shadingGroup");
+	sbSync.executeSync();
+}
+
+} // namespace
 
 MTypeId ArnoldMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::ARNOLD_MATERIAL_NODE);
 
@@ -122,19 +134,9 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	const MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(fStructure);
 
-	std::set<std::wstring> shaderNames;
-	MItDependencyNodes itDependencyNodes(MFn::kShadingEngine, &status);
-	MCHECK(status);
-	for (const auto& dependencyNode : MItDependencyNodesWrapper(itDependencyNodes)) {
-		MFnDependencyNode fnDependencyNode(dependencyNode, &status);
-		MCHECK(status);
-		MString shaderNodeName = fnDependencyNode.name(&status);
-		MCHECK(status);
-		shaderNames.insert(shaderNodeName.asWChar());
-	}
+	MaterialNameSource nameSource;
 
 	MELScriptBuilder sb;
-
 	sb.declString(L"$shadingGroup");
 	sb.declString(L"$shaderNode");
 	sb.declString(L"$mapFile");
@@ -161,14 +163,12 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 		MaterialInfo matInfo(inMatStreamHandle);
 
-		if (!inMatStreamHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str())) {
+		if (!inMatStreamHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str()))
 			continue;
-		}
 		const int faceStart = *inMatStreamHandle.asInt32();
 
-		if (!inMatStreamHandle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str())) {
+		if (!inMatStreamHandle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str()))
 			continue;
-		}
 		const int faceEnd = *inMatStreamHandle.asInt32();
 
 		// check for existing material/shader with same material info
@@ -176,26 +176,19 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		if (matIt != matCache.end()) {
 			MObject matchingShadingGroup = matIt->second;
 			std::wstring matName(MFnDependencyNode(matchingShadingGroup).name().asWChar());
+			LOG_INF << "reusing arnold material: " << matName;
 			sb.setsAddFaceRange(matName, MString(meshName).asWChar(), faceStart, faceEnd);
 			continue;
 		}
 
-		// get unique name
-		std::wstring shaderName(L"serlioGeneratedArnoldMaterialSh");
-		std::wstring shadingGroupName(L"serlioGeneratedArnoldMaterialSg");
+		auto newMaterialName = nameSource.getUniqueName(MATERIAL_BASE_NAME);
+		const std::wstring& shadingEngineName = newMaterialName.first;
+		const std::wstring& shaderName = newMaterialName.second;
 
-		int shIdx = 0;
-		while (shaderNames.find(shaderName + std::to_wstring(shIdx)) != shaderNames.end()) {
-			shIdx++;
-		}
-		shaderName += std::to_wstring(shIdx);
-		shadingGroupName += std::to_wstring(shIdx);
-		shaderNames.insert(shaderName);
-
-		buildMaterialShaderScript(sb, matInfo, shaderName, shadingGroupName, meshName.asWChar(), faceStart, faceEnd);
-
-		// making use of buildMaterialShaderScript side effect: shading node is created
-		MaterialUtils::assignMaterialMetadata(fStructure, inMatStreamHandle, shadingGroupName);
+		synchronouslyCreateShadingEngine(shadingEngineName);
+		MaterialUtils::assignMaterialMetadata(fStructure, inMatStreamHandle, shadingEngineName);
+		appendToMaterialScriptBuilder(sb, matInfo, shaderName, shadingEngineName, meshName.asWChar(), faceStart,
+		                              faceEnd);
 	}
 
 	sb.execute();
@@ -203,17 +196,11 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	return MStatus::kSuccess;
 }
 
-void ArnoldMaterialNode::buildMaterialShaderScript(MELScriptBuilder& sb, const MaterialInfo& matInfo,
-                                                   const std::wstring& shaderName, const std::wstring& shadingGroupName,
-                                                   const std::wstring& meshName, const int faceStart,
-                                                   const int faceEnd) const {
-	// synchronously create shading group
-	// TODO: pull this out
-	MELScriptBuilder sbSync;
-	sbSync.setVar(L"$shadingGroup", shadingGroupName);
-	sbSync.setsCreate(L"$shadingGroup");
-	sbSync.executeSync();
-
+void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+                                                       const std::wstring& shaderName,
+                                                       const std::wstring& shadingGroupName,
+                                                       const std::wstring& meshName, const int faceStart,
+                                                       const int faceEnd) const {
 	// create shader
 	sb.setVar(L"$shaderNode", shaderName);
 	sb.setVar(L"$shadingGroup", shadingGroupName);

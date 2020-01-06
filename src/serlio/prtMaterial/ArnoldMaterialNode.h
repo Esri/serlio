@@ -41,9 +41,9 @@ public:
 	}
 
 private:
-	void buildMaterialShaderScript(MELScriptBuilder& sb, const MaterialInfo& matInfo, const std::wstring& shaderName,
-	                               const std::wstring& shadingGroupName, const std::wstring& meshName,
-	                               const int faceStart, const int faceEnd) const;
+	void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+	                                   const std::wstring& shaderName, const std::wstring& shadingGroupName,
+	                                   const std::wstring& meshName, const int faceStart, const int faceEnd) const;
 
 	void setUvTransformAttrs(MELScriptBuilder& sb, const std::wstring& uvSet, const MaterialTrafo& trafo) const;
 
