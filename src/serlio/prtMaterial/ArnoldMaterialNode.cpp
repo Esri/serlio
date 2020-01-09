@@ -186,12 +186,12 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 }
 
 void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
-                                                       const std::wstring& shaderName,
-                                                       const std::wstring& shadingGroupName) const {
+                                                       const std::wstring& shaderBaseName,
+                                                       const std::wstring& shadingEngineName) const {
 	// create shader
-	sb.setVar(L"$shaderNode", shaderName);
-	sb.setVar(L"$shadingGroup", shadingGroupName);
-	sb.createShader(L"aiStandardSurface", L"$shaderNode");
+	sb.setVar(L"$shaderNode", shaderBaseName);
+	sb.setVar(L"$shadingGroup", shadingEngineName);
+	sb.createShader(L"aiStandardSurface", L"$shaderNode"); // note: name might change to be unique
 
 	// connect to shading group
 	sb.connectAttr(L"($shaderNode + \".outColor\")", L"($shadingGroup + \".surfaceShader\")");
@@ -199,12 +199,12 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 	sb.setAttr(L"($shaderNode + \".base\")", 1.0);
 
 	// color/dirt map multiply node
-	sb.setVar(L"$dirtMapBlendNode", shadingGroupName + L"_dirt_multiply");
+	sb.setVar(L"$dirtMapBlendNode", shadingEngineName + L"_dirt_multiply");
 	sb.createShader(L"aiMultiply", L"$dirtMapBlendNode");
 	sb.connectAttr(L"($dirtMapBlendNode + \".outColor\")", L"($shaderNode + \".baseColor\")");
 
 	// color/color map multiply node
-	sb.setVar(L"$colorMapBlendNode", shadingGroupName + L"_color_map_blend");
+	sb.setVar(L"$colorMapBlendNode", shadingEngineName + L"_color_map_blend");
 	sb.createShader(L"aiMultiply", L"$colorMapBlendNode");
 	sb.connectAttr(L"($colorMapBlendNode + \".outColor\")", L"($dirtMapBlendNode + \".input1\")");
 
@@ -216,14 +216,14 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 		sb.setAttr(L"($colorMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
 	}
 	else {
-		std::wstring shaderName = shadingGroupName + L"_color_map";
+		std::wstring shaderName = shadingEngineName + L"_color_map";
 		std::wstring shaderNode =
 		        createMapShader(sb, matInfo.colormap, matInfo.colormapTrafo, shaderName, L"map1", false, false);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($colorMapBlendNode + \".input2\")");
 	}
 
 	// bump map
-	sb.setVar(L"$bumpValueNode", shadingGroupName + L"_bump_value");
+	sb.setVar(L"$bumpValueNode", shadingEngineName + L"_bump_value");
 	sb.createShader(L"bump2d", L"$bumpValueNode");
 	sb.connectAttr(L"($bumpValueNode + \".outNormal\")", L"($shaderNode + \".normalCamera\")");
 
@@ -231,11 +231,11 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 		sb.setAttr(L"($bumpValueNode + \".bumpValue\")", 0.0);
 	}
 	else {
-		std::wstring shaderName = shadingGroupName + L"_bump_map";
+		std::wstring shaderName = shadingEngineName + L"_bump_map";
 		std::wstring shaderNode =
 		        createMapShader(sb, matInfo.bumpMap, matInfo.bumpmapTrafo, shaderName, L"bumpMap", true, false);
 
-		sb.setVar(L"$bumpLuminanceNode", shadingGroupName + L"_bump_luminance");
+		sb.setVar(L"$bumpLuminanceNode", shadingEngineName + L"_bump_luminance");
 		sb.createShader(L"luminance", L"$bumpLuminanceNode");
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($bumpLuminanceNode + \".value\")");
 		sb.connectAttr(L"($bumpLuminanceNode + \".outValue\")", L"($bumpValueNode + \".bumpValue\")");
@@ -246,7 +246,7 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 		sb.setAttr(L"($dirtMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
 	}
 	else {
-		std::wstring shaderName = shadingGroupName + L"_dirt_map";
+		std::wstring shaderName = shadingEngineName + L"_dirt_map";
 		std::wstring shaderNode =
 		        createMapShader(sb, matInfo.dirtmap, matInfo.dirtmapTrafo, shaderName, L"dirtMap", false, false);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($dirtMapBlendNode + \".input2\")");
@@ -256,7 +256,7 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 	sb.setAttr(L"($shaderNode + \".specular\")", 1.0);
 
 	// specular/specular map multiply node
-	sb.setVar(L"$specularMapBlendNode", shadingGroupName + L"_specular_map_blend");
+	sb.setVar(L"$specularMapBlendNode", shadingEngineName + L"_specular_map_blend");
 	sb.createShader(L"aiMultiply", L"$specularMapBlendNode");
 	sb.connectAttr(L"($specularMapBlendNode + \".outColor\")", L"($shaderNode + \".specularColor\")");
 
@@ -271,14 +271,14 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 		sb.setAttr(L"($specularMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
 	}
 	else {
-		std::wstring shaderName = shadingGroupName + L"_specular_map";
+		std::wstring shaderName = shadingEngineName + L"_specular_map";
 		std::wstring shaderNode = createMapShader(sb, matInfo.specularMap, matInfo.specularmapTrafo, shaderName,
 		                                          L"specularMap", false, false);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($specularMapBlendNode + \".input2\")");
 	}
 
 	// opacity/opacity map multiply node
-	sb.setVar(L"$opacityMapBlendNode", shadingGroupName + L"_opacity_map_blend");
+	sb.setVar(L"$opacityMapBlendNode", shadingEngineName + L"_opacity_map_blend");
 	sb.createShader(L"aiMultiply", L"$opacityMapBlendNode");
 	sb.connectAttr(L"($opacityMapBlendNode + \".outColorR\")", L"($shaderNode + \".opacityR\")");
 	sb.connectAttr(L"($opacityMapBlendNode + \".outColorR\")", L"($shaderNode + \".opacityG\")");
@@ -292,7 +292,7 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 		sb.setAttr(L"($opacityMapBlendNode + \".input2R\")", 1.0);
 	}
 	else {
-		std::wstring shaderName = shadingGroupName + L"_opacity_map";
+		std::wstring shaderName = shadingEngineName + L"_opacity_map";
 		std::wstring shaderNode = createMapShader(sb, matInfo.opacityMap, matInfo.opacitymapTrafo, shaderName,
 		                                          L"opacityMap", false, true);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColorR\")", L"($opacityMapBlendNode + \".input2R\")");
@@ -300,11 +300,11 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 
 	// normal map
 	if (!matInfo.normalMap.empty()) {
-		std::wstring shaderName = shadingGroupName + L"_normal_map";
+		std::wstring shaderName = shadingEngineName + L"_normal_map";
 		std::wstring shaderNode =
 		        createMapShader(sb, matInfo.normalMap, matInfo.normalmapTrafo, shaderName, L"normalMap", true, false);
 
-		sb.setVar(L"$normalMapConvertNode", shadingGroupName + L"_normal_map_convert");
+		sb.setVar(L"$normalMapConvertNode", shadingEngineName + L"_normal_map_convert");
 		sb.createShader(L"aiNormalMap", L"$normalMapConvertNode");
 		sb.setAttr(L"($normalMapConvertNode + \".colorToSigned\")", true);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($normalMapConvertNode + \".input\")");
@@ -315,7 +315,7 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 	sb.setAttr(L"($shaderNode + \".emission\")", 1.0);
 
 	// emission/emissive map multiply node
-	sb.setVar(L"$emissiveMapBlendNode", shadingGroupName + L"_emissive_map_blend");
+	sb.setVar(L"$emissiveMapBlendNode", shadingEngineName + L"_emissive_map_blend");
 	sb.createShader(L"aiMultiply", L"$emissiveMapBlendNode");
 	sb.connectAttr(L"($emissiveMapBlendNode + \".outColor\")", L"($shaderNode + \".emissionColor\")");
 
@@ -327,14 +327,14 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 		sb.setAttr(L"($emissiveMapBlendNode + \".input2\")", 1.0, 1.0, 1.0);
 	}
 	else {
-		std::wstring shaderName = shadingGroupName + L"_emissive_map";
+		std::wstring shaderName = shadingEngineName + L"_emissive_map";
 		std::wstring shaderNode = createMapShader(sb, matInfo.emissiveMap, matInfo.emissivemapTrafo, shaderName,
 		                                          L"emissiveMap", false, false);
 		sb.connectAttr(L"(" + shaderNode + L" + \".outColor\")", L"($emissiveMapBlendNode + \".input2\")");
 	}
 
 	// roughness/roughness map multiply node
-	sb.setVar(L"$roughnessMapBlendNode", shadingGroupName + L"_roughness_map_blend");
+	sb.setVar(L"$roughnessMapBlendNode", shadingEngineName + L"_roughness_map_blend");
 	sb.createShader(L"aiMultiply", L"$roughnessMapBlendNode");
 	sb.connectAttr(L"($roughnessMapBlendNode + \".outColorR\")", L"($shaderNode + \".specularRoughness\")");
 
@@ -346,7 +346,7 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 		sb.setAttr(L"($roughnessMapBlendNode + \".input2R\")", 1.0);
 	}
 	else {
-		std::wstring shaderName = shadingGroupName + L"_roughness_map";
+		std::wstring shaderName = shadingEngineName + L"_roughness_map";
 		std::wstring shaderNode = createMapShader(sb, matInfo.roughnessMap, matInfo.roughnessmapTrafo, shaderName,
 		                                          L"roughnessMap", true, false);
 
@@ -355,7 +355,7 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 	}
 
 	// metallic/metallic map multiply node
-	sb.setVar(L"$metallicMapBlendNode", shadingGroupName + L"_metallic_map_blend");
+	sb.setVar(L"$metallicMapBlendNode", shadingEngineName + L"_metallic_map_blend");
 	sb.createShader(L"aiMultiply", L"$metallicMapBlendNode");
 	sb.connectAttr(L"($metallicMapBlendNode + \".outColorR\")", L"($shaderNode + \".metalness\")");
 
@@ -367,7 +367,7 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 		sb.setAttr(L"($metallicMapBlendNode + \".input2R\")", 1.0);
 	}
 	else {
-		std::wstring shaderName = shadingGroupName + L"_metallic_map";
+		std::wstring shaderName = shadingEngineName + L"_metallic_map";
 		std::wstring shaderNode = createMapShader(sb, matInfo.metallicMap, matInfo.metallicmapTrafo, shaderName,
 		                                          L"metallicMap", true, false);
 
