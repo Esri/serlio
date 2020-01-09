@@ -48,10 +48,10 @@ namespace {
 const std::wstring MATERIAL_BASE_NAME(L"serlioGeneratedArnoldMaterial");
 
 void synchronouslyCreateShadingEngine(const std::wstring& shadingEngineName) {
-	MELScriptBuilder sbSync;
-	sbSync.setVar(L"$shadingGroup", shadingEngineName);
-	sbSync.setsCreate(L"$shadingGroup");
-	sbSync.executeSync();
+	MELScriptBuilder scriptBuilder;
+	scriptBuilder.setVar(L"$shadingGroup", shadingEngineName);
+	scriptBuilder.setsCreate(L"$shadingGroup");
+	scriptBuilder.executeSync();
 }
 
 } // namespace
