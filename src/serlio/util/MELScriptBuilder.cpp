@@ -78,7 +78,8 @@ void MELScriptBuilder::setsAddFaceRange(const std::wstring& setName, const std::
 }
 
 void MELScriptBuilder::createShader(const std::wstring& shaderType, const std::wstring& shaderName) {
-	commandStream << "shadingNode -asShader -skipSelect -name " << shaderName << " " << shaderType << ";\n";
+	commandStream << shaderName << " = `shadingNode -asShader -skipSelect -name " << shaderName << " " << shaderType
+	              << "`;\n";
 }
 
 void MELScriptBuilder::createTexture(const std::wstring& textureName) {
