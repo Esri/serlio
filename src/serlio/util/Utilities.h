@@ -252,7 +252,7 @@ template <typename M, typename F, typename... ARGS>
 auto getCachedValue(M& cache, const typename M::key_type& key, F valueFunc, ARGS&&... valueFuncArgs) {
 	auto p = cache.find(key);
 	if (p == cache.end()) {
-		auto value = valueFunc(valueFuncArgs...);
+		auto value = valueFunc(std::forward<ARGS&&...>(valueFuncArgs)...);
 		p = cache.emplace(key, value).first;
 	}
 	return p->second;
