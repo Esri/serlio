@@ -24,14 +24,11 @@
 
 #include "prtModifier/PRTModifierAction.h"
 
-#include "util/MArrayWrapper.h"
 #include "util/MItDependencyNodesWrapper.h"
 #include "util/MayaUtilities.h"
-#include "util/Utilities.h"
 
+#include "PRTContext.h"
 #include "serlioPlugin.h"
-
-#include "prt/StringUtils.h"
 
 #include "maya/MFnMesh.h"
 #include "maya/MFnTypedAttribute.h"
@@ -41,11 +38,8 @@
 #include "maya/adskDataAssociations.h"
 #include "maya/adskDataStream.h"
 
-#include <algorithm>
 #include <array>
-#include <cstdio>
 #include <set>
-#include <sstream>
 
 namespace {
 

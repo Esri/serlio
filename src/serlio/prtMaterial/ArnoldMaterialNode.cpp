@@ -22,25 +22,14 @@
 
 #include "prtMaterial/MaterialUtils.h"
 
-#include "util/MArrayWrapper.h"
 #include "util/MELScriptBuilder.h"
 #include "util/MayaUtilities.h"
 
-#include "serlioPlugin.h"
-
-#include "prt/StringUtils.h"
-
-#include "maya/MFnGenericAttribute.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnTypedAttribute.h"
-#include "maya/MGlobal.h"
-#include "maya/MPlugArray.h"
 #include "maya/adskDataAssociations.h"
 #include "maya/adskDataStream.h"
-#include "maya/adskDataStructure.h"
 
-#include <cassert>
-#include <set>
 #include <sstream>
 
 namespace {
