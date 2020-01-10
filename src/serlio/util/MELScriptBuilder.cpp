@@ -23,6 +23,10 @@
 
 #include "util/MayaUtilities.h"
 
+namespace {
+constexpr bool MEL_ENABLE_DISPLAY = false;
+} // namespace
+
 void MELScriptBuilder::setAttr(const std::wstring& attribute, const bool val) {
 	commandStream << "setAttr " << attribute << " " << (val ? 1 : 0) << ";\n";
 }
@@ -78,19 +82,24 @@ void MELScriptBuilder::setsAddFaceRange(const std::wstring& setName, const std::
 }
 
 void MELScriptBuilder::createShader(const std::wstring& shaderType, const std::wstring& shaderName) {
-	commandStream << "shadingNode -asShader -skipSelect -name " << shaderName << " " << shaderType << ";\n";
+	commandStream << shaderName << " = `shadingNode -asShader -skipSelect -name " << shaderName << " " << shaderType
+	              << "`;\n";
 }
 
 void MELScriptBuilder::createTexture(const std::wstring& textureName) {
 	commandStream << "shadingNode -asTexture -skipSelect -name " << textureName << " file;\n";
 }
 
-void MELScriptBuilder::executeSync() {
-	MCHECK(MGlobal::executeCommand(commandStream.str().c_str(), true));
+std::wstring MELScriptBuilder::executeSync() {
+	MStatus status;
+	MString result =
+	        MGlobal::executeCommandStringResult(commandStream.str().c_str(), MEL_ENABLE_DISPLAY, false, &status);
+	MCHECK(status);
 	commandStream.clear();
+	return result.asWChar();
 }
 
 void MELScriptBuilder::execute() {
-	MCHECK(MGlobal::executeCommandOnIdle(commandStream.str().c_str(), true));
+	MCHECK(MGlobal::executeCommandOnIdle(commandStream.str().c_str(), MEL_ENABLE_DISPLAY));
 	commandStream.clear();
 }

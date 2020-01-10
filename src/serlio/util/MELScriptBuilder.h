@@ -60,7 +60,7 @@ public:
 
 	void createTexture(const std::wstring& textureName);
 
-	void executeSync();
+	std::wstring executeSync();
 
 	void execute();
 

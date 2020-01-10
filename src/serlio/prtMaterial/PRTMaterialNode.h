@@ -19,19 +19,14 @@
 
 #pragma once
 
-#include "PRTContext.h"
-#include "prtModifier/MayaCallbacks.h"
-
 #include "maya/MPxNode.h"
 #include "maya/MString.h"
 #include "maya/adskDataHandle.h"
 
-#include <algorithm>
-#include <cmath>
-#include <cstdlib>
-#include <vector>
+#include <array>
 
 class MaterialColor;
+struct PRTContext;
 
 class PRTMaterialNode : public MPxNode {
 public:

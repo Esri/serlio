@@ -94,6 +94,8 @@ public:
 
 	bool equals(const MaterialInfo& o) const;
 
+	bool operator<(const MaterialInfo& rhs) const;
+
 private:
 	static std::string getTexture(adsk::Data::Handle& sHandle, const std::string& texName);
 	static double getDouble(adsk::Data::Handle& sHandle, const std::string& name);

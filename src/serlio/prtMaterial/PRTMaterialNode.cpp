@@ -20,17 +20,15 @@
 #include "prtMaterial/PRTMaterialNode.h"
 
 #include "prtMaterial/MaterialInfo.h"
+#include "prtMaterial/MaterialUtils.h"
 
 #include "prtModifier/PRTModifierAction.h"
 
-#include "util/MArrayWrapper.h"
 #include "util/MItDependencyNodesWrapper.h"
 #include "util/MayaUtilities.h"
-#include "util/Utilities.h"
 
+#include "PRTContext.h"
 #include "serlioPlugin.h"
-
-#include "prt/StringUtils.h"
 
 #include "maya/MFnMesh.h"
 #include "maya/MFnTypedAttribute.h"
@@ -40,11 +38,8 @@
 #include "maya/adskDataAssociations.h"
 #include "maya/adskDataStream.h"
 
-#include <algorithm>
 #include <array>
-#include <cstdio>
 #include <set>
-#include <sstream>
 
 namespace {
 
@@ -106,42 +101,12 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block) {
 	MStatus stat;
 
 	MString meshName;
-	bool meshFound = false;
-	bool searchEnded = false;
-
-	for (MPlug curPlug = plug; !searchEnded;) {
-		searchEnded = true;
-		MPlugArray connectedPlugs;
-		curPlug.connectedTo(connectedPlugs, false, true, &status);
-		MCHECK(status);
-		if (!connectedPlugs.length()) {
-			return MStatus::kFailure;
-		}
-		for (const auto& connectedPlug : mu::makeMArrayConstWrapper(connectedPlugs)) {
-			MFnDependencyNode connectedDepNode(connectedPlug.node(), &status);
-			MCHECK(status);
-			MObject connectedDepNodeObj = connectedDepNode.object(&status);
-			MCHECK(status);
-			if (connectedDepNodeObj.hasFn(MFn::kMesh)) {
-				meshName = connectedDepNode.name(&status);
-				MCHECK(status);
-				meshFound = true;
-				break;
-			}
-			if (connectedDepNodeObj.hasFn(MFn::kGroupParts)) {
-				curPlug = connectedDepNode.findPlug("outputGeometry", true, &status);
-				MCHECK(status);
-				searchEnded = false;
-				break;
-			}
-		}
+	MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
+	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0) {
+		return meshNameStatus;
 	}
 
-	if (!meshFound) {
-		return MStatus::kSuccess;
-	}
-
-	if ((inputAssociations != nullptr) && meshFound) {
+	if ((inputAssociations != nullptr)) {
 		adsk::Data::Associations outputAssociations(inputMesh.metadata(&status));
 		MCHECK(status);
 
