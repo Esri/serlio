@@ -23,6 +23,10 @@
 
 #include "util/MayaUtilities.h"
 
+namespace {
+constexpr bool MEL_ENABLE_DISPLAY = false;
+} // namespace
+
 void MELScriptBuilder::setAttr(const std::wstring& attribute, const bool val) {
 	commandStream << "setAttr " << attribute << " " << (val ? 1 : 0) << ";\n";
 }
@@ -88,13 +92,14 @@ void MELScriptBuilder::createTexture(const std::wstring& textureName) {
 
 std::wstring MELScriptBuilder::executeSync() {
 	MStatus status;
-	MString result = MGlobal::executeCommandStringResult(commandStream.str().c_str(), true, false, &status);
+	MString result =
+	        MGlobal::executeCommandStringResult(commandStream.str().c_str(), MEL_ENABLE_DISPLAY, false, &status);
 	MCHECK(status);
 	commandStream.clear();
 	return result.asWChar();
 }
 
 void MELScriptBuilder::execute() {
-	MCHECK(MGlobal::executeCommandOnIdle(commandStream.str().c_str(), true));
+	MCHECK(MGlobal::executeCommandOnIdle(commandStream.str().c_str(), MEL_ENABLE_DISPLAY));
 	commandStream.clear();
 }
