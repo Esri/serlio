@@ -26,7 +26,7 @@
 #include <array>
 
 class MaterialColor;
-class PRTContext;
+struct PRTContext;
 
 class PRTMaterialNode : public MPxNode {
 public:
