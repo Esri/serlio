@@ -248,12 +248,14 @@ std::basic_string<C> join(Container const& container, const std::basic_string<C>
 #	define MAYBE_UNUSED // [[maybe_unused]] would require /std:c++latest i.e. C++17
 #endif
 
-template <typename M, typename F, typename... ARGS>
-auto getCachedValue(M& cache, const typename M::key_type& key, F valueFunc, ARGS&&... valueFuncArgs) {
+template <typename M, typename K, typename F, typename... ARGS,
+          typename =
+                  typename std::enable_if_t<std::is_convertible<typename std::decay_t<K>, typename M::key_type>::value>>
+auto getCachedValue(M& cache, K&& key, F valueFunc, ARGS&&... valueFuncArgs) {
 	auto p = cache.find(key);
 	if (p == cache.end()) {
-		auto value = valueFunc(std::forward<ARGS&&...>(valueFuncArgs)...);
-		p = cache.emplace(key, value).first;
+		auto&& value = valueFunc(std::forward<ARGS>(valueFuncArgs)...);
+		p = cache.emplace(std::forward<K>(key), std::forward<decltype(value)>(value)).first;
 	}
 	return p->second;
 }
