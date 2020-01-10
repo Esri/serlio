@@ -20,7 +20,6 @@ add_library(${SERLIO_TARGET} SHARED
 		prtMaterial/MaterialInfo.cpp
 		prtMaterial/MaterialUtils.cpp
 		prtMaterial/PRTMaterialNode.cpp
-		prtMaterial/MaterialNameSource.cpp
 		util/Utilities.cpp
 		util/ResolveMapCache.cpp
 		util/MayaUtilities.cpp

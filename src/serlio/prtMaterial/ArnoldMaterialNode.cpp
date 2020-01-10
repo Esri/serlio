@@ -19,7 +19,7 @@
 
 #include "prtMaterial/ArnoldMaterialNode.h"
 #include "prtMaterial/MaterialInfo.h"
-#include "prtMaterial/MaterialNameSource.h"
+
 #include "prtMaterial/MaterialUtils.h"
 
 #include "util/MArrayWrapper.h"
@@ -127,7 +127,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		return MStatus::kFailure;
 
 	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(materialStructure);
-	MaterialNameSource nameSource;
 
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.declString(L"$shadingGroup");
@@ -162,16 +161,15 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			continue;
 		const int faceEnd = *inMatStreamHandle.asInt32();
 
-		auto createShadingEngine = [this, &nameSource, &materialStructure, &scriptBuilder,
+		auto createShadingEngine = [this, &materialStructure, &scriptBuilder,
 		                            &inMatStreamHandle](const MaterialInfo& matInfo) {
-			auto newMaterialName = nameSource.getUniqueName(MATERIAL_BASE_NAME);
-			std::wstring shadingEngineName = newMaterialName.first;
-			const std::wstring& shaderName = newMaterialName.second;
+			std::wstring shadingEngineName = MATERIAL_BASE_NAME + L"Sg";
+			const std::wstring shaderBaseName = MATERIAL_BASE_NAME + L"Sh";
 
 			synchronouslyCreateShadingEngine(shadingEngineName);
 			MaterialUtils::assignMaterialMetadata(materialStructure, inMatStreamHandle, shadingEngineName);
-			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderName, shadingEngineName);
-			LOG_INF << "new arnold shading engine: " << shadingEngineName << " (surface shader: " << shaderName << ")";
+			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
+			LOG_INF << "new arnold shading engine: " << shadingEngineName;
 
 			return shadingEngineName;
 		};
