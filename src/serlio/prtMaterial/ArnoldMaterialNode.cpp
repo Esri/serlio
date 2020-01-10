@@ -34,12 +34,13 @@
 
 namespace {
 
-const std::wstring MATERIAL_BASE_NAME(L"serlioGeneratedArnoldMaterial");
+const std::wstring MATERIAL_BASE_NAME = L"serlioGeneratedArnoldMaterial";
+const std::wstring MEL_VARIABLE_SHADING_ENGINE = L"$shadingGroup";
 
 std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName) {
 	MELScriptBuilder scriptBuilder;
-	scriptBuilder.setVar(L"$shadingGroup", desiredShadingEngineName);
-	scriptBuilder.setsCreate(L"$shadingGroup");
+	scriptBuilder.setVar(MEL_VARIABLE_SHADING_ENGINE, desiredShadingEngineName);
+	scriptBuilder.setsCreate(MEL_VARIABLE_SHADING_ENGINE);
 	return scriptBuilder.executeSync();
 }
 
@@ -118,7 +119,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(*materialStructure);
 
 	MELScriptBuilder scriptBuilder;
-	scriptBuilder.declString(L"$shadingGroup");
+	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
 	scriptBuilder.declString(L"$shaderNode");
 	scriptBuilder.declString(L"$mapFile");
 	scriptBuilder.declString(L"$mapNode");
@@ -179,11 +180,11 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
                                                        const std::wstring& shadingEngineName) const {
 	// create shader
 	sb.setVar(L"$shaderNode", shaderBaseName);
-	sb.setVar(L"$shadingGroup", shadingEngineName);
+	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, shadingEngineName);
 	sb.createShader(L"aiStandardSurface", L"$shaderNode"); // note: name might change to be unique
 
 	// connect to shading group
-	sb.connectAttr(L"($shaderNode + \".outColor\")", L"($shadingGroup + \".surfaceShader\")");
+	sb.connectAttr(L"($shaderNode + \".outColor\")", L"(" + MEL_VARIABLE_SHADING_ENGINE + L" + \".surfaceShader\")");
 
 	sb.setAttr(L"($shaderNode + \".base\")", 1.0);
 
