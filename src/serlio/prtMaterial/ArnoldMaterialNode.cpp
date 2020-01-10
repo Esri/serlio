@@ -36,11 +36,11 @@ namespace {
 
 const std::wstring MATERIAL_BASE_NAME(L"serlioGeneratedArnoldMaterial");
 
-void synchronouslyCreateShadingEngine(std::wstring& shadingEngineName) {
+std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName) {
 	MELScriptBuilder scriptBuilder;
-	scriptBuilder.setVar(L"$shadingGroup", shadingEngineName);
+	scriptBuilder.setVar(L"$shadingGroup", desiredShadingEngineName);
 	scriptBuilder.setsCreate(L"$shadingGroup");
-	shadingEngineName = scriptBuilder.executeSync();
+	return scriptBuilder.executeSync();
 }
 
 } // namespace
@@ -152,10 +152,10 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 		auto createShadingEngine = [this, &materialStructure, &scriptBuilder,
 		                            &inMatStreamHandle](const MaterialInfo& matInfo) {
-			std::wstring shadingEngineName = MATERIAL_BASE_NAME + L"Sg";
+			const std::wstring shadingEngineBaseName = MATERIAL_BASE_NAME + L"Sg";
 			const std::wstring shaderBaseName = MATERIAL_BASE_NAME + L"Sh";
 
-			synchronouslyCreateShadingEngine(shadingEngineName);
+			const std::wstring shadingEngineName = synchronouslyCreateShadingEngine(shadingEngineBaseName);
 			MaterialUtils::assignMaterialMetadata(*materialStructure, inMatStreamHandle, shadingEngineName);
 			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
 			LOG_DBG << "new arnold shading engine: " << shadingEngineName;
