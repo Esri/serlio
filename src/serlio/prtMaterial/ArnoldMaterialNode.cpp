@@ -158,7 +158,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			synchronouslyCreateShadingEngine(shadingEngineName);
 			MaterialUtils::assignMaterialMetadata(*materialStructure, inMatStreamHandle, shadingEngineName);
 			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
-			LOG_INF << "new arnold shading engine: " << shadingEngineName;
+			LOG_DBG << "new arnold shading engine: " << shadingEngineName;
 
 			return shadingEngineName;
 		};
@@ -166,7 +166,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		MaterialInfo matInfo(inMatStreamHandle);
 		std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
 		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceStart, faceEnd);
-		LOG_INF << "assigned arnold shading engine (" << faceStart << ":" << faceEnd << "): " << shadingEngineName;
+		LOG_DBG << "assigned arnold shading engine (" << faceStart << ":" << faceEnd << "): " << shadingEngineName;
 	}
 
 	scriptBuilder.execute();
