@@ -126,7 +126,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (materialStructure == nullptr)
 		return MStatus::kFailure;
 
-	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(materialStructure);
+	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(*materialStructure);
 
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.declString(L"$shadingGroup");
@@ -167,7 +167,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			const std::wstring shaderBaseName = MATERIAL_BASE_NAME + L"Sh";
 
 			synchronouslyCreateShadingEngine(shadingEngineName);
-			MaterialUtils::assignMaterialMetadata(materialStructure, inMatStreamHandle, shadingEngineName);
+			MaterialUtils::assignMaterialMetadata(*materialStructure, inMatStreamHandle, shadingEngineName);
 			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
 			LOG_INF << "new arnold shading engine: " << shadingEngineName;
 

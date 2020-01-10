@@ -63,7 +63,7 @@ MStatus getMeshName(MString& meshName, const MPlug& plug) {
 	return MStatus::kSuccess;
 }
 
-MaterialCache getMaterialsByStructure(const adsk::Data::Structure* materialStructure) {
+MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStructure) {
 	MaterialCache existingMaterialInfos;
 
 	MStatus status;
@@ -75,37 +75,37 @@ MaterialCache getMaterialsByStructure(const adsk::Data::Structure* materialStruc
 		const adsk::Data::Associations* materialMetadata = node.metadata(&status);
 		MCHECK(status);
 
-		if (materialMetadata == nullptr) {
+		if (materialMetadata == nullptr)
 			continue;
-		}
 
 		adsk::Data::Associations materialAssociations(materialMetadata);
 		adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
 
-		if (matChannel == nullptr) {
+		if (matChannel == nullptr)
 			continue;
-		}
 
 		adsk::Data::Stream* matStream = matChannel->findDataStream(gPRTMatStream);
-		if ((matStream != nullptr) && matStream->elementCount() == 1) {
-			const adsk::Data::Handle matSHandle = matStream->element(0);
-			if (!matSHandle.usesStructure(*materialStructure))
-				continue;
-			existingMaterialInfos.emplace(matSHandle, node.name().asWChar());
-		}
+		if ((matStream == nullptr) || (matStream->elementCount() == 0))
+			continue;
+
+		const adsk::Data::Handle matSHandle = matStream->element(0);
+		if (!matSHandle.usesStructure(materialStructure))
+			continue;
+
+		existingMaterialInfos.emplace(matSHandle, node.name().asWChar());
 	}
 
 	return existingMaterialInfos;
 }
 
-void assignMaterialMetadata(const adsk::Data::Structure* materialStructure, const adsk::Data::Handle& streamHandle,
+void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, const adsk::Data::Handle& streamHandle,
                             const std::wstring& shadingEngineName) {
 	MObject shadingEngineObj = findNamedObject(shadingEngineName, MFn::kShadingEngine);
 	MFnDependencyNode shadingEngine(shadingEngineObj);
 
 	adsk::Data::Associations newMetadata;
 	adsk::Data::Channel newChannel = newMetadata.channel(gPRTMatChannel);
-	adsk::Data::Stream newStream(*materialStructure, gPRTMatStream);
+	adsk::Data::Stream newStream(materialStructure, gPRTMatStream);
 	newChannel.setDataStream(newStream);
 	newMetadata.setChannel(newChannel);
 	adsk::Data::Handle handle(streamHandle);
