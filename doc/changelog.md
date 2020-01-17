@@ -1,5 +1,10 @@
 # Serlio ChangeLog
 
+## v1.1.0 (2020-XX-YY)
+* BREAKING CHANGE: Switched to official Autodesk IDs for Serlio custom nodes.
+* Added creation of Arnold materials.
+* Show error message if required Maya plugins (e.g. 'shaderFXPlugin') are not loaded.
+
 ## v1.0.1 (2019-08-21)
 * Merged support for creating MSI installers via CMake.
 * Fixed wrong build type of codec library in MSI installers.
