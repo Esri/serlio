@@ -249,8 +249,7 @@ std::basic_string<C> join(Container const& container, const std::basic_string<C>
 #endif
 
 template <typename M, typename K, typename F, typename... ARGS,
-          typename =
-                  typename std::enable_if_t<std::is_convertible<typename std::decay_t<K>, typename M::key_type>::value>>
+          std::enable_if_t<std::is_convertible<std::decay_t<K>, typename M::key_type>::value>* = nullptr>
 auto getCachedValue(M& cache, K&& key, F valueFunc, ARGS&&... valueFuncArgs) {
 	auto p = cache.find(key);
 	if (p == cache.end()) {

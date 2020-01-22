@@ -30,7 +30,7 @@ const std::string gPRTMatStream = "prtMaterialStream";
 const std::string gPRTMatMemberFaceStart = "faceIndexStart";
 const std::string gPRTMatMemberFaceEnd = "faceIndexEnd";
 
-class MaterialColor : private std::array<double, 3> {
+class MaterialColor {
 
 public:
 	double r() const noexcept;
@@ -39,9 +39,17 @@ public:
 
 private:
 	friend class MaterialInfo;
+
+	bool operator==(const MaterialColor& other) const noexcept;
+
+	bool operator<(const MaterialColor& rhs) const noexcept;
+
+	bool operator>(const MaterialColor& rhs) const noexcept;
+
+	std::array<double, 3> data;
 };
 
-class MaterialTrafo : private std::array<double, 5> {
+class MaterialTrafo {
 
 public:
 	double su() const noexcept;
@@ -55,6 +63,14 @@ public:
 
 private:
 	friend class MaterialInfo;
+
+	bool operator==(const MaterialTrafo& other) const noexcept;
+
+	bool operator<(const MaterialTrafo& rhs) const noexcept;
+
+	bool operator>(const MaterialTrafo& rhs) const noexcept;
+
+	std::array<double, 5> data;
 };
 
 class MaterialInfo {
@@ -104,12 +120,13 @@ private:
 
 	template <size_t N>
 	static void getDoubleArray(std::array<double, N>& array, adsk::Data::Handle& sHandle, const std::string& name) {
-		array.fill(0.0);
 		if (sHandle.setPositionByMemberName(name.c_str())) {
 			double* data = sHandle.asDouble();
 			if (sHandle.dataLength() >= N && data) {
 				std::copy(data, data + N, array.begin());
+				return;
 			}
 		}
+		array.fill(0.0);
 	}
 };
