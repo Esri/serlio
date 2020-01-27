@@ -20,16 +20,13 @@
 #include "serlioPlugin.h"
 #include "PRTContext.h"
 
-#include "prtModifier/PRTModifierAction.h"
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/PRTModifierNode.h"
 
 #include "prtMaterial/ArnoldMaterialNode.h"
 #include "prtMaterial/PRTMaterialNode.h"
 
-#include "util/LogHandler.h"
 #include "util/MayaUtilities.h"
-#include "util/Utilities.h"
 
 #include "maya/MFnPlugin.h"
 #include "maya/MGlobal.h"
