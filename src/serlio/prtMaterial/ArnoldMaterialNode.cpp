@@ -19,23 +19,28 @@
 
 #include "prtMaterial/ArnoldMaterialNode.h"
 #include "prtMaterial/MaterialInfo.h"
-
 #include "prtMaterial/MaterialUtils.h"
 
 #include "util/MELScriptBuilder.h"
 #include "util/MayaUtilities.h"
+
+#include "serlioPlugin.h"
 
 #include "maya/MFnMesh.h"
 #include "maya/MFnTypedAttribute.h"
 #include "maya/adskDataAssociations.h"
 #include "maya/adskDataStream.h"
 
+#include <mutex>
 #include <sstream>
 
 namespace {
 
 const std::wstring MATERIAL_BASE_NAME = L"serlioGeneratedArnoldMaterial";
 const std::wstring MEL_VARIABLE_SHADING_ENGINE = L"$shadingGroup";
+
+std::once_flag pluginDependencyCheckFlag;
+const std::vector<std::string> PLUGIN_DEPENDENCIES = {"mtoa"};
 
 std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName) {
 	MELScriptBuilder scriptBuilder;
@@ -79,7 +84,14 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (plug != aOutMesh)
 		return MStatus::kUnknownParameter;
 
-	MStatus status;
+	MStatus status = MStatus::kSuccess;
+
+	std::call_once(pluginDependencyCheckFlag, [&status]() {
+		const bool b = MayaPluginUtilities::pluginDependencyCheck(PLUGIN_DEPENDENCIES);
+		status = b ? MStatus::kSuccess : MStatus::kFailure;
+	});
+	if (status != MStatus::kSuccess)
+		return status;
 
 	const MDataHandle inMeshHandle = data.inputValue(aInMesh, &status);
 	MCHECK(status);

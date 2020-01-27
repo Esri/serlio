@@ -39,11 +39,15 @@
 #include "maya/adskDataStream.h"
 
 #include <array>
+#include <mutex>
 #include <set>
 
 namespace {
 
 constexpr bool DBG = false;
+
+std::once_flag pluginDependencyCheckFlag;
+const std::vector<std::string> PLUGIN_DEPENDENCIES = {"shaderFXPlugin"};
 
 } // namespace
 
@@ -74,7 +78,14 @@ MStatus PRTMaterialNode::initialize() {
 }
 
 MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block) {
-	MStatus status = MS::kSuccess;
+	MStatus status = MStatus::kSuccess;
+
+	std::call_once(pluginDependencyCheckFlag, [&status]() {
+		const bool b = MayaPluginUtilities::pluginDependencyCheck(PLUGIN_DEPENDENCIES);
+		status = b ? MStatus::kSuccess : MStatus::kFailure;
+	});
+	if (status != MStatus::kSuccess)
+		return status;
 
 	MObject thisNode = thisMObject();
 
