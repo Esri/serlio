@@ -80,10 +80,10 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 
 		// TODO: is this correct? import name != rule file name
 		std::wstring ruleName = p.fqName;
-		size_t idxStyle = ruleName.find(L"$");
+		size_t idxStyle = ruleName.find(L'$');
 		if (idxStyle != std::wstring::npos)
 			ruleName = ruleName.substr(idxStyle + 1);
-		size_t idxDot = ruleName.find_last_of(L".");
+		size_t idxDot = ruleName.find_last_of(L'.');
 		if (idxDot != std::wstring::npos) {
 			p.ruleFile = ruleName.substr(0, idxDot);
 		}
