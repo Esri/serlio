@@ -95,7 +95,7 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 }
 
 // poor mans std::filesystem - we don't want boost or c++17 dependency right now
-SRL_TEST_EXPORTS_API const std::wstring filename(const std::wstring& path);
+SRL_TEST_EXPORTS_API std::wstring filename(const std::wstring& path);
 time_t getFileModificationTime(const std::wstring& p);
 std::wstring temp_directory_path();
 std::wstring getProcessTempDir(const std::wstring& prefix);
