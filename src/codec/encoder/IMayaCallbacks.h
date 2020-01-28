@@ -28,7 +28,7 @@ constexpr const wchar_t* EO_EMIT_REPORTS = L"emitReports";
 
 class IMayaCallbacks : public prt::Callbacks {
 public:
-	virtual ~IMayaCallbacks() override = default;
+	~IMayaCallbacks() override = default;
 
 	/**
 	 * @param name initial shape (primitive group) name, optionally used to create primitive groups on output
