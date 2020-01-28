@@ -61,11 +61,7 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList) {
 		if (!found) {
 			// Ensure that this DAG path will point to the shape
 			// of our object. Set the DAG path for the polyModifierCmd.
-			if (dagPath.extendToShape() == MStatus::kSuccess) {
-				setMeshNode(dagPath);
-				found = true;
-			}
-			else if (dagPath.extendToShapeDirectlyBelow(0) == MStatus::kSuccess) {
+			if ((dagPath.extendToShape() == MStatus::kSuccess) || (dagPath.extendToShapeDirectlyBelow(0) == MStatus::kSuccess)) {
 				setMeshNode(dagPath);
 				found = true;
 			}
