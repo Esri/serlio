@@ -30,9 +30,9 @@
 #include "maya/MFnTypedAttribute.h"
 
 #define MCheckStatus(status, message)                                                                                  \
-	if (MStatus::kSuccess != status) {                                                                                 \
-		cerr << message << "\n";                                                                                       \
-		return status;                                                                                                 \
+	if (MStatus::kSuccess != (status)) {                                                                                 \
+		cerr << (message) << "\n";                                                                                       \
+		return (status);                                                                                                 \
 	}
 
 namespace {
