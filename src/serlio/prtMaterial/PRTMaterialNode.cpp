@@ -334,7 +334,7 @@ void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& targ
 }
 
 void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& target, const std::string& tex) {
-	if (tex.size() > 0) {
+	if (!tex.empty()) {
 		mShadingCmd += "$colormap = \"" + MString(tex.c_str()) + "\";\n";
 		mShadingCmd += "$nodeName = $sgName +\"" + MString(target.c_str()) + "\";\n";
 		mShadingCmd += "shadingNode -asTexture file -n $nodeName -ss;\n";
