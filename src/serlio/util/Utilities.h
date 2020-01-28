@@ -232,7 +232,7 @@ std::basic_string<C> join(Container const& container, const std::basic_string<C>
 	auto b = std::begin(container), e = std::end(container);
 	if (b != e) {
 		std::copy(b, std::prev(e), std::ostream_iterator<ElementType, C>(os, delimiter.c_str()));
-		b = prev(e);
+		b = std::prev(e);
 	}
 	if (b != e) {
 		os << *b;
