@@ -283,9 +283,9 @@ std::wstring getProcessTempDir(const std::wstring& prefix) {
 }
 
 time_t getFileModificationTime(const std::wstring& p) {
-	std::wstring pn = p;
 
 #ifdef _WIN32
+	std::wstring pn = p;
 	std::replace(pn.begin(), pn.end(), L'/', L'\\');
 #endif
 
@@ -294,7 +294,7 @@ time_t getFileModificationTime(const std::wstring& p) {
 	int ierr = _wstat(pn.c_str(), &st);
 #else
 	struct stat st;
-	int ierr = stat(prtu::toOSNarrowFromUTF16(pn).c_str(), &st);
+	int ierr = stat(prtu::toOSNarrowFromUTF16(p).c_str(), &st);
 #endif
 
 	if (ierr == 0) {
