@@ -67,7 +67,7 @@ MStatus initializePlugin(MObject obj) {
 		return dependencyStatus;
 
 	if (!prtCtx) {
-		prtCtx.reset(new PRTContext());
+		prtCtx = std::make_unique<PRTContext>();
 
 		// maya exit does not call uninitializePlugin automatically, therefore use addCallback
 		auto mayaExitCallback = [](void*) { uninitializePlugin(MObject::kNullObj); }; // TODO: correct obj value?
