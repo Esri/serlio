@@ -46,7 +46,7 @@ class MArrayWrapperItProxy {
 public:
 	explicit MArrayWrapperItProxy(std::add_const_t<ElementType>& element) : element(element) {}
 
-	operator ElementType() const {
+	explicit operator ElementType() const {
 		return element;
 	}
 
