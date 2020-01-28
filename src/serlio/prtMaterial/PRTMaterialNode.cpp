@@ -221,9 +221,9 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block) {
 
 					// create shadingnode and add metadata
 					MCHECK(MGlobal::executeCommand(shaderCmd, DBG));
-					MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
+					MItDependencyNodes itHwShaders2(MFn::kPluginHardwareShader, &status);
 					MCHECK(status);
-					for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders)) {
+					for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders2)) {
 						MFnDependencyNode n(hwShaderNode);
 
 						if (n.name() == shaderNameMstr) {

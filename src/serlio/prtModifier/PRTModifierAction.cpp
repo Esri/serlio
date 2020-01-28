@@ -508,7 +508,6 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 				break;
 		}
 
-		MStatus stat;
 		MFnAttribute fnAttr(attr, &stat);
 		if (stat == MS::kSuccess) {
 			fnAttr.addToCategory(MString(p.ruleFile.c_str()));
