@@ -347,8 +347,8 @@ MStatus PRTModifierAction::doIt() {
 	assert(encIDs.size() == encOpts.size());
 
 	InitialShapeNOPtrVector shapes = {shape.get()};
-	const prt::Status generateStatus = prt::generate(shapes.data(), shapes.size(), 0, encIDs.data(), encIDs.size(),
-	                                                 encOpts.data(), outputHandler.get(), mPRTCtx.theCache.get(), 0);
+	const prt::Status generateStatus = prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(),
+	                                                 encOpts.data(), outputHandler.get(), mPRTCtx.theCache.get(), nullptr);
 	if (generateStatus != prt::STATUS_OK)
 		LOG_ERR << "prt generate failed: " << prt::getStatusDescription(generateStatus);
 
