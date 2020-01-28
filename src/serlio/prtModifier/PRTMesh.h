@@ -31,7 +31,7 @@ private:
 	std::vector<uint32_t> mFaceCountsVec;
 
 public:
-	PRTMesh(const MObject& mesh);
+	explicit PRTMesh(const MObject& mesh);
 
 	const double* vertexCoords() const noexcept {
 		return mVertexCoordsVec.data();

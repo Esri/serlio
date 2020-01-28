@@ -30,7 +30,7 @@ struct PRTContext;
 
 class PRTMaterialNode : public MPxNode {
 public:
-	PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {}
+	explicit PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {}
 
 	static MStatus initialize();
 

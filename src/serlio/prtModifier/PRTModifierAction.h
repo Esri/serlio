@@ -62,7 +62,7 @@ class PRTModifierAction : public polyModifierFty {
 	friend class PRTModifierEnum;
 
 public:
-	PRTModifierAction(const PRTContext& prtCtx);
+	explicit PRTModifierAction(const PRTContext& prtCtx);
 
 	MStatus updateRuleFiles(const MObject& node, const MString& rulePkg);
 	MStatus fillAttributesFromNode(const MObject& node);

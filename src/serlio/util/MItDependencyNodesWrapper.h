@@ -35,7 +35,7 @@ public:
 
 	MItDependencyNodesWrapperIt() noexcept : itDepNodes(nullptr) {}
 
-	MItDependencyNodesWrapperIt(MItDependencyNodes& itDepNodes);
+	explicit MItDependencyNodesWrapperIt(MItDependencyNodes& itDepNodes);
 
 	MItDependencyNodesWrapperIt& operator++();
 
@@ -67,7 +67,7 @@ private:
 class MItDependencyNodesWrapper {
 
 public:
-	MItDependencyNodesWrapper(MItDependencyNodes& itDepNodes) noexcept : itDepNodes(itDepNodes) {}
+	explicit MItDependencyNodesWrapper(MItDependencyNodes& itDepNodes) noexcept : itDepNodes(itDepNodes) {}
 
 	// don't allow copy or move, as this is only a thin wrapper around MItDependencyNodes
 	// and therefore should be recreated instead if needed
