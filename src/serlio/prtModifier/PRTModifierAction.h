@@ -55,7 +55,7 @@ private:
 	MStringArray mSVals;
 	MDoubleArray mFVals;
 	MIntArray mBVals;
-	bool mRestricted;
+	bool mRestricted = true;
 }; // class PRTModifierEnum
 
 class PRTModifierAction : public polyModifierFty {
@@ -94,7 +94,7 @@ private:
 	std::wstring mRuleFile;
 	std::wstring mStartRule;
 	const std::wstring mRuleStyle = L"Default"; // Serlio atm only supports the "Default" style
-	int32_t mRandomSeed;
+	int32_t mRandomSeed = 0;
 	RuleAttributes mRuleAttributes; // TODO: could be cached together with ResolveMap
 
 	ResolveMapSPtr getResolveMap();
