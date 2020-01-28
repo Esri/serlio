@@ -716,7 +716,7 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 }
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-                                            const RuleAttribute& ruleAttr, MString defaultValue, PRTModifierEnum& e) {
+                                            const RuleAttribute& ruleAttr, const MString& defaultValue, PRTModifierEnum& e) {
 	short idx = 0;
 	for (int i = static_cast<int>(e.mSVals.length()); --i >= 0;) {
 		if (e.mSVals[i] == defaultValue) {

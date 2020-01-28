@@ -121,7 +121,7 @@ private:
 	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
 	                                const RuleAttribute& name, double defaultValue, PRTModifierEnum& e);
 	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-	                                const RuleAttribute& name, MString defaultValue, PRTModifierEnum& e);
+	                                const RuleAttribute& name, const MString& defaultValue, PRTModifierEnum& e);
 	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
 	                                const RuleAttribute& name, short defaultValue, PRTModifierEnum& e);
 	static MStatus addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,

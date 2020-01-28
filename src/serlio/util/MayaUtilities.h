@@ -17,7 +17,7 @@ namespace mu {
 int32_t computeSeed(const MFloatPointArray& vertices);
 int32_t computeSeed(const double* vertices, size_t count);
 
-void statusCheck(MStatus status, const char* file, int line);
+void statusCheck(const MStatus& status, const char* file, int line);
 
 template <typename F>
 void forAllAttributes(const MFnDependencyNode& node, F func) {

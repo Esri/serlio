@@ -35,7 +35,7 @@
 
 class MayaCallbacks : public IMayaCallbacks {
 public:
-	MayaCallbacks(MObject inMesh, MObject outMesh, AttributeMapBuilderUPtr& amb)
+	MayaCallbacks(const MObject& inMesh, const MObject& outMesh, AttributeMapBuilderUPtr& amb)
 	    : inMeshObj(inMesh), outMeshObj(outMesh), mAttributeMapBuilder(amb) {}
 
 	// prt::Callbacks interface
