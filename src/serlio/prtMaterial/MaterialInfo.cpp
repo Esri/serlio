@@ -21,6 +21,43 @@
 
 #include <cmath>
 
+namespace {
+
+template <size_t N>
+void getDoubleArray(std::array<double, N>& array, adsk::Data::Handle& sHandle, const std::string& name) {
+	if (sHandle.setPositionByMemberName(name.c_str())) {
+		double* data = sHandle.asDouble();
+		if (sHandle.dataLength() >= N && data) {
+			std::copy(data, data + N, array.begin());
+			return;
+		}
+	}
+	array.fill(0.0);
+}
+
+std::string getTexture(adsk::Data::Handle& sHandle, const std::string& texName) {
+	std::string r;
+	if (sHandle.setPositionByMemberName(texName.c_str()))
+		r = (char*)sHandle.asUInt8();
+	return r;
+}
+
+double getDouble(adsk::Data::Handle& sHandle, const std::string& name) {
+	if (sHandle.setPositionByMemberName(name.c_str())) {
+		double* data = sHandle.asDouble();
+		if (sHandle.dataLength() >= 1 && data != nullptr) {
+			return *data;
+		}
+	}
+	return NAN;
+}
+
+} // namespace
+
+MaterialColor::MaterialColor(adsk::Data::Handle& sHandle, const std::string& name) {
+	getDoubleArray(data, sHandle, name);
+}
+
 double MaterialColor::r() const noexcept {
 	return data[0];
 }
@@ -43,6 +80,10 @@ bool MaterialColor::operator<(const MaterialColor& rhs) const noexcept {
 
 bool MaterialColor::operator>(const MaterialColor& rhs) const noexcept {
 	return rhs < *this;
+}
+
+MaterialTrafo::MaterialTrafo(adsk::Data::Handle& sHandle, const std::string& name) {
+	getDoubleArray(data, sHandle, name);
 }
 
 double MaterialTrafo::su() const noexcept {
@@ -85,66 +126,23 @@ bool MaterialTrafo::operator>(const MaterialTrafo& rhs) const noexcept {
 	return rhs < *this;
 }
 
-MaterialColor MaterialInfo::getColor(adsk::Data::Handle& sHandle, const std::string& name) {
-	MaterialColor color;
-	getDoubleArray(color.data, sHandle, name);
-	return color;
-}
+MaterialInfo::MaterialInfo(adsk::Data::Handle handle)
+    : bumpMap(getTexture(handle, "bumpMap")), colormap(getTexture(handle, "diffuseMap")),
+      dirtmap(getTexture(handle, "diffuseMap1")), emissiveMap(getTexture(handle, "emissiveMap")),
+      metallicMap(getTexture(handle, "metallicMap")), normalMap(getTexture(handle, "normalMap")),
+      occlusionMap(getTexture(handle, "occlusionMap")), opacityMap(getTexture(handle, "opacityMap")),
+      roughnessMap(getTexture(handle, "roughnessMap")), specularMap(getTexture(handle, "specularMap")),
 
-MaterialTrafo MaterialInfo::getTrafo(adsk::Data::Handle& sHandle, const std::string& name) {
-	MaterialTrafo trafo;
-	getDoubleArray(trafo.data, sHandle, name);
-	return trafo;
-}
+      opacity(getDouble(handle, "opacity")), metallic(getDouble(handle, "metallic")),
+      roughness(getDouble(handle, "roughness")),
 
-std::string MaterialInfo::getTexture(adsk::Data::Handle& sHandle, const std::string& texName) {
-	std::string r;
-	if (sHandle.setPositionByMemberName(texName.c_str()))
-		r = (char*)sHandle.asUInt8();
-	return r;
-}
-
-double MaterialInfo::getDouble(adsk::Data::Handle& sHandle, const std::string& name) {
-	if (sHandle.setPositionByMemberName(name.c_str())) {
-		double* data = sHandle.asDouble();
-		if (sHandle.dataLength() >= 1 && data != nullptr) {
-			return *data;
-		}
-	}
-	return NAN;
-}
-
-MaterialInfo::MaterialInfo(adsk::Data::Handle sHandle) {
-	bumpMap = getTexture(sHandle, "bumpMap");
-	colormap = getTexture(sHandle, "diffuseMap");
-	dirtmap = getTexture(sHandle, "diffuseMap1");
-	emissiveMap = getTexture(sHandle, "emissiveMap");
-	metallicMap = getTexture(sHandle, "metallicMap");
-	normalMap = getTexture(sHandle, "normalMap");
-	occlusionMap = getTexture(sHandle, "occlusionMap");
-	opacityMap = getTexture(sHandle, "opacityMap");
-	roughnessMap = getTexture(sHandle, "roughnessMap");
-	specularMap = getTexture(sHandle, "specularMap");
-
-	opacity = getDouble(sHandle, "opacity");
-	metallic = getDouble(sHandle, "metallic");
-	roughness = getDouble(sHandle, "roughness");
-
-	ambientColor = getColor(sHandle, "ambientColor");
-	bumpmapTrafo = getTrafo(sHandle, "bumpmapTrafo");
-	colormapTrafo = getTrafo(sHandle, "colormapTrafo");
-	diffuseColor = getColor(sHandle, "diffuseColor");
-	dirtmapTrafo = getTrafo(sHandle, "dirtmapTrafo");
-	emissiveColor = getColor(sHandle, "emissiveColor");
-	emissivemapTrafo = getTrafo(sHandle, "emissivemapTrafo");
-	metallicmapTrafo = getTrafo(sHandle, "metallicmapTrafo");
-	normalmapTrafo = getTrafo(sHandle, "normalmapTrafo");
-	occlusionmapTrafo = getTrafo(sHandle, "occlusionmapTrafo");
-	opacitymapTrafo = getTrafo(sHandle, "opacitymapTrafo");
-	roughnessmapTrafo = getTrafo(sHandle, "roughnessmapTrafo");
-	specularColor = getColor(sHandle, "specularColor");
-	specularmapTrafo = getTrafo(sHandle, "specularmapTrafo");
-}
+      ambientColor(handle, "ambientColor"), bumpmapTrafo(handle, "bumpmapTrafo"),
+      colormapTrafo(handle, "colormapTrafo"), diffuseColor(handle, "diffuseColor"),
+      dirtmapTrafo(handle, "dirtmapTrafo"), emissiveColor(handle, "emissiveColor"),
+      emissivemapTrafo(handle, "emissivemapTrafo"), metallicmapTrafo(handle, "metallicmapTrafo"),
+      normalmapTrafo(handle, "normalmapTrafo"), occlusionmapTrafo(handle, "occlusionmapTrafo"),
+      opacitymapTrafo(handle, "opacitymapTrafo"), roughnessmapTrafo(handle, "roughnessmapTrafo"),
+      specularColor(handle, "specularColor"), specularmapTrafo(handle, "specularmapTrafo") {}
 
 bool MaterialInfo::equals(const MaterialInfo& o) const {
 	// clang-format off
