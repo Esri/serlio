@@ -287,9 +287,6 @@ time_t getFileModificationTime(const std::wstring& p) {
 #ifdef _WIN32
 	std::wstring pn = p;
 	std::replace(pn.begin(), pn.end(), L'/', L'\\');
-#endif
-
-#ifdef _WIN32
 	struct _stat st;
 	int ierr = _wstat(pn.c_str(), &st);
 #else
