@@ -69,7 +69,7 @@ private:
 
 class MaterialInfo {
 public:
-	explicit MaterialInfo(adsk::Data::Handle handle);
+	explicit MaterialInfo(adsk::Data::Handle& handle);
 
 	std::string bumpMap;
 	std::string colormap;

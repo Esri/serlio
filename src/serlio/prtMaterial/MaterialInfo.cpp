@@ -126,7 +126,7 @@ bool MaterialTrafo::operator>(const MaterialTrafo& rhs) const noexcept {
 	return rhs < *this;
 }
 
-MaterialInfo::MaterialInfo(adsk::Data::Handle handle)
+MaterialInfo::MaterialInfo(adsk::Data::Handle& handle)
     : bumpMap(getTexture(handle, "bumpMap")), colormap(getTexture(handle, "diffuseMap")),
       dirtmap(getTexture(handle, "diffuseMap1")), emissiveMap(getTexture(handle, "emissiveMap")),
       metallicMap(getTexture(handle, "metallicMap")), normalMap(getTexture(handle, "normalMap")),
