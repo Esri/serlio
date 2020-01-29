@@ -88,7 +88,7 @@ MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStruc
 		if ((matStream == nullptr) || (matStream->elementCount() != 1))
 			continue;
 
-		const adsk::Data::Handle matSHandle = matStream->element(0);
+		adsk::Data::Handle matSHandle = matStream->element(0);
 		if (!matSHandle.usesStructure(materialStructure))
 			continue;
 
