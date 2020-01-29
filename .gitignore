@@ -1,6 +1,11 @@
-/src/cmake-*
 /build*
 /install
+
+# ignore CLion project files
+/src/cmake-*
 /**/.idea
+
+# ignore Visual Studio solution files
+/**/.vs
 /src/CMakeSettings.json
-/.vs
+/src/out*

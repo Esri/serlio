@@ -20,6 +20,8 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
+#include <vector>
 
 #ifdef _WIN32
 #	ifdef SRL_TEST_EXPORTS
@@ -40,3 +42,10 @@ constexpr std::uint32_t STRINGRAY_MATERIAL_NODE = 0xA;
 constexpr std::uint32_t ARNOLD_MATERIAL_NODE = 0xF;
 
 } // namespace SerlioNodeIDs
+
+namespace MayaPluginUtilities {
+
+// defined here because of limitations of including MFnPlugin.h multiple times
+bool pluginDependencyCheck(const std::vector<std::string>& dependencies);
+
+} // namespace MayaPluginUtilities

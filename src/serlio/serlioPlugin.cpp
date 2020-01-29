@@ -34,6 +34,8 @@
 #include "maya/MFnPlugin.h"
 #include "maya/MGlobal.h"
 #include "maya/MSceneMessage.h"
+#include "maya/MStatus.h"
+#include "maya/MString.h"
 
 namespace {
 constexpr bool DBG = false;
@@ -49,26 +51,10 @@ constexpr const char* SERLIO_VENDOR = "Esri R&D Center Zurich";
 // global PRT lifetime handler
 PRTContextUPtr prtCtx;
 
-MStatus checkRequiredPluginDependencies() {
-	const std::vector<MString> dependencies = {"shaderFXPlugin"};
-	for (const auto& d : dependencies) {
-		auto p = MFnPlugin::findPlugin(d);
-		if (p.isNull()) {
-			MGlobal::displayError("Serlio: the required dependency '" + d + "' is not loaded, please activate it!");
-			return MStatus::kFailure;
-		}
-	}
-	return MStatus::kSuccess;
-}
-
 } // namespace
 
 // called when the plug-in is loaded into Maya.
 MStatus initializePlugin(MObject obj) {
-	const MStatus dependencyStatus = checkRequiredPluginDependencies();
-	if (dependencyStatus != MStatus::kSuccess)
-		return dependencyStatus;
-
 	if (!prtCtx) {
 		prtCtx.reset(new PRTContext());
 
@@ -118,3 +104,20 @@ MStatus uninitializePlugin(MObject obj) {
 	}
 	return status;
 }
+
+namespace MayaPluginUtilities {
+
+bool pluginDependencyCheck(const std::vector<std::string>& dependencies) {
+	for (const auto& d : dependencies) {
+		MString md(d.c_str());
+		auto p = MFnPlugin::findPlugin(md);
+		if (p.isNull()) {
+			MGlobal::displayError("Serlio: the required dependency '" + md +
+			                      "' is not loaded, please activate it and restart Maya!");
+			return false;
+		}
+	}
+	return true;
+}
+
+} // namespace MayaPluginUtilities
