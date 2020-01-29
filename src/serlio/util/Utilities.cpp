@@ -30,18 +30,15 @@ struct IUnknown;
 #	include <windows.h>
 #	include <shellapi.h>
 #else
-#	include <ftw.h>
-#	include <unistd.h>
 #	include <dlfcn.h>
+#	include <unistd.h>
 #endif
 
 #include <cwchar>
-#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
-#include <sys/types.h>
 
 namespace prtu {
 

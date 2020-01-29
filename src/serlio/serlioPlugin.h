@@ -20,8 +20,8 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include <string>
+#include <vector>
 
 #ifdef _WIN32
 #	ifdef SRL_TEST_EXPORTS
