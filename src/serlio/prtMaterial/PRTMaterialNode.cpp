@@ -232,9 +232,9 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block) {
 
 					// create shadingnode and add metadata
 					MCHECK(MGlobal::executeCommand(shaderCmd, DBG));
-					MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
+					MItDependencyNodes itHwShaders2(MFn::kPluginHardwareShader, &status);
 					MCHECK(status);
-					for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders)) {
+					for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders2)) {
 						MFnDependencyNode n(hwShaderNode);
 
 						if (n.name() == shaderNameMstr) {
@@ -345,7 +345,7 @@ void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& targ
 }
 
 void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& target, const std::string& tex) {
-	if (tex.size() > 0) {
+	if (!tex.empty()) {
 		mShadingCmd += "$colormap = \"" + MString(tex.c_str()) + "\";\n";
 		mShadingCmd += "$nodeName = $sgName +\"" + MString(target.c_str()) + "\";\n";
 		mShadingCmd += "shadingNode -asTexture file -n $nodeName -ss;\n";

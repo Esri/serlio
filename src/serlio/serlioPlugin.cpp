@@ -20,16 +20,13 @@
 #include "serlioPlugin.h"
 #include "PRTContext.h"
 
-#include "prtModifier/PRTModifierAction.h"
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/PRTModifierNode.h"
 
 #include "prtMaterial/ArnoldMaterialNode.h"
 #include "prtMaterial/PRTMaterialNode.h"
 
-#include "util/LogHandler.h"
 #include "util/MayaUtilities.h"
-#include "util/Utilities.h"
 
 #include "maya/MFnPlugin.h"
 #include "maya/MGlobal.h"
@@ -56,7 +53,7 @@ PRTContextUPtr prtCtx;
 // called when the plug-in is loaded into Maya.
 MStatus initializePlugin(MObject obj) {
 	if (!prtCtx) {
-		prtCtx.reset(new PRTContext());
+		prtCtx = std::make_unique<PRTContext>();
 
 		// maya exit does not call uninitializePlugin automatically, therefore use addCallback
 		auto mayaExitCallback = [](void*) { uninitializePlugin(MObject::kNullObj); }; // TODO: correct obj value?

@@ -95,7 +95,7 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 }
 
 // poor mans std::filesystem - we don't want boost or c++17 dependency right now
-SRL_TEST_EXPORTS_API const std::wstring filename(const std::wstring& path);
+SRL_TEST_EXPORTS_API std::wstring filename(const std::wstring& path);
 time_t getFileModificationTime(const std::wstring& p);
 std::wstring temp_directory_path();
 std::wstring getProcessTempDir(const std::wstring& prefix);
@@ -232,7 +232,7 @@ std::basic_string<C> join(Container const& container, const std::basic_string<C>
 	auto b = std::begin(container), e = std::end(container);
 	if (b != e) {
 		std::copy(b, std::prev(e), std::ostream_iterator<ElementType, C>(os, delimiter.c_str()));
-		b = prev(e);
+		b = std::prev(e);
 	}
 	if (b != e) {
 		os << *b;

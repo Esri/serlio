@@ -80,10 +80,10 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 
 		// TODO: is this correct? import name != rule file name
 		std::wstring ruleName = p.fqName;
-		size_t idxStyle = ruleName.find(L"$");
+		size_t idxStyle = ruleName.find(L'$');
 		if (idxStyle != std::wstring::npos)
 			ruleName = ruleName.substr(idxStyle + 1);
-		size_t idxDot = ruleName.find_last_of(L".");
+		size_t idxDot = ruleName.find_last_of(L'.');
 		if (idxDot != std::wstring::npos) {
 			p.ruleFile = ruleName.substr(0, idxDot);
 		}
@@ -235,14 +235,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 }
 
 std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap) {
-	auto orderVal = [](int order) {
-		std::wostringstream ostr;
-		if (order == ORDER_NONE)
-			ostr << L"none";
-		else
-			ostr << order;
-		return ostr.str();
-	};
+	auto orderVal = [](int order) { return (order == ORDER_NONE) ? L"none" : std::to_wstring(order); };
 	ostr << L"RuleAttribute '" << ap.fqName << L"':" << L" order = " << orderVal(ap.order) << L", groupOrder = "
 	     << orderVal(ap.groupOrder) << L", ruleFile = '" << ap.ruleFile << L"'" << L", groups = [ "
 	     << join<wchar_t>(ap.groups, L" ") << L" ]\n";

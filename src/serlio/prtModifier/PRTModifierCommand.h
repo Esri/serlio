@@ -25,7 +25,7 @@
 // based on the splitUVCommand and meshOpCommand Maya example .
 class PRTModifierCommand : public polyModifierCmd {
 public:
-	PRTModifierCommand(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) {}
+	explicit PRTModifierCommand(PRTContextUPtr& prtCtx) : mPRTCtx(prtCtx) {}
 
 	bool isUndoable() const override;
 

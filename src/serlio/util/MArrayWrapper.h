@@ -44,9 +44,9 @@ template <typename ElementType>
 class MArrayWrapperItProxy {
 
 public:
-	MArrayWrapperItProxy(std::add_const_t<ElementType>& element) : element(element) {}
+	explicit MArrayWrapperItProxy(std::add_const_t<ElementType>& element) : element(element) {}
 
-	operator ElementType() const {
+	explicit operator ElementType() const {
 		return element;
 	}
 
@@ -78,11 +78,11 @@ public:
 	typedef std::conditional_t<ElementTypeIsRef, value_type*, MArrayWrapperItProxy<value_type>> pointer;
 	typedef std::conditional_t<ElementTypeIsRef, value_type&, value_type> reference;
 
-	MArrayWrapperItBase(ArrayType& array, unsigned int currentIdx = 0) noexcept
+	explicit MArrayWrapperItBase(ArrayType& array, unsigned int currentIdx = 0) noexcept
 	    : array(&array), currentIdx(currentIdx) {}
 
 	template <bool IsConstLazy = IsConst, typename = std::enable_if_t<IsConstLazy>>
-	MArrayWrapperItBase(const MArrayWrapperItBase<std::remove_cv_t<ArrayType>>& other)
+	explicit MArrayWrapperItBase(const MArrayWrapperItBase<std::remove_cv_t<ArrayType>>& other)
 	    : array(other.array), currentIdx(other.currentIdx) {}
 
 	MArrayWrapperItBase& operator++() noexcept {
@@ -136,7 +136,7 @@ class MArrayWrapperBase {
 public:
 	static constexpr bool IsConst = is_const_v<ArrayType>;
 
-	MArrayWrapperBase(ArrayType& array) : array(array), arrayLength(array.length()) {}
+	explicit MArrayWrapperBase(ArrayType& array) : array(array), arrayLength(array.length()) {}
 
 	template <bool IsConstLazy = IsConst, typename = std::enable_if_t<!IsConstLazy>>
 	MArrayWrapperIt<ArrayType> begin() noexcept {
@@ -177,7 +177,7 @@ template <typename ArrayType>
 class MArraySimpleWrapper {
 
 public:
-	MArraySimpleWrapper(ArrayType& array) : array(array){};
+	explicit MArraySimpleWrapper(ArrayType& array) : array(array){};
 
 	auto begin() {
 		return array.begin();

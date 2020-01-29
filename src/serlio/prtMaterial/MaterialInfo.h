@@ -31,27 +31,25 @@ const std::string gPRTMatMemberFaceStart = "faceIndexStart";
 const std::string gPRTMatMemberFaceEnd = "faceIndexEnd";
 
 class MaterialColor {
-
 public:
+	MaterialColor(adsk::Data::Handle& sHandle, const std::string& name);
+
 	double r() const noexcept;
 	double g() const noexcept;
 	double b() const noexcept;
 
-private:
-	friend class MaterialInfo;
-
 	bool operator==(const MaterialColor& other) const noexcept;
-
 	bool operator<(const MaterialColor& rhs) const noexcept;
-
 	bool operator>(const MaterialColor& rhs) const noexcept;
 
+private:
 	std::array<double, 3> data;
 };
 
 class MaterialTrafo {
-
 public:
+	MaterialTrafo(adsk::Data::Handle& sHandle, const std::string& name);
+
 	double su() const noexcept;
 	double sv() const noexcept;
 	double tu() const noexcept;
@@ -61,21 +59,17 @@ public:
 	std::array<double, 2> tuv() const noexcept;
 	std::array<double, 3> suvw() const noexcept;
 
-private:
-	friend class MaterialInfo;
-
 	bool operator==(const MaterialTrafo& other) const noexcept;
-
 	bool operator<(const MaterialTrafo& rhs) const noexcept;
-
 	bool operator>(const MaterialTrafo& rhs) const noexcept;
 
+private:
 	std::array<double, 5> data;
 };
 
 class MaterialInfo {
 public:
-	explicit MaterialInfo(adsk::Data::Handle sHandle);
+	explicit MaterialInfo(adsk::Data::Handle& handle);
 
 	std::string bumpMap;
 	std::string colormap;
@@ -88,9 +82,9 @@ public:
 	std::string roughnessMap;
 	std::string specularMap;
 
-	double opacity;
-	double metallic;
-	double roughness;
+	double opacity = 1.0;
+	double metallic = 0.0;
+	double roughness = 1.0;
 
 	MaterialColor ambientColor;
 	MaterialColor diffuseColor;
@@ -111,22 +105,4 @@ public:
 	bool equals(const MaterialInfo& o) const;
 
 	bool operator<(const MaterialInfo& rhs) const;
-
-private:
-	static std::string getTexture(adsk::Data::Handle& sHandle, const std::string& texName);
-	static double getDouble(adsk::Data::Handle& sHandle, const std::string& name);
-	static MaterialColor getColor(adsk::Data::Handle& sHandle, const std::string& name);
-	static MaterialTrafo getTrafo(adsk::Data::Handle& sHandle, const std::string& name);
-
-	template <size_t N>
-	static void getDoubleArray(std::array<double, N>& array, adsk::Data::Handle& sHandle, const std::string& name) {
-		if (sHandle.setPositionByMemberName(name.c_str())) {
-			double* data = sHandle.asDouble();
-			if (sHandle.dataLength() >= N && data) {
-				std::copy(data, data + N, array.begin());
-				return;
-			}
-		}
-		array.fill(0.0);
-	}
 };

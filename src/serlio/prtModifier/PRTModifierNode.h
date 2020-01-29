@@ -30,7 +30,7 @@
 
 class PRTModifierNode : public polyModifierNode {
 public:
-	PRTModifierNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx), fPRTModifierAction(prtCtx) {}
+	explicit PRTModifierNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx), fPRTModifierAction(prtCtx) {}
 
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
 	MStatus setDependentsDirty(const MPlug& plugBeingDirtied, MPlugArray& affectedPlugs) override;

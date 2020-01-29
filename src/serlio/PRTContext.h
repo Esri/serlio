@@ -35,7 +35,6 @@ struct SRL_TEST_EXPORTS_API PRTContext final {
 	PRTContext& operator=(PRTContext&&) = delete;
 	~PRTContext();
 
-	ResolveMapSPtr getResolveMap(const std::wstring& rpk);
 	bool isAlive() const {
 		return static_cast<bool>(thePRT);
 	}

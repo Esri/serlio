@@ -55,14 +55,14 @@ private:
 	MStringArray mSVals;
 	MDoubleArray mFVals;
 	MIntArray mBVals;
-	bool mRestricted;
+	bool mRestricted = true;
 }; // class PRTModifierEnum
 
 class PRTModifierAction : public polyModifierFty {
 	friend class PRTModifierEnum;
 
 public:
-	PRTModifierAction(const PRTContext& prtCtx);
+	explicit PRTModifierAction(const PRTContext& prtCtx);
 
 	MStatus updateRuleFiles(const MObject& node, const MString& rulePkg);
 	MStatus fillAttributesFromNode(const MObject& node);
@@ -94,7 +94,7 @@ private:
 	std::wstring mRuleFile;
 	std::wstring mStartRule;
 	const std::wstring mRuleStyle = L"Default"; // Serlio atm only supports the "Default" style
-	int32_t mRandomSeed;
+	int32_t mRandomSeed = 0;
 	RuleAttributes mRuleAttributes; // TODO: could be cached together with ResolveMap
 
 	ResolveMapSPtr getResolveMap();
@@ -121,7 +121,7 @@ private:
 	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
 	                                const RuleAttribute& name, double defaultValue, PRTModifierEnum& e);
 	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-	                                const RuleAttribute& name, MString defaultValue, PRTModifierEnum& e);
+	                                const RuleAttribute& name, const MString& defaultValue, PRTModifierEnum& e);
 	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
 	                                const RuleAttribute& name, short defaultValue, PRTModifierEnum& e);
 	static MStatus addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,

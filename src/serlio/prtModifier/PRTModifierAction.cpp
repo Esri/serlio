@@ -347,8 +347,8 @@ MStatus PRTModifierAction::doIt() {
 	assert(encIDs.size() == encOpts.size());
 
 	InitialShapeNOPtrVector shapes = {shape.get()};
-	const prt::Status generateStatus = prt::generate(shapes.data(), shapes.size(), 0, encIDs.data(), encIDs.size(),
-	                                                 encOpts.data(), outputHandler.get(), mPRTCtx.theCache.get(), 0);
+	const prt::Status generateStatus = prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(),
+	                                                 encOpts.data(), outputHandler.get(), mPRTCtx.theCache.get(), nullptr);
 	if (generateStatus != prt::STATUS_OK)
 		LOG_ERR << "prt generate failed: " << prt::getStatusDescription(generateStatus);
 
@@ -508,7 +508,6 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 				break;
 		}
 
-		MStatus stat;
 		MFnAttribute fnAttr(attr, &stat);
 		if (stat == MS::kSuccess) {
 			fnAttr.addToCategory(MString(p.ruleFile.c_str()));
@@ -717,7 +716,7 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 }
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-                                            const RuleAttribute& ruleAttr, MString defaultValue, PRTModifierEnum& e) {
+                                            const RuleAttribute& ruleAttr, const MString& defaultValue, PRTModifierEnum& e) {
 	short idx = 0;
 	for (int i = static_cast<int>(e.mSVals.length()); --i >= 0;) {
 		if (e.mSVals[i] == defaultValue) {

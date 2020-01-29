@@ -30,7 +30,7 @@ struct PRTContext;
 
 class PRTMaterialNode : public MPxNode {
 public:
-	PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {}
+	explicit PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {}
 
 	static MStatus initialize();
 
@@ -42,10 +42,9 @@ public:
 
 private:
 	static void setTexture(MString& mShadingCmd, const std::string& tex, const std::string& target);
-	static void setAttribute(MString& mShadingCmd, const std::string& target, const double val);
-	static void setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2);
-	static void setAttribute(MString& mShadingCmd, const std::string& target, const double val1, double const val2,
-	                         double const val3);
+	static void setAttribute(MString& mShadingCmd, const std::string& target, double val);
+	static void setAttribute(MString& mShadingCmd, const std::string& target, double val1, double val2);
+	static void setAttribute(MString& mShadingCmd, const std::string& target, double val1, double val2, double val3);
 	static void setAttribute(MString& mShadingCmd, const std::string& target, const MaterialColor& color);
 	static void setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 2>& val);
 	static void setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 3>& val);

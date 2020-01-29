@@ -521,7 +521,7 @@ void MayaEncoder::init(prtx::GenerateContext&) {
 
 void MayaEncoder::encode(prtx::GenerateContext& context, size_t initialShapeIndex) {
 	const prtx::InitialShape& initialShape = *context.getInitialShape(initialShapeIndex);
-	auto* cb = static_cast<IMayaCallbacks*>(getCallbacks());
+	auto* cb = dynamic_cast<IMayaCallbacks*>(getCallbacks());
 
 	const bool emitAttrs = getOptions()->getBool(EO_EMIT_ATTRIBUTES);
 

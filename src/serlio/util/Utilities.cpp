@@ -75,7 +75,7 @@ std::wstring getPluginRoot() {
 	return rootPath;
 }
 
-const std::wstring filename(const std::wstring& path) {
+std::wstring filename(const std::wstring& path) {
 	size_t pos = path.find_last_of(L'/');
 	if (pos != std::string::npos) {
 		return path.substr(pos + 1);
@@ -284,18 +284,15 @@ std::wstring getProcessTempDir(const std::wstring& prefix) {
 }
 
 time_t getFileModificationTime(const std::wstring& p) {
+
+#ifdef _WIN32
 	std::wstring pn = p;
-
-#ifdef _WIN32
 	std::replace(pn.begin(), pn.end(), L'/', L'\\');
-#endif
-
-#ifdef _WIN32
 	struct _stat st;
 	int ierr = _wstat(pn.c_str(), &st);
 #else
 	struct stat st;
-	int ierr = stat(prtu::toOSNarrowFromUTF16(pn).c_str(), &st);
+	int ierr = stat(prtu::toOSNarrowFromUTF16(p).c_str(), &st);
 #endif
 
 	if (ierr == 0) {

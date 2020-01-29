@@ -35,45 +35,45 @@
 
 class MayaCallbacks : public IMayaCallbacks {
 public:
-	MayaCallbacks(MObject inMesh, MObject outMesh, AttributeMapBuilderUPtr& amb)
+	MayaCallbacks(const MObject& inMesh, const MObject& outMesh, AttributeMapBuilderUPtr& amb)
 	    : inMeshObj(inMesh), outMeshObj(outMesh), mAttributeMapBuilder(amb) {}
 
 	// prt::Callbacks interface
-	virtual prt::Status generateError(size_t /*isIndex*/, prt::Status /*status*/, const wchar_t* message) override {
+	prt::Status generateError(size_t /*isIndex*/, prt::Status /*status*/, const wchar_t* message) override {
 		LOG_ERR << "GENERATE ERROR: " << message;
 		return prt::STATUS_OK;
 	}
-	virtual prt::Status assetError(size_t /*isIndex*/, prt::CGAErrorLevel /*level*/, const wchar_t* /*key*/,
+	prt::Status assetError(size_t /*isIndex*/, prt::CGAErrorLevel /*level*/, const wchar_t* /*key*/,
 	                               const wchar_t* /*uri*/, const wchar_t* message) override {
 		LOG_ERR << "ASSET ERROR: " << message;
 		return prt::STATUS_OK;
 	}
-	virtual prt::Status cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel /*level*/,
+	prt::Status cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel /*level*/,
 	                             int32_t /*methodId*/, int32_t /*pc*/, const wchar_t* message) override {
 		LOG_ERR << "CGA ERROR: " << message;
 		return prt::STATUS_OK;
 	}
-	virtual prt::Status cgaPrint(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* txt) override {
+	prt::Status cgaPrint(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* txt) override {
 		LOG_INF << "CGA PRINT: " << txt;
 		return prt::STATUS_OK;
 	}
-	virtual prt::Status cgaReportBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+	prt::Status cgaReportBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
 	                                  bool /*value*/) override {
 		return prt::STATUS_OK;
 	}
-	virtual prt::Status cgaReportFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+	 prt::Status cgaReportFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
 	                                   double /*value*/) override {
 		return prt::STATUS_OK;
 	}
-	virtual prt::Status cgaReportString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+	prt::Status cgaReportString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
 	                                    const wchar_t* /*value*/) override {
 		return prt::STATUS_OK;
 	}
-	virtual prt::Status attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+	prt::Status attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
 	                             bool /*value*/) override;
-	virtual prt::Status attrFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+	prt::Status attrFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
 	                              double /*value*/) override;
-	virtual prt::Status attrString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+	prt::Status attrString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
 	                               const wchar_t* /*value*/) override;
 
 // PRT version >= 2.1
@@ -90,7 +90,7 @@ public:
 
 public:
 	// clang-format off
-	virtual void addMesh(const wchar_t* name,
+	void addMesh(const wchar_t* name,
 	                     const double* vtx, size_t vtxSize,
 	                     const double* nrm, size_t nrmSize,
 	                     const uint32_t* faceCounts, size_t faceCountsSize,

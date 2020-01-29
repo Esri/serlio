@@ -29,13 +29,13 @@ class MaterialColor;
 class MELScriptBuilder {
 
 public:
-	void setAttr(const std::wstring& attribute, const bool val);
+	void setAttr(const std::wstring& attribute, bool val);
 
-	void setAttr(const std::wstring& attribute, const double val);
+	void setAttr(const std::wstring& attribute, double val);
 
-	void setAttr(const std::wstring& attribute, const double val1, const double val2);
+	void setAttr(const std::wstring& attribute, double val1, double val2);
 
-	void setAttr(const std::wstring& attribute, const double val1, const double val2, const double val3);
+	void setAttr(const std::wstring& attribute, double val1, double val2, double val3);
 
 	void setAttr(const std::wstring& attribute, const wchar_t* val);
 
@@ -53,8 +53,7 @@ public:
 
 	void setsCreate(const std::wstring& setName);
 
-	void setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, const int faceStart,
-	                      const int faceEnd);
+	void setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, int faceStart, int faceEnd);
 
 	void createShader(const std::wstring& shaderType, const std::wstring& shaderName);
 
