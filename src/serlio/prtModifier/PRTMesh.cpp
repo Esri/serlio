@@ -39,8 +39,8 @@ PRTMesh::PRTMesh(const MObject& mesh) {
 	MFloatPointArray vertexArray;
 	meshFn.getPoints(vertexArray);
 
-	const size_t vertexArrayLength = vertexArray.length();
-	mVertexCoordsVec.reserve(vertexArrayLength);
+	const unsigned int vertexArrayLength = vertexArray.length();
+	mVertexCoordsVec.reserve(3 * vertexArrayLength);
 	for (unsigned int i = 0; i < vertexArrayLength; ++i) {
 		mVertexCoordsVec.push_back(vertexArray[i].x);
 		mVertexCoordsVec.push_back(vertexArray[i].y);

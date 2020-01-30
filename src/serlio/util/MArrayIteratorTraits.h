@@ -21,6 +21,18 @@
 
 #include "maya/MTypes.h"
 
+namespace mu {
+
+namespace detail {
+
+// remove in favour of std::void_t once we switch to C++17
+template <typename... T>
+using void_t = void;
+
+}
+
+}
+
 #if (MAYA_API_VERSION >= 20190000)
 
 #	include "maya/MArrayIteratorTemplate.h"
@@ -30,10 +42,6 @@
 namespace mu {
 
 namespace detail {
-
-// remove in favour of std::void_t once we switch to C++17
-template <typename... T>
-using void_t = void;
 
 template <typename Iterator, typename Default, typename = void_t<>>
 struct MArrayIteratorCategory {
