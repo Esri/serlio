@@ -148,9 +148,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		        << "): " << shadingEngineName;
 	}
 
-	scriptBuilder.execute();
-
-	return MStatus::kSuccess;
+	return scriptBuilder.execute();
 }
 
 void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,

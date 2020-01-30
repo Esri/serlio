@@ -90,16 +90,17 @@ void MELScriptBuilder::createTexture(const std::wstring& textureName) {
 	commandStream << "shadingNode -asTexture -skipSelect -name " << textureName << " file;\n";
 }
 
-std::wstring MELScriptBuilder::executeSync() {
+MStatus MELScriptBuilder::executeSync(std::wstring& output) {
 	MStatus status;
 	MString result =
 	        MGlobal::executeCommandStringResult(commandStream.str().c_str(), MEL_ENABLE_DISPLAY, false, &status);
-	MCHECK(status);
 	commandStream.clear();
-	return result.asWChar();
+	output.assign(result.asWChar());
+	return status;
 }
 
-void MELScriptBuilder::execute() {
-	MCHECK(MGlobal::executeCommandOnIdle(commandStream.str().c_str(), MEL_ENABLE_DISPLAY));
+MStatus MELScriptBuilder::execute() {
+	MStatus status = MGlobal::executeCommandOnIdle(commandStream.str().c_str(), MEL_ENABLE_DISPLAY);
 	commandStream.clear();
+	return status;
 }

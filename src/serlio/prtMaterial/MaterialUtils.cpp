@@ -162,7 +162,12 @@ std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShading
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.setVar(shadingEngineVariable, desiredShadingEngineName);
 	scriptBuilder.setsCreate(shadingEngineVariable);
-	return scriptBuilder.executeSync();
+
+	std::wstring output;
+	MStatus status = scriptBuilder.executeSync(output);
+	MCHECK(status); // TODO: return status
+
+	return output;
 }
 
 } // namespace MaterialUtils

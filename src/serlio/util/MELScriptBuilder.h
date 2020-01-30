@@ -59,9 +59,9 @@ public:
 
 	void createTexture(const std::wstring& textureName);
 
-	std::wstring executeSync();
+	MStatus executeSync(std::wstring& output);
 
-	void execute();
+	MStatus execute();
 
 private:
 	std::wstringstream commandStream;
