@@ -81,7 +81,7 @@ public:
 	explicit MArrayWrapperItBase(ArrayType& array, unsigned int currentIdx = 0) noexcept
 	    : array(&array), currentIdx(currentIdx) {}
 
-	template <bool IsConstLazy = IsConst, typename = std::enable_if_t<IsConstLazy>>
+	template <bool IsConstLazy = IsConst, std::enable_if_t<IsConstLazy>* = nullptr>
 	explicit MArrayWrapperItBase(const MArrayWrapperItBase<std::remove_cv_t<ArrayType>>& other)
 	    : array(other.array), currentIdx(other.currentIdx) {}
 
@@ -138,7 +138,7 @@ public:
 
 	explicit MArrayWrapperBase(ArrayType& array) : array(array), arrayLength(array.length()) {}
 
-	template <bool IsConstLazy = IsConst, typename = std::enable_if_t<!IsConstLazy>>
+	template <bool IsConstLazy = IsConst, std::enable_if_t<!IsConstLazy>* = nullptr>
 	MArrayWrapperIt<ArrayType> begin() noexcept {
 		return MArrayWrapperIt<ArrayType>(array);
 	}
@@ -147,7 +147,7 @@ public:
 		return MArrayWrapperConstIt<ArrayType>(array);
 	}
 
-	template <bool IsConstLazy = IsConst, typename = std::enable_if_t<!IsConstLazy>>
+	template <bool IsConstLazy = IsConst, std::enable_if_t<!IsConstLazy>* = nullptr>
 	MArrayWrapperIt<ArrayType> end() noexcept {
 		return MArrayWrapperIt<ArrayType>(array, arrayLength);
 	}
@@ -212,22 +212,22 @@ using MArrayConstWrapper = detail::MArrayWrapperBase<const ArrayType>;
 // needed. Callers are expected to let the return types of these functions be deduced, e.g. using auto. The whole
 // wrapper can be removed, once Maya 2018 API is not supported anymore.
 
-template <typename ArrayType, typename = std::enable_if_t<detail::isIterable<ArrayType>()>>
+template <typename ArrayType, std::enable_if_t<detail::isIterable<ArrayType>()>* = nullptr>
 MArraySimpleWrapper<ArrayType> makeMArrayWrapper(ArrayType& array) {
 	return MArraySimpleWrapper<ArrayType>(array);
 }
 
-template <typename ArrayType, typename = std::enable_if_t<!detail::isIterable<ArrayType>()>>
+template <typename ArrayType, std::enable_if_t<!detail::isIterable<ArrayType>()>* = nullptr>
 MArrayWrapper<ArrayType> makeMArrayWrapper(ArrayType& array) {
 	return MArrayWrapper<ArrayType>(array);
 }
 
-template <typename ArrayType, typename = std::enable_if_t<detail::isIterable<ArrayType>()>>
+template <typename ArrayType, std::enable_if_t<detail::isIterable<ArrayType>()>* = nullptr>
 MArraySimpleWrapper<const ArrayType> makeMArrayConstWrapper(const ArrayType& array) {
 	return MArraySimpleWrapper<const ArrayType>(array);
 }
 
-template <typename ArrayType, typename = std::enable_if_t<!detail::isIterable<ArrayType>()>>
+template <typename ArrayType, std::enable_if_t<!detail::isIterable<ArrayType>()>* = nullptr>
 MArrayConstWrapper<ArrayType> makeMArrayConstWrapper(const ArrayType& array) {
 	return MArrayConstWrapper<ArrayType>(array);
 }
