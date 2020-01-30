@@ -77,7 +77,10 @@ MStatus PRTMaterialNode::initialize() {
 	return MStatus::kSuccess;
 }
 
-MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block) {
+MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
+	if (plug != aOutMesh)
+		return MStatus::kUnknownParameter;
+
 	MStatus status = MStatus::kSuccess;
 
 	std::call_once(pluginDependencyCheckFlag, [&status]() {
@@ -87,230 +90,195 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& block) {
 	if (status != MStatus::kSuccess)
 		return status;
 
-	MObject thisNode = thisMObject();
+	adsk::Data::Stream* inMatStream = MaterialUtils::getMaterialStream(aOutMesh, aInMesh, data);
+	if (inMatStream == nullptr)
+		return MStatus::kSuccess;
 
-	MPlug inMeshPlug(thisNode, aInMesh);
-	MDataHandle inMeshHandle = block.inputValue(inMeshPlug, &status);
-	MObject inMeshObj = inMeshHandle.asMesh();
-	MFnMesh inputMesh(inMeshObj);
-	MCHECK(status);
-
-	// Create a copy of the mesh object. Rely on the underlying geometry
-	// object to minimize the amount of duplication that will happen.
-	MPlug outMeshPlug(thisNode, aOutMesh);
-	if (plug != outMeshPlug)
-		return status;
-
-	MDataHandle outMeshHandle = block.outputValue(outMeshPlug, &status);
-	MCHECK(status);
-	outMeshHandle.set(inMeshObj);
-	MObject outMeshObj = outMeshHandle.asMesh();
-	MFnMesh outputMesh(outMeshObj);
-
-	const adsk::Data::Associations* inputAssociations = inputMesh.metadata();
-
-	MStatus stat;
+	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
+	if (materialStructure == nullptr)
+		return MStatus::kFailure;
 
 	MString meshName;
 	MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
-	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0) {
+	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
 		return meshNameStatus;
+
+	// find all existing prt materials
+	std::set<std::string> shaderNames;
+	std::list<std::pair<const MObject, const MaterialInfo>> existingMaterialInfos;
+	MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
+	MCHECK(status);
+	for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders)) {
+		MFnDependencyNode n(hwShaderNode);
+		shaderNames.insert(std::string(n.name().asChar()));
+		const adsk::Data::Associations* materialMetadata = n.metadata(&status);
+		MCHECK(status);
+
+		if (materialMetadata == nullptr) {
+			continue;
+		}
+
+		adsk::Data::Associations materialAssociations(materialMetadata);
+		adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
+
+		if (matChannel == nullptr) {
+			continue;
+		}
+
+		adsk::Data::Stream* matStream = matChannel->findDataStream(gPRTMatStream);
+		if ((matStream != nullptr) && matStream->elementCount() == 1) {
+			adsk::Data::Handle matSHandle = matStream->element(0);
+			if (!matSHandle.usesStructure(*materialStructure))
+				continue;
+			auto p = std::pair<const MObject, const MaterialInfo>(hwShaderNode, matSHandle);
+			existingMaterialInfos.push_back(p);
+		}
 	}
 
-	if ((inputAssociations != nullptr)) {
-		adsk::Data::Associations outputAssociations(inputMesh.metadata(&status));
-		MCHECK(status);
+	// determine path of shader fx file
+	if (sfxFile.length() == 0) {
+		// mel command wants forward slashes
+		const std::wstring shadersPath = prtu::toGenericPath(mPRTCtx.mPluginRootPath + L"../shaders/");
+		sfxFile = MString(shadersPath.c_str()) + "serlioShaderStingray.sfx";
+		LOG_DBG << "stingray shader located at " << sfxFile.asWChar();
+	}
 
-		// find all existing prt materials
-		adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
-		std::set<std::string> shaderNames;
-		std::list<std::pair<const MObject, const MaterialInfo>> existingMaterialInfos;
-		MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
+	MString mShadingCmd;
+	mShadingCmd += "string $sgName;\n";
+	mShadingCmd += "string $shName;\n";
+	mShadingCmd += "string $colormap;\n";
+	mShadingCmd += "string $nodeName;\n";
+	mShadingCmd += "int $shadingNodeIndex;\n";
+
+	std::array<wchar_t, 512> buf;
+
+	for (adsk::Data::Handle& sHandle : *inMatStream) {
+		if (!sHandle.hasData())
+			continue;
+
+		if (!sHandle.usesStructure(*materialStructure))
+			continue;
+
+		MaterialInfo matInfo(sHandle);
+
+		// material with same metadata already exists?
+		MObject matchingMaterial = MObject::kNullObj;
+
+		for (const auto& kv : existingMaterialInfos) {
+			if (matInfo.equals(kv.second)) {
+				matchingMaterial = kv.first;
+				break;
+			}
+		}
+
+		sHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str());
+		int faceStart = sHandle.asInt32()[0];
+
+		sHandle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str());
+		int faceEnd = sHandle.asInt32()[0];
+
+		if (matchingMaterial != MObject::kNullObj) {
+			std::wstring matName(MFnDependencyNode(matchingMaterial).name().asWChar());
+			size_t idx = matName.find_last_of(L"Sh");
+			if (idx != std::wstring::npos)
+				matName[idx] = L'g';
+			swprintf(buf.data(), buf.size() - 1, L"sets -forceElement %ls %ls.f[%d:%d];\n", matName.c_str(),
+			         MString(meshName).asWChar(), faceStart, faceEnd);
+			mShadingCmd += buf.data();
+			continue;
+		}
+
+		// get unique name
+		std::string shaderName = "serlioGeneratedMaterialSh";
+		std::string shadingGroupName = "serlioGeneratedMaterialSg";
+
+		int shIdx = 0;
+		while (shaderNames.find(shaderName + std::to_string(shIdx)) != shaderNames.end()) {
+			shIdx++;
+		}
+		shaderName += std::to_string(shIdx);
+		shadingGroupName += std::to_string(shIdx);
+		shaderNames.insert(shaderName);
+
+		MString shaderNameMstr = MString(shaderName.c_str());
+		MString shadingGroupNameMstr = MString(shadingGroupName.c_str());
+
+		MString shaderCmd = "shadingNode -asShader StingrayPBS -n " + shaderNameMstr + " -ss;\n";
+		shaderCmd += "shaderfx -sfxnode \"" + shaderNameMstr + "\" -loadGraph  \"" + sfxFile + "\";\n";
+
+		// create shadingnode and add metadata
+		MCHECK(MGlobal::executeCommand(shaderCmd, DBG));
+		MItDependencyNodes itHwShaders2(MFn::kPluginHardwareShader, &status);
 		MCHECK(status);
-		for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders)) {
+		for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders2)) {
 			MFnDependencyNode n(hwShaderNode);
-			shaderNames.insert(std::string(n.name().asChar()));
-			const adsk::Data::Associations* materialMetadata = n.metadata(&status);
-			MCHECK(status);
 
-			if (materialMetadata == nullptr) {
-				continue;
-			}
-
-			adsk::Data::Associations materialAssociations(materialMetadata);
-			adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
-
-			if (matChannel == nullptr) {
-				continue;
-			}
-
-			adsk::Data::Stream* matStream = matChannel->findDataStream(gPRTMatStream);
-			if ((matStream != nullptr) && matStream->elementCount() == 1) {
-				adsk::Data::Handle matSHandle = matStream->element(0);
-				if (!matSHandle.usesStructure(*fStructure))
-					continue;
-				auto p = std::pair<const MObject, const MaterialInfo>(hwShaderNode, matSHandle);
-				existingMaterialInfos.push_back(p);
+			if (n.name() == shaderNameMstr) {
+				adsk::Data::Associations newMetadata;
+				adsk::Data::Channel newChannel = newMetadata.channel(gPRTMatChannel);
+				adsk::Data::Stream newStream(*materialStructure, gPRTMatStream);
+				newChannel.setDataStream(newStream);
+				newMetadata.setChannel(newChannel);
+				adsk::Data::Handle handle(sHandle);
+				handle.makeUnique();
+				newStream.setElement(0, handle);
+				n.setMetadata(newMetadata);
+				break;
 			}
 		}
 
-		// determine path of shader fx file
-		if (sfxFile.length() == 0) {
-			// mel command wants forward slashes
-			const std::wstring shadersPath = prtu::toGenericPath(mPRTCtx.mPluginRootPath + L"../shaders/");
-			sfxFile = MString(shadersPath.c_str()) + "serlioShaderStingray.sfx";
-			LOG_DBG << "stingray shader located at " << sfxFile.asWChar();
-		}
+		mShadingCmd += "$shName = \"" + shaderNameMstr + "\";\n";
+		mShadingCmd += "$sgName = \"" + shadingGroupNameMstr + "\";\n";
 
-		adsk::Data::Channel* channel = outputAssociations.findChannel(gPRTMatChannel);
-		if (channel != nullptr) {
-			adsk::Data::Stream* stream = channel->findDataStream(gPRTMatStream);
-			if (stream != nullptr) {
+		mShadingCmd += "sets -empty -renderable true -noSurfaceShader true -name $sgName;\n";
+		mShadingCmd += "setAttr ($shName+\".initgraph\") true;\n";
+		mShadingCmd += "connectAttr -force ($shName + \".outColor\") ($sgName + \".surfaceShader\");\n";
 
-				MString mShadingCmd;
-				mShadingCmd += "string $sgName;\n";
-				mShadingCmd += "string $shName;\n";
-				mShadingCmd += "string $colormap;\n";
-				mShadingCmd += "string $nodeName;\n";
-				mShadingCmd += "int $shadingNodeIndex;\n";
+		MString blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? "0" : "1";
+		mShadingCmd += "$shadingNodeIndex = `shaderfx -sfxnode $shName -getNodeIDByName \"Standard_Base\"`;\n";
+		mShadingCmd += "shaderfx -sfxnode $shName -edit_stringlist $shadingNodeIndex blendmode " + blendMode + ";\n";
 
-				std::array<wchar_t, 512> buf;
+		// ignored: ambientColor, specularColor
+		setAttribute(mShadingCmd, "diffuse_color", matInfo.diffuseColor);
+		setAttribute(mShadingCmd, "emissive_color", matInfo.emissiveColor);
+		setAttribute(mShadingCmd, "opacity", matInfo.opacity);
+		setAttribute(mShadingCmd, "roughness", matInfo.roughness);
+		setAttribute(mShadingCmd, "metallic", matInfo.metallic);
 
-				for (adsk::Data::Handle& sHandle : *stream) {
-					if (!sHandle.hasData())
-						continue;
+		// ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
+		// shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
+		setAttribute(mShadingCmd, "colormap_trafo_tuv", matInfo.colormapTrafo.tuv());
+		setAttribute(mShadingCmd, "dirtmap_trafo_tuv", matInfo.dirtmapTrafo.tuv());
+		setAttribute(mShadingCmd, "emissivemap_trafo_tuv", matInfo.emissivemapTrafo.tuv());
+		setAttribute(mShadingCmd, "metallicmap_trafo_tuv", matInfo.metallicmapTrafo.tuv());
+		setAttribute(mShadingCmd, "normalmap_trafo_tuv", matInfo.normalmapTrafo.tuv());
+		setAttribute(mShadingCmd, "opacitymap_trafo_tuv", matInfo.opacitymapTrafo.tuv());
+		setAttribute(mShadingCmd, "roughnessmap_trafo_tuv", matInfo.roughnessmapTrafo.tuv());
 
-					if (!sHandle.usesStructure(*fStructure))
-						continue;
+		setAttribute(mShadingCmd, "colormap_trafo_suvw", matInfo.colormapTrafo.suvw());
+		setAttribute(mShadingCmd, "dirtmap_trafo_suvw", matInfo.dirtmapTrafo.suvw());
+		setAttribute(mShadingCmd, "emissivemap_trafo_suvw", matInfo.emissivemapTrafo.suvw());
+		setAttribute(mShadingCmd, "metallicmap_trafo_suvw", matInfo.metallicmapTrafo.suvw());
+		setAttribute(mShadingCmd, "normalmap_trafo_suvw", matInfo.normalmapTrafo.suvw());
+		setAttribute(mShadingCmd, "opacitymap_trafo_suvw", matInfo.opacitymapTrafo.suvw());
+		setAttribute(mShadingCmd, "roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
 
-					MaterialInfo matInfo(sHandle);
+		// ignored: bumpMap, specularMap, occlusionmap
+		setTexture(mShadingCmd, "color_map", matInfo.colormap);
+		setTexture(mShadingCmd, "dirt_map", matInfo.dirtmap);
+		setTexture(mShadingCmd, "emissive_map", matInfo.emissiveMap);
+		setTexture(mShadingCmd, "metallic_map", matInfo.metallicMap);
+		setTexture(mShadingCmd, "normal_map", matInfo.normalMap);
+		setTexture(mShadingCmd, "roughness_map", matInfo.roughnessMap);
+		setTexture(mShadingCmd, "opacity_map", matInfo.opacityMap);
 
-					// material with same metadata already exists?
-					MObject matchingMaterial = MObject::kNullObj;
-
-					for (const auto& kv : existingMaterialInfos) {
-						if (matInfo.equals(kv.second)) {
-							matchingMaterial = kv.first;
-							break;
-						}
-					}
-
-					sHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str());
-					int faceStart = sHandle.asInt32()[0];
-
-					sHandle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str());
-					int faceEnd = sHandle.asInt32()[0];
-
-					if (matchingMaterial != MObject::kNullObj) {
-						std::wstring matName(MFnDependencyNode(matchingMaterial).name().asWChar());
-						size_t idx = matName.find_last_of(L"Sh");
-						if (idx != std::wstring::npos)
-							matName[idx] = L'g';
-						swprintf(buf.data(), buf.size() - 1, L"sets -forceElement %ls %ls.f[%d:%d];\n", matName.c_str(),
-						         MString(meshName).asWChar(), faceStart, faceEnd);
-						mShadingCmd += buf.data();
-						continue;
-					}
-
-					// get unique name
-					std::string shaderName = "serlioGeneratedMaterialSh";
-					std::string shadingGroupName = "serlioGeneratedMaterialSg";
-
-					int shIdx = 0;
-					while (shaderNames.find(shaderName + std::to_string(shIdx)) != shaderNames.end()) {
-						shIdx++;
-					}
-					shaderName += std::to_string(shIdx);
-					shadingGroupName += std::to_string(shIdx);
-					shaderNames.insert(shaderName);
-
-					MString shaderNameMstr = MString(shaderName.c_str());
-					MString shadingGroupNameMstr = MString(shadingGroupName.c_str());
-
-					MString shaderCmd = "shadingNode -asShader StingrayPBS -n " + shaderNameMstr + " -ss;\n";
-					shaderCmd += "shaderfx -sfxnode \"" + shaderNameMstr + "\" -loadGraph  \"" + sfxFile + "\";\n";
-
-					// create shadingnode and add metadata
-					MCHECK(MGlobal::executeCommand(shaderCmd, DBG));
-					MItDependencyNodes itHwShaders2(MFn::kPluginHardwareShader, &status);
-					MCHECK(status);
-					for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders2)) {
-						MFnDependencyNode n(hwShaderNode);
-
-						if (n.name() == shaderNameMstr) {
-							adsk::Data::Associations newMetadata;
-							MCHECK(stat);
-							adsk::Data::Channel newChannel = newMetadata.channel(gPRTMatChannel);
-							adsk::Data::Stream newStream(*fStructure, gPRTMatStream);
-							newChannel.setDataStream(newStream);
-							newMetadata.setChannel(newChannel);
-							adsk::Data::Handle handle(sHandle);
-							handle.makeUnique();
-							newStream.setElement(0, handle);
-							n.setMetadata(newMetadata);
-							break;
-						}
-					}
-
-					mShadingCmd += "$shName = \"" + shaderNameMstr + "\";\n";
-					mShadingCmd += "$sgName = \"" + shadingGroupNameMstr + "\";\n";
-
-					mShadingCmd += "sets -empty -renderable true -noSurfaceShader true -name $sgName;\n";
-					mShadingCmd += "setAttr ($shName+\".initgraph\") true;\n";
-					mShadingCmd += "connectAttr -force ($shName + \".outColor\") ($sgName + \".surfaceShader\");\n";
-
-					MString blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? "0" : "1";
-					mShadingCmd +=
-					        "$shadingNodeIndex = `shaderfx -sfxnode $shName -getNodeIDByName \"Standard_Base\"`;\n";
-					mShadingCmd += "shaderfx -sfxnode $shName -edit_stringlist $shadingNodeIndex blendmode " +
-					               blendMode + ";\n";
-
-					// ignored: ambientColor, specularColor
-					setAttribute(mShadingCmd, "diffuse_color", matInfo.diffuseColor);
-					setAttribute(mShadingCmd, "emissive_color", matInfo.emissiveColor);
-					setAttribute(mShadingCmd, "opacity", matInfo.opacity);
-					setAttribute(mShadingCmd, "roughness", matInfo.roughness);
-					setAttribute(mShadingCmd, "metallic", matInfo.metallic);
-
-					// ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
-					// shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
-					setAttribute(mShadingCmd, "colormap_trafo_tuv", matInfo.colormapTrafo.tuv());
-					setAttribute(mShadingCmd, "dirtmap_trafo_tuv", matInfo.dirtmapTrafo.tuv());
-					setAttribute(mShadingCmd, "emissivemap_trafo_tuv", matInfo.emissivemapTrafo.tuv());
-					setAttribute(mShadingCmd, "metallicmap_trafo_tuv", matInfo.metallicmapTrafo.tuv());
-					setAttribute(mShadingCmd, "normalmap_trafo_tuv", matInfo.normalmapTrafo.tuv());
-					setAttribute(mShadingCmd, "opacitymap_trafo_tuv", matInfo.opacitymapTrafo.tuv());
-					setAttribute(mShadingCmd, "roughnessmap_trafo_tuv", matInfo.roughnessmapTrafo.tuv());
-
-					setAttribute(mShadingCmd, "colormap_trafo_suvw", matInfo.colormapTrafo.suvw());
-					setAttribute(mShadingCmd, "dirtmap_trafo_suvw", matInfo.dirtmapTrafo.suvw());
-					setAttribute(mShadingCmd, "emissivemap_trafo_suvw", matInfo.emissivemapTrafo.suvw());
-					setAttribute(mShadingCmd, "metallicmap_trafo_suvw", matInfo.metallicmapTrafo.suvw());
-					setAttribute(mShadingCmd, "normalmap_trafo_suvw", matInfo.normalmapTrafo.suvw());
-					setAttribute(mShadingCmd, "opacitymap_trafo_suvw", matInfo.opacitymapTrafo.suvw());
-					setAttribute(mShadingCmd, "roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
-
-					// ignored: bumpMap, specularMap, occlusionmap
-					setTexture(mShadingCmd, "color_map", matInfo.colormap);
-					setTexture(mShadingCmd, "dirt_map", matInfo.dirtmap);
-					setTexture(mShadingCmd, "emissive_map", matInfo.emissiveMap);
-					setTexture(mShadingCmd, "metallic_map", matInfo.metallicMap);
-					setTexture(mShadingCmd, "normal_map", matInfo.normalMap);
-					setTexture(mShadingCmd, "roughness_map", matInfo.roughnessMap);
-					setTexture(mShadingCmd, "opacity_map", matInfo.opacityMap);
-
-					swprintf(buf.data(), buf.size() - 1, L"sets -forceElement $sgName %ls.f[%d:%d];\n",
-					         MString(meshName).asWChar(), faceStart, faceEnd);
-					mShadingCmd += buf.data();
-				}
-
-				MCHECK(MGlobal::executeCommandOnIdle(mShadingCmd, DBG));
-			}
-		}
-
-		outputMesh.setMetadata(outputAssociations);
+		swprintf(buf.data(), buf.size() - 1, L"sets -forceElement $sgName %ls.f[%d:%d];\n", MString(meshName).asWChar(),
+		         faceStart, faceEnd);
+		mShadingCmd += buf.data();
 	}
-	outMeshHandle.setClean();
+
+	MCHECK(MGlobal::executeCommandOnIdle(mShadingCmd, DBG));
+
 	return status;
 }
 
