@@ -130,13 +130,9 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		if (!inMatStreamHandle.usesStructure(*materialStructure))
 			continue;
 
-		if (!inMatStreamHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str()))
+		std::pair<int, int> faceRange;
+		if (!MaterialUtils::getFaceRange(inMatStreamHandle, faceRange))
 			continue;
-		const int faceStart = *inMatStreamHandle.asInt32();
-
-		if (!inMatStreamHandle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str()))
-			continue;
-		const int faceEnd = *inMatStreamHandle.asInt32();
 
 		auto createShadingEngine = [this, &materialStructure, &scriptBuilder,
 		                            &inMatStreamHandle](const MaterialInfo& matInfo) {
@@ -153,8 +149,9 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 		MaterialInfo matInfo(inMatStreamHandle);
 		std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
-		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceStart, faceEnd);
-		LOG_DBG << "assigned arnold shading engine (" << faceStart << ":" << faceEnd << "): " << shadingEngineName;
+		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceRange.first, faceRange.second);
+		LOG_DBG << "assigned arnold shading engine (" << faceRange.first << ":" << faceRange.second
+		        << "): " << shadingEngineName;
 	}
 
 	scriptBuilder.execute();

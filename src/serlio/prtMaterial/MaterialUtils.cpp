@@ -128,6 +128,18 @@ MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStruc
 	return existingMaterialInfos;
 }
 
+bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange) {
+	if (!handle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str()))
+		return false;
+	faceRange.first = *handle.asInt32();
+
+	if (!handle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str()))
+		return false;
+	faceRange.second = *handle.asInt32();
+
+	return true;
+}
+
 void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, const adsk::Data::Handle& streamHandle,
                             const std::wstring& shadingEngineName) {
 	MObject shadingEngineObj = findNamedObject(shadingEngineName, MFn::kShadingEngine);
