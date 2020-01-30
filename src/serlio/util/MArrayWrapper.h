@@ -161,15 +161,16 @@ private:
 	unsigned int arrayLength;
 };
 
-template <typename T>
-constexpr auto isIterable() -> decltype(std::declval<T>().begin(), std::declval<T>().end(), bool()) {
-	return true;
-}
+template <typename T, typename = void_t<>>
+struct isIterable : public bool_constant<false> {};
 
-template <typename T, typename... U>
-constexpr auto isIterable(U...) {
-	return false;
-}
+template <typename T>
+struct isIterable<T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end(), bool())>>
+    : public bool_constant<true> {};
+
+// add inline specifier to isIterableV once we switch to C++17
+template <typename T>
+constexpr bool isIterableV = isIterable<T>::value;
 
 } // namespace detail
 
@@ -212,22 +213,22 @@ using MArrayConstWrapper = detail::MArrayWrapperBase<const ArrayType>;
 // needed. Callers are expected to let the return types of these functions be deduced, e.g. using auto. The whole
 // wrapper can be removed, once Maya 2018 API is not supported anymore.
 
-template <typename ArrayType, std::enable_if_t<detail::isIterable<ArrayType>()>* = nullptr>
+template <typename ArrayType, std::enable_if_t<detail::isIterableV<ArrayType>>* = nullptr>
 MArraySimpleWrapper<ArrayType> makeMArrayWrapper(ArrayType& array) {
 	return MArraySimpleWrapper<ArrayType>(array);
 }
 
-template <typename ArrayType, std::enable_if_t<!detail::isIterable<ArrayType>()>* = nullptr>
+template <typename ArrayType, std::enable_if_t<!detail::isIterableV<ArrayType>>* = nullptr>
 MArrayWrapper<ArrayType> makeMArrayWrapper(ArrayType& array) {
 	return MArrayWrapper<ArrayType>(array);
 }
 
-template <typename ArrayType, std::enable_if_t<detail::isIterable<ArrayType>()>* = nullptr>
+template <typename ArrayType, std::enable_if_t<detail::isIterableV<ArrayType>>* = nullptr>
 MArraySimpleWrapper<const ArrayType> makeMArrayConstWrapper(const ArrayType& array) {
 	return MArraySimpleWrapper<const ArrayType>(array);
 }
 
-template <typename ArrayType, std::enable_if_t<!detail::isIterable<ArrayType>()>* = nullptr>
+template <typename ArrayType, std::enable_if_t<!detail::isIterableV<ArrayType>>* = nullptr>
 MArrayConstWrapper<ArrayType> makeMArrayConstWrapper(const ArrayType& array) {
 	return MArrayConstWrapper<ArrayType>(array);
 }
