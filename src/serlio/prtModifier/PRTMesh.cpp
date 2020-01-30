@@ -40,7 +40,7 @@ PRTMesh::PRTMesh(const MObject& mesh) {
 	meshFn.getPoints(vertexArray);
 
 	const unsigned int vertexArrayLength = vertexArray.length();
-	mVertexCoordsVec.reserve(vertexArrayLength);
+	mVertexCoordsVec.reserve(3 * vertexArrayLength);
 	for (unsigned int i = 0; i < vertexArrayLength; ++i) {
 		mVertexCoordsVec.push_back(vertexArray[i].x);
 		mVertexCoordsVec.push_back(vertexArray[i].y);
