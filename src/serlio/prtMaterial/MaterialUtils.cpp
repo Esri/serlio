@@ -1,6 +1,7 @@
 #include "prtMaterial/MaterialUtils.h"
 
 #include "util/MArrayWrapper.h"
+#include "util/MELScriptBuilder.h"
 #include "util/MItDependencyNodesWrapper.h"
 #include "util/MayaUtilities.h"
 
@@ -154,6 +155,14 @@ void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, cons
 	handle.makeUnique();
 	newStream.setElement(0, handle);
 	shadingEngine.setMetadata(newMetadata);
+}
+
+std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName,
+                                              const std::wstring& shadingEngineVariable) {
+	MELScriptBuilder scriptBuilder;
+	scriptBuilder.setVar(shadingEngineVariable, desiredShadingEngineName);
+	scriptBuilder.setsCreate(shadingEngineVariable);
+	return scriptBuilder.executeSync();
 }
 
 } // namespace MaterialUtils

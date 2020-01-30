@@ -23,4 +23,7 @@ bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange);
 void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, const adsk::Data::Handle& streamHandle,
                             const std::wstring& shadingEngineName);
 
+std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName,
+                                              const std::wstring& shadingEngineVariable);
+
 } // namespace MaterialUtils
