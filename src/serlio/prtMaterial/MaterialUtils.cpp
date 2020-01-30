@@ -4,10 +4,12 @@
 #include "util/MItDependencyNodesWrapper.h"
 #include "util/MayaUtilities.h"
 
+#include "maya/MDataBlock.h"
+#include "maya/MDataHandle.h"
+#include "maya/MFnMesh.h"
 #include "maya/MItDependencyNodes.h"
 #include "maya/MPlugArray.h"
 #include "maya/adskDataAssociations.h"
-#include "maya/adskDataStream.h"
 
 namespace {
 
@@ -28,6 +30,34 @@ MObject findNamedObject(const std::wstring& name, MFn::Type fnType) {
 } // namespace
 
 namespace MaterialUtils {
+
+adsk::Data::Stream* getMaterialStream(MObject& aOutMesh, MObject& aInMesh, MDataBlock& data) {
+	MStatus status;
+
+	const MDataHandle inMeshHandle = data.inputValue(aInMesh, &status);
+	MCHECK(status);
+
+	MDataHandle outMeshHandle = data.outputValue(aOutMesh, &status);
+	MCHECK(status);
+
+	status = outMeshHandle.set(inMeshHandle.asMesh());
+	MCHECK(status);
+
+	const MFnMesh inMesh(inMeshHandle.asMesh(), &status);
+	MCHECK(status);
+
+	const adsk::Data::Associations* inMetadata = inMesh.metadata(&status);
+	MCHECK(status);
+	if (inMetadata == nullptr)
+		return nullptr;
+
+	adsk::Data::Associations inAssociations(inMetadata);
+	adsk::Data::Channel* inMatChannel = inAssociations.findChannel(gPRTMatChannel);
+	if (inMatChannel == nullptr)
+		return nullptr;
+
+	return inMatChannel->findDataStream(gPRTMatStream);
+}
 
 MStatus getMeshName(MString& meshName, const MPlug& plug) {
 	MStatus status;

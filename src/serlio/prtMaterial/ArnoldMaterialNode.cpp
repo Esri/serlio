@@ -26,13 +26,10 @@
 
 #include "serlioPlugin.h"
 
-#include "maya/MFnMesh.h"
 #include "maya/MFnTypedAttribute.h"
-#include "maya/adskDataAssociations.h"
 #include "maya/adskDataStream.h"
 
 #include <mutex>
-#include <sstream>
 
 namespace {
 
@@ -93,40 +90,18 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (status != MStatus::kSuccess)
 		return status;
 
-	const MDataHandle inMeshHandle = data.inputValue(aInMesh, &status);
-	MCHECK(status);
-
-	MDataHandle outMeshHandle = data.outputValue(aOutMesh, &status);
-	MCHECK(status);
-
-	status = outMeshHandle.set(inMeshHandle.asMesh());
-	MCHECK(status);
-
-	const MFnMesh inMesh(inMeshHandle.asMesh(), &status);
-	MCHECK(status);
-
-	const adsk::Data::Associations* inMetadata = inMesh.metadata(&status);
-	MCHECK(status);
-	if (inMetadata == nullptr)
-		return MStatus::kSuccess;
-
-	MString meshName;
-	MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
-	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
-		return meshNameStatus;
-
-	adsk::Data::Associations inAssociations(inMetadata);
-	adsk::Data::Channel* inMatChannel = inAssociations.findChannel(gPRTMatChannel);
-	if (inMatChannel == nullptr)
-		return MStatus::kSuccess;
-
-	adsk::Data::Stream* inMatStream = inMatChannel->findDataStream(gPRTMatStream);
+	adsk::Data::Stream* inMatStream = MaterialUtils::getMaterialStream(aOutMesh, aInMesh, data);
 	if (inMatStream == nullptr)
 		return MStatus::kSuccess;
 
 	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
 	if (materialStructure == nullptr)
 		return MStatus::kFailure;
+
+	MString meshName;
+	const MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
+	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
+		return meshNameStatus;
 
 	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(*materialStructure);
 
