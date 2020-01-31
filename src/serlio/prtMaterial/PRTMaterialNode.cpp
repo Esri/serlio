@@ -24,6 +24,7 @@
 
 #include "prtModifier/PRTModifierAction.h"
 
+#include "util/MELScriptBuilder.h"
 #include "util/MItDependencyNodesWrapper.h"
 #include "util/MayaUtilities.h"
 
@@ -46,6 +47,9 @@ namespace {
 
 constexpr bool DBG = false;
 
+const std::wstring MATERIAL_BASE_NAME = L"serlioGeneratedMaterial";
+const std::wstring MEL_VARIABLE_SHADING_ENGINE = L"$shadingGroup"; // FIXME: duplicate
+
 std::once_flag pluginDependencyCheckFlag;
 const std::vector<std::string> PLUGIN_DEPENDENCIES = {"shaderFXPlugin"};
 
@@ -55,7 +59,7 @@ MTypeId PRTMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::STRINGR
 
 MObject PRTMaterialNode::aInMesh;
 MObject PRTMaterialNode::aOutMesh;
-MString PRTMaterialNode::sfxFile;
+std::wstring PRTMaterialNode::sfxFile;
 const MString OUTPUT_GEOMETRY = MString("og");
 
 MStatus PRTMaterialNode::initialize() {
@@ -103,228 +107,135 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
 		return meshNameStatus;
 
-	// find all existing prt materials
-	std::set<std::string> shaderNames;
-	std::list<std::pair<const MObject, const MaterialInfo>> existingMaterialInfos;
-	MItDependencyNodes itHwShaders(MFn::kPluginHardwareShader, &status);
-	MCHECK(status);
-	for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders)) {
-		MFnDependencyNode n(hwShaderNode);
-		shaderNames.insert(std::string(n.name().asChar()));
-		const adsk::Data::Associations* materialMetadata = n.metadata(&status);
-		MCHECK(status);
+	// TODO: double-check that we do not find arnold materials etc...
+	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(*materialStructure);
 
-		if (materialMetadata == nullptr) {
+	MELScriptBuilder scriptBuilder;
+	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
+
+	// declare MEL variables required by appendToMaterialScriptBuilder()
+	scriptBuilder.declString(L"$shaderNode");
+	scriptBuilder.declString(L"$mapFile");
+	scriptBuilder.declString(L"$mapNode");
+	scriptBuilder.declInt(L"$shadingNodeIndex");
+
+	for (adsk::Data::Handle& materialHandle : *inMatStream) {
+		if (!materialHandle.hasData())
 			continue;
-		}
 
-		adsk::Data::Associations materialAssociations(materialMetadata);
-		adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
-
-		if (matChannel == nullptr) {
+		if (!materialHandle.usesStructure(*materialStructure))
 			continue;
-		}
 
-		adsk::Data::Stream* matStream = matChannel->findDataStream(gPRTMatStream);
-		if ((matStream != nullptr) && matStream->elementCount() == 1) {
-			adsk::Data::Handle matSHandle = matStream->element(0);
-			if (!matSHandle.usesStructure(*materialStructure))
-				continue;
-			auto p = std::pair<const MObject, const MaterialInfo>(hwShaderNode, matSHandle);
-			existingMaterialInfos.push_back(p);
-		}
+		std::pair<int, int> faceRange;
+		if (!MaterialUtils::getFaceRange(materialHandle, faceRange))
+			continue;
+
+		auto createShadingEngine = [this, &materialStructure, &scriptBuilder,
+		                            &materialHandle](const MaterialInfo& matInfo) {
+			const std::wstring shadingEngineBaseName = MATERIAL_BASE_NAME + L"Sg";
+			const std::wstring shaderBaseName = MATERIAL_BASE_NAME + L"Sh";
+
+			const std::wstring shadingEngineName =
+			        MaterialUtils::synchronouslyCreateShadingEngine(shadingEngineBaseName, MEL_VARIABLE_SHADING_ENGINE);
+			MaterialUtils::assignMaterialMetadata(*materialStructure, materialHandle, shadingEngineName);
+			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
+			LOG_DBG << "new stingray shading engine: " << shadingEngineName;
+
+			return shadingEngineName;
+		};
+
+		MaterialInfo matInfo(materialHandle);
+		std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
+		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceRange.first, faceRange.second);
+		LOG_DBG << "assigned stingray shading engine (" << faceRange.first << ":" << faceRange.second
+		        << "): " << shadingEngineName;
 	}
 
+	LOG_DBG << "scheduling stringray material script";
+	return scriptBuilder.execute(); // note: script is executed asynchronously
+}
+
+namespace {
+
+void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wstring& shaderBaseName,
+                const std::wstring& tex) {
+	if (!tex.empty()) {
+		sb.setVar(L"$mapNode", shaderBaseName);
+		sb.setVar(L"$mapFile", tex);
+		sb.createTexture(L"$mapNode");
+		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
+
+		sb.connectAttr(L"($mapNode + \".outColor\")", L"($shaderNode + \".TEX_" + target + L"\")");
+		sb.setAttr(L"($shaderNode + \".use_" + target + L"\")", 1);
+	}
+	else {
+		sb.setAttr(L"($shaderNode + \".use_" + target + L"\")", 0);
+	}
+}
+
+} // namespace
+
+void PRTMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+                                                    const std::wstring& shaderBaseName,
+                                                    const std::wstring& shadingEngineName) const {
 	// determine path of shader fx file
+	// TODO: move out of here
 	if (sfxFile.length() == 0) {
 		// mel command wants forward slashes
 		const std::wstring shadersPath = prtu::toGenericPath(mPRTCtx.mPluginRootPath + L"../shaders/");
-		sfxFile = MString(shadersPath.c_str()) + "serlioShaderStingray.sfx";
-		LOG_DBG << "stingray shader located at " << sfxFile.asWChar();
+		sfxFile = shadersPath + L"serlioShaderStingray.sfx";
+		LOG_DBG << "stingray shader located at " << sfxFile;
 	}
 
-	MString mShadingCmd;
-	mShadingCmd += "string $sgName;\n";
-	mShadingCmd += "string $shName;\n";
-	mShadingCmd += "string $colormap;\n";
-	mShadingCmd += "string $nodeName;\n";
-	mShadingCmd += "int $shadingNodeIndex;\n";
+	// create shader
+	sb.setVar(L"$shaderNode", shaderBaseName);
+	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, shadingEngineName);
+	sb.createShader(L"StingrayPBS", L"$shaderNode");
 
-	std::array<wchar_t, 512> buf;
+	// connect to shading group
+	sb.connectAttr(L"($shaderNode + \".outColor\")", L"(" + MEL_VARIABLE_SHADING_ENGINE + L" + \".surfaceShader\")");
 
-	for (adsk::Data::Handle& sHandle : *inMatStream) {
-		if (!sHandle.hasData())
-			continue;
+	// stingray specifics
+	sb.addCmdLine(L"shaderfx -sfxnode $shaderNode -loadGraph  \"" + sfxFile + L"\";");
+	sb.setAttr(L"($shaderNode + \".initgraph\")", true);
 
-		if (!sHandle.usesStructure(*materialStructure))
-			continue;
+	sb.addCmdLine(L"$shadingNodeIndex = `shaderfx -sfxnode $shaderNode -getNodeIDByName \"Standard_Base\"`;");
 
-		MaterialInfo matInfo(sHandle);
+	const std::wstring blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? L"0" : L"1";
+	sb.addCmdLine(L"shaderfx -sfxnode $shaderNode -edit_stringlist $shadingNodeIndex blendmode " + blendMode + L";");
 
-		// material with same metadata already exists?
-		MObject matchingMaterial = MObject::kNullObj;
+	// ignored: ambientColor, specularColor
+	sb.setAttr(L"($shaderNode + \".diffuse_color\")", matInfo.diffuseColor);
+	sb.setAttr(L"($shaderNode + \".emissive_color\")", matInfo.emissiveColor);
+	sb.setAttr(L"($shaderNode + \".opacity\")", matInfo.opacity);
+	sb.setAttr(L"($shaderNode + \".roughness\")", matInfo.roughness);
+	sb.setAttr(L"($shaderNode + \".metallic\")", matInfo.metallic);
 
-		for (const auto& kv : existingMaterialInfos) {
-			if (matInfo.equals(kv.second)) {
-				matchingMaterial = kv.first;
-				break;
-			}
-		}
+	// ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
+	// shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
+	sb.setAttr(L"($shaderNode + \".colormap_trafo_tuv\")", matInfo.colormapTrafo.tuv());
+	sb.setAttr(L"($shaderNode + \".dirtmap_trafo_tuv\")", matInfo.dirtmapTrafo.tuv());
+	sb.setAttr(L"($shaderNode + \".emissivemap_trafo_tuv\")", matInfo.emissivemapTrafo.tuv());
+	sb.setAttr(L"($shaderNode + \".metallicmap_trafo_tuv\")", matInfo.metallicmapTrafo.tuv());
+	sb.setAttr(L"($shaderNode + \".normalmap_trafo_tuv\")", matInfo.normalmapTrafo.tuv());
+	sb.setAttr(L"($shaderNode + \".opacitymap_trafo_tuv\")", matInfo.opacitymapTrafo.tuv());
+	sb.setAttr(L"($shaderNode + \".roughnessmap_trafo_tuv\")", matInfo.roughnessmapTrafo.tuv());
 
-		sHandle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str());
-		int faceStart = sHandle.asInt32()[0];
+	sb.setAttr(L"($shaderNode + \".colormap_trafo_suvw\")", matInfo.colormapTrafo.suvw());
+	sb.setAttr(L"($shaderNode + \".dirtmap_trafo_suvw\")", matInfo.dirtmapTrafo.suvw());
+	sb.setAttr(L"($shaderNode + \".emissivemap_trafo_suvw\")", matInfo.emissivemapTrafo.suvw());
+	sb.setAttr(L"($shaderNode + \".metallicmap_trafo_suvw\")", matInfo.metallicmapTrafo.suvw());
+	sb.setAttr(L"($shaderNode + \".normalmap_trafo_suvw\")", matInfo.normalmapTrafo.suvw());
+	sb.setAttr(L"($shaderNode + \".opacitymap_trafo_suvw\")", matInfo.opacitymapTrafo.suvw());
+	sb.setAttr(L"($shaderNode + \".roughnessmap_trafo_suvw\")", matInfo.roughnessmapTrafo.suvw());
 
-		sHandle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str());
-		int faceEnd = sHandle.asInt32()[0];
-
-		if (matchingMaterial != MObject::kNullObj) {
-			std::wstring matName(MFnDependencyNode(matchingMaterial).name().asWChar());
-			size_t idx = matName.find_last_of(L"Sh");
-			if (idx != std::wstring::npos)
-				matName[idx] = L'g';
-			swprintf(buf.data(), buf.size() - 1, L"sets -forceElement %ls %ls.f[%d:%d];\n", matName.c_str(),
-			         MString(meshName).asWChar(), faceStart, faceEnd);
-			mShadingCmd += buf.data();
-			continue;
-		}
-
-		// get unique name
-		std::string shaderName = "serlioGeneratedMaterialSh";
-		std::string shadingGroupName = "serlioGeneratedMaterialSg";
-
-		int shIdx = 0;
-		while (shaderNames.find(shaderName + std::to_string(shIdx)) != shaderNames.end()) {
-			shIdx++;
-		}
-		shaderName += std::to_string(shIdx);
-		shadingGroupName += std::to_string(shIdx);
-		shaderNames.insert(shaderName);
-
-		MString shaderNameMstr = MString(shaderName.c_str());
-		MString shadingGroupNameMstr = MString(shadingGroupName.c_str());
-
-		MString shaderCmd = "shadingNode -asShader StingrayPBS -n " + shaderNameMstr + " -ss;\n";
-		shaderCmd += "shaderfx -sfxnode \"" + shaderNameMstr + "\" -loadGraph  \"" + sfxFile + "\";\n";
-
-		// create shadingnode and add metadata
-		MCHECK(MGlobal::executeCommand(shaderCmd, DBG));
-		MItDependencyNodes itHwShaders2(MFn::kPluginHardwareShader, &status);
-		MCHECK(status);
-		for (const auto& hwShaderNode : MItDependencyNodesWrapper(itHwShaders2)) {
-			MFnDependencyNode n(hwShaderNode);
-
-			if (n.name() == shaderNameMstr) {
-				adsk::Data::Associations newMetadata;
-				adsk::Data::Channel newChannel = newMetadata.channel(gPRTMatChannel);
-				adsk::Data::Stream newStream(*materialStructure, gPRTMatStream);
-				newChannel.setDataStream(newStream);
-				newMetadata.setChannel(newChannel);
-				adsk::Data::Handle handle(sHandle);
-				handle.makeUnique();
-				newStream.setElement(0, handle);
-				n.setMetadata(newMetadata);
-				break;
-			}
-		}
-
-		mShadingCmd += "$shName = \"" + shaderNameMstr + "\";\n";
-		mShadingCmd += "$sgName = \"" + shadingGroupNameMstr + "\";\n";
-
-		mShadingCmd += "sets -empty -renderable true -noSurfaceShader true -name $sgName;\n";
-		mShadingCmd += "setAttr ($shName+\".initgraph\") true;\n";
-		mShadingCmd += "connectAttr -force ($shName + \".outColor\") ($sgName + \".surfaceShader\");\n";
-
-		MString blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? "0" : "1";
-		mShadingCmd += "$shadingNodeIndex = `shaderfx -sfxnode $shName -getNodeIDByName \"Standard_Base\"`;\n";
-		mShadingCmd += "shaderfx -sfxnode $shName -edit_stringlist $shadingNodeIndex blendmode " + blendMode + ";\n";
-
-		// ignored: ambientColor, specularColor
-		setAttribute(mShadingCmd, "diffuse_color", matInfo.diffuseColor);
-		setAttribute(mShadingCmd, "emissive_color", matInfo.emissiveColor);
-		setAttribute(mShadingCmd, "opacity", matInfo.opacity);
-		setAttribute(mShadingCmd, "roughness", matInfo.roughness);
-		setAttribute(mShadingCmd, "metallic", matInfo.metallic);
-
-		// ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
-		// shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
-		setAttribute(mShadingCmd, "colormap_trafo_tuv", matInfo.colormapTrafo.tuv());
-		setAttribute(mShadingCmd, "dirtmap_trafo_tuv", matInfo.dirtmapTrafo.tuv());
-		setAttribute(mShadingCmd, "emissivemap_trafo_tuv", matInfo.emissivemapTrafo.tuv());
-		setAttribute(mShadingCmd, "metallicmap_trafo_tuv", matInfo.metallicmapTrafo.tuv());
-		setAttribute(mShadingCmd, "normalmap_trafo_tuv", matInfo.normalmapTrafo.tuv());
-		setAttribute(mShadingCmd, "opacitymap_trafo_tuv", matInfo.opacitymapTrafo.tuv());
-		setAttribute(mShadingCmd, "roughnessmap_trafo_tuv", matInfo.roughnessmapTrafo.tuv());
-
-		setAttribute(mShadingCmd, "colormap_trafo_suvw", matInfo.colormapTrafo.suvw());
-		setAttribute(mShadingCmd, "dirtmap_trafo_suvw", matInfo.dirtmapTrafo.suvw());
-		setAttribute(mShadingCmd, "emissivemap_trafo_suvw", matInfo.emissivemapTrafo.suvw());
-		setAttribute(mShadingCmd, "metallicmap_trafo_suvw", matInfo.metallicmapTrafo.suvw());
-		setAttribute(mShadingCmd, "normalmap_trafo_suvw", matInfo.normalmapTrafo.suvw());
-		setAttribute(mShadingCmd, "opacitymap_trafo_suvw", matInfo.opacitymapTrafo.suvw());
-		setAttribute(mShadingCmd, "roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
-
-		// ignored: bumpMap, specularMap, occlusionmap
-		setTexture(mShadingCmd, "color_map", matInfo.colormap);
-		setTexture(mShadingCmd, "dirt_map", matInfo.dirtmap);
-		setTexture(mShadingCmd, "emissive_map", matInfo.emissiveMap);
-		setTexture(mShadingCmd, "metallic_map", matInfo.metallicMap);
-		setTexture(mShadingCmd, "normal_map", matInfo.normalMap);
-		setTexture(mShadingCmd, "roughness_map", matInfo.roughnessMap);
-		setTexture(mShadingCmd, "opacity_map", matInfo.opacityMap);
-
-		swprintf(buf.data(), buf.size() - 1, L"sets -forceElement $sgName %ls.f[%d:%d];\n", MString(meshName).asWChar(),
-		         faceStart, faceEnd);
-		mShadingCmd += buf.data();
-	}
-
-	MCHECK(MGlobal::executeCommandOnIdle(mShadingCmd, DBG));
-
-	return status;
-}
-
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const double val) {
-	mShadingCmd += ("setAttr ($shName + \"." + target + "\") " + std::to_string(val) + ";\n").c_str();
-}
-
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const double val1,
-                                   double const val2) {
-	mShadingCmd += ("setAttr ($shName + \"." + target + "\") -type double2 " + std::to_string(val1) + " " +
-	                std::to_string(val2) + ";\n")
-	                       .c_str();
-}
-
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const double val1,
-                                   double const val2, double const val3) {
-	mShadingCmd += ("setAttr ($shName + \"." + target + "\") -type double3 " + std::to_string(val1) + " " +
-	                std::to_string(val2) + " " + std::to_string(val3) + ";\n")
-	                       .c_str();
-}
-
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 2>& val) {
-	setAttribute(mShadingCmd, target, val[0], val[1]);
-}
-
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 3>& val) {
-	setAttribute(mShadingCmd, target, val[0], val[1], val[2]);
-}
-
-void PRTMaterialNode::setAttribute(MString& mShadingCmd, const std::string& target, const MaterialColor& color) {
-	setAttribute(mShadingCmd, target, color.r(), color.g(), color.b());
-}
-
-void PRTMaterialNode::setTexture(MString& mShadingCmd, const std::string& target, const std::string& tex) {
-	if (!tex.empty()) {
-		mShadingCmd += "$colormap = \"" + MString(tex.c_str()) + "\";\n";
-		mShadingCmd += "$nodeName = $sgName +\"" + MString(target.c_str()) + "\";\n";
-		mShadingCmd += "shadingNode -asTexture file -n $nodeName -ss;\n";
-		mShadingCmd += R"foo(setAttr($nodeName + ".fileTextureName") -type "string" $colormap ;)foo"
-		               "\n";
-
-		mShadingCmd += R"foo(connectAttr -force ($nodeName + ".outColor") ($shName + ".TEX_)foo" +
-		               MString(target.c_str()) + "\");\n";
-		mShadingCmd += "setAttr ($shName+\".use_" + MString(target.c_str()) + "\") 1;\n";
-	}
-	else {
-		mShadingCmd += "setAttr ($shName+\".use_" + MString(target.c_str()) + "\") 0;\n";
-	}
+	// ignored: bumpMap, specularMap, occlusionmap
+	// TODO: avoid wide/narrow conversion of map strings
+	setTexture(sb, L"color_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.colormap));
+	setTexture(sb, L"dirt_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.dirtmap));
+	setTexture(sb, L"emissive_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.emissiveMap));
+	setTexture(sb, L"metallic_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.metallicMap));
+	setTexture(sb, L"normal_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.normalMap));
+	setTexture(sb, L"roughness_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.roughnessMap));
+	setTexture(sb, L"opacity_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.opacityMap));
 }

@@ -21,6 +21,7 @@
 
 #include "maya/MGlobal.h"
 
+#include <array>
 #include <sstream>
 #include <string>
 
@@ -31,11 +32,15 @@ class MELScriptBuilder {
 public:
 	void setAttr(const std::wstring& attribute, bool val);
 
+	void setAttr(const std::wstring& attribute, int val);
+
 	void setAttr(const std::wstring& attribute, double val);
 
 	void setAttr(const std::wstring& attribute, double val1, double val2);
+	void setAttr(const std::wstring& attribute, const std::array<double, 2>& val);
 
 	void setAttr(const std::wstring& attribute, double val1, double val2, double val3);
+	void setAttr(const std::wstring& attribute, const std::array<double, 3>& val);
 
 	void setAttr(const std::wstring& attribute, const wchar_t* val);
 
@@ -47,6 +52,7 @@ public:
 
 	void python(const std::wstring& pythonCmd);
 
+	void declInt(const std::wstring& varName);
 	void declString(const std::wstring& varName);
 
 	void setVar(const std::wstring& varName, const std::wstring& val);
@@ -58,6 +64,8 @@ public:
 	void createShader(const std::wstring& shaderType, const std::wstring& shaderName);
 
 	void createTexture(const std::wstring& textureName);
+
+	void addCmdLine(const std::wstring& line);
 
 	MStatus executeSync(std::wstring& output);
 

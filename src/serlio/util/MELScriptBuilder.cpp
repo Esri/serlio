@@ -31,6 +31,10 @@ void MELScriptBuilder::setAttr(const std::wstring& attribute, const bool val) {
 	commandStream << "setAttr " << attribute << " " << (val ? 1 : 0) << ";\n";
 }
 
+void MELScriptBuilder::setAttr(const std::wstring& attribute, const int val) {
+	commandStream << "setAttr " << attribute << " " << val << ";\n";
+}
+
 void MELScriptBuilder::setAttr(const std::wstring& attribute, const double val) {
 	commandStream << "setAttr " << attribute << " " << val << ";\n";
 }
@@ -39,8 +43,16 @@ void MELScriptBuilder::setAttr(const std::wstring& attribute, const double val1,
 	commandStream << "setAttr -type double2 " << attribute << " " << val1 << " " << val2 << ";\n";
 }
 
+void MELScriptBuilder::setAttr(const std::wstring& attribute, const std::array<double, 2>& val) {
+	setAttr(attribute, val[0], val[1]);
+}
+
 void MELScriptBuilder::setAttr(const std::wstring& attribute, const double val1, const double val2, const double val3) {
 	commandStream << "setAttr -type double3 " << attribute << " " << val1 << " " << val2 << " " << val3 << ";\n";
+}
+
+void MELScriptBuilder::setAttr(const std::wstring& attribute, const std::array<double, 3>& val) {
+	setAttr(attribute, val[0], val[1], val[2]);
 }
 
 void MELScriptBuilder::setAttr(const std::wstring& attribute, const wchar_t* val) {
@@ -61,6 +73,10 @@ void MELScriptBuilder::connectAttr(const std::wstring& source, const std::wstrin
 
 void MELScriptBuilder::python(const std::wstring& pythonCmd) {
 	commandStream << "python(\"" << pythonCmd << "\");\n";
+}
+
+void MELScriptBuilder::declInt(const std::wstring& varName) {
+	commandStream << "int " << varName << ";\n";
 }
 
 void MELScriptBuilder::declString(const std::wstring& varName) {
@@ -88,6 +104,10 @@ void MELScriptBuilder::createShader(const std::wstring& shaderType, const std::w
 
 void MELScriptBuilder::createTexture(const std::wstring& textureName) {
 	commandStream << "shadingNode -asTexture -skipSelect -name " << textureName << " file;\n";
+}
+
+void MELScriptBuilder::addCmdLine(const std::wstring& line) {
+	commandStream << line << L"\n";
 }
 
 MStatus MELScriptBuilder::executeSync(std::wstring& output) {

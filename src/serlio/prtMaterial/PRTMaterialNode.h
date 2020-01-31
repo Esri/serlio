@@ -27,10 +27,13 @@
 
 class MaterialColor;
 struct PRTContext;
+class MaterialInfo;
+class MaterialTrafo;
+class MELScriptBuilder;
 
 class PRTMaterialNode : public MPxNode {
 public:
-	explicit PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {}
+	explicit PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {} // TODO
 
 	static MStatus initialize();
 
@@ -41,16 +44,11 @@ public:
 	static MObject aOutMesh;
 
 private:
-	static void setTexture(MString& mShadingCmd, const std::string& tex, const std::string& target);
-	static void setAttribute(MString& mShadingCmd, const std::string& target, double val);
-	static void setAttribute(MString& mShadingCmd, const std::string& target, double val1, double val2);
-	static void setAttribute(MString& mShadingCmd, const std::string& target, double val1, double val2, double val3);
-	static void setAttribute(MString& mShadingCmd, const std::string& target, const MaterialColor& color);
-	static void setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 2>& val);
-	static void setAttribute(MString& mShadingCmd, const std::string& target, const std::array<double, 3>& val);
+	void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+	                                   const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) const;
 
-	static MString sfxFile;
+	static std::wstring sfxFile;
 
 private:
-	const PRTContext& mPRTCtx;
-}; // class PRTMaterialNode
+	const PRTContext& mPRTCtx; // TODO
+};                             // class PRTMaterialNode
