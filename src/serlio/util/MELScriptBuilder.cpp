@@ -103,7 +103,7 @@ void MELScriptBuilder::createShader(const std::wstring& shaderType, const std::w
 }
 
 void MELScriptBuilder::createTexture(const std::wstring& textureName) {
-	commandStream << "shadingNode -asTexture -skipSelect -name " << textureName << " file;\n";
+	commandStream << textureName << "= `shadingNode -asTexture -skipSelect -name " << textureName << " file`;\n";
 }
 
 void MELScriptBuilder::addCmdLine(const std::wstring& line) {
