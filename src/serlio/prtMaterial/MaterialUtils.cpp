@@ -94,7 +94,7 @@ MStatus getMeshName(MString& meshName, const MPlug& plug) {
 	return MStatus::kSuccess;
 }
 
-MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStructure) {
+MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStructure, const std::wstring& baseName) {
 	MaterialCache existingMaterialInfos;
 
 	MStatus status;
@@ -121,6 +121,9 @@ MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStruc
 
 		adsk::Data::Handle matSHandle = matStream->element(0);
 		if (!matSHandle.usesStructure(materialStructure))
+			continue;
+
+		if (std::wcsncmp(node.name().asWChar(), baseName.c_str(), baseName.length()) != 0)
 			continue;
 
 		existingMaterialInfos.emplace(matSHandle, node.name().asWChar());

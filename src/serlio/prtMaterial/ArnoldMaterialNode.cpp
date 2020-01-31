@@ -96,7 +96,8 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
 		return meshNameStatus;
 
-	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(*materialStructure);
+	MaterialUtils::MaterialCache matCache =
+	        MaterialUtils::getMaterialsByStructure(*materialStructure, MATERIAL_BASE_NAME);
 
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);

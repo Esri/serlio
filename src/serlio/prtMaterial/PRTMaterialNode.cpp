@@ -107,8 +107,8 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
 		return meshNameStatus;
 
-	// TODO: double-check that we do not find arnold materials etc...
-	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(*materialStructure);
+	MaterialUtils::MaterialCache matCache =
+	        MaterialUtils::getMaterialsByStructure(*materialStructure, MATERIAL_BASE_NAME);
 
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
