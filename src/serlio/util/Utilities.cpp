@@ -161,6 +161,9 @@ std::wstring getColorString(const Color& c) {
 
 template <typename CO, typename CI, typename AF>
 std::basic_string<CO> stringConversionWrapper(AF apiFunc, const std::basic_string<CI>& inputString) {
+	if (inputString.empty())
+		return std::basic_string<CO>();
+
 	std::vector<CO> temp(2 * inputString.size(), 0);
 	size_t size = temp.size();
 	prt::Status status = prt::STATUS_OK;
