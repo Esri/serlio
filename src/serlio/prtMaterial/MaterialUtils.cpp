@@ -43,6 +43,7 @@ adsk::Data::Stream* getMaterialStream(MObject& aOutMesh, MObject& aInMesh, MData
 
 	status = outMeshHandle.set(inMeshHandle.asMesh());
 	MCHECK(status);
+	outMeshHandle.setClean();
 
 	const MFnMesh inMesh(inMeshHandle.asMesh(), &status);
 	MCHECK(status);
