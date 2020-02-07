@@ -5,6 +5,8 @@
 #include "util/MItDependencyNodesWrapper.h"
 #include "util/MayaUtilities.h"
 
+#include "PRTContext.h"
+
 #include "maya/MDataBlock.h"
 #include "maya/MDataHandle.h"
 #include "maya/MFnMesh.h"
@@ -179,6 +181,17 @@ std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShading
 	status = scriptBuilder.executeSync(output);
 
 	return output;
+}
+
+std::wstring getStingrayShaderPath() {
+	static const std::wstring sfxFile = []() {
+		// mel command wants forward slashes
+		const std::wstring shadersPath = prtu::toGenericPath(PRTContext::get()->mPluginRootPath + L"../shaders/");
+		std::wstring p = shadersPath + L"serlioShaderStingray.sfx";
+		LOG_DBG << "stingray shader located at " << p;
+		return p;
+	}();
+	return sfxFile;
 }
 
 } // namespace MaterialUtils

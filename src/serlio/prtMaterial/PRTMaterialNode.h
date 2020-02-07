@@ -33,10 +33,7 @@ class MELScriptBuilder;
 
 class PRTMaterialNode : public MPxNode {
 public:
-	explicit PRTMaterialNode(const PRTContext& prtCtx) : mPRTCtx(prtCtx) {} // TODO
-
 	static MStatus initialize();
-
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
 
 	static MTypeId id;
@@ -46,9 +43,4 @@ public:
 private:
 	void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
 	                                   const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) const;
-
-	static std::wstring sfxFile;
-
-private:
-	const PRTContext& mPRTCtx; // TODO
-};                             // class PRTMaterialNode
+};

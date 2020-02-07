@@ -59,7 +59,6 @@ MTypeId PRTMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::STRINGR
 
 MObject PRTMaterialNode::aInMesh;
 MObject PRTMaterialNode::aOutMesh;
-std::wstring PRTMaterialNode::sfxFile;
 const MString OUTPUT_GEOMETRY = MString("og");
 
 MStatus PRTMaterialNode::initialize() {
@@ -183,15 +182,6 @@ void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wst
 void PRTMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
                                                     const std::wstring& shaderBaseName,
                                                     const std::wstring& shadingEngineName) const {
-	// determine path of shader fx file
-	// TODO: move out of here
-	if (sfxFile.length() == 0) {
-		// mel command wants forward slashes
-		const std::wstring shadersPath = prtu::toGenericPath(mPRTCtx.mPluginRootPath + L"../shaders/");
-		sfxFile = shadersPath + L"serlioShaderStingray.sfx";
-		LOG_DBG << "stingray shader located at " << sfxFile;
-	}
-
 	// create shader
 	sb.setVar(L"$shaderNode", shaderBaseName);
 	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, shadingEngineName);
@@ -201,6 +191,7 @@ void PRTMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const 
 	sb.connectAttr(L"($shaderNode + \".outColor\")", L"(" + MEL_VARIABLE_SHADING_ENGINE + L" + \".surfaceShader\")");
 
 	// stingray specifics
+	const std::wstring sfxFile = MaterialUtils::getStingrayShaderPath();
 	sb.addCmdLine(L"shaderfx -sfxnode $shaderNode -loadGraph  \"" + sfxFile + L"\";");
 	sb.setAttr(L"($shaderNode + \".initgraph\")", true);
 

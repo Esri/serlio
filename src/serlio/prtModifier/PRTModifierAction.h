@@ -62,7 +62,7 @@ class PRTModifierAction : public polyModifierFty {
 	friend class PRTModifierEnum;
 
 public:
-	explicit PRTModifierAction(const PRTContext& prtCtx);
+	explicit PRTModifierAction();
 
 	MStatus updateRuleFiles(const MObject& node, const MString& rulePkg);
 	MStatus fillAttributesFromNode(const MObject& node);
@@ -75,8 +75,6 @@ public:
 	MStatus doIt() override;
 
 private:
-	const PRTContext& mPRTCtx;
-
 	// init in PRTModifierAction::PRTModifierAction()
 	AttributeMapUPtr mMayaEncOpts;
 	AttributeMapUPtr mCGAPrintOptions;
