@@ -135,8 +135,11 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			const std::wstring shadingEngineBaseName = MATERIAL_BASE_NAME + L"Sg";
 			const std::wstring shaderBaseName = MATERIAL_BASE_NAME + L"Sh";
 
-			const std::wstring shadingEngineName =
-			        MaterialUtils::synchronouslyCreateShadingEngine(shadingEngineBaseName, MEL_VARIABLE_SHADING_ENGINE);
+			MStatus status;
+			const std::wstring shadingEngineName = MaterialUtils::synchronouslyCreateShadingEngine(
+			        shadingEngineBaseName, MEL_VARIABLE_SHADING_ENGINE, status);
+			MCHECK(status);
+
 			MaterialUtils::assignMaterialMetadata(*materialStructure, inMatStreamHandle, shadingEngineName);
 			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
 			LOG_DBG << "new arnold shading engine: " << shadingEngineName;
