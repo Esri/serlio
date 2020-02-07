@@ -33,7 +33,7 @@
 
 namespace {
 
-const std::wstring MATERIAL_BASE_NAME = L"serlioGeneratedArnoldMaterial";
+const std::wstring MATERIAL_BASE_NAME = L"serlioArnoldMaterial";
 const std::wstring MEL_VARIABLE_SHADING_ENGINE = L"$shadingGroup";
 
 std::once_flag pluginDependencyCheckFlag;

@@ -47,7 +47,7 @@ namespace {
 
 constexpr bool DBG = false;
 
-const std::wstring MATERIAL_BASE_NAME = L"serlioGeneratedMaterial";
+const std::wstring MATERIAL_BASE_NAME = L"serlioStingrayMaterial";
 const std::wstring MEL_VARIABLE_SHADING_ENGINE = L"$shadingGroup"; // FIXME: duplicate
 
 std::once_flag pluginDependencyCheckFlag;
