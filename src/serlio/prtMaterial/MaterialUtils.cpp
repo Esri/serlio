@@ -32,7 +32,7 @@ MObject findNamedObject(const std::wstring& name, MFn::Type fnType) {
 
 namespace MaterialUtils {
 
-adsk::Data::Stream* getMaterialStream(MObject& aOutMesh, MObject& aInMesh, MDataBlock& data) {
+void forwardGeometry(const MObject& aInMesh, const MObject& aOutMesh, MDataBlock& data) {
 	MStatus status;
 
 	const MDataHandle inMeshHandle = data.inputValue(aInMesh, &status);
@@ -43,7 +43,15 @@ adsk::Data::Stream* getMaterialStream(MObject& aOutMesh, MObject& aInMesh, MData
 
 	status = outMeshHandle.set(inMeshHandle.asMesh());
 	MCHECK(status);
+
 	outMeshHandle.setClean();
+}
+
+adsk::Data::Stream* getMaterialStream(const MObject& aInMesh, MDataBlock& data) {
+	MStatus status;
+
+	const MDataHandle inMeshHandle = data.inputValue(aInMesh, &status);
+	MCHECK(status);
 
 	const MFnMesh inMesh(inMeshHandle.asMesh(), &status);
 	MCHECK(status);

@@ -11,7 +11,8 @@
 
 namespace MaterialUtils {
 
-adsk::Data::Stream* getMaterialStream(MObject& aOutMesh, MObject& aInMesh, MDataBlock& data);
+void forwardGeometry(const MObject& aInMesh, const MObject& aOutMesh, MDataBlock& data);
+adsk::Data::Stream* getMaterialStream(const MObject& aInMesh, MDataBlock& data);
 
 MStatus getMeshName(MString& meshName, const MPlug& plug);
 

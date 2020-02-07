@@ -94,7 +94,9 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (status != MStatus::kSuccess)
 		return status;
 
-	adsk::Data::Stream* inMatStream = MaterialUtils::getMaterialStream(aOutMesh, aInMesh, data);
+	MaterialUtils::forwardGeometry(aInMesh, aOutMesh, data);
+
+	adsk::Data::Stream* inMatStream = MaterialUtils::getMaterialStream(aInMesh, data);
 	if (inMatStream == nullptr)
 		return MStatus::kSuccess;
 
