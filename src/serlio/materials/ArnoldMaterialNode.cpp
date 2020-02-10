@@ -21,8 +21,8 @@
 #include "materials/MaterialInfo.h"
 #include "materials/MaterialUtils.h"
 
-#include "util/MELScriptBuilder.h"
-#include "util/MayaUtilities.h"
+#include "utils/MELScriptBuilder.h"
+#include "utils/MayaUtilities.h"
 
 #include "serlioPlugin.h"
 

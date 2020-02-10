@@ -21,8 +21,8 @@
 
 #include "modifiers/RuleAttributes.h"
 
-#include "util/LogHandler.h"
-#include "util/Utilities.h"
+#include "utils/LogHandler.h"
+#include "utils/Utilities.h"
 
 #define CATCH_CONFIG_RUNNER
 #include "catch/catch.hpp"

@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "util/MELScriptBuilder.h"
+#include "utils/MELScriptBuilder.h"
 
 #include "maya/MString.h"
 #include "maya/adskDataHandle.h"

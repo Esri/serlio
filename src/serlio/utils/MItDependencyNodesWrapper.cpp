@@ -17,9 +17,8 @@
  * limitations under the License.
  */
 
-#include "util/MItDependencyNodesWrapper.h"
-
-#include "util/MayaUtilities.h"
+#include "utils/MItDependencyNodesWrapper.h"
+#include "utils/MayaUtilities.h"
 
 #include "maya/MItDependencyNodes.h"
 

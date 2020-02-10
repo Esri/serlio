@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "util/MayaUtilities.h"
+#include "utils/MayaUtilities.h"
 
 #include "maya/MGlobal.h"
 

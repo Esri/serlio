@@ -20,11 +20,11 @@ add_library(${SERLIO_TARGET} SHARED
 		materials/MaterialInfo.cpp
 		materials/MaterialUtils.cpp
         materials/StingrayMaterialNode.cpp
-		util/Utilities.cpp
-		util/ResolveMapCache.cpp
-		util/MayaUtilities.cpp
-		util/MELScriptBuilder.cpp
-		util/MItDependencyNodesWrapper.cpp)
+		utils/Utilities.cpp
+		utils/ResolveMapCache.cpp
+		utils/MayaUtilities.cpp
+		utils/MELScriptBuilder.cpp
+		utils/MItDependencyNodesWrapper.cpp)
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 	target_sources(${SERLIO_TARGET}
@@ -44,13 +44,13 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 			materials/MaterialInfo.h
 			materials/MaterialUtils.h
             materials/StingrayMaterialNode.h
-			util/Utilities.h
-			util/ResolveMapCache.h
-			util/MayaUtilities.h
-			util/MArrayIteratorTraits.h
-			util/MArrayWrapper.h
-			util/MELScriptBuilder.h
-			util/MItDependencyNodesWrapper.h)
+			utils/Utilities.h
+			utils/ResolveMapCache.h
+			utils/MayaUtilities.h
+			utils/MArrayIteratorTraits.h
+			utils/MArrayWrapper.h
+			utils/MELScriptBuilder.h
+			utils/MItDependencyNodesWrapper.h)
 endif()
 
 set_target_properties(${SERLIO_TARGET} PROPERTIES

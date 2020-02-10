@@ -1,4 +1,4 @@
-#include "util/MayaUtilities.h"
+#include "utils/MayaUtilities.h"
 
 #include <memory>
 

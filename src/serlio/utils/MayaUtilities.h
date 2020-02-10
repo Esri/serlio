@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/LogHandler.h"
+#include "utils/LogHandler.h"
 
 #include "maya/MFloatPointArray.h"
 #include "maya/MFnAttribute.h"

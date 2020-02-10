@@ -23,9 +23,9 @@
 
 #include "modifiers/PRTModifierAction.h"
 
-#include "util/MELScriptBuilder.h"
-#include "util/MItDependencyNodesWrapper.h"
-#include "util/MayaUtilities.h"
+#include "utils/MELScriptBuilder.h"
+#include "utils/MItDependencyNodesWrapper.h"
+#include "utils/MayaUtilities.h"
 
 #include "PRTContext.h"
 #include "serlioPlugin.h"

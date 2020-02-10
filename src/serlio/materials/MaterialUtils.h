@@ -1,7 +1,8 @@
 #pragma once
 
 #include "materials/MaterialInfo.h"
-#include "util/MELScriptBuilder.h"
+
+#include "utils/MELScriptBuilder.h"
 
 #include "maya/MPlug.h"
 #include "maya/MStatus.h"

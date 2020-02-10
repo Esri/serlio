@@ -21,8 +21,8 @@
 
 #include "serlioPlugin.h"
 
-#include "util/ResolveMapCache.h"
-#include "util/Utilities.h"
+#include "utils/ResolveMapCache.h"
+#include "utils/Utilities.h"
 
 #include <memory>
 #include <vector>

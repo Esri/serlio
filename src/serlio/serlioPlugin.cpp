@@ -26,7 +26,7 @@
 #include "materials/ArnoldMaterialNode.h"
 #include "materials/StingrayMaterialNode.h"
 
-#include "util/MayaUtilities.h"
+#include "utils/MayaUtilities.h"
 
 #include "maya/MFnPlugin.h"
 #include "maya/MGlobal.h"

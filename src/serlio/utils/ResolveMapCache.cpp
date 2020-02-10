@@ -18,8 +18,9 @@
  */
 
 #include "ResolveMapCache.h"
-#include "Utilities.h"
-#include "util/LogHandler.h"
+
+#include "utils/Utilities.h"
+#include "utils/LogHandler.h"
 
 #include <mutex>
 

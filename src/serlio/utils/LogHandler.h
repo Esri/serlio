@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "util/Utilities.h"
+#include "utils/Utilities.h"
 
 #include "prt/API.h"
 #include "prt/LogHandler.h"

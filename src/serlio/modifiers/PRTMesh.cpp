@@ -19,8 +19,8 @@
 
 #include "modifiers/PRTMesh.h"
 
-#include "util/MArrayWrapper.h"
-#include "util/MayaUtilities.h"
+#include "utils/MArrayWrapper.h"
+#include "utils/MayaUtilities.h"
 
 #include "maya/MFloatPointArray.h"
 #include "maya/MFnMesh.h"

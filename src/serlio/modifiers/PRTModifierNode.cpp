@@ -19,7 +19,7 @@
 
 #include "modifiers/PRTModifierNode.h"
 
-#include "util/MayaUtilities.h"
+#include "utils/MayaUtilities.h"
 
 #include "serlioPlugin.h"
 

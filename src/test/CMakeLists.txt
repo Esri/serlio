@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.13)
 add_executable(${TEST_TARGET}
 		tests.cpp
 		../serlio/PRTContext.cpp
-		../serlio/util/Utilities.cpp
-		../serlio/util/ResolveMapCache.cpp
+		../serlio/utils/Utilities.cpp
+		../serlio/utils/ResolveMapCache.cpp
 		../serlio/modifiers/RuleAttributes.cpp)
 
 set_target_properties(${TEST_TARGET} PROPERTIES CXX_STANDARD 14)

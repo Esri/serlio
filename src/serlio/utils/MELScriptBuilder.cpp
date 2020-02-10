@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#include "util/MELScriptBuilder.h"
-#include "util/MayaUtilities.h"
+#include "utils/MELScriptBuilder.h"
+#include "utils/MayaUtilities.h"
 
 #include "materials/MaterialInfo.h"
 

@@ -20,7 +20,7 @@
 #include "modifiers/PRTModifierCommand.h"
 #include "modifiers/PRTModifierNode.h"
 
-#include "util/MayaUtilities.h"
+#include "utils/MayaUtilities.h"
 
 #include "maya/MArgList.h"
 #include "maya/MFloatPointArray.h"

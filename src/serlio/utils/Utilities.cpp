@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "util/Utilities.h"
+#include "utils/Utilities.h"
 
 #include "prt/API.h"
 #include "prt/StringUtils.h"

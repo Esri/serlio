@@ -22,9 +22,9 @@
 
 #include "materials/MaterialInfo.h"
 
-#include "util/LogHandler.h"
-#include "util/MayaUtilities.h"
-#include "util/Utilities.h"
+#include "utils/LogHandler.h"
+#include "utils/MayaUtilities.h"
+#include "utils/Utilities.h"
 
 #include "prt/StringUtils.h"
 

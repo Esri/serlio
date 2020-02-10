@@ -26,7 +26,7 @@
 #include "modifiers/PRTMesh.h"
 #include "modifiers/RuleAttributes.h"
 
-#include "util/Utilities.h"
+#include "utils/Utilities.h"
 
 #include "prt/API.h"
 

@@ -1,9 +1,9 @@
 #include "materials/MaterialUtils.h"
 
-#include "util/MArrayWrapper.h"
-#include "util/MELScriptBuilder.h"
-#include "util/MItDependencyNodesWrapper.h"
-#include "util/MayaUtilities.h"
+#include "utils/MArrayWrapper.h"
+#include "utils/MELScriptBuilder.h"
+#include "utils/MItDependencyNodesWrapper.h"
+#include "utils/MayaUtilities.h"
 
 #include "PRTContext.h"
 
