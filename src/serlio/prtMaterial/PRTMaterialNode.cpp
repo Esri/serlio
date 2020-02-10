@@ -48,7 +48,7 @@ namespace {
 constexpr bool DBG = false;
 
 const std::wstring MATERIAL_BASE_NAME = L"serlioStingrayMaterial";
-const std::wstring MEL_VARIABLE_SHADING_ENGINE = L"$shadingGroup"; // FIXME: duplicate
+const MELVariable  MEL_VARIABLE_SHADING_ENGINE(L"shadingGroup"); // FIXME: duplicate
 
 std::once_flag pluginDependencyCheckFlag;
 const std::vector<std::string> PLUGIN_DEPENDENCIES = {"shaderFXPlugin"};
@@ -115,10 +115,10 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
 
 	// declare MEL variables required by appendToMaterialScriptBuilder()
-	scriptBuilder.declString(L"$shaderNode");
-	scriptBuilder.declString(L"$mapFile");
-	scriptBuilder.declString(L"$mapNode");
-	scriptBuilder.declInt(L"$shadingNodeIndex");
+	scriptBuilder.declString(MELVariable(L"shaderNode"));
+	scriptBuilder.declString(MELVariable(L"mapFile"));
+	scriptBuilder.declString(MELVariable(L"mapNode"));
+	scriptBuilder.declInt(MELVariable(L"shadingNodeIndex"));
 
 	for (adsk::Data::Handle& materialHandle : *inMatStream) {
 		if (!materialHandle.hasData())
@@ -164,9 +164,9 @@ namespace {
 void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wstring& shaderBaseName,
                 const std::wstring& tex) {
 	if (!tex.empty()) {
-		sb.setVar(L"$mapNode", shaderBaseName);
-		sb.setVar(L"$mapFile", tex);
-		sb.createTexture(L"$mapNode");
+		sb.setVar(MELVariable(L"mapNode"), shaderBaseName);
+		sb.setVar(MELVariable(L"mapFile"), tex);
+		sb.createTextureShadingNode(MELVariable(L"mapNode"));
 		sb.setAttr(L"($mapNode + \".fileTextureName\")", L"$mapFile");
 
 		sb.connectAttr(L"($mapNode + \".outColor\")", L"($shaderNode + \".TEX_" + target + L"\")");
@@ -183,12 +183,12 @@ void PRTMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const 
                                                     const std::wstring& shaderBaseName,
                                                     const std::wstring& shadingEngineName) const {
 	// create shader
-	sb.setVar(L"$shaderNode", shaderBaseName);
+	sb.setVar(MELVariable(L"shaderNode"), shaderBaseName);
 	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, shadingEngineName);
-	sb.createShader(L"StingrayPBS", L"$shaderNode");
+	sb.createShader(L"StingrayPBS", MELVariable(L"shaderNode"));
 
 	// connect to shading group
-	sb.connectAttr(L"($shaderNode + \".outColor\")", L"(" + MEL_VARIABLE_SHADING_ENGINE + L" + \".surfaceShader\")");
+	sb.connectAttr(L"($shaderNode + \".outColor\")", L"(" + MEL_VARIABLE_SHADING_ENGINE.mel() + L" + \".surfaceShader\")");
 
 	// stingray specifics
 	const std::wstring sfxFile = MaterialUtils::getStingrayShaderPath();

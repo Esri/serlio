@@ -19,56 +19,56 @@
 
 #pragma once
 
+#include "util/MayaUtilities.h"
+
 #include "maya/MGlobal.h"
 
 #include <array>
 #include <sstream>
 #include <string>
+#include <cassert>
 
 class MaterialColor;
 
-class MELScriptBuilder {
+class MELVariable : public mu::NamedType<std::wstring, struct MelVariableName> {
+public:
+	using mu::NamedType<std::wstring, struct MelVariableName>::NamedType;
+	std::wstring mel() const {
+		assert(!get().empty() && get()[0] != L'$');
+		return L'$' + get();
+	}
+};
 
+class MELScriptBuilder {
 public:
 	void setAttr(const std::wstring& attribute, bool val);
-
 	void setAttr(const std::wstring& attribute, int val);
-
 	void setAttr(const std::wstring& attribute, double val);
-
 	void setAttr(const std::wstring& attribute, double val1, double val2);
 	void setAttr(const std::wstring& attribute, const std::array<double, 2>& val);
-
 	void setAttr(const std::wstring& attribute, double val1, double val2, double val3);
 	void setAttr(const std::wstring& attribute, const std::array<double, 3>& val);
-
 	void setAttr(const std::wstring& attribute, const wchar_t* val);
-
 	void setAttr(const std::wstring& attribute, const std::wstring& val);
-
 	void setAttr(const std::wstring& attribute, const MaterialColor& color);
 
 	void connectAttr(const std::wstring& source, const std::wstring& dest);
 
-	void python(const std::wstring& pythonCmd);
+	void declInt(const MELVariable& varName);
+	void declString(const MELVariable& varName);
 
-	void declInt(const std::wstring& varName);
-	void declString(const std::wstring& varName);
-
-	void setVar(const std::wstring& varName, const std::wstring& val);
+	void setVar(const MELVariable& varName, const std::wstring& val);
 
 	void setsCreate(const std::wstring& setName);
-
 	void setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, int faceStart, int faceEnd);
 
-	void createShader(const std::wstring& shaderType, const std::wstring& shaderName);
+	void createShader(const std::wstring& shaderType, const MELVariable& nodeName);
+	void createTextureShadingNode(const MELVariable& nodeName);
 
-	void createTexture(const std::wstring& textureName);
-
+	void python(const std::wstring& pythonCmd);
 	void addCmdLine(const std::wstring& line);
 
 	MStatus executeSync(std::wstring& output);
-
 	MStatus execute();
 
 private:

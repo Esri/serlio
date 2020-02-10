@@ -75,16 +75,16 @@ void MELScriptBuilder::python(const std::wstring& pythonCmd) {
 	commandStream << "python(\"" << pythonCmd << "\");\n";
 }
 
-void MELScriptBuilder::declInt(const std::wstring& varName) {
-	commandStream << "int " << varName << ";\n";
+void MELScriptBuilder::declInt(const MELVariable& varName) {
+	commandStream << "int " << varName.mel() << ";\n";
 }
 
-void MELScriptBuilder::declString(const std::wstring& varName) {
-	commandStream << "string " << varName << ";\n";
+void MELScriptBuilder::declString(const MELVariable& varName) {
+	commandStream << "string " << varName.mel() << ";\n";
 }
 
-void MELScriptBuilder::setVar(const std::wstring& varName, const std::wstring& val) {
-	commandStream << varName << " = \"" << val << "\";\n";
+void MELScriptBuilder::setVar(const MELVariable& varName, const std::wstring& val) {
+	commandStream << varName.mel() << " = \"" << val << "\";\n";
 }
 
 void MELScriptBuilder::setsCreate(const std::wstring& setName) {
@@ -97,13 +97,14 @@ void MELScriptBuilder::setsAddFaceRange(const std::wstring& setName, const std::
 	              << "];\n";
 }
 
-void MELScriptBuilder::createShader(const std::wstring& shaderType, const std::wstring& shaderName) {
-	commandStream << shaderName << " = `shadingNode -asShader -skipSelect -name " << shaderName << " " << shaderType
-	              << "`;\n";
+void MELScriptBuilder::createShader(const std::wstring& shaderType, const MELVariable& nodeName) {
+	const auto mel = nodeName.mel();
+	commandStream << mel << " = `shadingNode -asShader -skipSelect -name " << mel << " " << shaderType << "`;\n";
 }
 
-void MELScriptBuilder::createTexture(const std::wstring& textureName) {
-	commandStream << textureName << "= `shadingNode -asTexture -skipSelect -name " << textureName << " file`;\n";
+void MELScriptBuilder::createTextureShadingNode(const MELVariable& nodeName) {
+	const auto mel = nodeName.mel();
+	commandStream << mel << "= `shadingNode -asTexture -skipSelect -name " << mel << " file`;\n";
 }
 
 void MELScriptBuilder::addCmdLine(const std::wstring& line) {

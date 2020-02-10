@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prtMaterial/MaterialInfo.h"
+#include "util/MELScriptBuilder.h"
 
 #include "maya/MPlug.h"
 #include "maya/MStatus.h"
@@ -25,7 +26,7 @@ void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, cons
                             const std::wstring& shadingEngineName);
 
 std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName,
-                                              const std::wstring& shadingEngineVariable, MStatus& status);
+                                              const MELVariable& shadingEngineVariable, MStatus& status);
 
 std::wstring getStingrayShaderPath();
 
