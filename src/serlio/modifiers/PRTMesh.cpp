@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "prtModifier/PRTMesh.h"
+#include "modifiers/PRTMesh.h"
 
 #include "util/MArrayWrapper.h"
 #include "util/MayaUtilities.h"

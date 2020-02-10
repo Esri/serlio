@@ -17,10 +17,10 @@
  * limitations under the License.
  */
 
-#include "prtModifier/PRTModifierAction.h"
-#include "prtModifier/MayaCallbacks.h"
-#include "prtModifier/PRTModifierCommand.h"
-#include "prtModifier/RuleAttributes.h"
+#include "modifiers/PRTModifierAction.h"
+#include "modifiers/MayaCallbacks.h"
+#include "modifiers/PRTModifierCommand.h"
+#include "modifiers/RuleAttributes.h"
 
 #include "util/LogHandler.h"
 #include "util/MayaUtilities.h"

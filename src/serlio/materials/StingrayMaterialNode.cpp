@@ -21,7 +21,7 @@
 #include "materials/MaterialInfo.h"
 #include "materials/MaterialUtils.h"
 
-#include "prtModifier/PRTModifierAction.h"
+#include "modifiers/PRTModifierAction.h"
 
 #include "util/MELScriptBuilder.h"
 #include "util/MItDependencyNodesWrapper.h"

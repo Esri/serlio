@@ -20,8 +20,8 @@
 #include "serlioPlugin.h"
 #include "PRTContext.h"
 
-#include "prtModifier/PRTModifierCommand.h"
-#include "prtModifier/PRTModifierNode.h"
+#include "modifiers/PRTModifierCommand.h"
+#include "modifiers/PRTModifierNode.h"
 
 #include "materials/ArnoldMaterialNode.h"
 #include "materials/StingrayMaterialNode.h"

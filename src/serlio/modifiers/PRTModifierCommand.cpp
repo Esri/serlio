@@ -17,8 +17,9 @@
  * limitations under the License.
  */
 
-#include "prtModifier/PRTModifierCommand.h"
-#include "prtModifier/PRTModifierNode.h"
+#include "modifiers/PRTModifierCommand.h"
+#include "modifiers/PRTModifierNode.h"
+
 #include "util/MayaUtilities.h"
 
 #include "maya/MArgList.h"

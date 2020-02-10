@@ -20,9 +20,12 @@
 #pragma once
 
 #include "PRTContext.h"
+
 #include "polyModifier/polyModifierFty.h"
-#include "prtModifier/PRTMesh.h"
-#include "prtModifier/RuleAttributes.h"
+
+#include "modifiers/PRTMesh.h"
+#include "modifiers/RuleAttributes.h"
+
 #include "util/Utilities.h"
 
 #include "prt/API.h"

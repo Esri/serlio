@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "prtModifier/RuleAttributes.h"
+#include "modifiers/RuleAttributes.h"
 
 #include "util/LogHandler.h"
 #include "util/Utilities.h"

@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#include "prtModifier/MayaCallbacks.h"
-#include "prtModifier/PRTModifierNode.h"
+#include "modifiers/MayaCallbacks.h"
+#include "modifiers/PRTModifierNode.h"
 
 #include "materials/MaterialInfo.h"
 

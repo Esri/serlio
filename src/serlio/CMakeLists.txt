@@ -7,15 +7,15 @@ cmake_policy(SET CMP0015 NEW)
 add_library(${SERLIO_TARGET} SHARED
 		serlioPlugin.cpp
 		PRTContext.cpp
-		prtModifier/MayaCallbacks.cpp
-		prtModifier/RuleAttributes.cpp
-		prtModifier/PRTMesh.cpp
-		prtModifier/PRTModifierAction.cpp
-		prtModifier/PRTModifierCommand.cpp
-		prtModifier/PRTModifierNode.cpp
-		prtModifier/polyModifier/polyModifierCmd.cpp
-		prtModifier/polyModifier/polyModifierFty.cpp
-		prtModifier/polyModifier/polyModifierNode.cpp
+		modifiers/MayaCallbacks.cpp
+		modifiers/RuleAttributes.cpp
+		modifiers/PRTMesh.cpp
+		modifiers/PRTModifierAction.cpp
+		modifiers/PRTModifierCommand.cpp
+		modifiers/PRTModifierNode.cpp
+		modifiers/polyModifier/polyModifierCmd.cpp
+		modifiers/polyModifier/polyModifierFty.cpp
+		modifiers/polyModifier/polyModifierNode.cpp
 		materials/ArnoldMaterialNode.cpp
 		materials/MaterialInfo.cpp
 		materials/MaterialUtils.cpp
@@ -31,15 +31,15 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 		PRIVATE
 			serlioPlugin.h
 			PRTContext.h
-			prtModifier/MayaCallbacks.h
-			prtModifier/RuleAttributes.h
-			prtModifier/PRTMesh.h
-			prtModifier/PRTModifierAction.h
-			prtModifier/PRTModifierCommand.h
-			prtModifier/PRTModifierNode.h
-			prtModifier/polyModifier/polyModifierCmd.h
-			prtModifier/polyModifier/polyModifierFty.h
-			prtModifier/polyModifier/polyModifierNode.h
+			modifiers/MayaCallbacks.h
+			modifiers/RuleAttributes.h
+			modifiers/PRTMesh.h
+			modifiers/PRTModifierAction.h
+			modifiers/PRTModifierCommand.h
+			modifiers/PRTModifierNode.h
+			modifiers/polyModifier/polyModifierCmd.h
+			modifiers/polyModifier/polyModifierFty.h
+			modifiers/polyModifier/polyModifierNode.h
 			materials/ArnoldMaterialNode.h
 			materials/MaterialInfo.h
 			materials/MaterialUtils.h

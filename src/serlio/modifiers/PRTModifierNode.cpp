@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "prtModifier/PRTModifierNode.h"
+#include "modifiers/PRTModifierNode.h"
 
 #include "util/MayaUtilities.h"
 

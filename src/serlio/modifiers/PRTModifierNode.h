@@ -22,7 +22,7 @@
 #include "PRTContext.h"
 
 #include "polyModifier/polyModifierNode.h"
-#include "prtModifier/PRTModifierAction.h"
+#include "modifiers/PRTModifierAction.h"
 
 #include "maya/MObject.h"
 #include "maya/MStatus.h"

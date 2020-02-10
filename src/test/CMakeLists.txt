@@ -5,7 +5,7 @@ add_executable(${TEST_TARGET}
 		../serlio/PRTContext.cpp
 		../serlio/util/Utilities.cpp
 		../serlio/util/ResolveMapCache.cpp
-		../serlio/prtModifier/RuleAttributes.cpp)
+		../serlio/modifiers/RuleAttributes.cpp)
 
 set_target_properties(${TEST_TARGET} PROPERTIES CXX_STANDARD 14)
 
