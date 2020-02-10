@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "prtMaterial/PRTMaterialNode.h"
+#include "prtMaterial/StingrayMaterialNode.h"
 
 #include "prtMaterial/MaterialInfo.h"
 #include "prtMaterial/MaterialUtils.h"
@@ -131,13 +131,13 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 
 } // namespace
 
-MTypeId PRTMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::STRINGRAY_MATERIAL_NODE);
+MTypeId StingrayMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::STRINGRAY_MATERIAL_NODE);
 
-MObject PRTMaterialNode::aInMesh;
-MObject PRTMaterialNode::aOutMesh;
+MObject StingrayMaterialNode::aInMesh;
+MObject StingrayMaterialNode::aOutMesh;
 const MString OUTPUT_GEOMETRY = MString("og");
 
-MStatus PRTMaterialNode::initialize() {
+MStatus StingrayMaterialNode::initialize() {
 	MStatus status;
 
 	MFnTypedAttribute tAttr;
@@ -156,7 +156,7 @@ MStatus PRTMaterialNode::initialize() {
 	return MStatus::kSuccess;
 }
 
-MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
+MStatus StingrayMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (plug != aOutMesh)
 		return MStatus::kUnknownParameter;
 

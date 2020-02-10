@@ -31,7 +31,7 @@ class MaterialInfo;
 class MaterialTrafo;
 class MELScriptBuilder;
 
-class PRTMaterialNode : public MPxNode {
+class StingrayMaterialNode : public MPxNode {
 public:
 	static MStatus initialize();
 	MStatus compute(const MPlug& plug, MDataBlock& data) override;
