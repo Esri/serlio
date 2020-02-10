@@ -183,9 +183,10 @@ void PRTMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const 
                                                     const std::wstring& shaderBaseName,
                                                     const std::wstring& shadingEngineName) const {
 	// create shader
-	sb.setVar(MELVariable(L"shaderNode"), shaderBaseName);
+	MELVariable shaderNode(L"shaderNode");
+	sb.setVar(shaderNode, shaderBaseName);
 	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, shadingEngineName);
-	sb.createShader(L"StingrayPBS", MELVariable(L"shaderNode"));
+	sb.createShader(L"StingrayPBS", shaderNode);
 
 	// connect to shading group
 	sb.connectAttr(L"($shaderNode + \".outColor\")", L"(" + MEL_VARIABLE_SHADING_ENGINE.mel() + L" + \".surfaceShader\")");
