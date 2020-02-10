@@ -106,8 +106,9 @@ void MELScriptBuilder::setVar(const MELVariable& varName, const std::wstring& va
 	commandStream << varName.mel() << " = \"" << val << "\";\n";
 }
 
-void MELScriptBuilder::setsCreate(const std::wstring& setName) {
-	commandStream << "sets -empty -renderable true -noSurfaceShader true -name " << setName << ";\n";
+void MELScriptBuilder::setsCreate(const MELVariable& setName) {
+	const auto mel = setName.mel();
+	commandStream << mel << "= `sets -empty -renderable true -noSurfaceShader true -name " << mel << "`;\n";
 }
 
 void MELScriptBuilder::setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, const int faceStart,

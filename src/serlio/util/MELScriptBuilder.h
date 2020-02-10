@@ -60,7 +60,7 @@ public:
 
 	void setVar(const MELVariable& varName, const std::wstring& val);
 
-	void setsCreate(const std::wstring& setName);
+	void setsCreate(const MELVariable& setName);
 	void setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, int faceStart, int faceEnd);
 
 	void createShader(const std::wstring& shaderType, const MELVariable& nodeName);
