@@ -17,10 +17,9 @@
  * limitations under the License.
  */
 
-#include "ResolveMapCache.h"
-
-#include "utils/Utilities.h"
+#include "utils/ResolveMapCache.h"
 #include "utils/LogHandler.h"
+#include "utils/Utilities.h"
 
 #include <mutex>
 

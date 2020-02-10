@@ -19,10 +19,10 @@
 
 #pragma once
 
-#include "PRTContext.h"
-
-#include "polyModifier/polyModifierNode.h"
 #include "modifiers/PRTModifierAction.h"
+#include "modifiers/polyModifier/polyModifierNode.h"
+
+#include "PRTContext.h"
 
 #include "maya/MObject.h"
 #include "maya/MStatus.h"
