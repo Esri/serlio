@@ -39,8 +39,4 @@ public:
 	static MTypeId id;
 	static MObject aInMesh;
 	static MObject aOutMesh;
-
-private:
-	void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
-	                                   const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) const;
 };

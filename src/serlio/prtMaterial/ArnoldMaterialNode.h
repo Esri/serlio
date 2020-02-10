@@ -39,8 +39,4 @@ public:
 	MPxNode::SchedulingType schedulingType() const noexcept override {
 		return SchedulingType::kGloballySerial;
 	}
-
-private:
-	void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
-	                                   const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) const;
 };

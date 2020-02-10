@@ -53,6 +53,83 @@ const MELVariable MEL_VARIABLE_SHADING_ENGINE(L"shadingGroup"); // FIXME: duplic
 std::once_flag pluginDependencyCheckFlag;
 const std::vector<std::string> PLUGIN_DEPENDENCIES = {"shaderFXPlugin"};
 
+void setTexture(MELScriptBuilder& sb, const MELVariable& shaderNode, const std::wstring& target,
+                const std::wstring& textureNodeBaseName, const std::wstring& tex) {
+	if (!tex.empty()) {
+		MELVariable mapNode(L"mapNode");
+		sb.setVar(mapNode, textureNodeBaseName);
+
+		MELVariable mapFile(L"mapFile");
+		sb.setVar(mapFile, tex);
+
+		sb.createTextureShadingNode(mapNode);
+		sb.setAttr(mapNode, L"fileTextureName", mapFile.mel());
+
+		sb.connectAttr(mapNode, L"outColor", shaderNode, L"TEX_" + target);
+		sb.setAttr(shaderNode, L"use_" + target, 1);
+	}
+	else {
+		sb.setAttr(shaderNode, L"use_" + target, 0);
+	}
+}
+
+void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+                                   const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) {
+	// create shader
+	MELVariable shaderNode(L"shaderNode");
+	sb.setVar(shaderNode, shaderBaseName);
+	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, shadingEngineName);
+	sb.createShader(L"StingrayPBS", shaderNode);
+
+	// connect to shading group
+	sb.connectAttr(shaderNode, L"outColor", MEL_VARIABLE_SHADING_ENGINE, L"surfaceShader");
+
+	// stingray specifics
+	const std::wstring sfxFile = MaterialUtils::getStingrayShaderPath();
+	sb.addCmdLine(L"shaderfx -sfxnode $shaderNode -loadGraph  \"" + sfxFile + L"\";");
+	sb.setAttr(shaderNode, L"initgraph", true);
+
+	sb.addCmdLine(L"$shadingNodeIndex = `shaderfx -sfxnode $shaderNode -getNodeIDByName \"Standard_Base\"`;");
+
+	const std::wstring blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? L"0" : L"1";
+	sb.addCmdLine(L"shaderfx -sfxnode $shaderNode -edit_stringlist $shadingNodeIndex blendmode " + blendMode + L";");
+
+	// ignored: ambientColor, specularColor
+	sb.setAttr(shaderNode, L"diffuse_color", matInfo.diffuseColor);
+	sb.setAttr(shaderNode, L"emissive_color", matInfo.emissiveColor);
+	sb.setAttr(shaderNode, L"opacity", matInfo.opacity);
+	sb.setAttr(shaderNode, L"roughness", matInfo.roughness);
+	sb.setAttr(shaderNode, L"metallic", matInfo.metallic);
+
+	// ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
+	// shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
+	sb.setAttr(shaderNode, L"colormap_trafo_tuv", matInfo.colormapTrafo.tuv());
+	sb.setAttr(shaderNode, L"dirtmap_trafo_tuv", matInfo.dirtmapTrafo.tuv());
+	sb.setAttr(shaderNode, L"emissivemap_trafo_tuv", matInfo.emissivemapTrafo.tuv());
+	sb.setAttr(shaderNode, L"metallicmap_trafo_tuv", matInfo.metallicmapTrafo.tuv());
+	sb.setAttr(shaderNode, L"normalmap_trafo_tuv", matInfo.normalmapTrafo.tuv());
+	sb.setAttr(shaderNode, L"opacitymap_trafo_tuv", matInfo.opacitymapTrafo.tuv());
+	sb.setAttr(shaderNode, L"roughnessmap_trafo_tuv", matInfo.roughnessmapTrafo.tuv());
+
+	sb.setAttr(shaderNode, L"colormap_trafo_suvw", matInfo.colormapTrafo.suvw());
+	sb.setAttr(shaderNode, L"dirtmap_trafo_suvw", matInfo.dirtmapTrafo.suvw());
+	sb.setAttr(shaderNode, L"emissivemap_trafo_suvw", matInfo.emissivemapTrafo.suvw());
+	sb.setAttr(shaderNode, L"metallicmap_trafo_suvw", matInfo.metallicmapTrafo.suvw());
+	sb.setAttr(shaderNode, L"normalmap_trafo_suvw", matInfo.normalmapTrafo.suvw());
+	sb.setAttr(shaderNode, L"opacitymap_trafo_suvw", matInfo.opacitymapTrafo.suvw());
+	sb.setAttr(shaderNode, L"roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
+
+	// ignored: bumpMap, specularMap, occlusionmap
+	// TODO: avoid wide/narrow conversion of map strings
+	setTexture(sb, shaderNode, L"color_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.colormap));
+	setTexture(sb, shaderNode, L"dirt_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.dirtmap));
+	setTexture(sb, shaderNode, L"emissive_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.emissiveMap));
+	setTexture(sb, shaderNode, L"metallic_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.metallicMap));
+	setTexture(sb, shaderNode, L"normal_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.normalMap));
+	setTexture(sb, shaderNode, L"roughness_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.roughnessMap));
+	setTexture(sb, shaderNode, L"opacity_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.opacityMap));
+}
+
 } // namespace
 
 MTypeId PRTMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::STRINGRAY_MATERIAL_NODE);
@@ -157,86 +234,4 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	LOG_DBG << "scheduling stringray material script";
 	return scriptBuilder.execute(); // note: script is executed asynchronously
-}
-
-namespace {
-
-void setTexture(MELScriptBuilder& sb, const MELVariable& shaderNode, const std::wstring& target,
-                const std::wstring& textureNodeBaseName, const std::wstring& tex) {
-	if (!tex.empty()) {
-		MELVariable mapNode(L"mapNode");
-		sb.setVar(mapNode, textureNodeBaseName);
-
-		MELVariable mapFile(L"mapFile");
-		sb.setVar(mapFile, tex);
-
-		sb.createTextureShadingNode(mapNode);
-		sb.setAttr(mapNode, L"fileTextureName", mapFile.mel());
-
-		sb.connectAttr(mapNode, L"outColor", shaderNode, L"TEX_" + target);
-		sb.setAttr(shaderNode, L"use_" + target, 1);
-	}
-	else {
-		sb.setAttr(shaderNode, L"use_" + target, 0);
-	}
-}
-
-} // namespace
-
-void PRTMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
-                                                    const std::wstring& shaderBaseName,
-                                                    const std::wstring& shadingEngineName) const {
-	// create shader
-	MELVariable shaderNode(L"shaderNode");
-	sb.setVar(shaderNode, shaderBaseName);
-	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, shadingEngineName);
-	sb.createShader(L"StingrayPBS", shaderNode);
-
-	// connect to shading group
-	sb.connectAttr(shaderNode, L"outColor", MEL_VARIABLE_SHADING_ENGINE, L"surfaceShader");
-
-	// stingray specifics
-	const std::wstring sfxFile = MaterialUtils::getStingrayShaderPath();
-	sb.addCmdLine(L"shaderfx -sfxnode $shaderNode -loadGraph  \"" + sfxFile + L"\";");
-	sb.setAttr(shaderNode, L"initgraph", true);
-
-	sb.addCmdLine(L"$shadingNodeIndex = `shaderfx -sfxnode $shaderNode -getNodeIDByName \"Standard_Base\"`;");
-
-	const std::wstring blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? L"0" : L"1";
-	sb.addCmdLine(L"shaderfx -sfxnode $shaderNode -edit_stringlist $shadingNodeIndex blendmode " + blendMode + L";");
-
-	// ignored: ambientColor, specularColor
-	sb.setAttr(shaderNode, L"diffuse_color", matInfo.diffuseColor);
-	sb.setAttr(shaderNode, L"emissive_color", matInfo.emissiveColor);
-	sb.setAttr(shaderNode, L"opacity", matInfo.opacity);
-	sb.setAttr(shaderNode, L"roughness", matInfo.roughness);
-	sb.setAttr(shaderNode, L"metallic", matInfo.metallic);
-
-	// ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
-	// shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
-	sb.setAttr(shaderNode, L"colormap_trafo_tuv", matInfo.colormapTrafo.tuv());
-	sb.setAttr(shaderNode, L"dirtmap_trafo_tuv", matInfo.dirtmapTrafo.tuv());
-	sb.setAttr(shaderNode, L"emissivemap_trafo_tuv", matInfo.emissivemapTrafo.tuv());
-	sb.setAttr(shaderNode, L"metallicmap_trafo_tuv", matInfo.metallicmapTrafo.tuv());
-	sb.setAttr(shaderNode, L"normalmap_trafo_tuv", matInfo.normalmapTrafo.tuv());
-	sb.setAttr(shaderNode, L"opacitymap_trafo_tuv", matInfo.opacitymapTrafo.tuv());
-	sb.setAttr(shaderNode, L"roughnessmap_trafo_tuv", matInfo.roughnessmapTrafo.tuv());
-
-	sb.setAttr(shaderNode, L"colormap_trafo_suvw", matInfo.colormapTrafo.suvw());
-	sb.setAttr(shaderNode, L"dirtmap_trafo_suvw", matInfo.dirtmapTrafo.suvw());
-	sb.setAttr(shaderNode, L"emissivemap_trafo_suvw", matInfo.emissivemapTrafo.suvw());
-	sb.setAttr(shaderNode, L"metallicmap_trafo_suvw", matInfo.metallicmapTrafo.suvw());
-	sb.setAttr(shaderNode, L"normalmap_trafo_suvw", matInfo.normalmapTrafo.suvw());
-	sb.setAttr(shaderNode, L"opacitymap_trafo_suvw", matInfo.opacitymapTrafo.suvw());
-	sb.setAttr(shaderNode, L"roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
-
-	// ignored: bumpMap, specularMap, occlusionmap
-	// TODO: avoid wide/narrow conversion of map strings
-	setTexture(sb, shaderNode, L"color_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.colormap));
-	setTexture(sb, shaderNode, L"dirt_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.dirtmap));
-	setTexture(sb, shaderNode, L"emissive_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.emissiveMap));
-	setTexture(sb, shaderNode, L"metallic_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.metallicMap));
-	setTexture(sb, shaderNode, L"normal_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.normalMap));
-	setTexture(sb, shaderNode, L"roughness_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.roughnessMap));
-	setTexture(sb, shaderNode, L"opacity_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.opacityMap));
 }

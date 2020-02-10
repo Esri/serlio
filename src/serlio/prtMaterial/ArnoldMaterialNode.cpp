@@ -76,127 +76,8 @@ MELVariable createMapShader(MELScriptBuilder& sb, const std::string& mapFile, co
 	return uvTrafoNode;
 }
 
-} // namespace
-
-MTypeId ArnoldMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::ARNOLD_MATERIAL_NODE);
-
-MObject ArnoldMaterialNode::aInMesh;
-MObject ArnoldMaterialNode::aOutMesh;
-
-MStatus ArnoldMaterialNode::initialize() {
-	MStatus status;
-
-	MFnTypedAttribute tAttr;
-	aInMesh = tAttr.create("inMesh", "im", MFnData::kMesh, MObject::kNullObj, &status);
-	MCHECK(status);
-	status = addAttribute(aInMesh);
-	MCHECK(status);
-
-	aOutMesh = tAttr.create("outMesh", "om", MFnData::kMesh, MObject::kNullObj, &status);
-	MCHECK(status);
-	status = tAttr.setWritable(false);
-	MCHECK(status);
-	status = tAttr.setStorable(false);
-	MCHECK(status);
-	status = addAttribute(aOutMesh);
-	MCHECK(status);
-
-	status = attributeAffects(aInMesh, aOutMesh);
-	MCHECK(status);
-
-	return MStatus::kSuccess;
-}
-
-MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
-	if (plug != aOutMesh)
-		return MStatus::kUnknownParameter;
-
-	MStatus status = MStatus::kSuccess;
-
-	std::call_once(pluginDependencyCheckFlag, [&status]() {
-		const bool b = MayaPluginUtilities::pluginDependencyCheck(PLUGIN_DEPENDENCIES);
-		status = b ? MStatus::kSuccess : MStatus::kFailure;
-	});
-	if (status != MStatus::kSuccess)
-		return status;
-
-	MaterialUtils::forwardGeometry(aInMesh, aOutMesh, data);
-
-	adsk::Data::Stream* inMatStream = MaterialUtils::getMaterialStream(aInMesh, data);
-	if (inMatStream == nullptr)
-		return MStatus::kSuccess;
-
-	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
-	if (materialStructure == nullptr)
-		return MStatus::kFailure;
-
-	MString meshName;
-	const MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
-	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
-		return meshNameStatus;
-
-	MaterialUtils::MaterialCache matCache =
-	        MaterialUtils::getMaterialsByStructure(*materialStructure, MATERIAL_BASE_NAME);
-
-	MELScriptBuilder scriptBuilder;
-	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
-	scriptBuilder.declString(MELVariable(L"shaderNode"));
-	scriptBuilder.declString(MELVariable(L"mapFile"));
-	scriptBuilder.declString(MELVariable(L"mapNode"));
-	scriptBuilder.declString(MELVariable(L"bumpLuminanceNode"));
-	scriptBuilder.declString(MELVariable(L"bumpValueNode"));
-	scriptBuilder.declString(MELVariable(L"displacementNode"));
-	scriptBuilder.declString(MELVariable(L"normalMapConvertNode"));
-	scriptBuilder.declString(MELVariable(L"colorMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"dirtMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"opacityMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"specularMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"emissiveMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"roughnessMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"metallicMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"uvTrafoNode"));
-
-	for (adsk::Data::Handle& inMatStreamHandle : *inMatStream) {
-		if (!inMatStreamHandle.hasData())
-			continue;
-
-		if (!inMatStreamHandle.usesStructure(*materialStructure))
-			continue;
-
-		std::pair<int, int> faceRange;
-		if (!MaterialUtils::getFaceRange(inMatStreamHandle, faceRange))
-			continue;
-
-		auto createShadingEngine = [this, &materialStructure, &scriptBuilder,
-		                            &inMatStreamHandle](const MaterialInfo& matInfo) {
-			const std::wstring shadingEngineBaseName = MATERIAL_BASE_NAME + L"Sg";
-			const std::wstring shaderBaseName = MATERIAL_BASE_NAME + L"Sh";
-
-			MStatus status;
-			const std::wstring shadingEngineName = MaterialUtils::synchronouslyCreateShadingEngine(
-			        shadingEngineBaseName, MEL_VARIABLE_SHADING_ENGINE, status);
-			MCHECK(status);
-
-			MaterialUtils::assignMaterialMetadata(*materialStructure, inMatStreamHandle, shadingEngineName);
-			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
-			LOG_DBG << "new arnold shading engine: " << shadingEngineName;
-
-			return shadingEngineName;
-		};
-
-		MaterialInfo matInfo(inMatStreamHandle);
-		std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
-		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceRange.first, faceRange.second);
-		LOG_DBG << "assigned arnold shading engine (" << faceRange.first << ":" << faceRange.second
-		        << "): " << shadingEngineName;
-	}
-
-	return scriptBuilder.execute();
-}
-
-void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
-                                                       const std::wstring& shaderBaseName,
-                                                       const std::wstring& shadingEngineName) const {
+void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+                                   const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) {
 	// create shader
 	MELVariable shaderNode(L"shaderNode");
 	sb.setVar(shaderNode, shaderBaseName);
@@ -394,4 +275,122 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 		// in PRT the metallic map only uses the blue channel
 		sb.connectAttr(mapShaderNode, L"outColorB", metallicMapBlendNode, L"input2R");
 	}
+}
+
+} // namespace
+
+MTypeId ArnoldMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::ARNOLD_MATERIAL_NODE);
+
+MObject ArnoldMaterialNode::aInMesh;
+MObject ArnoldMaterialNode::aOutMesh;
+
+MStatus ArnoldMaterialNode::initialize() {
+	MStatus status;
+
+	MFnTypedAttribute tAttr;
+	aInMesh = tAttr.create("inMesh", "im", MFnData::kMesh, MObject::kNullObj, &status);
+	MCHECK(status);
+	status = addAttribute(aInMesh);
+	MCHECK(status);
+
+	aOutMesh = tAttr.create("outMesh", "om", MFnData::kMesh, MObject::kNullObj, &status);
+	MCHECK(status);
+	status = tAttr.setWritable(false);
+	MCHECK(status);
+	status = tAttr.setStorable(false);
+	MCHECK(status);
+	status = addAttribute(aOutMesh);
+	MCHECK(status);
+
+	status = attributeAffects(aInMesh, aOutMesh);
+	MCHECK(status);
+
+	return MStatus::kSuccess;
+}
+
+MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
+	if (plug != aOutMesh)
+		return MStatus::kUnknownParameter;
+
+	MStatus status = MStatus::kSuccess;
+
+	std::call_once(pluginDependencyCheckFlag, [&status]() {
+		const bool b = MayaPluginUtilities::pluginDependencyCheck(PLUGIN_DEPENDENCIES);
+		status = b ? MStatus::kSuccess : MStatus::kFailure;
+	});
+	if (status != MStatus::kSuccess)
+		return status;
+
+	MaterialUtils::forwardGeometry(aInMesh, aOutMesh, data);
+
+	adsk::Data::Stream* inMatStream = MaterialUtils::getMaterialStream(aInMesh, data);
+	if (inMatStream == nullptr)
+		return MStatus::kSuccess;
+
+	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
+	if (materialStructure == nullptr)
+		return MStatus::kFailure;
+
+	MString meshName;
+	const MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
+	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
+		return meshNameStatus;
+
+	MaterialUtils::MaterialCache matCache =
+	        MaterialUtils::getMaterialsByStructure(*materialStructure, MATERIAL_BASE_NAME);
+
+	MELScriptBuilder scriptBuilder;
+	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
+	scriptBuilder.declString(MELVariable(L"shaderNode"));
+	scriptBuilder.declString(MELVariable(L"mapFile"));
+	scriptBuilder.declString(MELVariable(L"mapNode"));
+	scriptBuilder.declString(MELVariable(L"bumpLuminanceNode"));
+	scriptBuilder.declString(MELVariable(L"bumpValueNode"));
+	scriptBuilder.declString(MELVariable(L"displacementNode"));
+	scriptBuilder.declString(MELVariable(L"normalMapConvertNode"));
+	scriptBuilder.declString(MELVariable(L"colorMapBlendNode"));
+	scriptBuilder.declString(MELVariable(L"dirtMapBlendNode"));
+	scriptBuilder.declString(MELVariable(L"opacityMapBlendNode"));
+	scriptBuilder.declString(MELVariable(L"specularMapBlendNode"));
+	scriptBuilder.declString(MELVariable(L"emissiveMapBlendNode"));
+	scriptBuilder.declString(MELVariable(L"roughnessMapBlendNode"));
+	scriptBuilder.declString(MELVariable(L"metallicMapBlendNode"));
+	scriptBuilder.declString(MELVariable(L"uvTrafoNode"));
+
+	for (adsk::Data::Handle& inMatStreamHandle : *inMatStream) {
+		if (!inMatStreamHandle.hasData())
+			continue;
+
+		if (!inMatStreamHandle.usesStructure(*materialStructure))
+			continue;
+
+		std::pair<int, int> faceRange;
+		if (!MaterialUtils::getFaceRange(inMatStreamHandle, faceRange))
+			continue;
+
+		auto createShadingEngine = [this, &materialStructure, &scriptBuilder,
+		                            &inMatStreamHandle](const MaterialInfo& matInfo) {
+			const std::wstring shadingEngineBaseName = MATERIAL_BASE_NAME + L"Sg";
+			const std::wstring shaderBaseName = MATERIAL_BASE_NAME + L"Sh";
+
+			MStatus status;
+			const std::wstring shadingEngineName = MaterialUtils::synchronouslyCreateShadingEngine(
+			        shadingEngineBaseName, MEL_VARIABLE_SHADING_ENGINE, status);
+			MCHECK(status);
+
+			MaterialUtils::assignMaterialMetadata(*materialStructure, inMatStreamHandle, shadingEngineName);
+			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
+			LOG_DBG << "new arnold shading engine: " << shadingEngineName;
+
+			return shadingEngineName;
+		};
+
+		MaterialInfo matInfo(inMatStreamHandle);
+		std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
+		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceRange.first, faceRange.second);
+		LOG_DBG << "assigned arnold shading engine (" << faceRange.first << ":" << faceRange.second
+		        << "): " << shadingEngineName;
+	}
+
+	return scriptBuilder.execute();
 }
