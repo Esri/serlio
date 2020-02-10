@@ -16,10 +16,10 @@ add_library(${SERLIO_TARGET} SHARED
 		prtModifier/polyModifier/polyModifierCmd.cpp
 		prtModifier/polyModifier/polyModifierFty.cpp
 		prtModifier/polyModifier/polyModifierNode.cpp
-		prtMaterial/ArnoldMaterialNode.cpp
-		prtMaterial/MaterialInfo.cpp
-		prtMaterial/MaterialUtils.cpp
-        prtMaterial/StingrayMaterialNode.cpp
+		materials/ArnoldMaterialNode.cpp
+		materials/MaterialInfo.cpp
+		materials/MaterialUtils.cpp
+        materials/StingrayMaterialNode.cpp
 		util/Utilities.cpp
 		util/ResolveMapCache.cpp
 		util/MayaUtilities.cpp
@@ -40,10 +40,10 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio.+")
 			prtModifier/polyModifier/polyModifierCmd.h
 			prtModifier/polyModifier/polyModifierFty.h
 			prtModifier/polyModifier/polyModifierNode.h
-			prtMaterial/ArnoldMaterialNode.h
-			prtMaterial/MaterialInfo.h
-			prtMaterial/MaterialUtils.h
-            prtMaterial/StingrayMaterialNode.h
+			materials/ArnoldMaterialNode.h
+			materials/MaterialInfo.h
+			materials/MaterialUtils.h
+            materials/StingrayMaterialNode.h
 			util/Utilities.h
 			util/ResolveMapCache.h
 			util/MayaUtilities.h

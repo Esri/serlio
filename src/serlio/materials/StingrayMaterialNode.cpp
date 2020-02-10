@@ -17,10 +17,9 @@
  * limitations under the License.
  */
 
-#include "prtMaterial/StingrayMaterialNode.h"
-
-#include "prtMaterial/MaterialInfo.h"
-#include "prtMaterial/MaterialUtils.h"
+#include "materials/StingrayMaterialNode.h"
+#include "materials/MaterialInfo.h"
+#include "materials/MaterialUtils.h"
 
 #include "prtModifier/PRTModifierAction.h"
 
@@ -175,7 +174,8 @@ MStatus StingrayMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (inMatStream == nullptr)
 		return MStatus::kSuccess;
 
-	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
+	const adsk::Data::Structure* materialStructure =
+	        adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
 	if (materialStructure == nullptr)
 		return MStatus::kFailure;
 

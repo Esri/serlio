@@ -1,6 +1,6 @@
 #pragma once
 
-#include "prtMaterial/MaterialInfo.h"
+#include "materials/MaterialInfo.h"
 #include "util/MELScriptBuilder.h"
 
 #include "maya/MPlug.h"

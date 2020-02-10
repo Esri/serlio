@@ -1,4 +1,4 @@
-#include "prtMaterial/MaterialUtils.h"
+#include "materials/MaterialUtils.h"
 
 #include "util/MArrayWrapper.h"
 #include "util/MELScriptBuilder.h"

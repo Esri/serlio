@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 
-#include "prtMaterial/ArnoldMaterialNode.h"
-#include "prtMaterial/MaterialInfo.h"
-#include "prtMaterial/MaterialUtils.h"
+#include "materials/ArnoldMaterialNode.h"
+#include "materials/MaterialInfo.h"
+#include "materials/MaterialUtils.h"
 
 #include "util/MELScriptBuilder.h"
 #include "util/MayaUtilities.h"

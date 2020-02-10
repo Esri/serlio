@@ -20,7 +20,7 @@
 #include "prtModifier/MayaCallbacks.h"
 #include "prtModifier/PRTModifierNode.h"
 
-#include "prtMaterial/MaterialInfo.h"
+#include "materials/MaterialInfo.h"
 
 #include "util/LogHandler.h"
 #include "util/MayaUtilities.h"

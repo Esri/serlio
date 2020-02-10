@@ -23,8 +23,8 @@
 #include "prtModifier/PRTModifierCommand.h"
 #include "prtModifier/PRTModifierNode.h"
 
-#include "prtMaterial/ArnoldMaterialNode.h"
-#include "prtMaterial/StingrayMaterialNode.h"
+#include "materials/ArnoldMaterialNode.h"
+#include "materials/StingrayMaterialNode.h"
 
 #include "util/MayaUtilities.h"
 
@@ -75,7 +75,8 @@ MStatus initializePlugin(MObject obj) {
 	MCHECK(plugin.registerNode(NODE_MODIFIER, PRTModifierNode::id, createModifierNode, PRTModifierNode::initialize));
 
 	auto createMaterialNode = []() { return (void*)new StingrayMaterialNode(); };
-	MCHECK(plugin.registerNode(NODE_MATERIAL, StingrayMaterialNode::id, createMaterialNode, &StingrayMaterialNode::initialize));
+	MCHECK(plugin.registerNode(NODE_MATERIAL, StingrayMaterialNode::id, createMaterialNode,
+	                           &StingrayMaterialNode::initialize));
 
 	auto createArnoldMaterialNode = []() { return (void*)new ArnoldMaterialNode(); };
 	MCHECK(plugin.registerNode(NODE_ARNOLD_MATERIAL, ArnoldMaterialNode::id, createArnoldMaterialNode,

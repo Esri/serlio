@@ -18,10 +18,9 @@
  */
 
 #include "util/MELScriptBuilder.h"
-
-#include "prtMaterial/MaterialInfo.h"
-
 #include "util/MayaUtilities.h"
+
+#include "materials/MaterialInfo.h"
 
 #include <iomanip>
 

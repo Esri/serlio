@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "prtMaterial/MaterialInfo.h"
+#include "materials/MaterialInfo.h"
 
 #include <cmath>
 
