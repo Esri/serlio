@@ -23,48 +23,65 @@
 
 #include "util/MayaUtilities.h"
 
+#include <iomanip>
+
 namespace {
+
 constexpr bool MEL_ENABLE_DISPLAY = false;
+
+std::wstring composeAttributeExpression(const MELVariable& node, const std::wstring& attribute) {
+	assert(!attribute.empty() && attribute[0] != L'.'); // to catch refactoring bugs
+	std::wostringstream out;
+	out << "(" << node.mel() << " + " << std::quoted(L'.' + attribute) << ")";
+	return out.str();
+}
+
 } // namespace
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, const bool val) {
-	commandStream << "setAttr " << attribute << " " << (val ? 1 : 0) << ";\n";
+void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const bool val) {
+	commandStream << "setAttr " << composeAttributeExpression(node, attribute) << " " << (val ? 1 : 0) << ";\n";
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, const int val) {
-	commandStream << "setAttr " << attribute << " " << val << ";\n";
+void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const int val) {
+	commandStream << "setAttr " << composeAttributeExpression(node, attribute) << " " << val << ";\n";
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, const double val) {
-	commandStream << "setAttr " << attribute << " " << val << ";\n";
+void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const double val) {
+	commandStream << "setAttr " << composeAttributeExpression(node, attribute) << " " << val << ";\n";
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, const double val1, const double val2) {
-	commandStream << "setAttr -type double2 " << attribute << " " << val1 << " " << val2 << ";\n";
+void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const double val1,
+                               const double val2) {
+	commandStream << "setAttr -type double2 " << composeAttributeExpression(node, attribute) << " " << val1 << " "
+	              << val2 << ";\n";
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, const std::array<double, 2>& val) {
-	setAttr(attribute, val[0], val[1]);
+void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute,
+                               const std::array<double, 2>& val) {
+	setAttr(node, attribute, val[0], val[1]);
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, const double val1, const double val2, const double val3) {
-	commandStream << "setAttr -type double3 " << attribute << " " << val1 << " " << val2 << " " << val3 << ";\n";
+void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const double val1,
+                               const double val2, const double val3) {
+	commandStream << "setAttr -type double3 " << composeAttributeExpression(node, attribute) << " " << val1 << " "
+	              << val2 << " " << val3 << ";\n";
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, const std::array<double, 3>& val) {
-	setAttr(attribute, val[0], val[1], val[2]);
+void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute,
+                               const std::array<double, 3>& val) {
+	setAttr(node, attribute, val[0], val[1], val[2]);
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, const wchar_t* val) {
-	setAttr(attribute, std::wstring(val));
+void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const wchar_t* val) {
+	setAttr(node, attribute, std::wstring(val));
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, const std::wstring& val) {
-	commandStream << "setAttr -type \"string\" " << attribute << " " << val << ";\n";
+void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const std::wstring& val) {
+	commandStream << "setAttr -type \"string\" " << composeAttributeExpression(node, attribute) << " " << val << ";\n";
 }
 
-void MELScriptBuilder::setAttr(const std::wstring& attribute, const MaterialColor& color) {
-	setAttr(attribute, color.r(), color.g(), color.b());
+void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const MaterialColor& color) {
+	setAttr(node, attribute, color.r(), color.g(), color.b());
 }
 
 void MELScriptBuilder::connectAttr(const std::wstring& source, const std::wstring& dest) {
