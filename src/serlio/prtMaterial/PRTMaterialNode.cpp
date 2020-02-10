@@ -48,7 +48,6 @@ namespace {
 constexpr bool DBG = false;
 
 const std::wstring MATERIAL_BASE_NAME = L"serlioStingrayMaterial";
-const MELVariable MEL_VARIABLE_SHADING_ENGINE(L"shadingGroup"); // FIXME: duplicate
 
 std::once_flag pluginDependencyCheckFlag;
 const std::vector<std::string> PLUGIN_DEPENDENCIES = {"shaderFXPlugin"};
@@ -176,7 +175,7 @@ MStatus PRTMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (inMatStream == nullptr)
 		return MStatus::kSuccess;
 
-	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
+	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
 	if (materialStructure == nullptr)
 		return MStatus::kFailure;
 

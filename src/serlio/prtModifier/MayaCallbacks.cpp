@@ -201,16 +201,16 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	constexpr unsigned int maxStringArrayLength = 2;
 
 	adsk::Data::Structure* fStructure; // Structure to use for creation
-	fStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
+	fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
 	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
 		const prt::AttributeMap* mat = materials[0];
 
 		// Register our structure since it is not registered yet.
 		fStructure = adsk::Data::Structure::create();
-		fStructure->setName(gPRTMatStructure.c_str());
+		fStructure->setName(PRT_MATERIAL_STRUCTURE.c_str());
 
-		fStructure->addMember(adsk::Data::Member::kInt32, 1, gPRTMatMemberFaceStart.c_str());
-		fStructure->addMember(adsk::Data::Member::kInt32, 1, gPRTMatMemberFaceEnd.c_str());
+		fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_START.c_str());
+		fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_END.c_str());
 
 		size_t keyCount = 0;
 		wchar_t const* const* keys = mat->getKeys(&keyCount);
@@ -261,8 +261,8 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	adsk::Data::Associations newMetadata(inputMesh.metadata(&stat));
 	newMetadata.makeUnique();
 	MCHECK(stat);
-	adsk::Data::Channel newChannel = newMetadata.channel(gPRTMatChannel);
-	adsk::Data::Stream newStream(*fStructure, gPRTMatStream);
+	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIAL_CHANNEL);
+	adsk::Data::Stream newStream(*fStructure, PRT_MATERIAL_STREAM);
 
 	newChannel.setDataStream(newStream);
 	newMetadata.setChannel(newChannel);
@@ -367,10 +367,10 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 					}
 				}
 
-				handle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str());
+				handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_START.c_str());
 				*handle.asInt32() = faceRanges[fri];
 
-				handle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str());
+				handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_END.c_str());
 				*handle.asInt32() = faceRanges[fri + 1];
 
 				newStream.setElement(static_cast<adsk::Data::IndexCount>(fri), handle);

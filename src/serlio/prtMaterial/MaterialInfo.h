@@ -19,16 +19,19 @@
 
 #pragma once
 
+#include "util/MELScriptBuilder.h"
+
 #include "maya/MString.h"
 #include "maya/adskDataHandle.h"
 
 #include <array>
 
-const std::string gPRTMatStructure = "prtMaterialStructure";
-const std::string gPRTMatChannel = "prtMaterialChannel";
-const std::string gPRTMatStream = "prtMaterialStream";
-const std::string gPRTMatMemberFaceStart = "faceIndexStart";
-const std::string gPRTMatMemberFaceEnd = "faceIndexEnd";
+const std::string PRT_MATERIAL_STRUCTURE = "prtMaterialStructure";
+const std::string PRT_MATERIAL_CHANNEL = "prtMaterialChannel";
+const std::string PRT_MATERIAL_STREAM = "prtMaterialStream";
+const std::string PRT_MATERIAL_FACE_INDEX_START = "faceIndexStart";
+const std::string PRT_MATERIAL_FACE_INDEX_END = "faceIndexEnd";
+const MELVariable MEL_VARIABLE_SHADING_ENGINE(L"shadingGroup");
 
 class MaterialColor {
 public:

@@ -64,11 +64,11 @@ adsk::Data::Stream* getMaterialStream(const MObject& aInMesh, MDataBlock& data) 
 		return nullptr;
 
 	adsk::Data::Associations inAssociations(inMetadata);
-	adsk::Data::Channel* inMatChannel = inAssociations.findChannel(gPRTMatChannel);
+	adsk::Data::Channel* inMatChannel = inAssociations.findChannel(PRT_MATERIAL_CHANNEL);
 	if (inMatChannel == nullptr)
 		return nullptr;
 
-	return inMatChannel->findDataStream(gPRTMatStream);
+	return inMatChannel->findDataStream(PRT_MATERIAL_STREAM);
 }
 
 MStatus getMeshName(MString& meshName, const MPlug& plug) {
@@ -121,12 +121,12 @@ MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStruc
 			continue;
 
 		adsk::Data::Associations materialAssociations(materialMetadata);
-		adsk::Data::Channel* matChannel = materialAssociations.findChannel(gPRTMatChannel);
+		adsk::Data::Channel* matChannel = materialAssociations.findChannel(PRT_MATERIAL_CHANNEL);
 
 		if (matChannel == nullptr)
 			continue;
 
-		adsk::Data::Stream* matStream = matChannel->findDataStream(gPRTMatStream);
+		adsk::Data::Stream* matStream = matChannel->findDataStream(PRT_MATERIAL_STREAM);
 		if ((matStream == nullptr) || (matStream->elementCount() != 1))
 			continue;
 
@@ -144,11 +144,11 @@ MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStruc
 }
 
 bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange) {
-	if (!handle.setPositionByMemberName(gPRTMatMemberFaceStart.c_str()))
+	if (!handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_START.c_str()))
 		return false;
 	faceRange.first = *handle.asInt32();
 
-	if (!handle.setPositionByMemberName(gPRTMatMemberFaceEnd.c_str()))
+	if (!handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_END.c_str()))
 		return false;
 	faceRange.second = *handle.asInt32();
 
@@ -161,8 +161,8 @@ void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, cons
 	MFnDependencyNode shadingEngine(shadingEngineObj);
 
 	adsk::Data::Associations newMetadata;
-	adsk::Data::Channel newChannel = newMetadata.channel(gPRTMatChannel);
-	adsk::Data::Stream newStream(materialStructure, gPRTMatStream);
+	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIAL_CHANNEL);
+	adsk::Data::Stream newStream(materialStructure, PRT_MATERIAL_STREAM);
 	newChannel.setDataStream(newStream);
 	newMetadata.setChannel(newChannel);
 	adsk::Data::Handle handle(streamHandle);

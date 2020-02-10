@@ -34,7 +34,6 @@
 namespace {
 
 const std::wstring MATERIAL_BASE_NAME = L"serlioArnoldMaterial";
-const MELVariable MEL_VARIABLE_SHADING_ENGINE(L"shadingGroup");
 
 std::once_flag pluginDependencyCheckFlag;
 const std::vector<std::string> PLUGIN_DEPENDENCIES = {"mtoa"};
@@ -327,7 +326,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (inMatStream == nullptr)
 		return MStatus::kSuccess;
 
-	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(gPRTMatStructure.c_str());
+	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
 	if (materialStructure == nullptr)
 		return MStatus::kFailure;
 
