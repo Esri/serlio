@@ -84,8 +84,10 @@ void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attr
 	setAttr(node, attribute, color.r(), color.g(), color.b());
 }
 
-void MELScriptBuilder::connectAttr(const std::wstring& source, const std::wstring& dest) {
-	commandStream << "connectAttr -force " << source << " " << dest << ";\n";
+void MELScriptBuilder::connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,
+                                   const std::wstring& dstAttr) {
+	commandStream << "connectAttr -force " << composeAttributeExpression(srcNode, srcAttr) << " "
+	              << composeAttributeExpression(dstNode, dstAttr) << ";\n";
 }
 
 void MELScriptBuilder::python(const std::wstring& pythonCmd) {

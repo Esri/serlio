@@ -173,7 +173,7 @@ void setTexture(MELScriptBuilder& sb, const MELVariable& shaderNode, const std::
 		sb.createTextureShadingNode(mapNode);
 		sb.setAttr(mapNode, L"fileTextureName", mapFile.mel());
 
-		sb.connectAttr(L"($mapNode + \".outColor\")", L"($shaderNode + \".TEX_" + target + L"\")");
+		sb.connectAttr(mapNode, L"outColor", shaderNode, L"TEX_" + target);
 		sb.setAttr(shaderNode, L"use_" + target, 1);
 	}
 	else {
@@ -193,8 +193,7 @@ void PRTMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const 
 	sb.createShader(L"StingrayPBS", shaderNode);
 
 	// connect to shading group
-	sb.connectAttr(L"($shaderNode + \".outColor\")",
-	               L"(" + MEL_VARIABLE_SHADING_ENGINE.mel() + L" + \".surfaceShader\")");
+	sb.connectAttr(shaderNode, L"outColor", MEL_VARIABLE_SHADING_ENGINE, L"surfaceShader");
 
 	// stingray specifics
 	const std::wstring sfxFile = MaterialUtils::getStingrayShaderPath();

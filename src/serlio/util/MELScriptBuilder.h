@@ -24,9 +24,9 @@
 #include "maya/MGlobal.h"
 
 #include <array>
+#include <cassert>
 #include <sstream>
 #include <string>
-#include <cassert>
 
 class MaterialColor;
 
@@ -52,7 +52,8 @@ public:
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const std::wstring& val);
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const MaterialColor& color);
 
-	void connectAttr(const std::wstring& source, const std::wstring& dest);
+	void connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,
+	                 const std::wstring& dstAttr);
 
 	void declInt(const MELVariable& varName);
 	void declString(const MELVariable& varName);
