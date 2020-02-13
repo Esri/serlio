@@ -19,7 +19,9 @@
 
 #include "PRTContext.h"
 
-#include "util/LogHandler.h"
+#include "utils/LogHandler.h"
+
+#include <mutex>
 
 namespace {
 
@@ -38,6 +40,11 @@ bool verifyMayaEncoder() {
 }
 
 } // namespace
+
+PRTContext& PRTContext::get() {
+	static PRTContext prtCtx;
+	return prtCtx;
+}
 
 PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRootPath(prtu::getPluginRoot()) {
 	if (ENABLE_LOG_CONSOLE) {

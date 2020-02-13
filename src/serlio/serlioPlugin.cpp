@@ -20,19 +20,21 @@
 #include "serlioPlugin.h"
 #include "PRTContext.h"
 
-#include "prtModifier/PRTModifierCommand.h"
-#include "prtModifier/PRTModifierNode.h"
+#include "modifiers/PRTModifierCommand.h"
+#include "modifiers/PRTModifierNode.h"
 
-#include "prtMaterial/ArnoldMaterialNode.h"
-#include "prtMaterial/PRTMaterialNode.h"
+#include "materials/ArnoldMaterialNode.h"
+#include "materials/StingrayMaterialNode.h"
 
-#include "util/MayaUtilities.h"
+#include "utils/MayaUtilities.h"
 
 #include "maya/MFnPlugin.h"
 #include "maya/MGlobal.h"
 #include "maya/MSceneMessage.h"
 #include "maya/MStatus.h"
 #include "maya/MString.h"
+
+#include <mutex>
 
 namespace {
 constexpr bool DBG = false;
@@ -45,37 +47,36 @@ constexpr const char* MEL_PROC_CREATE_UI = "serlioCreateUI";
 constexpr const char* MEL_PROC_DELETE_UI = "serlioDeleteUI";
 constexpr const char* SERLIO_VENDOR = "Esri R&D Center Zurich";
 
-// global PRT lifetime handler
-PRTContextUPtr prtCtx;
+std::once_flag callbackRegisterFlag;
 
 } // namespace
 
 // called when the plug-in is loaded into Maya.
 MStatus initializePlugin(MObject obj) {
-	if (!prtCtx) {
-		prtCtx = std::make_unique<PRTContext>();
+	if (!PRTContext::get().isAlive()) // this will implicitly load PRT
+		return MS::kFailure;
 
-		// maya exit does not call uninitializePlugin automatically, therefore use addCallback
+	// maya exit does not call uninitializePlugin automatically, therefore use addCallback
+	// we only do this once in case the serlio plugin is unload and loaded again
+	// (which is not recommended but allowed by the Maya UI)
+	std::call_once(callbackRegisterFlag, []() {
 		auto mayaExitCallback = [](void*) { uninitializePlugin(MObject::kNullObj); }; // TODO: correct obj value?
 		MStatus mayaStatus = MStatus::kFailure;
 		MSceneMessage::addCallback(MSceneMessage::kMayaExiting, mayaExitCallback, nullptr, &mayaStatus);
 		MCHECK(mayaStatus);
-	}
+	});
 
-	if (!prtCtx->isAlive())
-		return MS::kFailure;
-
-	// TODO: extract string literals
 	MFnPlugin plugin(obj, SERLIO_VENDOR, SRL_VERSION);
 
-	auto createModifierCommand = []() { return (void*)new PRTModifierCommand(prtCtx); };
+	auto createModifierCommand = []() { return (void*)new PRTModifierCommand(); };
 	MCHECK(plugin.registerCommand(CMD_ASSIGN, createModifierCommand));
 
-	auto createModifierNode = []() { return (void*)new PRTModifierNode(*prtCtx); };
+	auto createModifierNode = []() { return (void*)new PRTModifierNode(); };
 	MCHECK(plugin.registerNode(NODE_MODIFIER, PRTModifierNode::id, createModifierNode, PRTModifierNode::initialize));
 
-	auto createMaterialNode = []() { return (void*)new PRTMaterialNode(*prtCtx); };
-	MCHECK(plugin.registerNode(NODE_MATERIAL, PRTMaterialNode::id, createMaterialNode, &PRTMaterialNode::initialize));
+	auto createMaterialNode = []() { return (void*)new StingrayMaterialNode(); };
+	MCHECK(plugin.registerNode(NODE_MATERIAL, StingrayMaterialNode::id, createMaterialNode,
+	                           &StingrayMaterialNode::initialize));
 
 	auto createArnoldMaterialNode = []() { return (void*)new ArnoldMaterialNode(); };
 	MCHECK(plugin.registerNode(NODE_ARNOLD_MATERIAL, ArnoldMaterialNode::id, createArnoldMaterialNode,
@@ -88,15 +89,16 @@ MStatus initializePlugin(MObject obj) {
 
 // called when the plug-in is unloaded from Maya.
 MStatus uninitializePlugin(MObject obj) {
-	// shutdown PRT
-	prtCtx.reset();
+	// note: we do not shutdown PRT here because:
+	// * maya may unload/load serlio
+	// * PRT only supports initializing once per process life time
 
 	MStatus status;
 	if (obj != MObject::kNullObj) { // TODO
 		MFnPlugin plugin(obj);
 		MCHECK(plugin.deregisterCommand(CMD_ASSIGN));
 		MCHECK(plugin.deregisterNode(PRTModifierNode::id));
-		MCHECK(plugin.deregisterNode(PRTMaterialNode::id));
+		MCHECK(plugin.deregisterNode(StingrayMaterialNode::id));
 		MCHECK(plugin.deregisterNode(ArnoldMaterialNode::id));
 	}
 	return status;

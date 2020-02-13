@@ -21,13 +21,18 @@
 
 #include "serlioPlugin.h"
 
-#include "util/ResolveMapCache.h"
-#include "util/Utilities.h"
+#include "utils/ResolveMapCache.h"
+#include "utils/Utilities.h"
 
 #include <memory>
 #include <vector>
 
+struct PRTContext;
+using PRTContextUPtr = std::unique_ptr<PRTContext>;
+
 struct SRL_TEST_EXPORTS_API PRTContext final {
+	static PRTContext& get();
+
 	explicit PRTContext(const std::vector<std::wstring>& addExtDirs = {});
 	PRTContext(const PRTContext&) = delete;
 	PRTContext(PRTContext&&) = delete;
@@ -46,5 +51,3 @@ struct SRL_TEST_EXPORTS_API PRTContext final {
 	prt::FileLogHandler* theFileLogHandler = nullptr;
 	ResolveMapCacheUPtr mResolveMapCache;
 };
-
-using PRTContextUPtr = std::unique_ptr<PRTContext>;

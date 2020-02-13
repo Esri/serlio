@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.13)
 
 add_executable(${TEST_TARGET}
-		tests.cpp
-		../serlio/PRTContext.cpp
-		../serlio/util/Utilities.cpp
-		../serlio/util/ResolveMapCache.cpp
-		../serlio/prtModifier/RuleAttributes.cpp)
+	tests.cpp
+	../serlio/PRTContext.cpp
+	../serlio/utils/Utilities.cpp
+	../serlio/utils/ResolveMapCache.cpp
+	../serlio/modifiers/RuleAttributes.cpp)
 
 set_target_properties(${TEST_TARGET} PROPERTIES CXX_STANDARD 14)
 
@@ -14,19 +14,19 @@ target_compile_definitions(${TEST_TARGET} PRIVATE
 	-DSERLIO_CODEC_PATH="$<TARGET_FILE:${CODEC_TARGET}>"
 	-DTEST_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
-if(WIN32)
+if (WIN32)
 
-else()
+else ()
 	target_compile_options(${TEST_TARGET} PRIVATE
-			-D_GLIBCXX_USE_CXX11_ABI=0 -Wl,--exclude-libs,ALL
-			-fvisibility=hidden -fvisibility-inlines-hidden)
+		-D_GLIBCXX_USE_CXX11_ABI=0 -Wl,--exclude-libs,ALL
+		-fvisibility=hidden -fvisibility-inlines-hidden)
 
 	target_link_libraries(${TEST_TARGET} PRIVATE dl)
-endif()
+endif ()
 
 target_include_directories(${TEST_TARGET} PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}
-		$<TARGET_PROPERTY:${SERLIO_TARGET},INTERFACE_INCLUDE_DIRECTORIES>)
+	${CMAKE_CURRENT_SOURCE_DIR}
+	$<TARGET_PROPERTY:${SERLIO_TARGET},INTERFACE_INCLUDE_DIRECTORIES>)
 
 srl_add_dependency_prt(${TEST_TARGET})
 
