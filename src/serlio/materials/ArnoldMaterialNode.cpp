@@ -38,243 +38,232 @@ const std::wstring MATERIAL_BASE_NAME = L"serlioArnoldMaterial";
 std::once_flag pluginDependencyCheckFlag;
 const std::vector<std::string> PLUGIN_DEPENDENCIES = {"mtoa"};
 
-void setUvTransformAttrs(MELScriptBuilder& sb, const MELVariable& node, const std::wstring& uvSet,
-                         const MaterialTrafo& trafo) {
-	sb.setAttr(node, L"uvset", MELStringLiteral(uvSet));
-	sb.setAttr(node, L"pivotFrame", 0.0, 0.0);
-	sb.setAttr(node, L"scaleFrame", 1.0 / trafo.su(), 1.0 / trafo.sv());
-	sb.setAttr(node, L"translateFrame", -trafo.tu() / trafo.su(), -trafo.tv() / trafo.sv());
+const MELVariable MEL_VAR_SHADER_NODE(L"shaderNode");
+const MELVariable MEL_VAR_MAP_FILE(L"mapFile");
+const MELVariable MEL_VAR_MAP_NODE(L"mapNode");
+const MELVariable MEL_VAR_BUMP_LUMINANCE_NODE(L"bumpLuminanceNode");
+const MELVariable MEL_VAR_BUMP_VALUE_NODE(L"bumpValueNode");
+const MELVariable MEL_VAR_DISPLACEMENT_NODE(L"displacementNode");
+const MELVariable MEL_VAR_NORMAL_MAP_CONVERT_NODE(L"normalMapConvertNode");
+const MELVariable MEL_VAR_COLOR_MAP_BLEND_NODE(L"colorMapBlendNode");
+const MELVariable MEL_VAR_DIRTMAP_BLEND_NODE(L"dirtMapBlendNode");
+const MELVariable MEL_VAR_OPACITYMAP_BLEND_NODE(L"opacityMapBlendNode");
+const MELVariable MEL_VAR_SPECULARMAP_BLEND_NODE(L"specularMapBlendNode");
+const MELVariable MEL_VAR_EMISSIVEMAP_BLEND_NODE(L"emissiveMapBlendNode");
+const MELVariable MEL_VAR_ROUGHNESSMAP_BLEND_NODE(L"roughnessMapBlendNode");
+const MELVariable MEL_VAR_METALLICMAP_BLEND_NODE(L"metallicMapBlendNode");
+const MELVariable MEL_VAR_UV_TRAFO_NODE(L"uvTrafoNode");
+
+void setUvTransformAttrs(MELScriptBuilder& sb, const std::wstring& uvSet, const MaterialTrafo& trafo) {
+	sb.setAttr(MEL_VAR_UV_TRAFO_NODE, L"uvset", MELStringLiteral(uvSet));
+	sb.setAttr(MEL_VAR_UV_TRAFO_NODE, L"pivotFrame", 0.0, 0.0);
+	sb.setAttr(MEL_VAR_UV_TRAFO_NODE, L"scaleFrame", 1.0 / trafo.su(), 1.0 / trafo.sv());
+	sb.setAttr(MEL_VAR_UV_TRAFO_NODE, L"translateFrame", -trafo.tu() / trafo.su(), -trafo.tv() / trafo.sv());
 	if (trafo.rw() != 0.0) {
 		LOG_WRN << "rotation (material.map.rw) is not yet supported\n";
 	}
 }
 
-MELVariable createMapShader(MELScriptBuilder& sb, const std::string& mapFile, const MaterialTrafo& mapTrafo,
-                            const std::wstring& shaderName, const std::wstring& uvSet, const bool raw,
-                            const bool alpha) {
-	MELVariable mapNode(L"mapNode");
-	sb.setVar(mapNode, MELStringLiteral(shaderName));
+void createMapShader(MELScriptBuilder& sb, const std::string& mapFile, const MaterialTrafo& mapTrafo,
+                     const std::wstring& shaderName, const std::wstring& uvSet, const bool raw, const bool alpha) {
+	sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(shaderName));
 
-	MELVariable melMapFile(L"mapFile");
-	sb.setVar(melMapFile, MELStringLiteral(prtu::toUTF16FromOSNarrow(mapFile)));
-	sb.createTextureShadingNode(mapNode);
-	sb.setAttr(mapNode, L"fileTextureName", melMapFile);
+	sb.setVar(MEL_VAR_MAP_FILE, MELStringLiteral(prtu::toUTF16FromOSNarrow(mapFile)));
+	sb.createTextureShadingNode(MEL_VAR_MAP_NODE);
+	sb.setAttr(MEL_VAR_MAP_NODE, L"fileTextureName", MEL_VAR_MAP_FILE);
 
 	if (raw) {
-		sb.setAttr(mapNode, L"colorSpace", L"Raw");
-		sb.setAttr(mapNode, L"ignoreColorSpaceFileRules", true);
+		sb.setAttr(MEL_VAR_MAP_NODE, L"colorSpace", L"Raw");
+		sb.setAttr(MEL_VAR_MAP_NODE, L"ignoreColorSpaceFileRules", true);
 	}
 
-	MELVariable uvTrafoNode(L"uvTrafoNode");
-	sb.setVar(uvTrafoNode, MELStringLiteral(shaderName + L"_trafo"));
-	sb.createShader(L"aiUvTransform", uvTrafoNode);
-	setUvTransformAttrs(sb, uvTrafoNode, uvSet, mapTrafo);
+	sb.setVar(MEL_VAR_UV_TRAFO_NODE, MELStringLiteral(shaderName + L"_trafo"));
+	sb.createShader(L"aiUvTransform", MEL_VAR_UV_TRAFO_NODE);
+	setUvTransformAttrs(sb, uvSet, mapTrafo);
 
 	if (alpha)
-		sb.connectAttr(mapNode, L"outAlpha", uvTrafoNode, L"passthroughR");
+		sb.connectAttr(MEL_VAR_MAP_NODE, L"outAlpha", MEL_VAR_UV_TRAFO_NODE, L"passthroughR");
 	else
-		sb.connectAttr(mapNode, L"outColor", uvTrafoNode, L"passthrough");
-	return uvTrafoNode;
+		sb.connectAttr(MEL_VAR_MAP_NODE, L"outColor", MEL_VAR_UV_TRAFO_NODE, L"passthrough");
 }
 
 void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
                                    const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) {
 	// create shader
-	MELVariable shaderNode(L"shaderNode");
-	sb.setVar(shaderNode, MELStringLiteral(shaderBaseName));
+	sb.setVar(MEL_VAR_SHADER_NODE, MELStringLiteral(shaderBaseName));
 	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, MELStringLiteral(shadingEngineName));
-	sb.createShader(L"aiStandardSurface", shaderNode); // note: name might change to be unique
+	sb.createShader(L"aiStandardSurface", MEL_VAR_SHADER_NODE); // note: name might change to be unique
 
 	// connect to shading group
-	sb.connectAttr(shaderNode, L"outColor", MEL_VARIABLE_SHADING_ENGINE, L"surfaceShader");
+	sb.connectAttr(MEL_VAR_SHADER_NODE, L"outColor", MEL_VARIABLE_SHADING_ENGINE, L"surfaceShader");
 
-	sb.setAttr(shaderNode, L"base", 1.0);
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"base", 1.0);
 
 	// color/dirt map multiply node
-	MELVariable dirtMapBlendNode(L"dirtMapBlendNode");
-	sb.setVar(dirtMapBlendNode, MELStringLiteral(shadingEngineName + L"_dirt_multiply"));
-	sb.createShader(L"aiMultiply", dirtMapBlendNode);
-	sb.connectAttr(dirtMapBlendNode, L"outColor", shaderNode, L"baseColor");
+	sb.setVar(MEL_VAR_DIRTMAP_BLEND_NODE, MELStringLiteral(shadingEngineName + L"_dirt_multiply"));
+	sb.createShader(L"aiMultiply", MEL_VAR_DIRTMAP_BLEND_NODE);
+	sb.connectAttr(MEL_VAR_DIRTMAP_BLEND_NODE, L"outColor", MEL_VAR_SHADER_NODE, L"baseColor");
 
 	// color/color map multiply node
-	MELVariable colorMapBlendNode(L"colorMapBlendNode");
-	sb.setVar(colorMapBlendNode, MELStringLiteral(shadingEngineName + L"_color_map_blend"));
-	sb.createShader(L"aiMultiply", colorMapBlendNode);
-	sb.connectAttr(colorMapBlendNode, L"outColor", dirtMapBlendNode, L"input1");
+	sb.setVar(MEL_VAR_COLOR_MAP_BLEND_NODE, MELStringLiteral(shadingEngineName + L"_color_map_blend"));
+	sb.createShader(L"aiMultiply", MEL_VAR_COLOR_MAP_BLEND_NODE);
+	sb.connectAttr(MEL_VAR_COLOR_MAP_BLEND_NODE, L"outColor", MEL_VAR_DIRTMAP_BLEND_NODE, L"input1");
 
 	// color
-	sb.setAttr(colorMapBlendNode, L"input1", matInfo.diffuseColor);
+	sb.setAttr(MEL_VAR_COLOR_MAP_BLEND_NODE, L"input1", matInfo.diffuseColor);
 
 	// color map
 	if (matInfo.colormap.empty()) {
-		sb.setAttr(colorMapBlendNode, L"input2", 1.0, 1.0, 1.0);
+		sb.setAttr(MEL_VAR_COLOR_MAP_BLEND_NODE, L"input2", 1.0, 1.0, 1.0);
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_color_map";
-		const MELVariable mapShaderNode =
-		        createMapShader(sb, matInfo.colormap, matInfo.colormapTrafo, shaderName, L"map1", false, false);
-		sb.connectAttr(mapShaderNode, L"outColor", colorMapBlendNode, L"input2");
+		createMapShader(sb, matInfo.colormap, matInfo.colormapTrafo, shaderName, L"map1", false, false);
+		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColor", MEL_VAR_COLOR_MAP_BLEND_NODE, L"input2");
 	}
 
 	// bump map
-	MELVariable bumpValueNode(L"bumpValueNode");
-	sb.setVar(bumpValueNode, MELStringLiteral(shadingEngineName + L"_bump_value"));
-	sb.createShader(L"bump2d", bumpValueNode);
-	sb.connectAttr(bumpValueNode, L"outNormal", shaderNode, L"normalCamera");
+	sb.setVar(MEL_VAR_BUMP_VALUE_NODE, MELStringLiteral(shadingEngineName + L"_bump_value"));
+	sb.createShader(L"bump2d", MEL_VAR_BUMP_VALUE_NODE);
+	sb.connectAttr(MEL_VAR_BUMP_VALUE_NODE, L"outNormal", MEL_VAR_SHADER_NODE, L"normalCamera");
 
 	if (matInfo.bumpMap.empty()) {
-		sb.setAttr(bumpValueNode, L"bumpValue", 0.0);
+		sb.setAttr(MEL_VAR_BUMP_VALUE_NODE, L"bumpValue", 0.0);
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_bump_map";
-		const MELVariable mapShaderNode =
-		        createMapShader(sb, matInfo.bumpMap, matInfo.bumpmapTrafo, shaderName, L"bumpMap", true, false);
+		createMapShader(sb, matInfo.bumpMap, matInfo.bumpmapTrafo, shaderName, L"bumpMap", true, false);
 
-		MELVariable bumpLuminanceNode(L"bumpLuminanceNode");
-		sb.setVar(bumpLuminanceNode, MELStringLiteral(shadingEngineName + L"_bump_luminance"));
-		sb.createShader(L"luminance", bumpLuminanceNode);
-		sb.connectAttr(mapShaderNode, L"outColor", bumpLuminanceNode, L"value");
-		sb.connectAttr(bumpLuminanceNode, L"outValue", bumpValueNode, L"bumpValue");
+		sb.setVar(MEL_VAR_BUMP_LUMINANCE_NODE, MELStringLiteral(shadingEngineName + L"_bump_luminance"));
+		sb.createShader(L"luminance", MEL_VAR_BUMP_LUMINANCE_NODE);
+		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColor", MEL_VAR_BUMP_LUMINANCE_NODE, L"value");
+		sb.connectAttr(MEL_VAR_BUMP_LUMINANCE_NODE, L"outValue", MEL_VAR_BUMP_VALUE_NODE, L"bumpValue");
 	}
 
 	// dirt map
 	if (matInfo.dirtmap.empty()) {
-		sb.setAttr(dirtMapBlendNode, L"input2", 1.0, 1.0, 1.0);
+		sb.setAttr(MEL_VAR_DIRTMAP_BLEND_NODE, L"input2", 1.0, 1.0, 1.0);
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_dirt_map";
-		const MELVariable mapShaderNode =
-		        createMapShader(sb, matInfo.dirtmap, matInfo.dirtmapTrafo, shaderName, L"dirtMap", false, false);
-		sb.connectAttr(mapShaderNode, L"outColor", dirtMapBlendNode, L"input2");
+		createMapShader(sb, matInfo.dirtmap, matInfo.dirtmapTrafo, shaderName, L"dirtMap", false, false);
+		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColor", MEL_VAR_DIRTMAP_BLEND_NODE, L"input2");
 	}
 
 	// reflectivity
-	sb.setAttr(shaderNode, L"specular", 1.0);
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"specular", 1.0);
 
 	// specular/specular map multiply node
-	MELVariable specularMapBlendNode(L"specularMapBlendNode");
-	sb.setVar(specularMapBlendNode, MELStringLiteral(shadingEngineName + L"_specular_map_blend"));
-	sb.createShader(L"aiMultiply", specularMapBlendNode);
-	sb.connectAttr(specularMapBlendNode, L"outColor", shaderNode, L"specularColor");
+	sb.setVar(MEL_VAR_SPECULARMAP_BLEND_NODE, MELStringLiteral(shadingEngineName + L"_specular_map_blend"));
+	sb.createShader(L"aiMultiply", MEL_VAR_SPECULARMAP_BLEND_NODE);
+	sb.connectAttr(MEL_VAR_SPECULARMAP_BLEND_NODE, L"outColor", MEL_VAR_SHADER_NODE, L"specularColor");
 
 	// ignore the specular color for now (matInfo.specularColor), since in the metallic-roughness
 	// model of glTF specularity is controlled entirely via the roughness which requires the specular
 	// color of the aiStandardSurface shader to be set to white, however, the default value for
 	// matInfo.specularColor is black
-	sb.setAttr(specularMapBlendNode, L"input1", 1.0, 1.0, 1.0);
+	sb.setAttr(MEL_VAR_SPECULARMAP_BLEND_NODE, L"input1", 1.0, 1.0, 1.0);
 
 	// specular map
 	if (matInfo.specularMap.empty()) {
-		sb.setAttr(specularMapBlendNode, L"input2", 1.0, 1.0, 1.0);
+		sb.setAttr(MEL_VAR_SPECULARMAP_BLEND_NODE, L"input2", 1.0, 1.0, 1.0);
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_specular_map";
-		const MELVariable mapShaderNode = createMapShader(sb, matInfo.specularMap, matInfo.specularmapTrafo, shaderName,
-		                                                  L"specularMap", false, false);
-		sb.connectAttr(mapShaderNode, L"outColor", specularMapBlendNode, L"input2");
+		createMapShader(sb, matInfo.specularMap, matInfo.specularmapTrafo, shaderName, L"specularMap", false, false);
+		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColor", MEL_VAR_SPECULARMAP_BLEND_NODE, L"input2");
 	}
 
 	// opacity/opacity map multiply node
-	MELVariable opacityMapBlendNode(L"opacityMapBlendNode");
-	sb.setVar(opacityMapBlendNode, MELStringLiteral(shadingEngineName + L"_opacity_map_blend"));
-	sb.createShader(L"aiMultiply", opacityMapBlendNode);
-	sb.connectAttr(opacityMapBlendNode, L"outColorR", shaderNode, L"opacityR");
-	sb.connectAttr(opacityMapBlendNode, L"outColorR", shaderNode, L"opacityG");
-	sb.connectAttr(opacityMapBlendNode, L"outColorR", shaderNode, L"opacityB");
+	sb.setVar(MEL_VAR_OPACITYMAP_BLEND_NODE, MELStringLiteral(shadingEngineName + L"_opacity_map_blend"));
+	sb.createShader(L"aiMultiply", MEL_VAR_OPACITYMAP_BLEND_NODE);
+	sb.connectAttr(MEL_VAR_OPACITYMAP_BLEND_NODE, L"outColorR", MEL_VAR_SHADER_NODE, L"opacityR");
+	sb.connectAttr(MEL_VAR_OPACITYMAP_BLEND_NODE, L"outColorR", MEL_VAR_SHADER_NODE, L"opacityG");
+	sb.connectAttr(MEL_VAR_OPACITYMAP_BLEND_NODE, L"outColorR", MEL_VAR_SHADER_NODE, L"opacityB");
 
 	// opacity
-	sb.setAttr(opacityMapBlendNode, L"input1R", matInfo.opacity);
+	sb.setAttr(MEL_VAR_OPACITYMAP_BLEND_NODE, L"input1R", matInfo.opacity);
 
 	// opacity map
 	if (matInfo.opacityMap.empty()) {
-		sb.setAttr(opacityMapBlendNode, L"input2R", 1.0);
+		sb.setAttr(MEL_VAR_OPACITYMAP_BLEND_NODE, L"input2R", 1.0);
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_opacity_map";
-		const MELVariable mapShaderNode = createMapShader(sb, matInfo.opacityMap, matInfo.opacitymapTrafo, shaderName,
-		                                                  L"opacityMap", false, true);
-		sb.connectAttr(mapShaderNode, L"outColorR", opacityMapBlendNode, L"input2R");
+		createMapShader(sb, matInfo.opacityMap, matInfo.opacitymapTrafo, shaderName, L"opacityMap", false, true);
+		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColorR", MEL_VAR_OPACITYMAP_BLEND_NODE, L"input2R");
 	}
 
 	// normal map
 	if (!matInfo.normalMap.empty()) {
 		std::wstring shaderName = shadingEngineName + L"_normal_map";
-		const MELVariable mapShaderNode =
-		        createMapShader(sb, matInfo.normalMap, matInfo.normalmapTrafo, shaderName, L"normalMap", true, false);
-
-		MELVariable normalMapConvertNode(L"normalMapConvertNode");
-		sb.setVar(normalMapConvertNode, MELStringLiteral(shadingEngineName + L"_normal_map_convert"));
-		sb.createShader(L"aiNormalMap", normalMapConvertNode);
-		sb.setAttr(normalMapConvertNode, L"colorToSigned", true);
-		sb.connectAttr(mapShaderNode, L"outColor", normalMapConvertNode, L"input");
-		sb.connectAttr(normalMapConvertNode, L"outValue", bumpValueNode, L"normalCamera");
+		createMapShader(sb, matInfo.normalMap, matInfo.normalmapTrafo, shaderName, L"normalMap", true, false);
+		sb.setVar(MEL_VAR_NORMAL_MAP_CONVERT_NODE, MELStringLiteral(shadingEngineName + L"_normal_map_convert"));
+		sb.createShader(L"aiNormalMap", MEL_VAR_NORMAL_MAP_CONVERT_NODE);
+		sb.setAttr(MEL_VAR_NORMAL_MAP_CONVERT_NODE, L"colorToSigned", true);
+		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColor", MEL_VAR_NORMAL_MAP_CONVERT_NODE, L"input");
+		sb.connectAttr(MEL_VAR_NORMAL_MAP_CONVERT_NODE, L"outValue", MEL_VAR_BUMP_VALUE_NODE, L"normalCamera");
 	}
 
 	// emission
-	sb.setAttr(shaderNode, L"emission", 1.0);
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"emission", 1.0);
 
 	// emission/emissive map multiply node
-	MELVariable emissiveMapBlendNode(L"emissiveMapBlendNode");
-	sb.setVar(emissiveMapBlendNode, MELStringLiteral(shadingEngineName + L"_emissive_map_blend"));
-	sb.createShader(L"aiMultiply", emissiveMapBlendNode);
-	sb.connectAttr(emissiveMapBlendNode, L"outColor", shaderNode, L"emissionColor");
+	sb.setVar(MEL_VAR_EMISSIVEMAP_BLEND_NODE, MELStringLiteral(shadingEngineName + L"_emissive_map_blend"));
+	sb.createShader(L"aiMultiply", MEL_VAR_EMISSIVEMAP_BLEND_NODE);
+	sb.connectAttr(MEL_VAR_EMISSIVEMAP_BLEND_NODE, L"outColor", MEL_VAR_SHADER_NODE, L"emissionColor");
 
 	// emissive color
-	sb.setAttr(emissiveMapBlendNode, L"input1", matInfo.emissiveColor);
+	sb.setAttr(MEL_VAR_EMISSIVEMAP_BLEND_NODE, L"input1", matInfo.emissiveColor);
 
 	// emissive map
 	if (matInfo.emissiveMap.empty()) {
-		sb.setAttr(emissiveMapBlendNode, L"input2", 1.0, 1.0, 1.0);
+		sb.setAttr(MEL_VAR_EMISSIVEMAP_BLEND_NODE, L"input2", 1.0, 1.0, 1.0);
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_emissive_map";
-		const MELVariable mapShaderNode = createMapShader(sb, matInfo.emissiveMap, matInfo.emissivemapTrafo, shaderName,
-		                                                  L"emissiveMap", false, false);
-		sb.connectAttr(mapShaderNode, L"outColor", emissiveMapBlendNode, L"input2");
+		createMapShader(sb, matInfo.emissiveMap, matInfo.emissivemapTrafo, shaderName, L"emissiveMap", false, false);
+		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColor", MEL_VAR_EMISSIVEMAP_BLEND_NODE, L"input2");
 	}
 
 	// roughness/roughness map multiply node
-	MELVariable roughnessMapBlendNode(L"roughnessMapBlendNode");
-	sb.setVar(roughnessMapBlendNode, MELStringLiteral(shadingEngineName + L"_roughness_map_blend"));
-	sb.createShader(L"aiMultiply", roughnessMapBlendNode);
-	sb.connectAttr(roughnessMapBlendNode, L"outColorR", shaderNode, L"specularRoughness");
+	sb.setVar(MEL_VAR_ROUGHNESSMAP_BLEND_NODE, MELStringLiteral(shadingEngineName + L"_roughness_map_blend"));
+	sb.createShader(L"aiMultiply", MEL_VAR_ROUGHNESSMAP_BLEND_NODE);
+	sb.connectAttr(MEL_VAR_ROUGHNESSMAP_BLEND_NODE, L"outColorR", MEL_VAR_SHADER_NODE, L"specularRoughness");
 
 	// roughness
-	sb.setAttr(roughnessMapBlendNode, L"input1R", matInfo.roughness);
+	sb.setAttr(MEL_VAR_ROUGHNESSMAP_BLEND_NODE, L"input1R", matInfo.roughness);
 
 	// roughness map
 	if (matInfo.roughnessMap.empty()) {
-		sb.setAttr(roughnessMapBlendNode, L"input2R", 1.0);
+		sb.setAttr(MEL_VAR_ROUGHNESSMAP_BLEND_NODE, L"input2R", 1.0);
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_roughness_map";
-		const MELVariable mapShaderNode = createMapShader(sb, matInfo.roughnessMap, matInfo.roughnessmapTrafo,
-		                                                  shaderName, L"roughnessMap", true, false);
+		createMapShader(sb, matInfo.roughnessMap, matInfo.roughnessmapTrafo, shaderName, L"roughnessMap", true, false);
 
 		// in PRT the roughness map only uses the green channel
-		sb.connectAttr(mapShaderNode, L"outColorG", roughnessMapBlendNode, L"input2R");
+		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColorG", MEL_VAR_ROUGHNESSMAP_BLEND_NODE, L"input2R");
 	}
 
 	// metallic/metallic map multiply node
-	MELVariable metallicMapBlendNode(L"metallicMapBlendNode");
-	sb.setVar(metallicMapBlendNode, MELStringLiteral(shadingEngineName + L"_metallic_map_blend"));
-	sb.createShader(L"aiMultiply", metallicMapBlendNode);
-	sb.connectAttr(metallicMapBlendNode, L"outColorR", shaderNode, L"metalness");
+	sb.setVar(MEL_VAR_METALLICMAP_BLEND_NODE, MELStringLiteral(shadingEngineName + L"_metallic_map_blend"));
+	sb.createShader(L"aiMultiply", MEL_VAR_METALLICMAP_BLEND_NODE);
+	sb.connectAttr(MEL_VAR_METALLICMAP_BLEND_NODE, L"outColorR", MEL_VAR_SHADER_NODE, L"metalness");
 
 	// metallic
-	sb.setAttr(metallicMapBlendNode, L"input1R", matInfo.metallic);
+	sb.setAttr(MEL_VAR_METALLICMAP_BLEND_NODE, L"input1R", matInfo.metallic);
 
 	// metallic map
 	if (matInfo.metallicMap.empty()) {
-		sb.setAttr(metallicMapBlendNode, L"input2R", 1.0);
+		sb.setAttr(MEL_VAR_METALLICMAP_BLEND_NODE, L"input2R", 1.0);
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_metallic_map";
-		const MELVariable mapShaderNode = createMapShader(sb, matInfo.metallicMap, matInfo.metallicmapTrafo, shaderName,
-		                                                  L"metallicMap", true, false);
+		createMapShader(sb, matInfo.metallicMap, matInfo.metallicmapTrafo, shaderName, L"metallicMap", true, false);
 
 		// in PRT the metallic map only uses the blue channel
-		sb.connectAttr(mapShaderNode, L"outColorB", metallicMapBlendNode, L"input2R");
+		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColorB", MEL_VAR_METALLICMAP_BLEND_NODE, L"input2R");
 	}
 }
 
@@ -328,7 +317,8 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (inMatStream == nullptr)
 		return MStatus::kSuccess;
 
-	const adsk::Data::Structure* materialStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
+	const adsk::Data::Structure* materialStructure =
+	        adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
 	if (materialStructure == nullptr)
 		return MStatus::kFailure;
 
@@ -342,21 +332,21 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
-	scriptBuilder.declString(MELVariable(L"shaderNode"));
-	scriptBuilder.declString(MELVariable(L"mapFile"));
-	scriptBuilder.declString(MELVariable(L"mapNode"));
-	scriptBuilder.declString(MELVariable(L"bumpLuminanceNode"));
-	scriptBuilder.declString(MELVariable(L"bumpValueNode"));
-	scriptBuilder.declString(MELVariable(L"displacementNode"));
-	scriptBuilder.declString(MELVariable(L"normalMapConvertNode"));
-	scriptBuilder.declString(MELVariable(L"colorMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"dirtMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"opacityMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"specularMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"emissiveMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"roughnessMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"metallicMapBlendNode"));
-	scriptBuilder.declString(MELVariable(L"uvTrafoNode"));
+	scriptBuilder.declString(MEL_VAR_SHADER_NODE);
+	scriptBuilder.declString(MEL_VAR_MAP_FILE);
+	scriptBuilder.declString(MEL_VAR_MAP_NODE);
+	scriptBuilder.declString(MEL_VAR_BUMP_LUMINANCE_NODE);
+	scriptBuilder.declString(MEL_VAR_BUMP_VALUE_NODE);
+	scriptBuilder.declString(MEL_VAR_DISPLACEMENT_NODE);
+	scriptBuilder.declString(MEL_VAR_NORMAL_MAP_CONVERT_NODE);
+	scriptBuilder.declString(MEL_VAR_COLOR_MAP_BLEND_NODE);
+	scriptBuilder.declString(MEL_VAR_DIRTMAP_BLEND_NODE);
+	scriptBuilder.declString(MEL_VAR_OPACITYMAP_BLEND_NODE);
+	scriptBuilder.declString(MEL_VAR_SPECULARMAP_BLEND_NODE);
+	scriptBuilder.declString(MEL_VAR_EMISSIVEMAP_BLEND_NODE);
+	scriptBuilder.declString(MEL_VAR_ROUGHNESSMAP_BLEND_NODE);
+	scriptBuilder.declString(MEL_VAR_METALLICMAP_BLEND_NODE);
+	scriptBuilder.declString(MEL_VAR_UV_TRAFO_NODE);
 
 	for (adsk::Data::Handle& inMatStreamHandle : *inMatStream) {
 		if (!inMatStreamHandle.hasData())
