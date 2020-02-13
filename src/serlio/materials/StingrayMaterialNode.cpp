@@ -90,12 +90,12 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	sb.setAttr(MEL_VAR_SHADER_NODE, L"initgraph", true);
 
 	const MELStringLiteral nodeIDName(L"Standard_Base");
-	sb.addCmdLine(L"$shadingNodeIndex = `shaderfx -sfxnode " + MEL_VAR_SHADER_NODE.mel() + L" -getNodeIDByName " +
-	              nodeIDName.mel() + L"`;");
+	sb.addCmdLine(MEL_VAR_SHADING_NODE_INDEX.mel() + L" = `shaderfx -sfxnode " + MEL_VAR_SHADER_NODE.mel() +
+	              L" -getNodeIDByName " + nodeIDName.mel() + L"`;");
 
 	const std::wstring blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? L"0" : L"1";
-	sb.addCmdLine(L"shaderfx -sfxnode " + MEL_VAR_SHADER_NODE.mel() +
-	              L" -edit_stringlist $shadingNodeIndex blendmode " + blendMode + L";");
+	sb.addCmdLine(L"shaderfx -sfxnode " + MEL_VAR_SHADER_NODE.mel() + L" -edit_stringlist " +
+	              MEL_VAR_SHADING_NODE_INDEX.mel() + L" blendmode " + blendMode + L";");
 
 	// ignored: ambientColor, specularColor
 	sb.setAttr(MEL_VAR_SHADER_NODE, L"diffuse_color", matInfo.diffuseColor);
