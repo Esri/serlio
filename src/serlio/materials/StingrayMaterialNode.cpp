@@ -61,7 +61,7 @@ void setTexture(MELScriptBuilder& sb, const MELVariable& shaderNode, const std::
 		sb.setVar(mapFile, tex);
 
 		sb.createTextureShadingNode(mapNode);
-		sb.setAttr(mapNode, L"fileTextureName", mapFile.mel());
+		sb.setAttr(mapNode, L"fileTextureName", mapFile);
 
 		sb.connectAttr(mapNode, L"outColor", shaderNode, L"TEX_" + target);
 		sb.setAttr(shaderNode, L"use_" + target, 1);

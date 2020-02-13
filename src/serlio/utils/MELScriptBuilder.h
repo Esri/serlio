@@ -39,6 +39,14 @@ public:
 	}
 };
 
+class MELStringLiteral : public mu::NamedType<std::wstring, MELStringLiteral> {
+public:
+	using mu::NamedType<std::wstring, MELStringLiteral>::NamedType;
+	std::wstring mel() const {
+		return L"\"" + get() + L"\"";
+	}
+};
+
 class MELScriptBuilder {
 public:
 	void setAttr(const MELVariable& node, const std::wstring& attribute, bool val);
@@ -48,8 +56,8 @@ public:
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const std::array<double, 2>& val);
 	void setAttr(const MELVariable& node, const std::wstring& attribute, double val1, double val2, double val3);
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const std::array<double, 3>& val);
-	void setAttr(const MELVariable& node, const std::wstring& attribute, const wchar_t* val);
-	void setAttr(const MELVariable& node, const std::wstring& attribute, const std::wstring& val);
+	void setAttr(const MELVariable& node, const std::wstring& attribute, const MELVariable& val);
+	void setAttr(const MELVariable& node, const std::wstring& attribute, const MELStringLiteral& val);
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const MaterialColor& color);
 
 	void connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,

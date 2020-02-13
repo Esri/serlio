@@ -40,7 +40,7 @@ const std::vector<std::string> PLUGIN_DEPENDENCIES = {"mtoa"};
 
 void setUvTransformAttrs(MELScriptBuilder& sb, const MELVariable& node, const std::wstring& uvSet,
                          const MaterialTrafo& trafo) {
-	sb.setAttr(node, L"uvset", L"\"" + uvSet + L"\"");
+	sb.setAttr(node, L"uvset", MELStringLiteral(uvSet));
 	sb.setAttr(node, L"pivotFrame", 0.0, 0.0);
 	sb.setAttr(node, L"scaleFrame", 1.0 / trafo.su(), 1.0 / trafo.sv());
 	sb.setAttr(node, L"translateFrame", -trafo.tu() / trafo.su(), -trafo.tv() / trafo.sv());
