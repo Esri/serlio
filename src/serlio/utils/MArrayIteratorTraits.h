@@ -29,9 +29,9 @@ namespace detail {
 template <typename... T>
 using void_t = void;
 
-}
+} // namespace detail
 
-}
+} // namespace mu
 
 #if (MAYA_API_VERSION >= 20190000)
 

@@ -268,7 +268,8 @@ void PRTModifierAction::setMesh(MObject& _inMesh, MObject& _outMesh) {
 }
 
 ResolveMapSPtr PRTModifierAction::getResolveMap() {
-	ResolveMapCache::LookupResult lookupResult = PRTContext::get().mResolveMapCache->get(std::wstring(mRulePkg.asWChar()));
+	ResolveMapCache::LookupResult lookupResult =
+	        PRTContext::get().mResolveMapCache->get(std::wstring(mRulePkg.asWChar()));
 	ResolveMapSPtr resolveMap = lookupResult.first;
 	return resolveMap;
 }
@@ -309,8 +310,8 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	mStartRule = prtu::detectStartRule(info);
 
 	if (node != MObject::kNullObj) {
-		mGenerateAttrs =
-		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh);
+		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
+		                                           *inPrtMesh);
 		if (DBG)
 			LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
@@ -347,8 +348,9 @@ MStatus PRTModifierAction::doIt() {
 	assert(encIDs.size() == encOpts.size());
 
 	InitialShapeNOPtrVector shapes = {shape.get()};
-	const prt::Status generateStatus = prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(),
-	                                                 encOpts.data(), outputHandler.get(), PRTContext::get().theCache.get(), nullptr);
+	const prt::Status generateStatus =
+	        prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(),
+	                      outputHandler.get(), PRTContext::get().theCache.get(), nullptr);
 	if (generateStatus != prt::STATUS_OK)
 		LOG_ERR << "prt generate failed: " << prt::getStatusDescription(generateStatus);
 
@@ -716,7 +718,8 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 }
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-                                            const RuleAttribute& ruleAttr, const MString& defaultValue, PRTModifierEnum& e) {
+                                            const RuleAttribute& ruleAttr, const MString& defaultValue,
+                                            PRTModifierEnum& e) {
 	short idx = 0;
 	for (int i = static_cast<int>(e.mSVals.length()); --i >= 0;) {
 		if (e.mSVals[i] == defaultValue) {

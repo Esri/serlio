@@ -44,12 +44,12 @@ public:
 		return prt::STATUS_OK;
 	}
 	prt::Status assetError(size_t /*isIndex*/, prt::CGAErrorLevel /*level*/, const wchar_t* /*key*/,
-	                               const wchar_t* /*uri*/, const wchar_t* message) override {
+	                       const wchar_t* /*uri*/, const wchar_t* message) override {
 		LOG_ERR << "ASSET ERROR: " << message;
 		return prt::STATUS_OK;
 	}
-	prt::Status cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel /*level*/,
-	                             int32_t /*methodId*/, int32_t /*pc*/, const wchar_t* message) override {
+	prt::Status cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel /*level*/, int32_t /*methodId*/,
+	                     int32_t /*pc*/, const wchar_t* message) override {
 		LOG_ERR << "CGA ERROR: " << message;
 		return prt::STATUS_OK;
 	}
@@ -58,23 +58,21 @@ public:
 		return prt::STATUS_OK;
 	}
 	prt::Status cgaReportBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
-	                                  bool /*value*/) override {
+	                          bool /*value*/) override {
 		return prt::STATUS_OK;
 	}
-	 prt::Status cgaReportFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
-	                                   double /*value*/) override {
+	prt::Status cgaReportFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+	                           double /*value*/) override {
 		return prt::STATUS_OK;
 	}
 	prt::Status cgaReportString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
-	                                    const wchar_t* /*value*/) override {
+	                            const wchar_t* /*value*/) override {
 		return prt::STATUS_OK;
 	}
-	prt::Status attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
-	                             bool /*value*/) override;
-	prt::Status attrFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
-	                              double /*value*/) override;
+	prt::Status attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, bool /*value*/) override;
+	prt::Status attrFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, double /*value*/) override;
 	prt::Status attrString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
-	                               const wchar_t* /*value*/) override;
+	                       const wchar_t* /*value*/) override;
 
 // PRT version >= 2.1
 #if PRT_VERSION_GTE(2, 1)

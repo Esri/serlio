@@ -72,11 +72,13 @@ void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attr
 }
 
 void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const MELVariable& val) {
-	commandStream << "setAttr -type \"string\" " << composeAttributeExpression(node, attribute) << " " << val.mel() << ";\n";
+	commandStream << "setAttr -type \"string\" " << composeAttributeExpression(node, attribute) << " " << val.mel()
+	              << ";\n";
 }
 
 void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const MELStringLiteral& val) {
-	commandStream << "setAttr -type \"string\" " << composeAttributeExpression(node, attribute) << " " << val.mel() << ";\n";
+	commandStream << "setAttr -type \"string\" " << composeAttributeExpression(node, attribute) << " " << val.mel()
+	              << ";\n";
 }
 
 void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const MaterialColor& color) {
