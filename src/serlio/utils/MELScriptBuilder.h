@@ -60,6 +60,9 @@ public:
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const MELStringLiteral& val);
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const MaterialColor& color);
 
+	void setAttr(const MELVariable& node, const std::wstring& attribute, const wchar_t* val) = delete;
+	void setAttr(const MELVariable& node, const std::wstring& attribute, const char* val) = delete;
+
 	void connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,
 	                 const std::wstring& dstAttr);
 
