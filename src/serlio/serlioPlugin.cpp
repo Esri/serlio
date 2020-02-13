@@ -53,7 +53,7 @@ std::once_flag callbackRegisterFlag;
 
 // called when the plug-in is loaded into Maya.
 MStatus initializePlugin(MObject obj) {
-	if (!PRTContext::get()->isAlive()) // this will implicitly load PRT
+	if (!PRTContext::get().isAlive()) // this will implicitly load PRT
 		return MS::kFailure;
 
 	// maya exit does not call uninitializePlugin automatically, therefore use addCallback

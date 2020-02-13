@@ -39,14 +39,10 @@ bool verifyMayaEncoder() {
 	return static_cast<bool>(mayaEncOpts);
 }
 
-// global PRT lifetime handler
-PRTContextUPtr prtCtx;
-std::once_flag prtCtxFlag;
-
 } // namespace
 
-PRTContextUPtr& PRTContext::get() {
-	std::call_once(prtCtxFlag, []() { prtCtx = std::make_unique<PRTContext>(); });
+PRTContext& PRTContext::get() {
+	static PRTContext prtCtx;
 	return prtCtx;
 }
 
