@@ -53,10 +53,12 @@ MELVariable createMapShader(MELScriptBuilder& sb, const std::string& mapFile, co
                             const std::wstring& shaderName, const std::wstring& uvSet, const bool raw,
                             const bool alpha) {
 	MELVariable mapNode(L"mapNode");
-	sb.setVar(mapNode, shaderName);
-	sb.setVar(MELVariable(L"mapFile"), prtu::toUTF16FromOSNarrow(mapFile));
+	sb.setVar(mapNode, MELStringLiteral(shaderName));
+
+	MELVariable melMapFile(L"mapFile");
+	sb.setVar(melMapFile, MELStringLiteral(prtu::toUTF16FromOSNarrow(mapFile)));
 	sb.createTextureShadingNode(mapNode);
-	sb.setAttr(mapNode, L"fileTextureName", L"$mapFile");
+	sb.setAttr(mapNode, L"fileTextureName", melMapFile);
 
 	if (raw) {
 		sb.setAttr(mapNode, L"colorSpace", L"Raw");
@@ -64,7 +66,7 @@ MELVariable createMapShader(MELScriptBuilder& sb, const std::string& mapFile, co
 	}
 
 	MELVariable uvTrafoNode(L"uvTrafoNode");
-	sb.setVar(uvTrafoNode, shaderName + L"_trafo");
+	sb.setVar(uvTrafoNode, MELStringLiteral(shaderName + L"_trafo"));
 	sb.createShader(L"aiUvTransform", uvTrafoNode);
 	setUvTransformAttrs(sb, uvTrafoNode, uvSet, mapTrafo);
 
@@ -79,8 +81,8 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
                                    const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) {
 	// create shader
 	MELVariable shaderNode(L"shaderNode");
-	sb.setVar(shaderNode, shaderBaseName);
-	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, shadingEngineName);
+	sb.setVar(shaderNode, MELStringLiteral(shaderBaseName));
+	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, MELStringLiteral(shadingEngineName));
 	sb.createShader(L"aiStandardSurface", shaderNode); // note: name might change to be unique
 
 	// connect to shading group
@@ -90,13 +92,13 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 
 	// color/dirt map multiply node
 	MELVariable dirtMapBlendNode(L"dirtMapBlendNode");
-	sb.setVar(dirtMapBlendNode, shadingEngineName + L"_dirt_multiply");
+	sb.setVar(dirtMapBlendNode, MELStringLiteral(shadingEngineName + L"_dirt_multiply"));
 	sb.createShader(L"aiMultiply", dirtMapBlendNode);
 	sb.connectAttr(dirtMapBlendNode, L"outColor", shaderNode, L"baseColor");
 
 	// color/color map multiply node
 	MELVariable colorMapBlendNode(L"colorMapBlendNode");
-	sb.setVar(colorMapBlendNode, shadingEngineName + L"_color_map_blend");
+	sb.setVar(colorMapBlendNode, MELStringLiteral(shadingEngineName + L"_color_map_blend"));
 	sb.createShader(L"aiMultiply", colorMapBlendNode);
 	sb.connectAttr(colorMapBlendNode, L"outColor", dirtMapBlendNode, L"input1");
 
@@ -116,7 +118,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 
 	// bump map
 	MELVariable bumpValueNode(L"bumpValueNode");
-	sb.setVar(bumpValueNode, shadingEngineName + L"_bump_value");
+	sb.setVar(bumpValueNode, MELStringLiteral(shadingEngineName + L"_bump_value"));
 	sb.createShader(L"bump2d", bumpValueNode);
 	sb.connectAttr(bumpValueNode, L"outNormal", shaderNode, L"normalCamera");
 
@@ -129,7 +131,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 		        createMapShader(sb, matInfo.bumpMap, matInfo.bumpmapTrafo, shaderName, L"bumpMap", true, false);
 
 		MELVariable bumpLuminanceNode(L"bumpLuminanceNode");
-		sb.setVar(bumpLuminanceNode, shadingEngineName + L"_bump_luminance");
+		sb.setVar(bumpLuminanceNode, MELStringLiteral(shadingEngineName + L"_bump_luminance"));
 		sb.createShader(L"luminance", bumpLuminanceNode);
 		sb.connectAttr(mapShaderNode, L"outColor", bumpLuminanceNode, L"value");
 		sb.connectAttr(bumpLuminanceNode, L"outValue", bumpValueNode, L"bumpValue");
@@ -151,7 +153,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 
 	// specular/specular map multiply node
 	MELVariable specularMapBlendNode(L"specularMapBlendNode");
-	sb.setVar(specularMapBlendNode, shadingEngineName + L"_specular_map_blend");
+	sb.setVar(specularMapBlendNode, MELStringLiteral(shadingEngineName + L"_specular_map_blend"));
 	sb.createShader(L"aiMultiply", specularMapBlendNode);
 	sb.connectAttr(specularMapBlendNode, L"outColor", shaderNode, L"specularColor");
 
@@ -174,7 +176,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 
 	// opacity/opacity map multiply node
 	MELVariable opacityMapBlendNode(L"opacityMapBlendNode");
-	sb.setVar(opacityMapBlendNode, shadingEngineName + L"_opacity_map_blend");
+	sb.setVar(opacityMapBlendNode, MELStringLiteral(shadingEngineName + L"_opacity_map_blend"));
 	sb.createShader(L"aiMultiply", opacityMapBlendNode);
 	sb.connectAttr(opacityMapBlendNode, L"outColorR", shaderNode, L"opacityR");
 	sb.connectAttr(opacityMapBlendNode, L"outColorR", shaderNode, L"opacityG");
@@ -201,7 +203,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 		        createMapShader(sb, matInfo.normalMap, matInfo.normalmapTrafo, shaderName, L"normalMap", true, false);
 
 		MELVariable normalMapConvertNode(L"normalMapConvertNode");
-		sb.setVar(normalMapConvertNode, shadingEngineName + L"_normal_map_convert");
+		sb.setVar(normalMapConvertNode, MELStringLiteral(shadingEngineName + L"_normal_map_convert"));
 		sb.createShader(L"aiNormalMap", normalMapConvertNode);
 		sb.setAttr(normalMapConvertNode, L"colorToSigned", true);
 		sb.connectAttr(mapShaderNode, L"outColor", normalMapConvertNode, L"input");
@@ -213,7 +215,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 
 	// emission/emissive map multiply node
 	MELVariable emissiveMapBlendNode(L"emissiveMapBlendNode");
-	sb.setVar(emissiveMapBlendNode, shadingEngineName + L"_emissive_map_blend");
+	sb.setVar(emissiveMapBlendNode, MELStringLiteral(shadingEngineName + L"_emissive_map_blend"));
 	sb.createShader(L"aiMultiply", emissiveMapBlendNode);
 	sb.connectAttr(emissiveMapBlendNode, L"outColor", shaderNode, L"emissionColor");
 
@@ -233,7 +235,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 
 	// roughness/roughness map multiply node
 	MELVariable roughnessMapBlendNode(L"roughnessMapBlendNode");
-	sb.setVar(roughnessMapBlendNode, shadingEngineName + L"_roughness_map_blend");
+	sb.setVar(roughnessMapBlendNode, MELStringLiteral(shadingEngineName + L"_roughness_map_blend"));
 	sb.createShader(L"aiMultiply", roughnessMapBlendNode);
 	sb.connectAttr(roughnessMapBlendNode, L"outColorR", shaderNode, L"specularRoughness");
 
@@ -255,7 +257,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 
 	// metallic/metallic map multiply node
 	MELVariable metallicMapBlendNode(L"metallicMapBlendNode");
-	sb.setVar(metallicMapBlendNode, shadingEngineName + L"_metallic_map_blend");
+	sb.setVar(metallicMapBlendNode, MELStringLiteral(shadingEngineName + L"_metallic_map_blend"));
 	sb.createShader(L"aiMultiply", metallicMapBlendNode);
 	sb.connectAttr(metallicMapBlendNode, L"outColorR", shaderNode, L"metalness");
 

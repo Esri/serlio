@@ -66,7 +66,7 @@ public:
 	void declInt(const MELVariable& varName);
 	void declString(const MELVariable& varName);
 
-	void setVar(const MELVariable& varName, const std::wstring& val);
+	void setVar(const MELVariable& varName, const MELStringLiteral& val);
 
 	void setsCreate(const MELVariable& setName);
 	void setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, int faceStart, int faceEnd);

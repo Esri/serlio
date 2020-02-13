@@ -174,7 +174,7 @@ void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, cons
 std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName,
 											  const MELVariable& shadingEngineVariable, MStatus& status) {
 	MELScriptBuilder scriptBuilder;
-	scriptBuilder.setVar(shadingEngineVariable, desiredShadingEngineName);
+	scriptBuilder.setVar(shadingEngineVariable, MELStringLiteral(desiredShadingEngineName));
 	scriptBuilder.setsCreate(shadingEngineVariable);
 
 	std::wstring output;

@@ -101,8 +101,8 @@ void MELScriptBuilder::declString(const MELVariable& varName) {
 	commandStream << "string " << varName.mel() << ";\n";
 }
 
-void MELScriptBuilder::setVar(const MELVariable& varName, const std::wstring& val) {
-	commandStream << varName.mel() << " = \"" << val << "\";\n";
+void MELScriptBuilder::setVar(const MELVariable& varName, const MELStringLiteral& val) {
+	commandStream << varName.mel() << " = " << val.mel() << ";\n";
 }
 
 void MELScriptBuilder::setsCreate(const MELVariable& setName) {

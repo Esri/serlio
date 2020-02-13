@@ -55,10 +55,10 @@ void setTexture(MELScriptBuilder& sb, const MELVariable& shaderNode, const std::
                 const std::wstring& textureNodeBaseName, const std::wstring& tex) {
 	if (!tex.empty()) {
 		MELVariable mapNode(L"mapNode");
-		sb.setVar(mapNode, textureNodeBaseName);
+		sb.setVar(mapNode, MELStringLiteral(textureNodeBaseName));
 
 		MELVariable mapFile(L"mapFile");
-		sb.setVar(mapFile, tex);
+		sb.setVar(mapFile, MELStringLiteral(tex));
 
 		sb.createTextureShadingNode(mapNode);
 		sb.setAttr(mapNode, L"fileTextureName", mapFile);
@@ -75,22 +75,23 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
                                    const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) {
 	// create shader
 	MELVariable shaderNode(L"shaderNode");
-	sb.setVar(shaderNode, shaderBaseName);
-	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, shadingEngineName);
+	sb.setVar(shaderNode, MELStringLiteral(shaderBaseName));
+	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, MELStringLiteral(shadingEngineName));
 	sb.createShader(L"StingrayPBS", shaderNode);
 
 	// connect to shading group
 	sb.connectAttr(shaderNode, L"outColor", MEL_VARIABLE_SHADING_ENGINE, L"surfaceShader");
 
 	// stingray specifics
-	const std::wstring sfxFile = MaterialUtils::getStingrayShaderPath();
-	sb.addCmdLine(L"shaderfx -sfxnode $shaderNode -loadGraph  \"" + sfxFile + L"\";");
+	const MELStringLiteral sfxFile(MaterialUtils::getStingrayShaderPath());
+	sb.addCmdLine(L"shaderfx -sfxnode " + shaderNode.mel() + L" -loadGraph  " + sfxFile.mel() + L";");
 	sb.setAttr(shaderNode, L"initgraph", true);
 
-	sb.addCmdLine(L"$shadingNodeIndex = `shaderfx -sfxnode $shaderNode -getNodeIDByName \"Standard_Base\"`;");
+	const MELStringLiteral nodeIDName(L"Standard_Base");
+	sb.addCmdLine(L"$shadingNodeIndex = `shaderfx -sfxnode " + shaderNode.mel() + L" -getNodeIDByName " + nodeIDName.mel() + L"`;");
 
 	const std::wstring blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? L"0" : L"1";
-	sb.addCmdLine(L"shaderfx -sfxnode $shaderNode -edit_stringlist $shadingNodeIndex blendmode " + blendMode + L";");
+	sb.addCmdLine(L"shaderfx -sfxnode " + shaderNode.mel() + L" -edit_stringlist $shadingNodeIndex blendmode " + blendMode + L";");
 
 	// ignored: ambientColor, specularColor
 	sb.setAttr(shaderNode, L"diffuse_color", matInfo.diffuseColor);
