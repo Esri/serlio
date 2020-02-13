@@ -14,19 +14,19 @@ set(SRL_VERSION_MAJOR 1)
 set(SRL_VERSION_MINOR 1)
 set(SRL_VERSION_PATCH 0)
 
-if(NOT SRL_VERSION_BUILD)
-    set(SRL_VERSION_BUILD DEV)
-endif()
+if (NOT SRL_VERSION_BUILD)
+	set(SRL_VERSION_BUILD DEV)
+endif ()
 
 # we use semver.org, Semantic Versioning 2.0.0
 # i.e. <major>.<minor>.<patch>(-<prerelease>)+b<buildnr>.maya<maya major ver>.prt<prt ver>
 # Note: There are some limitations regarding Windows installers. See cpack_installer.cmake for details.
 set(SRL_VERSION_MMP "${SRL_VERSION_MAJOR}.${SRL_VERSION_MINOR}.${SRL_VERSION_PATCH}")
-if(NOT SRL_VERSION_PRERELEASE)
-    set(SRL_VERSION_MMP_PRE "${SRL_VERSION_MMP}")
-else()
-    set(SRL_VERSION_MMP_PRE "${SRL_VERSION_MMP}-${SRL_VERSION_PRERELEASE}")
-endif()
+if (NOT SRL_VERSION_PRERELEASE)
+	set(SRL_VERSION_MMP_PRE "${SRL_VERSION_MMP}")
+else ()
+	set(SRL_VERSION_MMP_PRE "${SRL_VERSION_MMP}-${SRL_VERSION_PRERELEASE}")
+endif ()
 set(SRL_VERSION_BASE "${SRL_VERSION_MMP_PRE}+b${SRL_VERSION_BUILD}")
 set(SRL_VERSION "${SRL_VERSION_BASE}.maya${maya_VERSION_MAJOR}.prt${PRT_VERSION_MAJOR}-${PRT_VERSION_MINOR}-${PRT_VERSION_MICRO}")
 message(STATUS "Using SRL_VERSION = ${SRL_VERSION}")
@@ -39,11 +39,11 @@ set(SERLIO_TARGET serlio)
 set(TEST_TARGET serlio_test)
 
 ### configure packaging
-if(WIN_INSTALLER) # <-- To be set on the command line
-    include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_installer.cmake)
-else()
-    include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_archives.cmake)
-endif()
+if (WIN_INSTALLER) # <-- To be set on the command line
+	include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_installer.cmake)
+else ()
+	include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_archives.cmake)
+endif ()
 
 add_subdirectory(codec)
 add_subdirectory(serlio)
