@@ -73,7 +73,7 @@ void createMapShader(MELScriptBuilder& sb, const std::string& mapFile, const Mat
 	sb.setAttr(MEL_VAR_MAP_NODE, L"fileTextureName", MEL_VAR_MAP_FILE);
 
 	if (raw) {
-		sb.setAttr(MEL_VAR_MAP_NODE, L"colorSpace", L"Raw");
+		sb.setAttr(MEL_VAR_MAP_NODE, L"colorSpace", MELStringLiteral(L"Raw"));
 		sb.setAttr(MEL_VAR_MAP_NODE, L"ignoreColorSpaceFileRules", true);
 	}
 
