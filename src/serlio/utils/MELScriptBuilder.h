@@ -30,9 +30,9 @@
 
 class MaterialColor;
 
-class MELVariable : public mu::NamedType<std::wstring, struct MelVariableName> {
+class MELVariable : public mu::NamedType<std::wstring, MELVariable> {
 public:
-	using mu::NamedType<std::wstring, struct MelVariableName>::NamedType;
+	using mu::NamedType<std::wstring, MELVariable>::NamedType;
 	std::wstring mel() const {
 		assert(!get().empty() && get()[0] != L'$');
 		return L'$' + get();
