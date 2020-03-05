@@ -8,7 +8,7 @@
 1. Start Maya
 1. You should now see the new menu item "Serlio".
 
-### Windows: Compiled from Source
+### Windows: Compile from Source
 1. Locate the `install` directory where you [built](build.md) the plugin, let's call it `PLUGINDIR`
 1. Locate the Maya.env file in your home, usually its in `<home directory>\Documents\maya\2019`
 1. Edit Maya.env as follows:
@@ -44,4 +44,5 @@
 
 1. Use CityEngine to export a Rule Package (RPK).
 1. In Maya, select a mesh and use the `Serlio` menu to assign the RPK. This will run the rules for each face in the mesh.
-2. Use the Hypergraph to navigate to the "serlio" node where you can edit the rule parameters.
+1. Use the Hypergraph to navigate to the "serlio" node where you can edit the rule parameters.
+1. To create materials, apply one of the two commands in the serlio menu on the generated model. Please note the the two material systems are mutually exclusive at this point.
