@@ -1,9 +1,12 @@
 # Serlio ChangeLog
 
-## v1.1.0 (2020-XX-YY)
-* BREAKING CHANGE: Switched to official Autodesk IDs for Serlio custom nodes.
-* Added creation of Arnold materials.
-* Show error message if required Maya plugins (e.g. 'shaderFXPlugin') are not loaded.
+## v1.1.0 (2020-06-02)
+* BREAKING CHANGE: Switched to official Autodesk IDs for Serlio custom nodes. (#26)
+* Added creation of Arnold materials. (#11, #40, #65)
+* Correctly compute default values of rule attributes based on initial shape geometry.
+* Show error message if required Maya plugins (e.g. 'shaderFXPlugin') are not loaded. (#65)
+* Updated to CityEngine SDK 2019.1. (#42)
+* Introduced clang-format. (#37)
 
 ## v1.0.1 (2019-08-21)
 * Merged support for creating MSI installers via CMake.
