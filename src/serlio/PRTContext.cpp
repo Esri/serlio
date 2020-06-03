@@ -59,6 +59,9 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 		prt::addLogHandler(theFileLogHandler);
 	}
 
+	// Not the best place, but here we are sure the console logger is running and we are before PRT init info
+	LOG_INF << "Initializing Serlio Version " << SRL_VERSION << " ...";
+
 	if (DBG)
 		LOG_DBG << "initialized prt logger, plugin root path is " << mPluginRootPath;
 
