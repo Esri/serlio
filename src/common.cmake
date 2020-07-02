@@ -21,6 +21,16 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 endif ()
 
 
+### common target functions
+
+function(set_common_target_definitions TGT)
+	target_compile_definitions(${TGT} PRIVATE
+		-DSRL_VERSION=\"${SRL_VERSION}\" # quoted to use it as string literal
+		-DPRT_VERSION_MAJOR=${PRT_VERSION_MAJOR}
+		-DPRT_VERSION_MINOR=${PRT_VERSION_MINOR})
+endfunction()
+
+
 ### look for the PRT libraries
 
 # if prt_DIR is not provided, download PRT from its github home

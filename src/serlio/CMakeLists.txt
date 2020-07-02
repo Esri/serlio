@@ -69,8 +69,7 @@ endif ()
 set_target_properties(${CLIENT_TARGET} PROPERTIES
 	CXX_STANDARD 14)
 
-target_compile_definitions(${SERLIO_TARGET} PRIVATE
-	-DSRL_VERSION=\"${SRL_VERSION}\") # quoted to use it as string literal
+set_common_target_definitions(${SERLIO_TARGET})
 
 target_include_directories(${SERLIO_TARGET}
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}

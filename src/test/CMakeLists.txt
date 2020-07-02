@@ -9,6 +9,8 @@ add_executable(${TEST_TARGET}
 
 set_target_properties(${TEST_TARGET} PROPERTIES CXX_STANDARD 14)
 
+set_common_target_definitions(${TEST_TARGET})
+
 target_compile_definitions(${TEST_TARGET} PRIVATE
 	-DSRL_TEST_EXPORTS
 	-DSERLIO_CODEC_PATH="$<TARGET_FILE:${CODEC_TARGET}>"
