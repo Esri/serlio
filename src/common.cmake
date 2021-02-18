@@ -46,9 +46,9 @@ if (NOT prt_DIR)
 		set(PRT_TC "ac81")
 	endif ()
 
-	set(PRT_VERSION "2.1.5705")
+	set(PRT_VERSION "2.3.6821")
 	set(PRT_CLS "${PRT_OS}-${PRT_TC}-x86_64-rel-opt")
-	set(PRT_URL "https://github.com/esri/esri-cityengine-sdk/releases/download/${PRT_VERSION}/esri_ce_sdk-${PRT_VERSION}-${PRT_CLS}.zip")
+	set(PRT_URL "https://github.com/esri/cityengine-sdk/releases/download/${PRT_VERSION}/esri_ce_sdk-${PRT_VERSION}-${PRT_CLS}.zip")
 
 	FetchContent_Declare(prt URL ${PRT_URL})
 	FetchContent_GetProperties(prt)
