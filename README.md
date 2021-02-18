@@ -1,7 +1,5 @@
 # ![](doc/img/serlio_32.png)  Serlio - CityEngine Plugin for Autodesk Maya
 
-*Binaries and examples are available at https://esri.github.io/serlio*
-
 Serlio is a plugin for [Autodesk Maya](https://www.autodesk.com/maya). It provides a modifier node which enables the execution of [CityEngine](http://www.esri.com/software/cityengine) ‘rules’ within a Maya scene. Therefore, a 3D environment artist does not have to leave their familiar Maya toolset anymore to make use of CityEngine’s procedural modeling power. Complicated export-import pipelines are no longer needed, which also means that the procedural building models do not need to be “baked” anymore. The buildings stay procedural during the entire modeling workflow. Consequently, the 3D environment artist can change the height, style and appearance of buildings easily with a parametric interface at any point during production.
 
 Serlio requires so-called rule packages (RPK) as input, which are authored in CityEngine. An RPK includes assets and a CGA rule file which encodes an architectural style. Comprehensive RPK examples are available below and can be used “out-of-the-box” in Serlio.
@@ -13,6 +11,7 @@ Serlio is well suited for managing the procedural generation of architectural 3D
 
 ## Documentation
 
+* [Home Page with Examples](https://esri.github.io/cityengine/serlio)
 * [Installation and Quick Start](doc/usage.md)
 * [Building Serlio](doc/build.md)
 * [ChangeLog](doc/changelog.md)
@@ -21,7 +20,7 @@ External documentation:
 * [CityEngine Tutorials](https://doc.arcgis.com/en/cityengine/latest/tutorials/introduction-to-the-cityengine-tutorials.htm)
 * [CityEngine CGA Reference](https://doc.arcgis.com/en/cityengine/latest/cga/cityengine-cga-introduction.htm)
 * [CityEngine Manual](https://doc.arcgis.com/en/cityengine/latest/help/cityengine-help-intro.htm)
-* [CityEngine SDK API Reference](https://esri.github.io/esri-cityengine-sdk/html/index.html)
+* [CityEngine SDK API Reference](https://esri.github.io/cityengine-sdk/html/index.html)
 
 
 ## Licensing
