@@ -40,7 +40,7 @@ import com.esri.zrh.jenkins.ce.PrtAppPipelineLibrary
 // entry point for standalone pipeline
 def pipeline(String branchName = null) {
 	cepl.runParallel(getTasks(branchName))
-        papl.finalizeRun('serlio', myBranch)
+	papl.finalizeRun('serlio', myBranch)
 }
 
 // entry point for embedded pipeline
