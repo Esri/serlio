@@ -37,9 +37,9 @@ import com.esri.zrh.jenkins.ce.PrtAppPipelineLibrary
 
 @Field final List TEST_CONFIGS = [
 	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC63, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
-	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201 ],
+	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
 	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC141, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
-	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201 ],
+	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
 ]
 
 
@@ -104,9 +104,10 @@ def taskBuildSerlio(cfg) {
 
 def taskBuildSerlioTests(cfg) {
 	final String appName = 'serlio-test'
-	final List DEPS = [ cfg.cesdk ]
+	final List DEPS = [ cfg.cesdk, cfg.maya ]
 	List defs = [
 		[ key: 'prt_DIR',           val: cfg.cesdk.p ],
+		[ key: 'maya_DIR',          val: cfg.maya.p ],
 		[ key: 'SRL_VERSION_BUILD', val: env.BUILD_NUMBER ]
 	]
 
