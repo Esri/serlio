@@ -3,14 +3,14 @@
 ## Installation
 
 ### Windows: Provided Binaries
-1. Download the MSI installer for your Maya version (2018 or 2019) from the [desired release](https://github.com/Esri/serlio/releases)
+1. Download the MSI installer for your Maya version from the [desired release](https://github.com/Esri/serlio/releases)
 1. Run the MSI installer
 1. Start Maya
 1. You should now see the new menu item "Serlio".
 
 ### Windows: Compile from Source
 1. Locate the `install` directory where you [built](build.md) the plugin, let's call it `PLUGINDIR`
-1. Locate the Maya.env file in your home, usually its in `<home directory>\Documents\maya\2019`
+1. Locate the Maya.env file in your home, usually its in `<home directory>\Documents\maya\2020`
 1. Edit Maya.env as follows:
    ```
    :: replace <PLUGINDIR> with the actual path
@@ -28,7 +28,7 @@
     * ... download the [desired release](https://github.com/Esri/serlio/releases)
     * ... or [build](build.md) them yourself, which will result in an `install` directory
 1. Either way, let's call the directory with the Serlio binaries `PLUGINDIR`
-1. Locate the Maya.env file in your home, e.g.: `~/maya/2019/Maya.env`
+1. Locate the Maya.env file in your home, e.g.: `~/maya/2020/Maya.env`
 1. Edit Maya.env as follows:
    ```
    PLUGINDIR=<PLUGINDIR> # replace <PLUGINDIR> with the actual path

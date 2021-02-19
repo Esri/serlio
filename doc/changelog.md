@@ -2,6 +2,7 @@
 
 ## v1.2.0 (2021-02-XX)
 * Updated Procedural Runtime (PRT) to 2.3 (corresponds to CityEngine 2020).
+* Added support for Maya 2020.
 
 ## v1.1.0 (2020-06-02)
 * BREAKING CHANGE: Switched to official Autodesk IDs for Serlio custom nodes. (#26)
