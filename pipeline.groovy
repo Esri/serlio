@@ -14,7 +14,7 @@ import com.esri.zrh.jenkins.ce.PrtAppPipelineLibrary
 
 // -- GLOBAL DEFINITIONS
 
-@Field final String REPO         = 'git@github.com:ArcGIS/serlio.git'
+@Field final String REPO         = 'git@github.com:esri/serlio.git'
 @Field final String REPO_CREDS   = 'jenkins-github-serlio-deployer-key'
 @Field final String SOURCES      = "serlio.git/src"
 @Field final String BUILD_TARGET = 'package'
