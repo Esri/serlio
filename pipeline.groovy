@@ -27,18 +27,18 @@ import com.esri.zrh.jenkins.ce.PrtAppPipelineLibrary
 	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2019', maya: PrtAppPipelineLibrary.Dependencies.MAYA2019 ],
 	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC63, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
 	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2020', maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
-	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC141, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
+	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC142, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
 	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2018', maya: PrtAppPipelineLibrary.Dependencies.MAYA2018 ],
-	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC141, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
+	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC142, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
 	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2019', maya: PrtAppPipelineLibrary.Dependencies.MAYA2019 ],
-	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC141, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
+	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC142, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
 	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2020', maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
 ]
 
 @Field final List TEST_CONFIGS = [
 	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC63, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
 	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
-	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC141, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
+	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC142, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
 	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
 ]
 
