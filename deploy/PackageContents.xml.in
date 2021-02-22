@@ -49,4 +49,11 @@
         <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
     </Components>
 
+    <Components>
+        <RuntimeRequirements SupportPath="./2020/doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="2020" SeriesMax="2020" />
+        <MayaEnv expr="PATH+:=2020/plug-ins/" />
+        <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2020/plug-ins/" />
+        <MayaEnv expr="MAYA_SCRIPT_PATH+:=2020/scripts/" />
+        <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
+    </Components>
 </ApplicationPackage>
