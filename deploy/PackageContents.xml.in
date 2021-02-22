@@ -29,7 +29,7 @@
 
     <CompanyDetails Name="@PACKAGE_VENDOR_ESCAPED@"
         Phone=""
-        Url="https://github.com/ArcGIS/serlio"
+        Url="https://esri.github.io/cityengine/serlio"
         Email="" />
 
     <!-- OS: Valid values seem to be win64|macOS|linux -->
