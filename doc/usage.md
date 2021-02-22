@@ -17,6 +17,7 @@
    PATH=<PLUGINDIR>\plug-ins;%PATH%
    MAYA_PLUG_IN_PATH=<PLUGINDIR>\plug-ins
    MAYA_SCRIPT_PATH=<PLUGINDIR>\scripts
+   XBMLANGPATH=<PLUGINDIR>\icons
    ```
 1. Start maya
 1. Open the plugin manager: Windows -> Settings/Preferences -> Plug-in Manager
@@ -34,6 +35,7 @@
    PLUGINDIR=<PLUGINDIR> # replace <PLUGINDIR> with the actual path
    MAYA_PLUG_IN_PATH=$PLUGINDIR/plug-ins
    MAYA_SCRIPT_PATH=$PLUGINDIR/scripts
+   XBMLANGPATH=$PLUGINDIR/icons/%B
    ```
 1. Start Maya (Note: you may want to start maya from a shell to see the serlio log output).
 1. Open the plugin manager: Windows -> Settings/Preferences -> Plug-in Manager
