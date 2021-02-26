@@ -6,7 +6,7 @@
 ### All Platforms
 * License for CityEngine (2019.0 or later), e.g. to author Rule Packages.
 * CMake 3.13 or later (http://www.cmake.org)
-* Autodesk Maya 2018 or 2019 installation or the corresponding development kit
+* Autodesk Maya 2018 or later or the corresponding development kit
 
 ### Windows
 * Windows 7, 8.1 or 10 (64bit)

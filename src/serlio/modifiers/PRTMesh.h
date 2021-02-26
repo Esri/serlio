@@ -21,6 +21,7 @@
 
 #include "maya/MTypes.h"
 
+#include <cstddef>
 #include <vector>
 
 class PRTMesh {

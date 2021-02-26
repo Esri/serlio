@@ -74,8 +74,17 @@ public:
 	prt::Status attrString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
 	                       const wchar_t* /*value*/) override;
 
-// PRT version >= 2.1
-#if PRT_VERSION_GTE(2, 1)
+// PRT version >= 2.3
+#if PRT_VERSION_GTE(2, 3)
+
+	prt::Status attrBoolArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, const bool* /*values*/,
+	                          size_t /*size*/, size_t /*nRows*/) override;
+	prt::Status attrFloatArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+	                           const double* /*values*/, size_t /*size*/, size_t /*nRows*/) override;
+	prt::Status attrStringArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+	                            const wchar_t* const* /*values*/, size_t /*size*/, size_t /*nRows*/) override;
+
+#elif PRT_VERSION_GTE(2, 1)
 
 	prt::Status attrBoolArray(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, const bool* /*values*/,
 	                          size_t /*size*/) override;
