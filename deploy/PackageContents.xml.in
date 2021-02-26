@@ -29,7 +29,7 @@
 
     <CompanyDetails Name="@PACKAGE_VENDOR_ESCAPED@"
         Phone=""
-        Url="https://github.com/ArcGIS/serlio"
+        Url="https://esri.github.io/cityengine/serlio"
         Email="" />
 
     <!-- OS: Valid values seem to be win64|macOS|linux -->
@@ -38,6 +38,7 @@
         <MayaEnv expr="PATH+:=2018/plug-ins/" />
         <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2018/plug-ins/" />
         <MayaEnv expr="MAYA_SCRIPT_PATH+:=2018/scripts/" />
+        <MayaEnv expr="XBMLANGPATH+:=2018/icons/" />
         <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
     </Components>
 
@@ -46,6 +47,7 @@
         <MayaEnv expr="PATH+:=2019/plug-ins/" />
         <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2019/plug-ins/" />
         <MayaEnv expr="MAYA_SCRIPT_PATH+:=2019/scripts/" />
+        <MayaEnv expr="XBMLANGPATH+:=2019/icons/" />
         <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
     </Components>
 
@@ -54,6 +56,7 @@
         <MayaEnv expr="PATH+:=2020/plug-ins/" />
         <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2020/plug-ins/" />
         <MayaEnv expr="MAYA_SCRIPT_PATH+:=2020/scripts/" />
+        <MayaEnv expr="XBMLANGPATH+:=2020/icons/" />
         <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
     </Components>
 </ApplicationPackage>
