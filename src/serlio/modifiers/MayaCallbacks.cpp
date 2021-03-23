@@ -69,8 +69,6 @@ MFloatPointArray toMayaFloatPointArray(double const* a, size_t s) {
 	return mfpa;
 }
 
-} // namespace
-
 struct TextureUVOrder {
 	MString mayaUvSetName;
 	uint8_t mayaUvSetIndex;
@@ -96,14 +94,85 @@ const std::vector<TextureUVOrder> TEXTURE_UV_ORDERS = []() -> std::vector<Textur
 	// clang-format on
 }();
 
+void assignTextureCoordinates(MFnMesh& fnMesh, double const* const* uvs, size_t const* uvsSizes,
+                              uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
+                              uint32_t const* const* uvIndices, size_t const* uvIndicesSizes, size_t uvSetsCount) {
+	if (uvSetsCount == 0)
+		return;
+
+	fnMesh.clearUVs();
+
+	for (const TextureUVOrder& o : TEXTURE_UV_ORDERS) {
+		const uint8_t uvSet = o.prtUvSetIndex;
+		const MString uvSetName = o.mayaUvSetName;
+
+		if (uvSetsCount > uvSet && uvsSizes[uvSet] > 0) {
+			MFloatArray mU;
+			MFloatArray mV;
+			for (size_t uvIdx = 0; uvIdx < uvsSizes[uvSet] / 2; ++uvIdx) {
+				mU.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 0])); // maya mesh only supports float uvs
+				mV.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 1]));
+			}
+
+			if (uvSet > 0) {
+				MStatus status;
+				fnMesh.createUVSetDataMeshWithName(uvSetName, &status);
+				MCHECK(status);
+			}
+
+			MCHECK(fnMesh.setUVs(mU, mV, &uvSetName));
+
+			MIntArray mUVCounts = toMayaIntArray(uvCounts[uvSet], uvCountsSizes[uvSet]);
+			MIntArray mUVIndices = toMayaIntArray(uvIndices[uvSet], uvIndicesSizes[uvSet]);
+			MCHECK(fnMesh.assignUVs(mUVCounts, mUVIndices, &uvSetName));
+		}
+		else {
+			if (uvSet > 0) {
+				// add empty set to keep order consistent
+				MStatus status;
+				fnMesh.createUVSetDataMeshWithName(uvSetName, &status);
+				MCHECK(status);
+			}
+		}
+	}
+}
+
+void assignVertexNormals(MFnMesh& mFnMesh, MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices, const double* nrm,
+                         size_t nrmSize, const uint32_t* normalIndices, size_t normalIndicesSize) {
+	if (nrmSize == 0)
+		return;
+
+	assert(normalIndicesSize == mayaVertexIndices.length());
+	// guaranteed by MayaEncoder, see prtx::VertexNormalProcessor::SET_MISSING_TO_FACE_NORMALS
+
+	// convert to native maya normal layout
+	MVectorArray expandedNormals(static_cast<unsigned int>(mayaVertexIndices.length()));
+	MIntArray faceList(static_cast<unsigned int>(mayaVertexIndices.length()));
+
+	int indexCount = 0;
+	for (int i = 0; i < mayaFaceCounts.length(); i++) {
+		int faceLength = mayaFaceCounts[i];
+
+		for (int j = 0; j < faceLength; j++) {
+			faceList[indexCount] = i;
+			int idx = normalIndices[indexCount];
+			expandedNormals.set(&nrm[idx * 3], indexCount);
+			indexCount++;
+		}
+	}
+
+	MCHECK(mFnMesh.setFaceVertexNormals(expandedNormals, faceList, mayaVertexIndices));
+}
+
+} // namespace
+
 void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
                             const uint32_t* faceCounts, size_t faceCountsSize, const uint32_t* vertexIndices,
-                            size_t vertexIndicesSize, const uint32_t* normalIndices,
-                            MAYBE_UNUSED size_t normalIndicesSize, double const* const* uvs, size_t const* uvsSizes,
-                            uint32_t const* const* uvCounts, size_t const* uvCountsSizes,
-                            uint32_t const* const* uvIndices, size_t const* uvIndicesSizes, size_t uvSetsCount,
-                            const uint32_t* faceRanges, size_t faceRangesSize, const prt::AttributeMap** materials,
-                            const prt::AttributeMap** reports, const int32_t*) {
+                            size_t vertexIndicesSize, const uint32_t* normalIndices, size_t normalIndicesSize,
+                            double const* const* uvs, size_t const* uvsSizes, uint32_t const* const* uvCounts,
+                            size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
+                            size_t uvSetsCount, const uint32_t* faceRanges, size_t faceRangesSize,
+                            const prt::AttributeMap** materials, const prt::AttributeMap** reports, const int32_t*) {
 	MFloatPointArray mayaVertices = toMayaFloatPointArray(vtx, vtxSize);
 	MIntArray mayaFaceCounts = toMayaIntArray(faceCounts, faceCountsSize);
 	MIntArray mayaVertexIndices = toMayaIntArray(vertexIndices, vertexIndicesSize);
@@ -118,7 +187,6 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	}
 
 	MStatus stat;
-	MCHECK(stat);
 
 	MFnMeshData dataCreator;
 	MObject newOutputData = dataCreator.create(&stat);
@@ -130,65 +198,8 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	MCHECK(stat);
 
 	MFnMesh mFnMesh(oMesh);
-	mFnMesh.clearUVs();
-
-	// -- add texture coordinates
-	if (uvSetsCount > 0) {
-		for (const TextureUVOrder& o : TEXTURE_UV_ORDERS) {
-			const uint8_t uvSet = o.prtUvSetIndex;
-			const MString uvSetName = o.mayaUvSetName;
-
-			if (uvSetsCount > uvSet && uvsSizes[uvSet] > 0) {
-				MFloatArray mU;
-				MFloatArray mV;
-				for (size_t uvIdx = 0; uvIdx < uvsSizes[uvSet] / 2; ++uvIdx) {
-					mU.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 0])); // maya mesh only supports float uvs
-					mV.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 1]));
-				}
-
-				if (uvSet > 0) {
-					mFnMesh.createUVSetDataMeshWithName(uvSetName, &stat);
-					MCHECK(stat);
-				}
-
-				MCHECK(mFnMesh.setUVs(mU, mV, &uvSetName));
-
-				MIntArray mUVCounts = toMayaIntArray(uvCounts[uvSet], uvCountsSizes[uvSet]);
-				MIntArray mUVIndices = toMayaIntArray(uvIndices[uvSet], uvIndicesSizes[uvSet]);
-				MCHECK(mFnMesh.assignUVs(mUVCounts, mUVIndices, &uvSetName));
-			}
-			else {
-				if (uvSet > 0) {
-					// add empty set to keep order consistent
-					mFnMesh.createUVSetDataMeshWithName(uvSetName, &stat);
-					MCHECK(stat);
-				}
-			}
-		}
-	}
-
-	if (nrmSize > 0) {
-		assert(normalIndicesSize == vertexIndicesSize);
-		// guaranteed by MayaEncoder, see prtx::VertexNormalProcessor::SET_MISSING_TO_FACE_NORMALS
-
-		// convert to native maya normal layout
-		MVectorArray expandedNormals(static_cast<unsigned int>(vertexIndicesSize));
-		MIntArray faceList(static_cast<unsigned int>(vertexIndicesSize));
-
-		int indexCount = 0;
-		for (int i = 0; i < faceCountsSize; i++) {
-			int faceLength = mayaFaceCounts[i];
-
-			for (int j = 0; j < faceLength; j++) {
-				faceList[indexCount] = i;
-				int idx = normalIndices[indexCount];
-				expandedNormals.set(&nrm[idx * 3], indexCount);
-				indexCount++;
-			}
-		}
-
-		MCHECK(mFnMesh.setFaceVertexNormals(expandedNormals, faceList, mayaVertexIndices));
-	}
+	assignTextureCoordinates(mFnMesh, uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount);
+	assignVertexNormals(mFnMesh, mayaFaceCounts, mayaVertexIndices, nrm, nrmSize, normalIndices, normalIndicesSize);
 
 	MFnMesh outputMesh(outMeshObj);
 	outputMesh.copyInPlace(oMesh);
