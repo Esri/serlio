@@ -133,36 +133,36 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	mFnMesh.clearUVs();
 
 	// -- add texture coordinates
-	for (const TextureUVOrder& o : TEXTURE_UV_ORDERS) {
-		uint8_t uvSet = o.prtUvSetIndex;
+	if (uvSetsCount > 0) {
+		for (const TextureUVOrder& o : TEXTURE_UV_ORDERS) {
+			const uint8_t uvSet = o.prtUvSetIndex;
+			const MString uvSetName = o.mayaUvSetName;
 
-		if (uvSetsCount > uvSet && uvsSizes[uvSet] > 0) {
+			if (uvSetsCount > uvSet && uvsSizes[uvSet] > 0) {
+				MFloatArray mU;
+				MFloatArray mV;
+				for (size_t uvIdx = 0; uvIdx < uvsSizes[uvSet] / 2; ++uvIdx) {
+					mU.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 0])); // maya mesh only supports float uvs
+					mV.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 1]));
+				}
 
-			MFloatArray mU;
-			MFloatArray mV;
-			for (size_t uvIdx = 0; uvIdx < uvsSizes[uvSet] / 2; ++uvIdx) {
-				mU.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 0])); // maya mesh only supports float uvs
-				mV.append(static_cast<float>(uvs[uvSet][uvIdx * 2 + 1]));
+				if (uvSet > 0) {
+					mFnMesh.createUVSetDataMeshWithName(uvSetName, &stat);
+					MCHECK(stat);
+				}
+
+				MCHECK(mFnMesh.setUVs(mU, mV, &uvSetName));
+
+				MIntArray mUVCounts = toMayaIntArray(uvCounts[uvSet], uvCountsSizes[uvSet]);
+				MIntArray mUVIndices = toMayaIntArray(uvIndices[uvSet], uvIndicesSizes[uvSet]);
+				MCHECK(mFnMesh.assignUVs(mUVCounts, mUVIndices, &uvSetName));
 			}
-
-			MString uvSetName = o.mayaUvSetName;
-
-			if (uvSet != 0) {
-				mFnMesh.createUVSetDataMeshWithName(uvSetName, &stat);
-				MCHECK(stat);
-			}
-
-			MCHECK(mFnMesh.setUVs(mU, mV, &uvSetName));
-
-			MIntArray mUVCounts = toMayaIntArray(uvCounts[uvSet], uvCountsSizes[uvSet]);
-			MIntArray mUVIndices = toMayaIntArray(uvIndices[uvSet], uvIndicesSizes[uvSet]);
-			MCHECK(mFnMesh.assignUVs(mUVCounts, mUVIndices, &uvSetName));
-		}
-		else {
-			if (uvSet > 0) {
-				// add empty set to keep order consistent
-				mFnMesh.createUVSetDataMeshWithName(o.mayaUvSetName, &stat);
-				MCHECK(stat);
+			else {
+				if (uvSet > 0) {
+					// add empty set to keep order consistent
+					mFnMesh.createUVSetDataMeshWithName(uvSetName, &stat);
+					MCHECK(stat);
+				}
 			}
 		}
 	}
