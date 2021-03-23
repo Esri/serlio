@@ -18,6 +18,7 @@
  */
 
 #include "utils/Utilities.h"
+#include "utils/LogHandler.h"
 
 #include "prt/API.h"
 #include "prt/StringUtils.h"
@@ -30,10 +31,12 @@ struct IUnknown;
 #	include <windows.h>
 #	include <shellapi.h>
 #else
+#   include <cerrno>
 #	include <dlfcn.h>
 #	include <unistd.h>
 #endif
 
+#include <cstring>
 #include <cwchar>
 #include <sstream>
 #include <stdexcept>
@@ -236,7 +239,16 @@ void remove_all(const std::wstring& path) {
 	int ret = SHFileOperationW(&fileop);
 	delete[] pszFrom;
 #else
-	system((std::string("rm -rf ") + toOSNarrowFromUTF16(path)).c_str());
+	const auto exitCode = std::system((std::string("rm -rf ") + toOSNarrowFromUTF16(path)).c_str());
+	if (exitCode < 0) {
+		LOG_ERR << "Failed to delete " << path << ": " << std::strerror(errno);
+	}
+	else {
+		if (WIFEXITED(exitCode) != 0)
+			LOG_ERR << "Failed to delete " << path << ", exit code " << WEXITSTATUS(exitCode);
+		else
+			LOG_ERR << "Failed to delete " << path << ", unknown reason!";
+	}
 #endif
 }
 
