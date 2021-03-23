@@ -77,12 +77,10 @@ struct TextureUVOrder {
 	uint8_t prtUvSetIndex;
 };
 
-// maya pbr stingray shader only supports first 4 uvsets -> reoder so first 4 are most important ones
-// other shaders support >4 sets
 const std::vector<TextureUVOrder> TEXTURE_UV_ORDERS = []() -> std::vector<TextureUVOrder> {
 	// clang-format off
 	return {
-	        // maya uvset name | maya idx | prt idx  | CGA key
+	        // first 4 uv sets are selected to be compatible with the Maya PBR Stingray shader
 	        { L"map1",         0,    0 },  // colormap
 	        { L"dirtMap",      1,    2 },  // dirtmap
 	        { L"normalMap",    2,    5 },  // normalmap
@@ -114,7 +112,7 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 		LOG_DBG << "-- MayaCallbacks::addMesh";
 		LOG_DBG << "   faceCountsSize = " << faceCountsSize;
 		LOG_DBG << "   vertexIndicesSize = " << vertexIndicesSize;
-		LOG_DBG << "   mayaVertices.length         = " << mayaVertices.length();
+		LOG_DBG << "   mayaVertices.length = " << mayaVertices.length();
 		LOG_DBG << "   mayaFaceCounts.length   = " << mayaFaceCounts.length();
 		LOG_DBG << "   mayaVertexIndices.length = " << mayaVertexIndices.length();
 	}
