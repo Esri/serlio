@@ -164,6 +164,68 @@ void assignVertexNormals(MFnMesh& mFnMesh, MIntArray& mayaFaceCounts, MIntArray&
 	MCHECK(mFnMesh.setFaceVertexNormals(expandedNormals, faceList, mayaVertexIndices));
 }
 
+constexpr unsigned int maxStringLength = 400;
+constexpr unsigned int maxFloatArrayLength = 5;
+constexpr unsigned int maxStringArrayLength = 2;
+
+adsk::Data::Structure* getMaterialDataStructure(const prt::AttributeMap** materials, size_t faceRangesSize) {
+	adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
+	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
+		const prt::AttributeMap* mat = materials[0];
+
+		// Register our structure since it is not registered yet.
+		fStructure = adsk::Data::Structure::create();
+		fStructure->setName(PRT_MATERIAL_STRUCTURE.c_str());
+
+		fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_START.c_str());
+		fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_END.c_str());
+
+		size_t keyCount = 0;
+		wchar_t const* const* keys = mat->getKeys(&keyCount);
+		for (int k = 0; k < keyCount; k++) {
+			wchar_t const* key = keys[k];
+
+			adsk::Data::Member::eDataType type;
+			unsigned int size = 0;
+			unsigned int arrayLength = 1;
+
+			// clang-format off
+			switch (mat->getType(key)) {
+				case prt::Attributable::PT_BOOL: type = adsk::Data::Member::kBoolean; size = 1;  break;
+				case prt::Attributable::PT_FLOAT: type = adsk::Data::Member::kDouble; size = 1; break;
+				case prt::Attributable::PT_INT: type = adsk::Data::Member::kInt32; size = 1; break;
+
+				// workaround: using kString type crashes maya when setting metadata elements. Therefore we use array of kUInt8
+				case prt::Attributable::PT_STRING: type = adsk::Data::Member::kUInt8; size = maxStringLength;  break;
+				case prt::Attributable::PT_BOOL_ARRAY: type = adsk::Data::Member::kBoolean; size = maxStringLength; break;
+				case prt::Attributable::PT_INT_ARRAY: type = adsk::Data::Member::kInt32; size = maxStringLength; break;
+				case prt::Attributable::PT_FLOAT_ARRAY: type = adsk::Data::Member::kDouble; size = maxFloatArrayLength; break;
+				case prt::Attributable::PT_STRING_ARRAY: type = adsk::Data::Member::kUInt8; size = maxStringLength; arrayLength = maxStringArrayLength; break;
+
+				case prt::Attributable::PT_UNDEFINED: break;
+				case prt::Attributable::PT_BLIND_DATA: break;
+				case prt::Attributable::PT_BLIND_DATA_ARRAY: break;
+				case prt::Attributable::PT_COUNT: break;
+			}
+			// clang-format on
+
+			if (size > 0) {
+				for (unsigned int i = 0; i < arrayLength; i++) {
+					std::wstring keyToUse = key;
+					if (i > 0)
+						keyToUse = key + std::to_wstring(i);
+					const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
+					fStructure->addMember(type, size, keyToUseNarrow.c_str());
+				}
+			}
+		}
+
+		adsk::Data::Structure::registerStructure(*fStructure);
+	}
+
+	return fStructure;
+}
+
 } // namespace
 
 void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
@@ -204,66 +266,6 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	MFnMesh outputMesh(outMeshObj);
 	outputMesh.copyInPlace(oMesh);
 
-	// create material metadata
-	constexpr unsigned int maxStringLength = 400;
-	constexpr unsigned int maxFloatArrayLength = 5;
-	constexpr unsigned int maxStringArrayLength = 2;
-
-	adsk::Data::Structure* fStructure; // Structure to use for creation
-	fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
-	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
-		const prt::AttributeMap* mat = materials[0];
-
-		// Register our structure since it is not registered yet.
-		fStructure = adsk::Data::Structure::create();
-		fStructure->setName(PRT_MATERIAL_STRUCTURE.c_str());
-
-		fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_START.c_str());
-		fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_END.c_str());
-
-		size_t keyCount = 0;
-		wchar_t const* const* keys = mat->getKeys(&keyCount);
-		for (int k = 0; k < keyCount; k++) {
-			wchar_t const* key = keys[k];
-
-			adsk::Data::Member::eDataType type;
-			unsigned int size = 0;
-			unsigned int arrayLength = 1;
-
-			// clang-format off
-			switch (mat->getType(key)) {
-				case prt::Attributable::PT_BOOL: type = adsk::Data::Member::kBoolean; size = 1;  break;
-				case prt::Attributable::PT_FLOAT: type = adsk::Data::Member::kDouble; size = 1; break;
-				case prt::Attributable::PT_INT: type = adsk::Data::Member::kInt32; size = 1; break;
-
-				//workaround: using kString type crashes maya when setting metadata elememts. Therefore we use array of kUInt8
-				case prt::Attributable::PT_STRING: type = adsk::Data::Member::kUInt8; size = maxStringLength;  break;
-				case prt::Attributable::PT_BOOL_ARRAY: type = adsk::Data::Member::kBoolean; size = maxStringLength; break;
-				case prt::Attributable::PT_INT_ARRAY: type = adsk::Data::Member::kInt32; size = maxStringLength; break;
-				case prt::Attributable::PT_FLOAT_ARRAY: type = adsk::Data::Member::kDouble; size = maxFloatArrayLength; break;
-				case prt::Attributable::PT_STRING_ARRAY: type = adsk::Data::Member::kUInt8; size = maxStringLength; arrayLength = maxStringArrayLength; break;
-
-				case prt::Attributable::PT_UNDEFINED: break;
-				case prt::Attributable::PT_BLIND_DATA: break;
-				case prt::Attributable::PT_BLIND_DATA_ARRAY: break;
-				case prt::Attributable::PT_COUNT: break;
-			}
-			// clang-format on
-
-			if (size > 0) {
-				for (unsigned int i = 0; i < arrayLength; i++) {
-					std::wstring keyToUse = key;
-					if (i > 0)
-						keyToUse = key + std::to_wstring(i);
-					const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
-					fStructure->addMember(type, size, keyToUseNarrow.c_str());
-				}
-			}
-		}
-
-		adsk::Data::Structure::registerStructure(*fStructure);
-	}
-
 	MCHECK(stat);
 	MFnMesh inputMesh(inMeshObj);
 
@@ -271,6 +273,7 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	newMetadata.makeUnique();
 	MCHECK(stat);
 	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIAL_CHANNEL);
+	const adsk::Data::Structure* fStructure = getMaterialDataStructure(materials, faceRangesSize);
 	adsk::Data::Stream newStream(*fStructure, PRT_MATERIAL_STREAM);
 
 	newChannel.setDataStream(newStream);
