@@ -138,7 +138,7 @@ void assignTextureCoordinates(MFnMesh& fnMesh, double const* const* uvs, size_t 
 }
 
 void assignVertexNormals(MFnMesh& mFnMesh, MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices, const double* nrm,
-                         size_t nrmSize, const uint32_t* normalIndices, size_t normalIndicesSize) {
+                         size_t nrmSize, const uint32_t* normalIndices, MAYBE_UNUSED size_t normalIndicesSize) {
 	if (nrmSize == 0)
 		return;
 
