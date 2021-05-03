@@ -193,16 +193,16 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	MCHECK(stat);
 
 	MFnMesh mFnMesh1;
-	MObject oMesh = mFnMesh1.create(mayaVertices.length(), mayaFaceCounts.length(), mayaVertices, mayaFaceCounts,
+	MObject newMeshObj = mFnMesh1.create(mayaVertices.length(), mayaFaceCounts.length(), mayaVertices, mayaFaceCounts,
 	                                mayaVertexIndices, newOutputData, &stat);
 	MCHECK(stat);
 
-	MFnMesh mFnMesh(oMesh);
-	assignTextureCoordinates(mFnMesh, uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount);
-	assignVertexNormals(mFnMesh, mayaFaceCounts, mayaVertexIndices, nrm, nrmSize, normalIndices, normalIndicesSize);
+	MFnMesh newMesh(newMeshObj);
+	assignTextureCoordinates(newMesh, uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount);
+	assignVertexNormals(newMesh, mayaFaceCounts, mayaVertexIndices, nrm, nrmSize, normalIndices, normalIndicesSize);
 
 	MFnMesh outputMesh(outMeshObj);
-	outputMesh.copyInPlace(oMesh);
+	outputMesh.copyInPlace(newMeshObj);
 
 	// create material metadata
 	constexpr unsigned int maxStringLength = 400;
