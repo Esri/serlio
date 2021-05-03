@@ -382,9 +382,9 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	                                 mayaVertexIndices, newOutputData, &stat);
 	MCHECK(stat);
 
-	MFnMesh fnMesh(oMesh);
-	assignTextureCoordinates(fnMesh, uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount);
-	assignVertexNormals(fnMesh, mayaFaceCounts, mayaVertexIndices, nrm, nrmSize, normalIndices, normalIndicesSize);
+	MFnMesh mFnMesh(oMesh);
+	assignTextureCoordinates(mFnMesh, uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount);
+	assignVertexNormals(mFnMesh, mayaFaceCounts, mayaVertexIndices, nrm, nrmSize, normalIndices, normalIndicesSize);
 
 	MFnMesh inputMesh(inMeshObj);
 	MFnMesh outputMesh(outMeshObj);
