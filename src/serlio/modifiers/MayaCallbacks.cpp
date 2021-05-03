@@ -164,6 +164,10 @@ void assignVertexNormals(MFnMesh& mFnMesh, MIntArray& mayaFaceCounts, MIntArray&
 	MCHECK(mFnMesh.setFaceVertexNormals(expandedNormals, faceList, mayaVertexIndices));
 }
 
+constexpr unsigned int MATERIAL_MAX_STRING_LENGTH = 400;
+constexpr unsigned int MATERIAL_MAX_FLOAT_ARRAY_LENGTH = 5;
+constexpr unsigned int MATERIAL_MAX_STRING_ARRAY_LENGTH = 2;
+
 } // namespace
 
 void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
@@ -205,10 +209,6 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	outputMesh.copyInPlace(newMeshObj);
 
 	// create material metadata
-	constexpr unsigned int maxStringLength = 400;
-	constexpr unsigned int maxFloatArrayLength = 5;
-	constexpr unsigned int maxStringArrayLength = 2;
-
 	adsk::Data::Structure* fStructure; // Structure to use for creation
 	fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
 	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
@@ -237,11 +237,11 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 				case prt::Attributable::PT_INT: type = adsk::Data::Member::kInt32; size = 1; break;
 
 				//workaround: using kString type crashes maya when setting metadata elememts. Therefore we use array of kUInt8
-				case prt::Attributable::PT_STRING: type = adsk::Data::Member::kUInt8; size = maxStringLength;  break;
-				case prt::Attributable::PT_BOOL_ARRAY: type = adsk::Data::Member::kBoolean; size = maxStringLength; break;
-				case prt::Attributable::PT_INT_ARRAY: type = adsk::Data::Member::kInt32; size = maxStringLength; break;
-				case prt::Attributable::PT_FLOAT_ARRAY: type = adsk::Data::Member::kDouble; size = maxFloatArrayLength; break;
-				case prt::Attributable::PT_STRING_ARRAY: type = adsk::Data::Member::kUInt8; size = maxStringLength; arrayLength = maxStringArrayLength; break;
+				case prt::Attributable::PT_STRING: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH;  break;
+				case prt::Attributable::PT_BOOL_ARRAY: type = adsk::Data::Member::kBoolean; size = MATERIAL_MAX_STRING_LENGTH; break;
+				case prt::Attributable::PT_INT_ARRAY: type = adsk::Data::Member::kInt32; size = MATERIAL_MAX_STRING_LENGTH; break;
+				case prt::Attributable::PT_FLOAT_ARRAY: type = adsk::Data::Member::kDouble; size = MATERIAL_MAX_FLOAT_ARRAY_LENGTH; break;
+				case prt::Attributable::PT_STRING_ARRAY: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH; arrayLength = MATERIAL_MAX_STRING_ARRAY_LENGTH; break;
 
 				case prt::Attributable::PT_UNDEFINED: break;
 				case prt::Attributable::PT_BLIND_DATA: break;
@@ -315,29 +315,29 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 							const wchar_t* str = mat->getString(key);
 							if (wcslen(str) == 0)
 								break;
-							checkStringLength(str, maxStringLength);
-							size_t maxStringLengthTmp = maxStringLength;
+							checkStringLength(str, MATERIAL_MAX_STRING_LENGTH);
+							size_t maxStringLengthTmp = MATERIAL_MAX_STRING_LENGTH;
 							prt::StringUtils::toOSNarrowFromUTF16(str, (char*)handle.asUInt8(), &maxStringLengthTmp);
 							break;
 						}
 						case prt::Attributable::PT_BOOL_ARRAY: {
 							const bool* boolArray;
 							boolArray = mat->getBoolArray(key, &arraySize);
-							for (unsigned int i = 0; i < arraySize && i < maxStringLength; i++)
+							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++)
 								handle.asBoolean()[i] = boolArray[i];
 							break;
 						}
 						case prt::Attributable::PT_INT_ARRAY: {
 							const int* intArray;
 							intArray = mat->getIntArray(key, &arraySize);
-							for (unsigned int i = 0; i < arraySize && i < maxStringLength; i++)
+							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++)
 								handle.asInt32()[i] = intArray[i];
 							break;
 						}
 						case prt::Attributable::PT_FLOAT_ARRAY: {
 							const double* floatArray;
 							floatArray = mat->getFloatArray(key, &arraySize);
-							for (unsigned int i = 0; i < arraySize && i < maxStringLength && i < maxFloatArrayLength;
+							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH && i < MATERIAL_MAX_FLOAT_ARRAY_LENGTH;
 							     i++)
 								handle.asDouble()[i] = floatArray[i];
 							break;
@@ -346,7 +346,7 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 
 							const wchar_t* const* stringArray = mat->getStringArray(key, &arraySize);
 
-							for (unsigned int i = 0; i < arraySize && i < maxStringLength; i++) {
+							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++) {
 								if (wcslen(stringArray[i]) == 0)
 									continue;
 
@@ -357,8 +357,8 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 										continue;
 								}
 
-								checkStringLength(stringArray[i], maxStringLength);
-								size_t maxStringLengthTmp = maxStringLength;
+								checkStringLength(stringArray[i], MATERIAL_MAX_STRING_LENGTH);
+								size_t maxStringLengthTmp = MATERIAL_MAX_STRING_LENGTH;
 								prt::StringUtils::toOSNarrowFromUTF16(stringArray[i], (char*)handle.asUInt8(),
 								                                      &maxStringLengthTmp);
 							}
