@@ -168,8 +168,49 @@ constexpr unsigned int MATERIAL_MAX_STRING_LENGTH = 400;
 constexpr unsigned int MATERIAL_MAX_FLOAT_ARRAY_LENGTH = 5;
 constexpr unsigned int MATERIAL_MAX_STRING_ARRAY_LENGTH = 2;
 
-adsk::Data::Structure* getMaterialDataStructure(const prt::AttributeMap** materials, size_t faceRangesSize) {
-	adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
+} // namespace
+
+void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
+                            const uint32_t* faceCounts, size_t faceCountsSize, const uint32_t* vertexIndices,
+                            size_t vertexIndicesSize, const uint32_t* normalIndices, size_t normalIndicesSize,
+                            double const* const* uvs, size_t const* uvsSizes, uint32_t const* const* uvCounts,
+                            size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
+                            size_t uvSetsCount, const uint32_t* faceRanges, size_t faceRangesSize,
+                            const prt::AttributeMap** materials, const prt::AttributeMap** reports, const int32_t*) {
+	MFloatPointArray mayaVertices = toMayaFloatPointArray(vtx, vtxSize);
+	MIntArray mayaFaceCounts = toMayaIntArray(faceCounts, faceCountsSize);
+	MIntArray mayaVertexIndices = toMayaIntArray(vertexIndices, vertexIndicesSize);
+
+	if (DBG) {
+		LOG_DBG << "-- MayaCallbacks::addMesh";
+		LOG_DBG << "   faceCountsSize = " << faceCountsSize;
+		LOG_DBG << "   vertexIndicesSize = " << vertexIndicesSize;
+		LOG_DBG << "   mayaVertices.length = " << mayaVertices.length();
+		LOG_DBG << "   mayaFaceCounts.length   = " << mayaFaceCounts.length();
+		LOG_DBG << "   mayaVertexIndices.length = " << mayaVertexIndices.length();
+	}
+
+	MStatus stat;
+
+	MFnMeshData dataCreator;
+	MObject newOutputData = dataCreator.create(&stat);
+	MCHECK(stat);
+
+	MFnMesh mFnMesh1;
+	MObject newMeshObj = mFnMesh1.create(mayaVertices.length(), mayaFaceCounts.length(), mayaVertices, mayaFaceCounts,
+	                                mayaVertexIndices, newOutputData, &stat);
+	MCHECK(stat);
+
+	MFnMesh newMesh(newMeshObj);
+	assignTextureCoordinates(newMesh, uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount);
+	assignVertexNormals(newMesh, mayaFaceCounts, mayaVertexIndices, nrm, nrmSize, normalIndices, normalIndicesSize);
+
+	MFnMesh outputMesh(outMeshObj);
+	outputMesh.copyInPlace(newMeshObj);
+
+	// create material metadata
+	adsk::Data::Structure* fStructure; // Structure to use for creation
+	fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
 	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
 		const prt::AttributeMap* mat = materials[0];
 
@@ -195,7 +236,7 @@ adsk::Data::Structure* getMaterialDataStructure(const prt::AttributeMap** materi
 				case prt::Attributable::PT_FLOAT: type = adsk::Data::Member::kDouble; size = 1; break;
 				case prt::Attributable::PT_INT: type = adsk::Data::Member::kInt32; size = 1; break;
 
-				// workaround: using kString type crashes maya when setting metadata elements. Therefore we use array of kUInt8
+				//workaround: using kString type crashes maya when setting metadata elememts. Therefore we use array of kUInt8
 				case prt::Attributable::PT_STRING: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH;  break;
 				case prt::Attributable::PT_BOOL_ARRAY: type = adsk::Data::Member::kBoolean; size = MATERIAL_MAX_STRING_LENGTH; break;
 				case prt::Attributable::PT_INT_ARRAY: type = adsk::Data::Member::kInt32; size = MATERIAL_MAX_STRING_LENGTH; break;
@@ -223,34 +264,34 @@ adsk::Data::Structure* getMaterialDataStructure(const prt::AttributeMap** materi
 		adsk::Data::Structure::registerStructure(*fStructure);
 	}
 
-	return fStructure;
-}
-
-void fillMaterialDataStructure(MFnMesh& inputMesh, MFnMesh& outputMesh, const prt::AttributeMap** materials,
-                               const uint32_t* faceRanges, size_t faceRangesSize) {
-	MStatus stat;
-	adsk::Data::Associations newMetadata(inputMesh.metadata(&stat));
 	MCHECK(stat);
+	MFnMesh inputMesh(inMeshObj);
 
+	adsk::Data::Associations newMetadata(inputMesh.metadata(&stat));
 	newMetadata.makeUnique();
-
+	MCHECK(stat);
 	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIAL_CHANNEL);
-	const adsk::Data::Structure* fStructure = getMaterialDataStructure(materials, faceRangesSize);
 	adsk::Data::Stream newStream(*fStructure, PRT_MATERIAL_STREAM);
 
 	newChannel.setDataStream(newStream);
 	newMetadata.setChannel(newChannel);
 
 	if (faceRangesSize > 1) {
-		adsk::Data::Handle handle(*fStructure);
+
 		for (size_t fri = 0; fri < faceRangesSize - 1; fri++) {
+
 			if (materials != nullptr) {
+				adsk::Data::Handle handle(*fStructure);
+
 				const prt::AttributeMap* mat = materials[fri];
 
 				size_t keyCount = 0;
 				wchar_t const* const* keys = mat->getKeys(&keyCount);
+
 				for (int k = 0; k < keyCount; k++) {
+
 					wchar_t const* key = keys[k];
+
 					const std::string keyNarrow = prtu::toOSNarrowFromUTF16(key);
 
 					if (!handle.setPositionByMemberName(keyNarrow.c_str()))
@@ -269,13 +310,13 @@ void fillMaterialDataStructure(MFnMesh& inputMesh, MFnMesh& outputMesh, const pr
 							handle.asInt32()[0] = mat->getInt(key);
 							break;
 
+							// workaround: transporting string as uint8 array, because using asString crashes maya
 						case prt::Attributable::PT_STRING: {
 							const wchar_t* str = mat->getString(key);
 							if (wcslen(str) == 0)
 								break;
 							checkStringLength(str, MATERIAL_MAX_STRING_LENGTH);
 							size_t maxStringLengthTmp = MATERIAL_MAX_STRING_LENGTH;
-							// workaround: transporting string as uint8 array, because using asString crashes maya
 							prt::StringUtils::toOSNarrowFromUTF16(str, (char*)handle.asUInt8(), &maxStringLengthTmp);
 							break;
 						}
@@ -296,8 +337,7 @@ void fillMaterialDataStructure(MFnMesh& inputMesh, MFnMesh& outputMesh, const pr
 						case prt::Attributable::PT_FLOAT_ARRAY: {
 							const double* floatArray;
 							floatArray = mat->getFloatArray(key, &arraySize);
-							for (unsigned int i = 0;
-							     i < arraySize && i < MATERIAL_MAX_STRING_LENGTH && i < MATERIAL_MAX_FLOAT_ARRAY_LENGTH;
+							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH && i < MATERIAL_MAX_FLOAT_ARRAY_LENGTH;
 							     i++)
 								handle.asDouble()[i] = floatArray[i];
 							break;
@@ -344,53 +384,14 @@ void fillMaterialDataStructure(MFnMesh& inputMesh, MFnMesh& outputMesh, const pr
 
 				newStream.setElement(static_cast<adsk::Data::IndexCount>(fri), handle);
 			}
+
+			if (reports != nullptr) {
+				// todo
+			}
 		}
 	}
 
 	outputMesh.setMetadata(newMetadata);
-}
-
-} // namespace
-
-void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
-                            const uint32_t* faceCounts, size_t faceCountsSize, const uint32_t* vertexIndices,
-                            size_t vertexIndicesSize, const uint32_t* normalIndices, size_t normalIndicesSize,
-                            double const* const* uvs, size_t const* uvsSizes, uint32_t const* const* uvCounts,
-                            size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
-                            size_t uvSetsCount, const uint32_t* faceRanges, size_t faceRangesSize,
-                            const prt::AttributeMap** materials, const prt::AttributeMap**, const int32_t*) {
-	MFloatPointArray mayaVertices = toMayaFloatPointArray(vtx, vtxSize);
-	MIntArray mayaFaceCounts = toMayaIntArray(faceCounts, faceCountsSize);
-	MIntArray mayaVertexIndices = toMayaIntArray(vertexIndices, vertexIndicesSize);
-
-	if (DBG) {
-		LOG_DBG << "-- MayaCallbacks::addMesh";
-		LOG_DBG << "   faceCountsSize = " << faceCountsSize;
-		LOG_DBG << "   vertexIndicesSize = " << vertexIndicesSize;
-		LOG_DBG << "   mayaVertices.length = " << mayaVertices.length();
-		LOG_DBG << "   mayaFaceCounts.length   = " << mayaFaceCounts.length();
-		LOG_DBG << "   mayaVertexIndices.length = " << mayaVertexIndices.length();
-	}
-
-	MStatus stat;
-
-	MFnMeshData dataCreator;
-	MObject newOutputData = dataCreator.create(&stat);
-	MCHECK(stat);
-
-	MObject oMesh = MFnMesh().create(mayaVertices.length(), mayaFaceCounts.length(), mayaVertices, mayaFaceCounts,
-	                                 mayaVertexIndices, newOutputData, &stat);
-	MCHECK(stat);
-
-	MFnMesh fnMesh(oMesh);
-	assignTextureCoordinates(fnMesh, uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount);
-	assignVertexNormals(fnMesh, mayaFaceCounts, mayaVertexIndices, nrm, nrmSize, normalIndices, normalIndicesSize);
-
-	MFnMesh inputMesh(inMeshObj);
-	MFnMesh outputMesh(outMeshObj);
-	outputMesh.copyInPlace(oMesh);
-
-	fillMaterialDataStructure(inputMesh, outputMesh, materials, faceRanges, faceRangesSize);
 }
 
 prt::Status MayaCallbacks::attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, bool value) {
