@@ -40,6 +40,8 @@ constexpr const wchar_t* ANNOT_DIR = L"@Directory";
 constexpr const wchar_t* ANNOT_FILE = L"@File";
 constexpr const wchar_t* ANNOT_ORDER = L"@Order";
 constexpr const wchar_t* ANNOT_GROUP = L"@Group";
+constexpr const wchar_t* ANNOT_IMPORTS = L"_$IMPORTS";
+constexpr const wchar_t* ANNOT_IMPORTS_KEY = L"fullPrefix";
 
 constexpr int ORDER_FIRST = std::numeric_limits<int>::min();
 constexpr int ORDER_NONE = std::numeric_limits<int>::max();
@@ -59,6 +61,7 @@ struct RuleAttribute {
 	int groupOrder = ORDER_NONE;
 
 	std::wstring ruleFile;
+	int ruleOrder = ORDER_NONE;
 	bool memberOfStartRuleFile = false;
 };
 

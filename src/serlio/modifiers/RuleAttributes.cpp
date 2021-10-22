@@ -57,6 +57,27 @@ std::wstring getNiceName(const std::wstring& fqAttrName) {
 
 } // namespace
 
+std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileInfo) {
+	std::map<std::wstring, int> importOrderMap;
+	int importOrder = 0;
+	for (size_t i = 0; i < ruleFileInfo->getNumAnnotations(); i++) {
+		const prt::Annotation* an = ruleFileInfo->getAnnotation(i);
+		const wchar_t* anName = an->getName();
+		if (!(std::wcscmp(anName, ANNOT_IMPORTS))) {
+			for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
+				if (an->getArgument(argIdx)->getType() == prt::AAT_STR) {
+					const wchar_t* anKey = an->getArgument(argIdx)->getKey();
+					if(!(std::wcscmp(anKey, ANNOT_IMPORTS_KEY))) {
+						std::wstring importRule = an->getArgument(argIdx)->getStr();
+						importOrderMap[importRule]= importOrder++;
+					}
+				}
+			}
+		}
+	}
+	return importOrderMap;
+}
+
 RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
 	RuleAttributes ra;
 
@@ -64,6 +85,8 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 	size_t idxExtension = mainCgaRuleName.find(L".cgb");
 	if (idxExtension != std::wstring::npos)
 		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
+
+	std::map<std::wstring,int> importOrderMap = getImportOrderMap(ruleFileInfo);
 
 	for (size_t i = 0; i < ruleFileInfo->getNumAttributes(); i++) {
 		const prt::RuleFileInfo::Entry* attr = ruleFileInfo->getAttribute(i);
@@ -92,6 +115,9 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 			p.memberOfStartRuleFile = true;
 		}
 
+		auto importOrder = importOrderMap.find(p.ruleFile);
+		p.ruleOrder =  (importOrder != importOrderMap.end()) ? importOrder->second : ORDER_NONE;
+		
 		bool hidden = false;
 		for (size_t a = 0; a < attr->getNumAnnotations(); a++) {
 			const prt::Annotation* an = attr->getAnnotation(a);
@@ -157,6 +183,9 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		if (b.memberOfStartRuleFile)
 			return false;
 
+		if(a.ruleOrder != b.ruleOrder)
+			return a.ruleOrder < b.ruleOrder;
+		
 		return lowerCaseOrdering(a.ruleFile, b.ruleFile);
 	};
 
