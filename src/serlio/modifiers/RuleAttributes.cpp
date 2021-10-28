@@ -244,7 +244,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 	};
 
 	auto compareAttributeOrder = [&](const RuleAttribute& a, const RuleAttribute& b) {
-		if (a.order == ORDER_NONE && b.order == ORDER_NONE)
+		if (a.order == b.order)
 			return lowerCaseOrdering(a.fqName, b.fqName);
 
 		return a.order < b.order;
