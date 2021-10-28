@@ -178,9 +178,9 @@ void sortRuleAttributes(RuleAttributes& ra) {
 
 	auto compareRuleFile = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		// sort main rule attributes before the rest
-		if (a.memberOfStartRuleFile)
+		if (a.memberOfStartRuleFile && !b.memberOfStartRuleFile)
 			return true;
-		if (b.memberOfStartRuleFile)
+		if (b.memberOfStartRuleFile && !a.memberOfStartRuleFile)
 			return false;
 
 		if(a.ruleOrder != b.ruleOrder)
