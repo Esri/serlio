@@ -47,7 +47,7 @@ constexpr int ORDER_FIRST = std::numeric_limits<int>::min();
 constexpr int ORDER_NONE = std::numeric_limits<int>::max();
 
 using AttributeGroup = std::vector<std::wstring>;
-using AttributeGroupOrder = std::map<AttributeGroup, int>;
+using AttributeGroupOrder = std::map<std::tuple<std::wstring,AttributeGroup>, int>;
 
 struct RuleAttribute {
 	std::wstring fqName;        // fully qualified rule name (i.e. including style prefix)
