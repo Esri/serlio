@@ -43,6 +43,7 @@
 #include <set>
 #include <sstream>
 #include <vector>
+#include <cassert>
 
 // PRT version < 2.1
 #if ((PRT_VERSION_MAJOR <= 2) && ((PRT_VERSION_MAJOR < 2) || (PRT_VERSION_MINOR < 1)))
