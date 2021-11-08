@@ -21,25 +21,17 @@ import com.esri.zrh.jenkins.ce.PrtAppPipelineLibrary
 
 // TODO: abusing grp field to distinguish maya versions per task
 @Field final List CONFIGS = [
-	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
-	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2018', maya: PrtAppPipelineLibrary.Dependencies.MAYA2018 ],
-	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
-	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2019', maya: PrtAppPipelineLibrary.Dependencies.MAYA2019 ],
-	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
-	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2020', maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
-	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
-	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2018', maya: PrtAppPipelineLibrary.Dependencies.MAYA2018 ],
-	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
-	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2019', maya: PrtAppPipelineLibrary.Dependencies.MAYA2019 ],
-	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
-	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, grp: 'maya2020', maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
+	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2018', maya: PrtAppPipelineLibrary.Dependencies.MAYA2018 ],
+	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2019', maya: PrtAppPipelineLibrary.Dependencies.MAYA2019 ],
+	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2020', maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
+	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2018', maya: PrtAppPipelineLibrary.Dependencies.MAYA2018 ],
+	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2019', maya: PrtAppPipelineLibrary.Dependencies.MAYA2019 ],
+	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2020', maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
 ]
 
 @Field final List TEST_CONFIGS = [
-	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
-	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
-	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64,
-	  cesdk: PrtAppPipelineLibrary.Dependencies.CESDK20201, maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
+	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
+	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
 ]
 
 
@@ -83,9 +75,8 @@ Map taskGenSerlioInstallers() {
 
 def taskBuildSerlio(cfg) {
 	final String appName = 'serlio'
-	final List DEPS = [ cfg.cesdk, cfg.maya ]
+	final List DEPS = [ cfg.maya ]
 	List defs = [
-		[ key: 'prt_DIR',           val: cfg.cesdk.p ],
 		[ key: 'maya_DIR',          val: cfg.maya.p ],
 		[ key: 'SRL_VERSION_BUILD', val: env.BUILD_NUMBER ]
 	]
@@ -104,9 +95,8 @@ def taskBuildSerlio(cfg) {
 
 def taskBuildSerlioTests(cfg) {
 	final String appName = 'serlio-test'
-	final List DEPS = [ cfg.cesdk, cfg.maya ]
+	final List DEPS = [ cfg.maya ]
 	List defs = [
-		[ key: 'prt_DIR',           val: cfg.cesdk.p ],
 		[ key: 'maya_DIR',          val: cfg.maya.p ],
 		[ key: 'SRL_VERSION_BUILD', val: env.BUILD_NUMBER ]
 	]
@@ -119,7 +109,7 @@ def taskBuildSerlioInstaller(cfg) {
 	final String appName = 'serlio-installer'
 	cepl.cleanCurrentDir()
 	papl.checkout(REPO, myBranch, REPO_CREDS)
-	final List deps = [ cfg.cesdk, cfg.maya ]
+	final List deps = [ cfg.maya ]
 	deps.each { d -> papl.fetchDependency(d, cfg) }
 
 	// Toolchain definition for building MSI installers.
@@ -138,7 +128,6 @@ def taskBuildSerlioInstaller(cfg) {
 			cmd += "\n"
 			cmd += "powershell .\\build.ps1"
 			cmd += " -MAYA_DIR ${cfg.maya.p.call(cfg)}" // <-- !!!
-			cmd += " -CESDK_DIR ${PrtAppPipelineLibrary.Dependencies.CESDK.p.call(cfg)}"
 			cmd += " -BUILD_NO ${env.BUILD_NUMBER}"
 			cmd += " -TARGET InstallerFromScratch"
 
