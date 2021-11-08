@@ -60,6 +60,37 @@ global proc createPrtNode() {
 	select -r $select;
 }
 
+global proc removePrtNode() {
+	string $select[] = `ls -sl`;
+	string $initialShapes[] = collectInitialShapes($select);
+	
+	if(!(size($initialShapes))) {
+		confirmDialog -title "Missing selection" -message "Please select shapes first in order to apply a rule." -button "OK";
+		return;
+	}
+
+	for($node in $initialShapes) {
+		select -r $node;
+		hyperShade -assign "lambert1";
+		string $nodeHistory[] = `listHistory $node`;
+		
+		for($dpNode in $nodeHistory){
+			$dpNodeType = `nodeType $dpNode`;
+				if($dpNodeType == "serlio" || $dpNodeType == "serlioMaterial" || $dpNodeType == "serlioArnoldMaterial" ){
+					$previousDpNodePlug =  `connectionInfo -sfd ($dpNode +".inMesh")`;
+					$nextDpNodePlug = `connectionInfo -dfs ($dpNode +".outMesh")`;
+					if (size($previousDpNodePlug)>0 && size($nextDpNodePlug)) {
+						connectAttr -force ( $previousDpNodePlug ) ($nextDpNodePlug);
+						delete $dpNode;
+					}
+				}
+		}
+	}
+
+	select -r $select;
+}
+
+
 global proc createPrtMaterialNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
@@ -109,6 +140,7 @@ global proc createPrtMenu() {
 		setParent -m $gPrtMenu;
 		menuItem -divider true;
 		menuItem -label "Attach CityEngine Rule Package..."  -c "createPrtNode" -annotation "Attach a CGA rule package to a geometry";
+		menuItem -label "Remove Rule Package Assignment"  -c "removePrtNode" -annotation "Remove a CGA rule package from a geometry";
 		menuItem -label "Create Materials"  -c "createPrtMaterialNode" -annotation "Create Materials";
         menuItem -label "Create Arnold Materials" -c "createArnoldMaterialNode" -annotation "Create Arnold Materials";
 		setParent -m ..;
