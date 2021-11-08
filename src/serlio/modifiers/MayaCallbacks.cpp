@@ -150,7 +150,7 @@ void assignVertexNormals(MFnMesh& mFnMesh, MIntArray& mayaFaceCounts, MIntArray&
 	MIntArray faceList(static_cast<unsigned int>(mayaVertexIndices.length()));
 
 	int indexCount = 0;
-	for (int i = 0; i < mayaFaceCounts.length(); i++) {
+	for (uint32_t i = 0; i < mayaFaceCounts.length(); i++) {
 		int faceLength = mayaFaceCounts[i];
 
 		for (int j = 0; j < faceLength; j++) {
