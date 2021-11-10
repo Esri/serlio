@@ -16,8 +16,6 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	set(SRL_WINDOWS 1)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	set(SRL_LINUX 1)
-elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-	set(SRL_MACOS 1)
 endif ()
 
 
@@ -42,9 +40,6 @@ if (NOT prt_DIR)
 	elseif (SRL_LINUX)
 		set(PRT_OS "rhel7")
 		set(PRT_TC "gcc93")
-	elseif (SRL_MACOS)
-		set(PRT_OS "osx12")
-		set(PRT_TC "ac81")
 	endif ()
 
 	set(PRT_VERSION "2.5.7799")

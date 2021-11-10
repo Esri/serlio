@@ -26,8 +26,6 @@ set_common_target_definitions(${CODEC_TARGET})
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	target_compile_options(${CODEC_TARGET} PRIVATE -bigobj -GR -EHsc)
-elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-	target_compile_options(${CODEC_TARGET} PRIVATE -stdlib=libc++ -fvisibility=hidden -fvisibility-inlines-hidden -Wl,--exclude-libs,ALL)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	target_compile_options(${CODEC_TARGET} PRIVATE -D_GLIBCXX_USE_CXX11_ABI=0 -march=nocona -fvisibility=hidden -fvisibility-inlines-hidden -Wl,--exclude-libs,ALL)
 endif ()
@@ -36,8 +34,6 @@ target_link_libraries(${CODEC_TARGET} ${PRT_LINK_LIBRARIES})
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	target_link_libraries(${CODEC_TARGET} IPHlpApi Psapi DbgHelp)
-elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-	# none
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	target_link_libraries(${CODEC_TARGET} z pthread dl rt)
 endif ()
