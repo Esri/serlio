@@ -24,6 +24,7 @@ endif ()
 ### common target functions
 
 function(set_common_target_definitions TGT)
+	set_target_properties(${TGT} PROPERTIES CXX_STANDARD 17)
 	target_compile_definitions(${TGT} PRIVATE
 		-DSRL_VERSION=\"${SRL_VERSION}\" # quoted to use it as string literal
 		-DPRT_VERSION_MAJOR=${PRT_VERSION_MAJOR}
