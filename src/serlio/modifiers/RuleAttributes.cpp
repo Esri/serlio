@@ -63,11 +63,11 @@ std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileIn
 	for (size_t i = 0; i < ruleFileInfo->getNumAnnotations(); i++) {
 		const prt::Annotation* an = ruleFileInfo->getAnnotation(i);
 		const wchar_t* anName = an->getName();
-		if (!(std::wcscmp(anName, ANNOT_IMPORTS))) {
+		if (std::wcscmp(anName, ANNOT_IMPORTS) == 0) {
 			for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
 				if (an->getArgument(argIdx)->getType() == prt::AAT_STR) {
 					const wchar_t* anKey = an->getArgument(argIdx)->getKey();
-					if(!(std::wcscmp(anKey, ANNOT_IMPORTS_KEY))) {
+					if(std::wcscmp(anKey, ANNOT_IMPORTS_KEY) == 0) {
 						std::wstring importRule = an->getArgument(argIdx)->getStr();
 						importOrderMap[importRule]= importOrder++;
 					}
@@ -122,14 +122,14 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 		for (size_t a = 0; a < attr->getNumAnnotations(); a++) {
 			const prt::Annotation* an = attr->getAnnotation(a);
 			const wchar_t* anName = an->getName();
-			if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
+			if (std::wcscmp(anName, ANNOT_HIDDEN) == 0)
 				hidden = true;
-			else if (!(std::wcscmp(anName, ANNOT_ORDER))) {
+			else if (std::wcscmp(anName, ANNOT_ORDER) == 0) {
 				if (an->getNumArguments() >= 1 && an->getArgument(0)->getType() == prt::AAT_FLOAT) {
 					p.order = static_cast<int>(an->getArgument(0)->getFloat());
 				}
 			}
-			else if (!(std::wcscmp(anName, ANNOT_GROUP))) {
+			else if (std::wcscmp(anName, ANNOT_GROUP) == 0) {
 				for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
 					if (an->getArgument(argIdx)->getType() == prt::AAT_STR) {
 						p.groups.push_back(an->getArgument(argIdx)->getStr());
