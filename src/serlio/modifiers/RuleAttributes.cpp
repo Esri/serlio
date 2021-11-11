@@ -87,7 +87,7 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 	if (idxExtension != std::wstring::npos)
 		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
 
-	std::map<std::wstring,int> importOrderMap = getImportOrderMap(ruleFileInfo);
+	const std::map<std::wstring,int> importOrderMap = getImportOrderMap(ruleFileInfo);
 
 	for (size_t i = 0; i < ruleFileInfo->getNumAttributes(); i++) {
 		const prt::RuleFileInfo::Entry* attr = ruleFileInfo->getAttribute(i);
