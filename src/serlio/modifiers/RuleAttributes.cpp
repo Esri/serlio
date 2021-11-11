@@ -163,7 +163,7 @@ AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes) {
 		for (auto it = std::rbegin(attribute.groups); it != std::rend(attribute.groups); ++it) {
 			std::vector<std::wstring> g(it, std::rend(attribute.groups));
 			std::reverse(g.begin(), g.end());
-			auto ggoIt = globalGroupOrder.emplace(std::tuple<std::wstring,AttributeGroup>(attribute.ruleFile,g), ORDER_NONE).first;
+			auto ggoIt = globalGroupOrder.emplace(std::make_pair(attribute.ruleFile,g), ORDER_NONE).first;
 			ggoIt->second = std::min(attribute.groupOrder, ggoIt->second);
 		}
 	}
@@ -221,7 +221,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		LOG_DBG << "globalGroupOrder:\n" << globalGroupOrder;
 
 	auto getGroupOrder = [&globalGroupOrder](const RuleAttribute& ap) {
-		const auto it = globalGroupOrder.find(std::tuple<std::wstring,AttributeGroup>(ap.ruleFile,ap.groups));
+		const auto it = globalGroupOrder.find(std::make_pair(ap.ruleFile,ap.groups));
 		return (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
 	};
 
@@ -281,7 +281,7 @@ std::ostream& operator<<(std::ostream& ostr, const RuleAttribute& ap) {
 
 std::wostream& operator<<(std::wostream& wostr, const AttributeGroupOrder& ago) {
 	for (const auto& i : ago) {
-		wostr << L"[ " << std::get<0>(i.first) << " " << join<wchar_t>(std::get<1>(i.first), L" ") << L"] = " << i.second << L"\n";
+		wostr << L"[ " << i.first.first << " " << join<wchar_t>(i.first.second, L" ") << L"] = " << i.second << L"\n";
 	}
 	return wostr;
 }
