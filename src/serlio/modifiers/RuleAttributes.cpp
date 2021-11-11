@@ -116,7 +116,7 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 			p.memberOfStartRuleFile = true;
 		}
 
-		auto importOrder = importOrderMap.find(p.ruleFile);
+		const auto importOrder = importOrderMap.find(p.ruleFile);
 		p.ruleOrder =  (importOrder != importOrderMap.end()) ? importOrder->second : ORDER_NONE;
 		
 		bool hidden = false;
