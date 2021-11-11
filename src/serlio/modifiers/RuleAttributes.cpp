@@ -69,8 +69,11 @@ std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileIn
 				if (anArg->getType() == prt::AAT_STR) {
 					const wchar_t* anKey = anArg->getKey();
 					if(std::wcscmp(anKey, ANNOT_IMPORTS_KEY) == 0) {
-						std::wstring importRule = anArg->getStr();
-						importOrderMap[importRule]= importOrder++;
+						const wchar_t* importRuleCharPtr = anArg->getStr();
+						if (importRuleCharPtr != nullptr) {
+							std::wstring importRule = importRuleCharPtr;
+							importOrderMap[importRule] = importOrder++;
+						}
 					}
 				}
 			}
