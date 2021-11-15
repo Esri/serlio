@@ -29,6 +29,7 @@
 #include <maya/MFloatVector.h>
 #include <maya/MObjectArray.h>
 #include <maya/MPlugArray.h>
+#include <maya/MFnMesh.h>
 
 #include <maya/MIOStream.h>
 
@@ -1161,6 +1162,8 @@ MStatus polyModifierCmd::undoDirectModifier()
 		status = meshNodeOutMeshPlug.setValue( fMeshData );
 		MCheckStatus( status, "Could not set meshData" );
 	}
+	MFnMesh fnMesh(meshNode);
+	fnMesh.updateSurface();
 
 	return status;
 }
