@@ -324,6 +324,37 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	return MS::kSuccess;
 }
 
+MStatus PRTModifierAction::clearTweaks(MObject mesh) {
+	MStatus stat;
+	MFnDependencyNode depNodeFn;
+	depNodeFn.setObject(mesh);
+	bool fHasTweaks = false;
+	MPlug tweakPlug = depNodeFn.findPlug("pnts", true);
+	if (!tweakPlug.isNull()) {
+		if (!tweakPlug.isArray()) {
+			return MStatus::kFailure;
+		}
+
+		MPlug tweak;
+		MFloatVector tweakData;
+		int i;
+		int numElements = tweakPlug.numElements();
+
+		for (i = 0; i < numElements; i++) {
+			tweak = tweakPlug.elementByPhysicalIndex(i, &stat);
+			if (stat == MS::kSuccess && !tweak.isNull()) {
+
+				MFnNumericData numDataFn;
+				MObject object = numDataFn.create(MFnNumericData::k3Float);
+				numDataFn.setData(0, 0, 0);
+				tweak.setValue(object);
+			}
+		}
+	}
+		
+	return stat;
+}
+
 MStatus PRTModifierAction::doIt() {
 	MStatus status;
 
