@@ -308,13 +308,12 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	}
 
 	mStartRule = prtu::detectStartRule(info);
+	mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
+	                                           *inPrtMesh);
+	if (DBG)
+		LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
 	if (node != MObject::kNullObj) {
-		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
-		                                           *inPrtMesh);
-		if (DBG)
-			LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
-
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
 		mRuleAttributes = getRuleAttributes(mRuleFile, info.get());
 		sortRuleAttributes(mRuleAttributes);
