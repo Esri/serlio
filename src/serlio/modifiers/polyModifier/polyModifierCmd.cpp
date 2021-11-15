@@ -1017,7 +1017,7 @@ MStatus polyModifierCmd::undoCachedMesh()
 
 			// Need to force a DG evaluation now that the input has been changed.
 			//
-			MString cmd( "dgeval -src " );
+			MString cmd( "dgeval " );
 			cmd += meshNodeName;
 			cmd += ".inMesh";
 			status = MGlobal::executeCommand( cmd, false, false );
@@ -1135,7 +1135,7 @@ MStatus polyModifierCmd::undoDirectModifier()
 
 		// Need to force a DG evaluation now that the input has been changed.
 		//
-		MString cmd("dgeval -src ");
+		MString cmd("dgeval ");
 		cmd += meshNodeName;
 		cmd += ".inMesh";
 		status = MGlobal::executeCommand( cmd, false, false );
