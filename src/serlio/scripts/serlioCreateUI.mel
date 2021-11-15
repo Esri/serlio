@@ -70,12 +70,8 @@ global proc createPrtMaterialNode() {
 	}	
 	
 	for($node in $initialShapes) {
-		$prtMaterialName = `createNode serlioMaterial`;
-		$im =  `connectionInfo -sfd ($node +".inMesh")`;
-		if (size($im)>0) {
-			connectAttr -force ( $prtMaterialName + ".outMesh" ) ( $node + ".inMesh" );
-			connectAttr -force ( $im ) ( $prtMaterialName + ".inMesh" );
-		}
+		select -r $node;
+		createMaterial "stingray";
 	}
 }
 
@@ -89,12 +85,8 @@ global proc createArnoldMaterialNode() {
 	}	
 	
 	for($node in $initialShapes) {
-		$prtMaterialName = `createNode serlioArnoldMaterial`;
-		$im =  `connectionInfo -sfd ($node +".inMesh")`;
-		if (size($im)>0) {
-			connectAttr -force ( $prtMaterialName + ".outMesh" ) ( $node + ".inMesh" );
-			connectAttr -force ( $im ) ( $prtMaterialName + ".inMesh" );
-		}
+		select -r $node;
+		createMaterial "arnold";
 	}
 }
 
