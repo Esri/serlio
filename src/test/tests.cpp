@@ -198,7 +198,7 @@ TEST_CASE("rule attribute sorting") {
 	}
 
 	SECTION("nested groups") {
-		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"bar", ORDER_NONE, true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
 		RuleAttributes inp = {A, B};
@@ -208,7 +208,7 @@ TEST_CASE("rule attribute sorting") {
 	}
 
 	SECTION("nested groups disjunct") {
-		const RuleAttribute A = getAttr(L"style$A", {L"foo1", L"bar"}, ORDER_NONE, ORDER_NONE, L"bar", ORDER_NONE, true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo1", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
 		RuleAttributes inp = {A, B};
