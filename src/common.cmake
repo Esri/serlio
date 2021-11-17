@@ -16,14 +16,13 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	set(SRL_WINDOWS 1)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	set(SRL_LINUX 1)
-elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-	set(SRL_MACOS 1)
 endif ()
 
 
 ### common target functions
 
 function(set_common_target_definitions TGT)
+	set_target_properties(${TGT} PROPERTIES CXX_STANDARD 17)
 	target_compile_definitions(${TGT} PRIVATE
 		-DSRL_VERSION=\"${SRL_VERSION}\" # quoted to use it as string literal
 		-DPRT_VERSION_MAJOR=${PRT_VERSION_MAJOR}
@@ -40,10 +39,7 @@ if (NOT prt_DIR)
 		set(PRT_TC "vc1427")
 	elseif (SRL_LINUX)
 		set(PRT_OS "rhel7")
-		set(PRT_TC "gcc63")
-	elseif (SRL_MACOS)
-		set(PRT_OS "osx12")
-		set(PRT_TC "ac81")
+		set(PRT_TC "gcc93")
 	endif ()
 
 	set(PRT_VERSION "2.5.7799")

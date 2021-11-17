@@ -66,9 +66,6 @@ endif ()
 
 ### setup compiler flags
 
-set_target_properties(${CLIENT_TARGET} PROPERTIES
-	CXX_STANDARD 14)
-
 set_common_target_definitions(${SERLIO_TARGET})
 
 target_include_directories(${SERLIO_TARGET}
