@@ -71,7 +71,7 @@ global proc createPrtMaterialNode() {
 	
 	for($node in $initialShapes) {
 		select -r $node;
-		createMaterial "stingray";
+		serlioCreateMaterial "stingray";
 	}
 }
 
@@ -86,7 +86,7 @@ global proc createArnoldMaterialNode() {
 	
 	for($node in $initialShapes) {
 		select -r $node;
-		createMaterial "arnold";
+		serlioCreateMaterial "arnold";
 	}
 }
 
