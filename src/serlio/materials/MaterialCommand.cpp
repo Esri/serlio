@@ -38,12 +38,10 @@ MStatus MaterialCommand::doIt(const MArgList& argList) {
 	MStatus status;
 
 	if (argList.length() == 0) {
-		cerr << "Material type expected (stingray/arnold)" << endl;
 		displayError("Material type expected (stingray/arnold)");
 		return MS::kFailure;
 	}
 	else if (argList.length() > 1) {
-		cerr << "Only one material type expected" << endl;
 		displayError("Only one material type expected");
 		return MS::kFailure;
 	}
@@ -59,7 +57,6 @@ MStatus MaterialCommand::doIt(const MArgList& argList) {
 		materialTypeId = ArnoldMaterialNode::id;
 	}
 	else {
-		cerr << "Material type expected (stingray/arnold)" << endl;
 		displayError("Material type expected (stingray/arnold)");
 		return MS::kFailure;
 	}

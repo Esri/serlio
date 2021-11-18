@@ -40,7 +40,6 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList) {
 		mRulePkg = argList.asString(0);
 	}
 	else {
-		cerr << "Expecting one parameter: the rpk name path" << endl;
 		displayError(" Expecting one parameter: the operation type.");
 		return MS::kFailure;
 	}
