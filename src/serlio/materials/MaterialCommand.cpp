@@ -90,8 +90,7 @@ MStatus MaterialCommand::doIt(const MArgList& argList) {
 		}
 	}
 	if (foundMultiple) {
-		displayWarning("Found more than one object with selected components.");
-		displayWarning("Only operating on first found object.");
+		displayWarning("Found more than one object with selected components. Only operating on first found object.");
 	}
 
 	if (found) {
