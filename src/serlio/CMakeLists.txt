@@ -135,7 +135,7 @@ install(FILES ${SRL_PRT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins
 
 # PRT: whitelist required extension libraries
 set(SRL_PRT_EXT_LIBRARIES ${PRT_EXT_LIBRARIES})
-list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.codecs|com\\.esri\\.prt\\.adaptors|VueExport")
+list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.codecs|com\\.esri\\.prt\\.adaptors|com\\.esri\\.prt\\.oda|com\\.esri\\.prt\\.alembic|com\\.esri\\.prt\\.usd|usd_ms|tbb")
 install(FILES ${SRL_PRT_EXT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
 
 # doc
