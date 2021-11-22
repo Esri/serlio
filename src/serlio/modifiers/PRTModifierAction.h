@@ -72,6 +72,7 @@ public:
 	void setRandomSeed(int32_t randomSeed) {
 		mRandomSeed = randomSeed;
 	};
+	MStatus clearTweaks(MObject mesh);
 
 	// polyModifierFty inherited methods
 	MStatus doIt() override;

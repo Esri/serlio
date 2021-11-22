@@ -40,7 +40,6 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList) {
 		mRulePkg = argList.asString(0);
 	}
 	else {
-		cerr << "Expecting one parameter: the rpk name path" << endl;
 		displayError(" Expecting one parameter: the operation type.");
 		return MS::kFailure;
 	}
@@ -74,8 +73,7 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList) {
 		}
 	}
 	if (foundMultiple) {
-		displayWarning("Found more than one object with selected components.");
-		displayWarning("Only operating on first found object.");
+		displayWarning("Found more than one object with selected components. Only operating on first found object.");
 	}
 
 	// Initialize the polyModifierCmd node type - mesh node already set
@@ -156,6 +154,7 @@ MStatus PRTModifierCommand::directModifier(MObject mesh) {
 	fPRTModifierAction.setMesh(mesh, mesh);
 	fPRTModifierAction.setRandomSeed(mInitialSeed);
 	fPRTModifierAction.updateRuleFiles(MObject::kNullObj, mRulePkg);
+	fPRTModifierAction.clearTweaks(mesh);
 
 	// Now, perform the PRT action
 	status = fPRTModifierAction.doIt();
