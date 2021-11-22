@@ -35,6 +35,7 @@
 #include "maya/MFnMeshData.h"
 #include "maya/adskDataAssociations.h"
 #include "maya/adskDataStream.h"
+#include "maya/MFnDependencyNode.h"
 
 #include <cassert>
 #include <sstream>
@@ -392,6 +393,16 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	}
 
 	outputMesh.setMetadata(newMetadata);
+
+	//manually set the plug value, since copyInPlace is broken for meshes without construction history
+	if (outMeshObj.apiType() == MFn::Type::kMesh) {
+		mFnMesh1.setMetadata(newMetadata);
+
+		MFnDependencyNode depNodeFn;
+		depNodeFn.setObject(outMeshObj);
+		MPlug meshNodeOutMeshPlug = depNodeFn.findPlug("inMesh", true);
+		meshNodeOutMeshPlug.setValue(newOutputData);
+	}
 }
 
 prt::Status MayaCallbacks::attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, bool value) {

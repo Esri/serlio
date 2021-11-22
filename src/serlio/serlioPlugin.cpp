@@ -25,6 +25,7 @@
 
 #include "materials/ArnoldMaterialNode.h"
 #include "materials/StingrayMaterialNode.h"
+#include "materials/MaterialCommand.h"
 
 #include "utils/MayaUtilities.h"
 
@@ -42,6 +43,7 @@ constexpr bool DBG = false;
 constexpr const char* NODE_MODIFIER = "serlio";
 constexpr const char* NODE_MATERIAL = "serlioMaterial";
 constexpr const char* NODE_ARNOLD_MATERIAL = "serlioArnoldMaterial";
+constexpr const char* CMD_CREATE_MATERIAL = "serlioCreateMaterial";
 constexpr const char* CMD_ASSIGN = "serlioAssign";
 constexpr const char* MEL_PROC_CREATE_UI = "serlioCreateUI";
 constexpr const char* MEL_PROC_DELETE_UI = "serlioDeleteUI";
@@ -70,6 +72,9 @@ MStatus initializePlugin(MObject obj) {
 
 	auto createModifierCommand = []() { return (void*)new PRTModifierCommand(); };
 	MCHECK(plugin.registerCommand(CMD_ASSIGN, createModifierCommand));
+
+	auto createMaterialCommand = []() { return (void*)new MaterialCommand(); };
+	MCHECK(plugin.registerCommand(CMD_CREATE_MATERIAL, createMaterialCommand));
 
 	auto createModifierNode = []() { return (void*)new PRTModifierNode(); };
 	MCHECK(plugin.registerNode(NODE_MODIFIER, PRTModifierNode::id, createModifierNode, PRTModifierNode::initialize));

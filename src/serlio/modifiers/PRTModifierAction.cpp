@@ -308,13 +308,12 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	}
 
 	mStartRule = prtu::detectStartRule(info);
+	mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
+	                                           *inPrtMesh);
+	if (DBG)
+		LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
 	if (node != MObject::kNullObj) {
-		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
-		                                           *inPrtMesh);
-		if (DBG)
-			LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
-
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
 		mRuleAttributes = getRuleAttributes(mRuleFile, info.get());
 		sortRuleAttributes(mRuleAttributes);
@@ -323,6 +322,37 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	}
 
 	return MS::kSuccess;
+}
+
+MStatus PRTModifierAction::clearTweaks(MObject mesh) {
+	MStatus stat;
+	MFnDependencyNode depNodeFn;
+	depNodeFn.setObject(mesh);
+	bool fHasTweaks = false;
+	MPlug tweakPlug = depNodeFn.findPlug("pnts", true);
+	if (!tweakPlug.isNull()) {
+		if (!tweakPlug.isArray()) {
+			return MStatus::kFailure;
+		}
+
+		MPlug tweak;
+		MFloatVector tweakData;
+		int i;
+		int numElements = tweakPlug.numElements();
+
+		for (i = 0; i < numElements; i++) {
+			tweak = tweakPlug.elementByPhysicalIndex(i, &stat);
+			if (stat == MS::kSuccess && !tweak.isNull()) {
+
+				MFnNumericData numDataFn;
+				MObject object = numDataFn.create(MFnNumericData::k3Float);
+				numDataFn.setData(0, 0, 0);
+				tweak.setValue(object);
+			}
+		}
+	}
+		
+	return stat;
 }
 
 MStatus PRTModifierAction::doIt() {
