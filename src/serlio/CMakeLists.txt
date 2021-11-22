@@ -66,9 +66,6 @@ endif ()
 
 ### setup compiler flags
 
-set_target_properties(${CLIENT_TARGET} PROPERTIES
-	CXX_STANDARD 14)
-
 set_common_target_definitions(${SERLIO_TARGET})
 
 target_include_directories(${SERLIO_TARGET}
@@ -138,8 +135,9 @@ install(FILES ${SRL_PRT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins
 
 # PRT: whitelist required extension libraries
 set(SRL_PRT_EXT_LIBRARIES ${PRT_EXT_LIBRARIES})
-list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.codecs|com\\.esri\\.prt\\.adaptors|VueExport")
+list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.(codecs|adaptors|oda|usd)|tbb|usd_ms")
 install(FILES ${SRL_PRT_EXT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+install(DIRECTORY "${PRT_EXTENSION_PATH}/usd" DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext) # USD resource files
 
 # doc
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/../doc DESTINATION ${INSTALL_FOLDER_PREFIX})
