@@ -65,7 +65,7 @@ global proc removePrtNode() {
 	string $initialShapes[] = collectInitialShapes($select);
 	
 	if(!(size($initialShapes))) {
-		confirmDialog -title "Missing selection" -message "Please select shapes first in order to apply a rule." -button "OK";
+		confirmDialog -title "Missing selection" -message "Please select shapes first in order to remove a rule." -button "OK";
 		return;
 	}
 
