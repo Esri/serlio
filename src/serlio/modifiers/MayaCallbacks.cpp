@@ -272,125 +272,132 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	newMetadata.makeUnique();
 	MCHECK(stat);
 	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIAL_CHANNEL);
-	adsk::Data::Stream newStream(*fStructure, PRT_MATERIAL_STREAM);
 
-	newChannel.setDataStream(newStream);
-	newMetadata.setChannel(newChannel);
+	if (fStructure != nullptr) {
+		adsk::Data::Stream newStream(*fStructure, PRT_MATERIAL_STREAM);
 
-	if (faceRangesSize > 1) {
+		newChannel.setDataStream(newStream);
+		newMetadata.setChannel(newChannel);
 
-		for (size_t fri = 0; fri < faceRangesSize - 1; fri++) {
+		if (faceRangesSize > 1) {
 
-			if (materials != nullptr) {
-				adsk::Data::Handle handle(*fStructure);
+			for (size_t fri = 0; fri < faceRangesSize - 1; fri++) {
 
-				const prt::AttributeMap* mat = materials[fri];
+				if (materials != nullptr) {
+					adsk::Data::Handle handle(*fStructure);
 
-				size_t keyCount = 0;
-				wchar_t const* const* keys = mat->getKeys(&keyCount);
+					const prt::AttributeMap* mat = materials[fri];
 
-				for (int k = 0; k < keyCount; k++) {
+					size_t keyCount = 0;
+					wchar_t const* const* keys = mat->getKeys(&keyCount);
 
-					wchar_t const* key = keys[k];
+					for (int k = 0; k < keyCount; k++) {
 
-					const std::string keyNarrow = prtu::toOSNarrowFromUTF16(key);
+						wchar_t const* key = keys[k];
 
-					if (!handle.setPositionByMemberName(keyNarrow.c_str()))
-						continue;
+						const std::string keyNarrow = prtu::toOSNarrowFromUTF16(key);
 
-					size_t arraySize = 0;
+						if (!handle.setPositionByMemberName(keyNarrow.c_str()))
+							continue;
 
-					switch (mat->getType(key)) {
-						case prt::Attributable::PT_BOOL:
-							handle.asBoolean()[0] = mat->getBool(key);
-							break;
-						case prt::Attributable::PT_FLOAT:
-							handle.asDouble()[0] = mat->getFloat(key);
-							break;
-						case prt::Attributable::PT_INT:
-							handle.asInt32()[0] = mat->getInt(key);
-							break;
+						size_t arraySize = 0;
 
-							// workaround: transporting string as uint8 array, because using asString crashes maya
-						case prt::Attributable::PT_STRING: {
-							const wchar_t* str = mat->getString(key);
-							if (wcslen(str) == 0)
+						switch (mat->getType(key)) {
+							case prt::Attributable::PT_BOOL:
+								handle.asBoolean()[0] = mat->getBool(key);
 								break;
-							checkStringLength(str, MATERIAL_MAX_STRING_LENGTH);
-							size_t maxStringLengthTmp = MATERIAL_MAX_STRING_LENGTH;
-							prt::StringUtils::toOSNarrowFromUTF16(str, (char*)handle.asUInt8(), &maxStringLengthTmp);
-							break;
-						}
-						case prt::Attributable::PT_BOOL_ARRAY: {
-							const bool* boolArray;
-							boolArray = mat->getBoolArray(key, &arraySize);
-							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++)
-								handle.asBoolean()[i] = boolArray[i];
-							break;
-						}
-						case prt::Attributable::PT_INT_ARRAY: {
-							const int* intArray;
-							intArray = mat->getIntArray(key, &arraySize);
-							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++)
-								handle.asInt32()[i] = intArray[i];
-							break;
-						}
-						case prt::Attributable::PT_FLOAT_ARRAY: {
-							const double* floatArray;
-							floatArray = mat->getFloatArray(key, &arraySize);
-							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH && i < MATERIAL_MAX_FLOAT_ARRAY_LENGTH;
-							     i++)
-								handle.asDouble()[i] = floatArray[i];
-							break;
-						}
-						case prt::Attributable::PT_STRING_ARRAY: {
+							case prt::Attributable::PT_FLOAT:
+								handle.asDouble()[0] = mat->getFloat(key);
+								break;
+							case prt::Attributable::PT_INT:
+								handle.asInt32()[0] = mat->getInt(key);
+								break;
 
-							const wchar_t* const* stringArray = mat->getStringArray(key, &arraySize);
-
-							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++) {
-								if (wcslen(stringArray[i]) == 0)
-									continue;
-
-								if (i > 0) {
-									std::wstring keyToUse = key + std::to_wstring(i);
-									const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
-									if (!handle.setPositionByMemberName(keyToUseNarrow.c_str()))
-										continue;
-								}
-
-								checkStringLength(stringArray[i], MATERIAL_MAX_STRING_LENGTH);
+								// workaround: transporting string as uint8 array, because using asString crashes maya
+							case prt::Attributable::PT_STRING: {
+								const wchar_t* str = mat->getString(key);
+								if (wcslen(str) == 0)
+									break;
+								checkStringLength(str, MATERIAL_MAX_STRING_LENGTH);
 								size_t maxStringLengthTmp = MATERIAL_MAX_STRING_LENGTH;
-								prt::StringUtils::toOSNarrowFromUTF16(stringArray[i], (char*)handle.asUInt8(),
+								prt::StringUtils::toOSNarrowFromUTF16(str, (char*)handle.asUInt8(),
 								                                      &maxStringLengthTmp);
+								break;
 							}
-							break;
-						}
+							case prt::Attributable::PT_BOOL_ARRAY: {
+								const bool* boolArray;
+								boolArray = mat->getBoolArray(key, &arraySize);
+								for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++)
+									handle.asBoolean()[i] = boolArray[i];
+								break;
+							}
+							case prt::Attributable::PT_INT_ARRAY: {
+								const int* intArray;
+								intArray = mat->getIntArray(key, &arraySize);
+								for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++)
+									handle.asInt32()[i] = intArray[i];
+								break;
+							}
+							case prt::Attributable::PT_FLOAT_ARRAY: {
+								const double* floatArray;
+								floatArray = mat->getFloatArray(key, &arraySize);
+								for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH &&
+								                         i < MATERIAL_MAX_FLOAT_ARRAY_LENGTH;
+								     i++)
+									handle.asDouble()[i] = floatArray[i];
+								break;
+							}
+							case prt::Attributable::PT_STRING_ARRAY: {
 
-						case prt::Attributable::PT_UNDEFINED:
-							break;
-						case prt::Attributable::PT_BLIND_DATA:
-							break;
-						case prt::Attributable::PT_BLIND_DATA_ARRAY:
-							break;
-						case prt::Attributable::PT_COUNT:
-							break;
+								const wchar_t* const* stringArray = mat->getStringArray(key, &arraySize);
+
+								for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++) {
+									if (wcslen(stringArray[i]) == 0)
+										continue;
+
+									if (i > 0) {
+										std::wstring keyToUse = key + std::to_wstring(i);
+										const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
+										if (!handle.setPositionByMemberName(keyToUseNarrow.c_str()))
+											continue;
+									}
+
+									checkStringLength(stringArray[i], MATERIAL_MAX_STRING_LENGTH);
+									size_t maxStringLengthTmp = MATERIAL_MAX_STRING_LENGTH;
+									prt::StringUtils::toOSNarrowFromUTF16(stringArray[i], (char*)handle.asUInt8(),
+									                                      &maxStringLengthTmp);
+								}
+								break;
+							}
+
+							case prt::Attributable::PT_UNDEFINED:
+								break;
+							case prt::Attributable::PT_BLIND_DATA:
+								break;
+							case prt::Attributable::PT_BLIND_DATA_ARRAY:
+								break;
+							case prt::Attributable::PT_COUNT:
+								break;
+						}
 					}
+
+					handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_START.c_str());
+					*handle.asInt32() = faceRanges[fri];
+
+					handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_END.c_str());
+					*handle.asInt32() = faceRanges[fri + 1];
+
+					newStream.setElement(static_cast<adsk::Data::IndexCount>(fri), handle);
 				}
 
-				handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_START.c_str());
-				*handle.asInt32() = faceRanges[fri];
-
-				handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_END.c_str());
-				*handle.asInt32() = faceRanges[fri + 1];
-
-				newStream.setElement(static_cast<adsk::Data::IndexCount>(fri), handle);
-			}
-
-			if (reports != nullptr) {
-				// todo
+				if (reports != nullptr) {
+					// todo
+				}
 			}
 		}
+
 	}
+
 
 	outputMesh.setMetadata(newMetadata);
 
