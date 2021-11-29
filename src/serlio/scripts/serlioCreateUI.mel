@@ -42,7 +42,7 @@ global proc createPrtNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
-	if(!(size($initialShapes))) {
+	if(size($initialShapes) == 0) {
 		confirmDialog -title "Missing selection" -message "Please select shapes first in order to apply a rule." -button "OK";
 		return;
 	}
@@ -51,7 +51,7 @@ global proc createPrtNode() {
 	string $rulePackage[] = `fileDialog2 -fm 1 -cap "Select Rule Package" -ff $filters`;
 	
 	
-	if(size($rulePackage)) {
+	if(size($rulePackage) > 0 ) {
 		for($node in $initialShapes) {
 			select -r $node;
 			serlioAssign $rulePackage;
@@ -64,7 +64,7 @@ global proc removePrtNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
-	if(!(size($initialShapes))) {
+	if(size($initialShapes) == 0) {
 		confirmDialog -title "Missing selection" -message "Please select shapes first in order to remove a rule." -button "OK";
 		return;
 	}
@@ -97,7 +97,7 @@ global proc createPrtMaterialNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
-	if(!(size($initialShapes))) {
+	if(size($initialShapes) == 0) {
 		confirmDialog -title "Missing selection" -message "Please select shapes first in order to create materials." -button "OK";
 		return;
 	}	
@@ -112,7 +112,7 @@ global proc createArnoldMaterialNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
-	if(!(size($initialShapes))) {
+	if(size($initialShapes) == 0) {
 		confirmDialog -title "Missing selection" -message "Please select shapes first in order to create materials." -button "OK";
 		return;
 	}	

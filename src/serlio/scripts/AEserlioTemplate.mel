@@ -62,7 +62,7 @@ global proc prtShowFileDialog(string $attr) {
 		$file = `fileDialog2 -fm 1 -cap "Select File" -ff $filters`;
 	}
 
-	if(size($file)) {  
+	if(size($file) == 0) {  
 		setAttr -type "string" $attr $file[0];  
 		if($attr == "Rule_Package") {
 			evalDeferred "refreshEditorTemplates()";
