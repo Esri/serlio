@@ -75,14 +75,16 @@ global proc removePrtNode() {
 		string $nodeHistory[] = `listHistory $node`;
 		
 		for($dpNode in $nodeHistory){
-			$dpNodeType = `nodeType $dpNode`;
+			string $dpNodeType = `nodeType $dpNode`;
 				if($dpNodeType == "serlio" || $dpNodeType == "serlioMaterial" || $dpNodeType == "serlioArnoldMaterial" ){
-					$previousDpNodePlug =  `connectionInfo -sfd ($dpNode +".inMesh")`;
-					$nextDpNodePlug = `connectionInfo -dfs ($dpNode +".outMesh")`;
-					if (size($previousDpNodePlug)>0 && size($nextDpNodePlug)) {
-						connectAttr -force ( $previousDpNodePlug ) ($nextDpNodePlug);
-						delete $dpNode;
+					string $previousDpNodePlug =  `connectionInfo -sfd ($dpNode +".inMesh")`;
+					string $nextDpNodePlugs[] = `connectionInfo -dfs ($dpNode +".outMesh")`;
+					if ($previousDpNodePlug != "") {
+						for($nextDpNodePlug in $nextDpNodePlugs){
+							connectAttr -force ( $previousDpNodePlug ) ($nextDpNodePlug);
+						}
 					}
+					delete $dpNode;
 				}
 		}
 	}
