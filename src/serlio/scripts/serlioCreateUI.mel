@@ -67,7 +67,7 @@ global proc createPrtNode() {
 				}
 			}
 
-			if (!alreadyHasExistingPrtNode){
+			if (!$alreadyHasExistingPrtNode){
 				select -r $node;
 				serlioAssign $rulePackage;
 			}
