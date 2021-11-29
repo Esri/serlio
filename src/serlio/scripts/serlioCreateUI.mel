@@ -65,7 +65,7 @@ global proc removePrtNode() {
 	string $initialShapes[] = collectInitialShapes($select);
 	
 	if(size($initialShapes) == 0) {
-		confirmDialog -title "Missing selection" -message "Please select shapes first in order to remove a rule." -button "OK";
+		confirmDialog -title "Missing selection" -message "Please select at least one shape to remove the associated rule package." -button "OK"
 		return;
 	}
 
@@ -134,7 +134,7 @@ global proc createPrtMenu() {
 		setParent -m $gPrtMenu;
 		menuItem -divider true;
 		menuItem -label "Attach CityEngine Rule Package..."  -c "createPrtNode" -annotation "Attach a CGA rule package to a geometry";
-		menuItem -label "Remove Rule Package Assignment"  -c "removePrtNode" -annotation "Remove a CGA rule package from a geometry";
+		menuItem -label "Remove CityEngine Rule Package"  -c "removePrtNode" -annotation "Remove a CGA rule package from a geometry";
 		menuItem -label "Create Materials"  -c "createPrtMaterialNode" -annotation "Create Materials";
         menuItem -label "Create Arnold Materials" -c "createArnoldMaterialNode" -annotation "Create Arnold Materials";
 		setParent -m ..;
