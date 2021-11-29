@@ -29,6 +29,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 namespace {
 
@@ -85,10 +86,7 @@ std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileIn
 RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
 	RuleAttributes ra;
 
-	std::wstring mainCgaRuleName = prtu::filename(ruleFile);
-	size_t idxExtension = mainCgaRuleName.find(L".cgb");
-	if (idxExtension != std::wstring::npos)
-		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
+	std::wstring mainCgaRuleName = std::filesystem::path(ruleFile).stem().wstring();
 
 	const std::map<std::wstring,int> importOrderMap = getImportOrderMap(ruleFileInfo);
 

@@ -78,15 +78,6 @@ std::wstring getPluginRoot() {
 	return rootPath;
 }
 
-std::wstring filename(const std::wstring& path) {
-	size_t pos = path.find_last_of(L'/');
-	if (pos != std::string::npos) {
-		return path.substr(pos + 1);
-	}
-	else
-		return path;
-}
-
 template <>
 char getDirSeparator() {
 #ifdef _WIN32
