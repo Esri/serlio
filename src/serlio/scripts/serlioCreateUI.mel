@@ -59,7 +59,7 @@ global proc createPrtNode() {
 			string $nodeHistory[] = `listHistory $node`;
 
 			for($dpNode in $nodeHistory){
-				$dpNodeType = `nodeType $dpNode`;
+				string $dpNodeType = `nodeType $dpNode`;
 				if($dpNodeType == "serlio"){
 					setAttr -type "string" ($dpNode + ".Rule_Package") $rulePackage[0];  
 					evalDeferred "refreshEditorTemplates()";
