@@ -99,7 +99,6 @@ SRL_TEST_EXPORTS_API std::wstring filename(const std::wstring& path);
 time_t getFileModificationTime(const std::wstring& p);
 std::wstring temp_directory_path();
 std::wstring getProcessTempDir(const std::wstring& prefix);
-void remove_all(const std::wstring& path);
 std::wstring toGenericPath(const std::wstring& osPath);
 
 template <typename C>

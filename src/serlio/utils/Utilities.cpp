@@ -214,44 +214,6 @@ std::wstring toFileURI(const std::wstring& p) {
 	return schema + u16String;
 }
 
-void remove_all(const std::wstring& path) {
-#ifdef _WIN32
-	std::wstring pc = path;
-	std::replace(pc.begin(), pc.end(), L'/', L'\\');
-	const wchar_t* lpszDir = pc.c_str();
-
-	size_t len = wcslen(lpszDir);
-	wchar_t* pszFrom = new wchar_t[len + 2];
-	wcscpy_s(pszFrom, len + 2, lpszDir);
-	pszFrom[len] = 0;
-	pszFrom[len + 1] = 0;
-
-	SHFILEOPSTRUCTW fileop;
-	fileop.hwnd = NULL;                              // no status display
-	fileop.wFunc = FO_DELETE;                        // delete operation
-	fileop.pFrom = pszFrom;                          // source file name as double null terminated string
-	fileop.pTo = NULL;                               // no destination needed
-	fileop.fFlags = FOF_NOCONFIRMATION | FOF_SILENT; // do not prompt the user
-	fileop.fAnyOperationsAborted = FALSE;
-	fileop.lpszProgressTitle = NULL;
-	fileop.hNameMappings = NULL;
-
-	int ret = SHFileOperationW(&fileop);
-	delete[] pszFrom;
-#else
-	const auto exitCode = std::system((std::string("rm -rf ") + toOSNarrowFromUTF16(path)).c_str());
-	if (exitCode < 0) {
-		LOG_ERR << "Failed to delete " << path << ": " << std::strerror(errno);
-	}
-	else {
-		if (WIFEXITED(exitCode) != 0)
-			LOG_ERR << "Failed to delete " << path << ", exit code " << WEXITSTATUS(exitCode);
-		else
-			LOG_ERR << "Failed to delete " << path << ", unknown reason!";
-	}
-#endif
-}
-
 std::wstring temp_directory_path() {
 #ifdef _WIN32
 	DWORD dwRetVal = 0;

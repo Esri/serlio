@@ -35,7 +35,7 @@ std::mutex resolveMapCacheMutex;
 
 ResolveMapCache::~ResolveMapCache() {
 	if (!mRPKUnpackPath.empty())
-		prtu::remove_all(mRPKUnpackPath);
+		std::filesystem::remove_all(mRPKUnpackPath);
 	if (DBG)
 		LOG_DBG << "Removed RPK unpack directory";
 }
@@ -59,10 +59,10 @@ ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
 			LOG_DBG << "rpk: cache timestamp: " << it->second.mTimeStamp;
 		if (it->second.mTimeStamp != timeStamp) {
 			mCache.erase(it);
-			std::wstring filename = prtu::filename(rpk);
+			std::filesystem::path filename = std::filesystem::path(rpk).filename();
 
 			if (!mRPKUnpackPath.empty() && !filename.empty())
-				prtu::remove_all(mRPKUnpackPath + prtu::getDirSeparator<std::wstring>() + prtu::filename(rpk));
+				std::filesystem::remove_all(mRPKUnpackPath / filename);
 
 			if (DBG)
 				LOG_DBG << "RPK change detected, forcing reload and clearing cache for " << rpk;
