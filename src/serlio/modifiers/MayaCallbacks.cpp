@@ -31,11 +31,11 @@
 #include "maya/MFloatArray.h"
 #include "maya/MFloatPointArray.h"
 #include "maya/MFloatVectorArray.h"
+#include "maya/MFnDependencyNode.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnMeshData.h"
 #include "maya/adskDataAssociations.h"
 #include "maya/adskDataStream.h"
-#include "maya/MFnDependencyNode.h"
 
 #include <cassert>
 #include <sstream>
@@ -199,7 +199,7 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 
 	MFnMesh mFnMesh1;
 	MObject newMeshObj = mFnMesh1.create(mayaVertices.length(), mayaFaceCounts.length(), mayaVertices, mayaFaceCounts,
-	                                mayaVertexIndices, newOutputData, &stat);
+	                                     mayaVertexIndices, newOutputData, &stat);
 	MCHECK(stat);
 
 	MFnMesh newMesh(newMeshObj);
@@ -395,13 +395,11 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 				}
 			}
 		}
-
 	}
-
 
 	outputMesh.setMetadata(newMetadata);
 
-	//manually set the plug value, since copyInPlace is broken for meshes without construction history
+	// manually set the plug value, since copyInPlace is broken for meshes without construction history
 	if (outMeshObj.apiType() == MFn::Type::kMesh) {
 		mFnMesh1.setMetadata(newMetadata);
 
