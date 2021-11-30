@@ -98,7 +98,7 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 // poor mans std::filesystem - we don't want boost or c++17 dependency right now
 time_t getFileModificationTime(const std::wstring& p);
 std::wstring temp_directory_path();
-std::wstring getProcessTempDir(const std::wstring& prefix);
+std::filesystem::path getProcessTempDir(const std::wstring& prefix);
 
 template <typename C>
 C getDirSeparator();

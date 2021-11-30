@@ -232,18 +232,16 @@ std::wstring temp_directory_path() {
 #endif
 }
 
-std::wstring getProcessTempDir(const std::wstring& prefix) {
-	std::wstring tp = prtu::temp_directory_path();
-	wchar_t sep = prtu::getDirSeparator<wchar_t>();
-	if (*tp.rbegin() != sep)
-		tp += sep;
+std::filesystem::path getProcessTempDir(const std::wstring& prefix) {
+	std::filesystem::path tmpPath = std::filesystem::temp_directory_path();
+
 	std::wstring n = prefix;
 #ifdef _WIN32
 	n += std::to_wstring(::_getpid()); // prevent warning in win32
 #else
 	n += std::to_wstring(::getpid());
 #endif
-	return {tp.append(n)};
+	return tmpPath / n;
 }
 
 time_t getFileModificationTime(const std::wstring& p) {

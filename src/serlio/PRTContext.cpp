@@ -86,7 +86,7 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 	}
 	else {
 		theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
-		mResolveMapCache = std::make_unique<ResolveMapCache>(prtu::getProcessTempDir(SRL_TMP_PREFIX));
+		mResolveMapCache = std::make_unique<ResolveMapCache>(prtu::getProcessTempDir(SRL_TMP_PREFIX).wstring());
 	}
 }
 
