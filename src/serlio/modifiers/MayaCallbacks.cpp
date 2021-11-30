@@ -169,6 +169,63 @@ constexpr unsigned int MATERIAL_MAX_STRING_LENGTH = 400;
 constexpr unsigned int MATERIAL_MAX_FLOAT_ARRAY_LENGTH = 5;
 constexpr unsigned int MATERIAL_MAX_STRING_ARRAY_LENGTH = 2;
 
+adsk::Data::Structure* createNewMayaStructure(const prt::AttributeMap** materials) {
+	adsk::Data::Structure* fStructure;
+
+	const prt::AttributeMap* mat = materials[0];
+
+	// Register our structure since it is not registered yet.
+	fStructure = adsk::Data::Structure::create();
+	fStructure->setName(PRT_MATERIAL_STRUCTURE.c_str());
+
+	fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_START.c_str());
+	fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_END.c_str());
+
+	size_t keyCount = 0;
+	wchar_t const* const* keys = mat->getKeys(&keyCount);
+	for (int k = 0; k < keyCount; k++) {
+		wchar_t const* key = keys[k];
+
+		adsk::Data::Member::eDataType type;
+		unsigned int size = 0;
+		unsigned int arrayLength = 1;
+
+		// clang-format off
+		switch (mat->getType(key)) {
+			case prt::Attributable::PT_BOOL: type = adsk::Data::Member::kBoolean; size = 1;  break;
+			case prt::Attributable::PT_FLOAT: type = adsk::Data::Member::kDouble; size = 1; break;
+			case prt::Attributable::PT_INT: type = adsk::Data::Member::kInt32; size = 1; break;
+
+			//workaround: using kString type crashes maya when setting metadata elememts. Therefore we use array of kUInt8
+			case prt::Attributable::PT_STRING: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH;  break;
+			case prt::Attributable::PT_BOOL_ARRAY: type = adsk::Data::Member::kBoolean; size = MATERIAL_MAX_STRING_LENGTH; break;
+			case prt::Attributable::PT_INT_ARRAY: type = adsk::Data::Member::kInt32; size = MATERIAL_MAX_STRING_LENGTH; break;
+			case prt::Attributable::PT_FLOAT_ARRAY: type = adsk::Data::Member::kDouble; size = MATERIAL_MAX_FLOAT_ARRAY_LENGTH; break;
+			case prt::Attributable::PT_STRING_ARRAY: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH; arrayLength = MATERIAL_MAX_STRING_ARRAY_LENGTH; break;
+
+			case prt::Attributable::PT_UNDEFINED: break;
+			case prt::Attributable::PT_BLIND_DATA: break;
+			case prt::Attributable::PT_BLIND_DATA_ARRAY: break;
+			case prt::Attributable::PT_COUNT: break;
+		}
+		// clang-format on
+
+		if (size > 0) {
+			for (unsigned int i = 0; i < arrayLength; i++) {
+				std::wstring keyToUse = key;
+				if (i > 0)
+					keyToUse = key + std::to_wstring(i);
+				const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
+				fStructure->addMember(type, size, keyToUseNarrow.c_str());
+			}
+		}
+	}
+
+	adsk::Data::Structure::registerStructure(*fStructure);
+
+	return fStructure;
+}
+
 } // namespace
 
 void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
@@ -213,56 +270,7 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	adsk::Data::Structure* fStructure; // Structure to use for creation
 	fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
 	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
-		const prt::AttributeMap* mat = materials[0];
-
-		// Register our structure since it is not registered yet.
-		fStructure = adsk::Data::Structure::create();
-		fStructure->setName(PRT_MATERIAL_STRUCTURE.c_str());
-
-		fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_START.c_str());
-		fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_END.c_str());
-
-		size_t keyCount = 0;
-		wchar_t const* const* keys = mat->getKeys(&keyCount);
-		for (int k = 0; k < keyCount; k++) {
-			wchar_t const* key = keys[k];
-
-			adsk::Data::Member::eDataType type;
-			unsigned int size = 0;
-			unsigned int arrayLength = 1;
-
-			// clang-format off
-			switch (mat->getType(key)) {
-				case prt::Attributable::PT_BOOL: type = adsk::Data::Member::kBoolean; size = 1;  break;
-				case prt::Attributable::PT_FLOAT: type = adsk::Data::Member::kDouble; size = 1; break;
-				case prt::Attributable::PT_INT: type = adsk::Data::Member::kInt32; size = 1; break;
-
-				//workaround: using kString type crashes maya when setting metadata elememts. Therefore we use array of kUInt8
-				case prt::Attributable::PT_STRING: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH;  break;
-				case prt::Attributable::PT_BOOL_ARRAY: type = adsk::Data::Member::kBoolean; size = MATERIAL_MAX_STRING_LENGTH; break;
-				case prt::Attributable::PT_INT_ARRAY: type = adsk::Data::Member::kInt32; size = MATERIAL_MAX_STRING_LENGTH; break;
-				case prt::Attributable::PT_FLOAT_ARRAY: type = adsk::Data::Member::kDouble; size = MATERIAL_MAX_FLOAT_ARRAY_LENGTH; break;
-				case prt::Attributable::PT_STRING_ARRAY: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH; arrayLength = MATERIAL_MAX_STRING_ARRAY_LENGTH; break;
-
-				case prt::Attributable::PT_UNDEFINED: break;
-				case prt::Attributable::PT_BLIND_DATA: break;
-				case prt::Attributable::PT_BLIND_DATA_ARRAY: break;
-				case prt::Attributable::PT_COUNT: break;
-			}
-			// clang-format on
-
-			if (size > 0) {
-				for (unsigned int i = 0; i < arrayLength; i++) {
-					std::wstring keyToUse = key;
-					if (i > 0)
-						keyToUse = key + std::to_wstring(i);
-					const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
-					fStructure->addMember(type, size, keyToUseNarrow.c_str());
-				}
-			}
-		}
-
-		adsk::Data::Structure::registerStructure(*fStructure);
+		createNewMayaStructure(materials);
 	}
 
 	MCHECK(stat);
