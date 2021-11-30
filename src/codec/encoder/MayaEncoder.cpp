@@ -552,6 +552,9 @@ void MayaEncoder::encode(prtx::GenerateContext& context, size_t initialShapeInde
 
 void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
                                   const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* cb) {
+	if (instances.size() == 0)
+		return;
+	
 	const bool emitMaterials = getOptions()->getBool(EO_EMIT_MATERIALS);
 	const bool emitReports = getOptions()->getBool(EO_EMIT_REPORTS);
 
@@ -617,6 +620,9 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 		++repIt;
 	}
 	faceRanges.push_back(faceCount); // close last range
+
+	if (faceRanges.size() <= 1)
+		return;
 
 	assert(matAttrMaps.v.empty() || matAttrMaps.v.size() == faceRanges.size() - 1);
 	assert(reportAttrMaps.v.empty() || reportAttrMaps.v.size() == faceRanges.size() - 1);
