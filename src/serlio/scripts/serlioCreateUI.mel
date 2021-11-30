@@ -42,7 +42,7 @@ global proc createPrtNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
-	if(!(size($initialShapes))) {
+	if(size($initialShapes) == 0) {
 		confirmDialog -title "Missing selection" -message "Please select shapes first in order to apply a rule." -button "OK";
 		return;
 	}
@@ -51,7 +51,7 @@ global proc createPrtNode() {
 	string $rulePackage[] = `fileDialog2 -fm 1 -cap "Select Rule Package" -ff $filters`;
 	
 	
-	if(size($rulePackage)) {
+	if(size($rulePackage) > 0 ) {
 		for($node in $initialShapes) {
 			select -r $node;
 			serlioAssign $rulePackage;
@@ -60,11 +60,44 @@ global proc createPrtNode() {
 	select -r $select;
 }
 
+global proc removePrtNode() {
+	string $select[] = `ls -sl`;
+	string $initialShapes[] = collectInitialShapes($select);
+	
+	if(size($initialShapes) == 0) {
+		confirmDialog -title "Missing selection" -message "Please select at least one shape to remove the associated rule package." -button "OK"
+		return;
+	}
+
+	for($node in $initialShapes) {
+		select -r $node;
+		hyperShade -assign "lambert1";
+		string $nodeHistory[] = `listHistory $node`;
+		
+		for($dpNode in $nodeHistory){
+			string $dpNodeType = `nodeType $dpNode`;
+				if($dpNodeType == "serlio" || $dpNodeType == "serlioMaterial" || $dpNodeType == "serlioArnoldMaterial" ){
+					string $previousDpNodePlug =  `connectionInfo -sfd ($dpNode +".inMesh")`;
+					string $nextDpNodePlugs[] = `connectionInfo -dfs ($dpNode +".outMesh")`;
+					if ($previousDpNodePlug != "") {
+						for($nextDpNodePlug in $nextDpNodePlugs){
+							connectAttr -force ( $previousDpNodePlug ) ($nextDpNodePlug);
+						}
+					}
+					delete $dpNode;
+				}
+		}
+	}
+
+	select -r $select;
+}
+
+
 global proc createPrtMaterialNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
-	if(!(size($initialShapes))) {
+	if(size($initialShapes) == 0) {
 		confirmDialog -title "Missing selection" -message "Please select shapes first in order to create materials." -button "OK";
 		return;
 	}	
@@ -79,7 +112,7 @@ global proc createArnoldMaterialNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
-	if(!(size($initialShapes))) {
+	if(size($initialShapes) == 0) {
 		confirmDialog -title "Missing selection" -message "Please select shapes first in order to create materials." -button "OK";
 		return;
 	}	
@@ -101,6 +134,7 @@ global proc createPrtMenu() {
 		setParent -m $gPrtMenu;
 		menuItem -divider true;
 		menuItem -label "Attach CityEngine Rule Package..."  -c "createPrtNode" -annotation "Attach a CGA rule package to a geometry";
+		menuItem -label "Remove CityEngine Rule Package"  -c "removePrtNode" -annotation "Remove a CGA rule package from a geometry";
 		menuItem -label "Create Materials"  -c "createPrtMaterialNode" -annotation "Create Materials";
         menuItem -label "Create Arnold Materials" -c "createArnoldMaterialNode" -annotation "Create Arnold Materials";
 		setParent -m ..;
