@@ -351,28 +351,12 @@ void fillMetadata(adsk::Data::Structure* fStructure, const uint32_t* faceRanges,
 	}
 }
 
-} // namespace
-
-void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
-                            const uint32_t* faceCounts, size_t faceCountsSize, const uint32_t* vertexIndices,
-                            size_t vertexIndicesSize, const uint32_t* normalIndices, size_t normalIndicesSize,
-                            double const* const* uvs, size_t const* uvsSizes, uint32_t const* const* uvCounts,
-                            size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
-                            size_t uvSetsCount, const uint32_t* faceRanges, size_t faceRangesSize,
-                            const prt::AttributeMap** materials, const prt::AttributeMap** reports, const int32_t*) {
-	MFloatPointArray mayaVertices = toMayaFloatPointArray(vtx, vtxSize);
-	MIntArray mayaFaceCounts = toMayaIntArray(faceCounts, faceCountsSize);
-	MIntArray mayaVertexIndices = toMayaIntArray(vertexIndices, vertexIndicesSize);
-
-	if (DBG) {
-		LOG_DBG << "-- MayaCallbacks::addMesh";
-		LOG_DBG << "   faceCountsSize = " << faceCountsSize;
-		LOG_DBG << "   vertexIndicesSize = " << vertexIndicesSize;
-		LOG_DBG << "   mayaVertices.length = " << mayaVertices.length();
-		LOG_DBG << "   mayaFaceCounts.length   = " << mayaFaceCounts.length();
-		LOG_DBG << "   mayaVertexIndices.length = " << mayaVertexIndices.length();
-	}
-
+void updateMayaMesh(double const* const* uvs, size_t const* uvsSizes, uint32_t const* const* uvCounts,
+                    size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
+                    size_t uvSetsCount, const double* nrm, size_t nrmSize, const uint32_t* vertexIndices,
+                    size_t vertexIndicesSize, const uint32_t* normalIndices, size_t normalIndicesSize,
+                    MFloatPointArray& mayaVertices, MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices,
+                    MObject& outMeshObj, adsk::Data::Associations& newMetadata) {
 	MStatus stat;
 
 	MFnMeshData dataCreator;
@@ -391,24 +375,6 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	MFnMesh outputMesh(outMeshObj);
 	outputMesh.copyInPlace(newMeshObj);
 
-	// create material metadata
-	adsk::Data::Structure* fStructure; // Structure to use for creation
-	fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
-	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
-		createNewMayaStructure(materials);
-	}
-
-	MCHECK(stat);
-	MFnMesh inputMesh(inMeshObj);
-
-	adsk::Data::Associations newMetadata(inputMesh.metadata(&stat));
-	newMetadata.makeUnique();
-	MCHECK(stat);
-
-	if (fStructure != nullptr && faceRangesSize > 1) {
-		fillMetadata(fStructure, faceRanges, faceRangesSize, materials, reports, newMetadata);
-	}
-
 	outputMesh.setMetadata(newMetadata);
 
 	// manually set the plug value, since copyInPlace is broken for meshes without construction history
@@ -420,6 +386,50 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 		MPlug meshNodeOutMeshPlug = depNodeFn.findPlug("inMesh", true);
 		meshNodeOutMeshPlug.setValue(newOutputData);
 	}
+}
+
+} // namespace
+
+void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
+                            const uint32_t* faceCounts, size_t faceCountsSize, const uint32_t* vertexIndices,
+                            size_t vertexIndicesSize, const uint32_t* normalIndices, size_t normalIndicesSize,
+                            double const* const* uvs, size_t const* uvsSizes, uint32_t const* const* uvCounts,
+                            size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
+                            size_t uvSetsCount, const uint32_t* faceRanges, size_t faceRangesSize,
+                            const prt::AttributeMap** materials, const prt::AttributeMap** reports, const int32_t*) {
+	MStatus stat;
+	adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
+
+	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
+		fStructure = createNewMayaStructure(materials); // Structure to use for creation
+	}
+
+	MFnMesh inputMesh(inMeshObj);
+
+	adsk::Data::Associations newMetadata(inputMesh.metadata(&stat));
+	newMetadata.makeUnique();
+	MCHECK(stat);
+
+	if (fStructure != nullptr && faceRangesSize > 1) {
+		fillMetadata(fStructure, faceRanges, faceRangesSize, materials, reports, newMetadata);
+	}
+
+	MFloatPointArray mayaVertices = toMayaFloatPointArray(vtx, vtxSize);
+	MIntArray mayaFaceCounts = toMayaIntArray(faceCounts, faceCountsSize);
+	MIntArray mayaVertexIndices = toMayaIntArray(vertexIndices, vertexIndicesSize);
+
+	if (DBG) {
+		LOG_DBG << "-- MayaCallbacks::addMesh";
+		LOG_DBG << "   faceCountsSize = " << faceCountsSize;
+		LOG_DBG << "   vertexIndicesSize = " << vertexIndicesSize;
+		LOG_DBG << "   mayaVertices.length = " << mayaVertices.length();
+		LOG_DBG << "   mayaFaceCounts.length   = " << mayaFaceCounts.length();
+		LOG_DBG << "   mayaVertexIndices.length = " << mayaVertexIndices.length();
+	}
+
+	updateMayaMesh(uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount, nrm, nrmSize,
+	               vertexIndices, vertexIndicesSize, normalIndices, normalIndicesSize, mayaVertices, mayaFaceCounts,
+	               mayaVertexIndices, outMeshObj, newMetadata);
 }
 
 prt::Status MayaCallbacks::attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, bool value) {
