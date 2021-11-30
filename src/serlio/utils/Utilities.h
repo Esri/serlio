@@ -99,7 +99,6 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 time_t getFileModificationTime(const std::wstring& p);
 std::wstring temp_directory_path();
 std::wstring getProcessTempDir(const std::wstring& prefix);
-std::wstring toGenericPath(const std::wstring& osPath);
 
 template <typename C>
 C getDirSeparator();

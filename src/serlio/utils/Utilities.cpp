@@ -264,12 +264,6 @@ time_t getFileModificationTime(const std::wstring& p) {
 	return -1;
 }
 
-std::wstring toGenericPath(const std::wstring& osPath) {
-	std::wstring genPath = osPath;
-	std::replace(genPath.begin(), genPath.end(), L'\\', L'/');
-	return genPath;
-}
-
 std::string objectToXML(prt::Object const* obj) {
 	if (obj == nullptr)
 		throw std::invalid_argument("object pointer is not valid");
