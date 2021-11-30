@@ -31,7 +31,7 @@ struct IUnknown;
 #	include <windows.h>
 #	include <shellapi.h>
 #else
-#   include <cerrno>
+#	include <cerrno>
 #	include <dlfcn.h>
 #	include <unistd.h>
 #endif
@@ -71,36 +71,6 @@ std::filesystem::path getPluginRoot() {
 #endif
 
 	return rootPath;
-}
-
-template <>
-char getDirSeparator() {
-#ifdef _WIN32
-	static const char SEPARATOR = '\\';
-#else
-	static const char SEPARATOR = '/';
-#endif
-	return SEPARATOR;
-}
-
-template <>
-wchar_t getDirSeparator() {
-#ifdef _WIN32
-	static const wchar_t SEPARATOR = L'\\';
-#else
-	static const wchar_t SEPARATOR = L'/';
-#endif
-	return SEPARATOR;
-}
-
-template <>
-std::string getDirSeparator() {
-	return std::string(1, getDirSeparator<char>());
-}
-
-template <>
-std::wstring getDirSeparator() {
-	return std::wstring(1, getDirSeparator<wchar_t>());
 }
 
 int fromHex(wchar_t c) {
@@ -198,38 +168,6 @@ std::wstring toFileURI(const std::wstring& p) {
 	std::string pecString = percentEncode(utf8Path);
 	std::wstring u16String = toUTF16FromUTF8(pecString);
 	return schema + u16String;
-}
-
-std::wstring temp_directory_path() {
-#ifdef _WIN32
-	DWORD dwRetVal = 0;
-	wchar_t lpTempPathBuffer[MAX_PATH];
-
-	dwRetVal = GetTempPathW(MAX_PATH, lpTempPathBuffer);
-	if (dwRetVal > MAX_PATH || (dwRetVal == 0)) {
-		return L".\tmp";
-	}
-	else {
-		return std::wstring(lpTempPathBuffer);
-	}
-
-#else
-
-	char const* folder = getenv("TMPDIR");
-	if (folder == nullptr) {
-		folder = getenv("TMP");
-		if (folder == nullptr) {
-			folder = getenv("TEMP");
-			if (folder == nullptr) {
-				folder = getenv("TEMPDIR");
-				if (folder == nullptr)
-					folder = "/tmp";
-			}
-		}
-	}
-
-	return toUTF16FromOSNarrow(std::string(folder));
-#endif
 }
 
 std::filesystem::path getProcessTempDir(const std::wstring& prefix) {
