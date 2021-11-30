@@ -46,7 +46,8 @@ struct IUnknown;
 namespace prtu {
 
 // plugin root = location of serlio shared library
-std::wstring getPluginRoot() {
+std::filesystem::path getPluginRoot() {
+	std::filesystem::path rootPath;
 #ifdef _WIN32
 	char dllPath[_MAX_PATH];
 	char drive[8];
@@ -61,19 +62,13 @@ std::wstring getPluginRoot() {
 		throw std::runtime_error("failed to get plugin location");
 	}
 
-	_splitpath_s(dllPath, drive, 8, dir, _MAX_PATH, 0, 0, 0, 0);
-	std::wstring rootPath = prtu::toUTF16FromOSNarrow(drive);
-	rootPath.append(prtu::toUTF16FromOSNarrow(dir));
+	rootPath = std::filesystem::path(dllPath).parent_path();
 #else
 	Dl_info dl_info;
 	dladdr((const void*)getPluginRoot, &dl_info);
 	const std::string tmp(dl_info.dli_fname);
-	std::wstring rootPath = prtu::toUTF16FromOSNarrow(tmp.substr(0, tmp.find_last_of(prtu::getDirSeparator<char>())));
+	rootPath = std::filesystem::path(tmp).parent_path();
 #endif
-
-	// ensure path separator at end
-	if (*rootPath.rbegin() != prtu::getDirSeparator<wchar_t>())
-		rootPath.append(1, prtu::getDirSeparator<wchar_t>());
 
 	return rootPath;
 }

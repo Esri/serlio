@@ -33,6 +33,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <iterator>
 #include <memory>
 #include <ostream>
@@ -78,7 +79,7 @@ using ResolveMapSPtr = std::shared_ptr<const prt::ResolveMap>;
 
 namespace prtu {
 
-std::wstring getPluginRoot();
+std::filesystem::path getPluginRoot();
 
 template <typename C>
 std::vector<const C*> toPtrVec(const std::vector<std::basic_string<C>>& sv) {
