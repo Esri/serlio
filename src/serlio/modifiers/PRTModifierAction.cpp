@@ -328,7 +328,6 @@ MStatus PRTModifierAction::clearTweaks(MObject mesh) {
 	MStatus stat;
 	MFnDependencyNode depNodeFn;
 	depNodeFn.setObject(mesh);
-	bool fHasTweaks = false;
 	MPlug tweakPlug = depNodeFn.findPlug("pnts", true);
 	if (!tweakPlug.isNull()) {
 		if (!tweakPlug.isArray()) {
