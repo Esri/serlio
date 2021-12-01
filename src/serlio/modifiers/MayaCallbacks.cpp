@@ -353,10 +353,9 @@ void fillMetadata(adsk::Data::Structure* fStructure, const uint32_t* faceRanges,
 
 void updateMayaMesh(double const* const* uvs, size_t const* uvsSizes, uint32_t const* const* uvCounts,
                     size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
-                    size_t uvSetsCount, const double* nrm, size_t nrmSize, const uint32_t* vertexIndices,
-                    size_t vertexIndicesSize, const uint32_t* normalIndices, size_t normalIndicesSize,
-                    MFloatPointArray& mayaVertices, MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices,
-                    MObject& outMeshObj, adsk::Data::Associations& newMetadata) {
+                    size_t uvSetsCount, const double* nrm, size_t nrmSize, const uint32_t* normalIndices,
+                    size_t normalIndicesSize, MFloatPointArray& mayaVertices, MIntArray& mayaFaceCounts,
+                    MIntArray& mayaVertexIndices, MObject& outMeshObj, adsk::Data::Associations& newMetadata) {
 	MStatus stat;
 
 	MFnMeshData dataCreator;
@@ -428,8 +427,8 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 	}
 
 	updateMayaMesh(uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount, nrm, nrmSize,
-	               vertexIndices, vertexIndicesSize, normalIndices, normalIndicesSize, mayaVertices, mayaFaceCounts,
-	               mayaVertexIndices, outMeshObj, newMetadata);
+	               normalIndices, normalIndicesSize, mayaVertices, mayaFaceCounts, mayaVertexIndices, outMeshObj,
+	               newMetadata);
 }
 
 prt::Status MayaCallbacks::attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, bool value) {
