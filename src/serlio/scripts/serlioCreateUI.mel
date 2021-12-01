@@ -80,7 +80,7 @@ global proc removePrtNode() {
 	string $initialShapes[] = collectInitialShapes($select);
 	
 	if(size($initialShapes) == 0) {
-		confirmDialog -title "Missing selection" -message "Please select at least one shape to remove the associated rule package." -button "OK"
+		confirmDialog -title "Missing selection" -message "Please select at least one shape to remove the associated rule package." -button "OK";
 		return;
 	}
 
