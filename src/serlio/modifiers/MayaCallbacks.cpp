@@ -138,7 +138,7 @@ void assignTextureCoordinates(MFnMesh& fnMesh, double const* const* uvs, size_t 
 	}
 }
 
-void assignVertexNormals(MFnMesh& mFnMesh, MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices, const double* nrm,
+void assignVertexNormals(MFnMesh& mFnMesh, const MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices, const double* nrm,
                          size_t nrmSize, const uint32_t* normalIndices, MAYBE_UNUSED size_t normalIndicesSize) {
 	if (nrmSize == 0)
 		return;
@@ -354,8 +354,8 @@ void fillMetadata(adsk::Data::Structure* fStructure, const uint32_t* faceRanges,
 void updateMayaMesh(double const* const* uvs, size_t const* uvsSizes, uint32_t const* const* uvCounts,
                     size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
                     size_t uvSetsCount, const double* nrm, size_t nrmSize, const uint32_t* normalIndices,
-                    size_t normalIndicesSize, MFloatPointArray& mayaVertices, MIntArray& mayaFaceCounts,
-                    MIntArray& mayaVertexIndices, MObject& outMeshObj, adsk::Data::Associations& newMetadata) {
+                    size_t normalIndicesSize, const MFloatPointArray& mayaVertices, const MIntArray& mayaFaceCounts,
+                    MIntArray& mayaVertexIndices, const MObject& outMeshObj, const adsk::Data::Associations& newMetadata) {
 	MStatus stat;
 
 	MFnMeshData dataCreator;
