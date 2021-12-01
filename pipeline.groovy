@@ -60,15 +60,15 @@ Map getTasks(String branchName = null) {
 // -- TASK GENERATORS
 
 Map taskGenSerlio() {
-	return cepl.generateTasks('serlio', this.&taskBuildSerlio, CONFIGS)
+	return cepl.generateTasks('srl', this.&taskBuildSerlio, CONFIGS)
 }
 
 Map taskGenSerlioTests() {
-	return cepl.generateTasks('serlio-test', this.&taskBuildSerlioTests, TEST_CONFIGS)
+	return cepl.generateTasks('srl-tst', this.&taskBuildSerlioTests, TEST_CONFIGS)
 }
 
 Map taskGenSerlioInstallers() {
-	return cepl.generateTasks('serlio-installers', this.&taskBuildSerlioInstaller, CONFIGS.findAll { it.os == cepl.CFG_OS_WIN10})
+	return cepl.generateTasks('srl-msi', this.&taskBuildSerlioInstaller, CONFIGS.findAll { it.os == cepl.CFG_OS_WIN10})
 }
 
 // -- TASK BUILDERS
