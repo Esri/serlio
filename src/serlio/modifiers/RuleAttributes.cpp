@@ -57,6 +57,31 @@ std::wstring getNiceName(const std::wstring& fqAttrName) {
 
 } // namespace
 
+std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileInfo) {
+	std::map<std::wstring, int> importOrderMap;
+	int importOrder = 0;
+	for (size_t i = 0; i < ruleFileInfo->getNumAnnotations(); i++) {
+		const prt::Annotation* an = ruleFileInfo->getAnnotation(i);
+		const wchar_t* anName = an->getName();
+		if (std::wcscmp(anName, ANNOT_IMPORTS) == 0) {
+			for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
+				const prt::AnnotationArgument* anArg = an->getArgument(argIdx);
+				if (anArg->getType() == prt::AAT_STR) {
+					const wchar_t* anKey = anArg->getKey();
+					if(std::wcscmp(anKey, ANNOT_IMPORTS_KEY) == 0) {
+						const wchar_t* importRuleCharPtr = anArg->getStr();
+						if (importRuleCharPtr != nullptr) {
+							std::wstring importRule = importRuleCharPtr;
+							importOrderMap[importRule] = importOrder++;
+						}
+					}
+				}
+			}
+		}
+	}
+	return importOrderMap;
+}
+
 RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
 	RuleAttributes ra;
 
@@ -64,6 +89,8 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 	size_t idxExtension = mainCgaRuleName.find(L".cgb");
 	if (idxExtension != std::wstring::npos)
 		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
+
+	const std::map<std::wstring,int> importOrderMap = getImportOrderMap(ruleFileInfo);
 
 	for (size_t i = 0; i < ruleFileInfo->getNumAttributes(); i++) {
 		const prt::RuleFileInfo::Entry* attr = ruleFileInfo->getAttribute(i);
@@ -92,18 +119,21 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 			p.memberOfStartRuleFile = true;
 		}
 
+		const auto importOrder = importOrderMap.find(p.ruleFile);
+		p.ruleOrder =  (importOrder != importOrderMap.end()) ? importOrder->second : ORDER_NONE;
+		
 		bool hidden = false;
 		for (size_t a = 0; a < attr->getNumAnnotations(); a++) {
 			const prt::Annotation* an = attr->getAnnotation(a);
 			const wchar_t* anName = an->getName();
-			if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
+			if (std::wcscmp(anName, ANNOT_HIDDEN) == 0)
 				hidden = true;
-			else if (!(std::wcscmp(anName, ANNOT_ORDER))) {
+			else if (std::wcscmp(anName, ANNOT_ORDER) == 0) {
 				if (an->getNumArguments() >= 1 && an->getArgument(0)->getType() == prt::AAT_FLOAT) {
 					p.order = static_cast<int>(an->getArgument(0)->getFloat());
 				}
 			}
-			else if (!(std::wcscmp(anName, ANNOT_GROUP))) {
+			else if (std::wcscmp(anName, ANNOT_GROUP) == 0) {
 				for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
 					if (an->getArgument(argIdx)->getType() == prt::AAT_STR) {
 						p.groups.push_back(an->getArgument(argIdx)->getStr());
@@ -136,7 +166,7 @@ AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes) {
 		for (auto it = std::rbegin(attribute.groups); it != std::rend(attribute.groups); ++it) {
 			std::vector<std::wstring> g(it, std::rend(attribute.groups));
 			std::reverse(g.begin(), g.end());
-			auto ggoIt = globalGroupOrder.emplace(g, ORDER_NONE).first;
+			auto ggoIt = globalGroupOrder.emplace(std::make_pair(attribute.ruleFile,g), ORDER_NONE).first;
 			ggoIt->second = std::min(attribute.groupOrder, ggoIt->second);
 		}
 	}
@@ -152,11 +182,14 @@ void sortRuleAttributes(RuleAttributes& ra) {
 
 	auto compareRuleFile = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		// sort main rule attributes before the rest
-		if (a.memberOfStartRuleFile)
+		if (a.memberOfStartRuleFile && !b.memberOfStartRuleFile)
 			return true;
-		if (b.memberOfStartRuleFile)
+		if (b.memberOfStartRuleFile && !a.memberOfStartRuleFile)
 			return false;
 
+		if(a.ruleOrder != b.ruleOrder)
+			return a.ruleOrder < b.ruleOrder;
+		
 		return lowerCaseOrdering(a.ruleFile, b.ruleFile);
 	};
 
@@ -191,7 +224,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		LOG_DBG << "globalGroupOrder:\n" << globalGroupOrder;
 
 	auto getGroupOrder = [&globalGroupOrder](const RuleAttribute& ap) {
-		const auto it = globalGroupOrder.find(ap.groups);
+		const auto it = globalGroupOrder.find(std::make_pair(ap.ruleFile,ap.groups));
 		return (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
 	};
 
@@ -215,7 +248,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 	};
 
 	auto compareAttributeOrder = [&](const RuleAttribute& a, const RuleAttribute& b) {
-		if (a.order == ORDER_NONE && b.order == ORDER_NONE)
+		if (a.order == b.order)
 			return lowerCaseOrdering(a.fqName, b.fqName);
 
 		return a.order < b.order;
@@ -251,7 +284,7 @@ std::ostream& operator<<(std::ostream& ostr, const RuleAttribute& ap) {
 
 std::wostream& operator<<(std::wostream& wostr, const AttributeGroupOrder& ago) {
 	for (const auto& i : ago) {
-		wostr << L"[ " << join<wchar_t>(i.first, L" ") << L"] = " << i.second << L"\n";
+		wostr << L"[ " << i.first.first << " " << join<wchar_t>(i.first.second, L" ") << L"] = " << i.second << L"\n";
 	}
 	return wostr;
 }

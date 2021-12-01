@@ -20,6 +20,7 @@ add_library(${SERLIO_TARGET} SHARED
 	materials/MaterialInfo.cpp
 	materials/MaterialUtils.cpp
 	materials/StingrayMaterialNode.cpp
+	materials/MaterialCommand.cpp
 	utils/Utilities.cpp
 	utils/ResolveMapCache.cpp
 	utils/MayaUtilities.cpp
@@ -44,6 +45,7 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio.+")
 		materials/MaterialInfo.h
 		materials/MaterialUtils.h
 		materials/StingrayMaterialNode.h
+		materials/MaterialCommand.h
 		utils/Utilities.h
 		utils/ResolveMapCache.h
 		utils/MayaUtilities.h
@@ -65,9 +67,6 @@ endif ()
 
 
 ### setup compiler flags
-
-set_target_properties(${CLIENT_TARGET} PROPERTIES
-	CXX_STANDARD 14)
 
 set_common_target_definitions(${SERLIO_TARGET})
 
@@ -138,8 +137,9 @@ install(FILES ${SRL_PRT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins
 
 # PRT: whitelist required extension libraries
 set(SRL_PRT_EXT_LIBRARIES ${PRT_EXT_LIBRARIES})
-list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.codecs|com\\.esri\\.prt\\.adaptors|VueExport")
+list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.(codecs|adaptors|oda|usd)|tbb|usd_ms")
 install(FILES ${SRL_PRT_EXT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+install(DIRECTORY "${PRT_EXTENSION_PATH}/usd" DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext) # USD resource files
 
 # doc
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/../doc DESTINATION ${INSTALL_FOLDER_PREFIX})

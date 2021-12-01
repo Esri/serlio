@@ -29,6 +29,7 @@
 #include <maya/MFloatVector.h>
 #include <maya/MObjectArray.h>
 #include <maya/MPlugArray.h>
+#include <maya/MFnMesh.h>
 
 #include <maya/MIOStream.h>
 
@@ -1017,7 +1018,7 @@ MStatus polyModifierCmd::undoCachedMesh()
 
 			// Need to force a DG evaluation now that the input has been changed.
 			//
-			MString cmd( "dgeval -src " );
+			MString cmd( "dgeval " );
 			cmd += meshNodeName;
 			cmd += ".inMesh";
 			status = MGlobal::executeCommand( cmd, false, false );
@@ -1135,7 +1136,7 @@ MStatus polyModifierCmd::undoDirectModifier()
 
 		// Need to force a DG evaluation now that the input has been changed.
 		//
-		MString cmd("dgeval -src ");
+		MString cmd("dgeval ");
 		cmd += meshNodeName;
 		cmd += ".inMesh";
 		status = MGlobal::executeCommand( cmd, false, false );
@@ -1161,6 +1162,8 @@ MStatus polyModifierCmd::undoDirectModifier()
 		status = meshNodeOutMeshPlug.setValue( fMeshData );
 		MCheckStatus( status, "Could not set meshData" );
 	}
+	MFnMesh fnMesh(meshNode);
+	fnMesh.updateSurface();
 
 	return status;
 }
