@@ -88,10 +88,7 @@ struct SerializedGeometry {
 	}
 
 	bool isEmpty() const {
-		if (coords.empty() || counts.empty() || vertexIndices.empty()) {
-			return true;
-		}
-		return false;
+		return coords.empty() || counts.empty() || vertexIndices.empty();
 	}
 };
 
@@ -584,9 +581,8 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 
 	const SerializedGeometry sg = detail::serializeGeometry(geometries, materials);
 
-	if (sg.isEmpty()) {
+	if (sg.isEmpty())
 		return;
-	}
 
 	if (DBG) {
 		log_debug("resolvemap: %s") % prtx::PRTUtils::objectToXML(initialShape.getResolveMap());
