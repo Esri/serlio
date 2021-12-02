@@ -86,6 +86,13 @@ struct SerializedGeometry {
 		vertexIndices.reserve(numIndices);
 		normalIndices.reserve(numIndices);
 	}
+
+	bool isEmpty() const {
+		if (coords.empty() || counts.empty() || vertexIndices.empty()) {
+			return true;
+		}
+		return false;
+	}
 };
 
 const prtx::EncodePreparator::PreparationFlags PREP_FLAGS =
