@@ -584,6 +584,10 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 
 	const SerializedGeometry sg = detail::serializeGeometry(geometries, materials);
 
+	if (sg.isEmpty()) {
+		return;
+	}
+
 	if (DBG) {
 		log_debug("resolvemap: %s") % prtx::PRTUtils::objectToXML(initialShape.getResolveMap());
 		log_debug("encoder #materials = %s") % materials.size();
@@ -627,9 +631,6 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 		++repIt;
 	}
 	faceRanges.push_back(faceCount); // close last range
-
-	if (faceRanges.size() <= 1)
-		return;
 
 	assert(matAttrMaps.v.empty() || matAttrMaps.v.size() == faceRanges.size() - 1);
 	assert(reportAttrMaps.v.empty() || reportAttrMaps.v.size() == faceRanges.size() - 1);
