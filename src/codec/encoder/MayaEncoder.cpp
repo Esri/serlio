@@ -86,6 +86,10 @@ struct SerializedGeometry {
 		vertexIndices.reserve(numIndices);
 		normalIndices.reserve(numIndices);
 	}
+
+	bool isEmpty() const {
+		return coords.empty() || counts.empty() || vertexIndices.empty();
+	}
 };
 
 const prtx::EncodePreparator::PreparationFlags PREP_FLAGS =
@@ -552,6 +556,9 @@ void MayaEncoder::encode(prtx::GenerateContext& context, size_t initialShapeInde
 
 void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
                                   const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* cb) {
+	if (instances.empty())
+		return;
+	
 	const bool emitMaterials = getOptions()->getBool(EO_EMIT_MATERIALS);
 	const bool emitReports = getOptions()->getBool(EO_EMIT_REPORTS);
 
@@ -573,6 +580,9 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 	}
 
 	const SerializedGeometry sg = detail::serializeGeometry(geometries, materials);
+
+	if (sg.isEmpty())
+		return;
 
 	if (DBG) {
 		log_debug("resolvemap: %s") % prtx::PRTUtils::objectToXML(initialShape.getResolveMap());

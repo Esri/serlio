@@ -31,11 +31,11 @@
 #include "maya/MFloatArray.h"
 #include "maya/MFloatPointArray.h"
 #include "maya/MFloatVectorArray.h"
+#include "maya/MFnDependencyNode.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnMeshData.h"
 #include "maya/adskDataAssociations.h"
 #include "maya/adskDataStream.h"
-#include "maya/MFnDependencyNode.h"
 
 #include <cassert>
 #include <sstream>
@@ -138,7 +138,7 @@ void assignTextureCoordinates(MFnMesh& fnMesh, double const* const* uvs, size_t 
 	}
 }
 
-void assignVertexNormals(MFnMesh& mFnMesh, MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices, const double* nrm,
+void assignVertexNormals(MFnMesh& mFnMesh, const MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices, const double* nrm,
                          size_t nrmSize, const uint32_t* normalIndices, MAYBE_UNUSED size_t normalIndicesSize) {
 	if (nrmSize == 0)
 		return;
@@ -169,6 +169,224 @@ constexpr unsigned int MATERIAL_MAX_STRING_LENGTH = 400;
 constexpr unsigned int MATERIAL_MAX_FLOAT_ARRAY_LENGTH = 5;
 constexpr unsigned int MATERIAL_MAX_STRING_ARRAY_LENGTH = 2;
 
+adsk::Data::Structure* createNewMayaStructure(const prt::AttributeMap** materials) {
+	adsk::Data::Structure* fStructure;
+
+	const prt::AttributeMap* mat = materials[0];
+
+	// Register our structure since it is not registered yet.
+	fStructure = adsk::Data::Structure::create();
+	fStructure->setName(PRT_MATERIAL_STRUCTURE.c_str());
+
+	fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_START.c_str());
+	fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_END.c_str());
+
+	size_t keyCount = 0;
+	wchar_t const* const* keys = mat->getKeys(&keyCount);
+	for (int k = 0; k < keyCount; k++) {
+		wchar_t const* key = keys[k];
+
+		adsk::Data::Member::eDataType type;
+		unsigned int size = 0;
+		unsigned int arrayLength = 1;
+
+		// clang-format off
+		switch (mat->getType(key)) {
+			case prt::Attributable::PT_BOOL: type = adsk::Data::Member::kBoolean; size = 1;  break;
+			case prt::Attributable::PT_FLOAT: type = adsk::Data::Member::kDouble; size = 1; break;
+			case prt::Attributable::PT_INT: type = adsk::Data::Member::kInt32; size = 1; break;
+
+			//workaround: using kString type crashes maya when setting metadata elememts. Therefore we use array of kUInt8
+			case prt::Attributable::PT_STRING: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH;  break;
+			case prt::Attributable::PT_BOOL_ARRAY: type = adsk::Data::Member::kBoolean; size = MATERIAL_MAX_STRING_LENGTH; break;
+			case prt::Attributable::PT_INT_ARRAY: type = adsk::Data::Member::kInt32; size = MATERIAL_MAX_STRING_LENGTH; break;
+			case prt::Attributable::PT_FLOAT_ARRAY: type = adsk::Data::Member::kDouble; size = MATERIAL_MAX_FLOAT_ARRAY_LENGTH; break;
+			case prt::Attributable::PT_STRING_ARRAY: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH; arrayLength = MATERIAL_MAX_STRING_ARRAY_LENGTH; break;
+
+			case prt::Attributable::PT_UNDEFINED: break;
+			case prt::Attributable::PT_BLIND_DATA: break;
+			case prt::Attributable::PT_BLIND_DATA_ARRAY: break;
+			case prt::Attributable::PT_COUNT: break;
+		}
+		// clang-format on
+
+		if (size > 0) {
+			for (unsigned int i = 0; i < arrayLength; i++) {
+				std::wstring keyToUse = key;
+				if (i > 0)
+					keyToUse = key + std::to_wstring(i);
+				const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
+				fStructure->addMember(type, size, keyToUseNarrow.c_str());
+			}
+		}
+	}
+
+	adsk::Data::Structure::registerStructure(*fStructure);
+
+	return fStructure;
+}
+
+void fillMetadata(adsk::Data::Structure* fStructure, const uint32_t* faceRanges, size_t faceRangesSize,
+                  const prt::AttributeMap** materials, const prt::AttributeMap** reports,
+                  adsk::Data::Associations& newMetadata) {
+	assert(fStructure != nullptr);
+	assert(faceRangesSize > 1);
+
+	adsk::Data::Stream newStream(*fStructure, PRT_MATERIAL_STREAM);
+	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIAL_CHANNEL);
+	newChannel.setDataStream(newStream);
+	newMetadata.setChannel(newChannel);
+
+	for (size_t fri = 0; fri < faceRangesSize - 1; fri++) {
+
+		if (materials != nullptr) {
+			adsk::Data::Handle handle(*fStructure);
+
+			const prt::AttributeMap* mat = materials[fri];
+
+			size_t keyCount = 0;
+			wchar_t const* const* keys = mat->getKeys(&keyCount);
+
+			for (int k = 0; k < keyCount; k++) {
+
+				wchar_t const* key = keys[k];
+
+				const std::string keyNarrow = prtu::toOSNarrowFromUTF16(key);
+
+				if (!handle.setPositionByMemberName(keyNarrow.c_str()))
+					continue;
+
+				size_t arraySize = 0;
+
+				switch (mat->getType(key)) {
+					case prt::Attributable::PT_BOOL:
+						handle.asBoolean()[0] = mat->getBool(key);
+						break;
+					case prt::Attributable::PT_FLOAT:
+						handle.asDouble()[0] = mat->getFloat(key);
+						break;
+					case prt::Attributable::PT_INT:
+						handle.asInt32()[0] = mat->getInt(key);
+						break;
+
+					// workaround: transporting string as uint8 array, because using asString crashes maya
+					case prt::Attributable::PT_STRING: {
+						const wchar_t* str = mat->getString(key);
+						if (wcslen(str) == 0)
+							break;
+						checkStringLength(str, MATERIAL_MAX_STRING_LENGTH);
+						size_t maxStringLengthTmp = MATERIAL_MAX_STRING_LENGTH;
+						prt::StringUtils::toOSNarrowFromUTF16(str, (char*)handle.asUInt8(), &maxStringLengthTmp);
+						break;
+					}
+					case prt::Attributable::PT_BOOL_ARRAY: {
+						const bool* boolArray;
+						boolArray = mat->getBoolArray(key, &arraySize);
+						for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++)
+							handle.asBoolean()[i] = boolArray[i];
+						break;
+					}
+					case prt::Attributable::PT_INT_ARRAY: {
+						const int* intArray;
+						intArray = mat->getIntArray(key, &arraySize);
+						for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++)
+							handle.asInt32()[i] = intArray[i];
+						break;
+					}
+					case prt::Attributable::PT_FLOAT_ARRAY: {
+						const double* floatArray;
+						floatArray = mat->getFloatArray(key, &arraySize);
+						for (unsigned int i = 0;
+						     i < arraySize && i < MATERIAL_MAX_STRING_LENGTH && i < MATERIAL_MAX_FLOAT_ARRAY_LENGTH;
+						     i++)
+							handle.asDouble()[i] = floatArray[i];
+						break;
+					}
+					case prt::Attributable::PT_STRING_ARRAY: {
+
+						const wchar_t* const* stringArray = mat->getStringArray(key, &arraySize);
+
+						for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++) {
+							if (wcslen(stringArray[i]) == 0)
+								continue;
+
+							if (i > 0) {
+								std::wstring keyToUse = key + std::to_wstring(i);
+								const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
+								if (!handle.setPositionByMemberName(keyToUseNarrow.c_str()))
+									continue;
+							}
+
+							checkStringLength(stringArray[i], MATERIAL_MAX_STRING_LENGTH);
+							size_t maxStringLengthTmp = MATERIAL_MAX_STRING_LENGTH;
+							prt::StringUtils::toOSNarrowFromUTF16(stringArray[i], (char*)handle.asUInt8(),
+							                                      &maxStringLengthTmp);
+						}
+						break;
+					}
+
+					case prt::Attributable::PT_UNDEFINED:
+						break;
+					case prt::Attributable::PT_BLIND_DATA:
+						break;
+					case prt::Attributable::PT_BLIND_DATA_ARRAY:
+						break;
+					case prt::Attributable::PT_COUNT:
+						break;
+				}
+			}
+
+			handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_START.c_str());
+			*handle.asInt32() = faceRanges[fri];
+
+			handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_END.c_str());
+			*handle.asInt32() = faceRanges[fri + 1];
+
+			newStream.setElement(static_cast<adsk::Data::IndexCount>(fri), handle);
+		}
+
+		if (reports != nullptr) {
+			// todo
+		}
+	}
+}
+
+void updateMayaMesh(double const* const* uvs, size_t const* uvsSizes, uint32_t const* const* uvCounts,
+                    size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
+                    size_t uvSetsCount, const double* nrm, size_t nrmSize, const uint32_t* normalIndices,
+                    size_t normalIndicesSize, const MFloatPointArray& mayaVertices, const MIntArray& mayaFaceCounts,
+                    MIntArray& mayaVertexIndices, const MObject& outMeshObj, const adsk::Data::Associations& newMetadata) {
+	MStatus stat;
+
+	MFnMeshData dataCreator;
+	MObject newOutputData = dataCreator.create(&stat);
+	MCHECK(stat);
+
+	MFnMesh mFnMesh1;
+	MObject newMeshObj = mFnMesh1.create(mayaVertices.length(), mayaFaceCounts.length(), mayaVertices, mayaFaceCounts,
+	                                     mayaVertexIndices, newOutputData, &stat);
+	MCHECK(stat);
+
+	MFnMesh newMesh(newMeshObj);
+	assignTextureCoordinates(newMesh, uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount);
+	assignVertexNormals(newMesh, mayaFaceCounts, mayaVertexIndices, nrm, nrmSize, normalIndices, normalIndicesSize);
+
+	MFnMesh outputMesh(outMeshObj);
+	outputMesh.copyInPlace(newMeshObj);
+
+	outputMesh.setMetadata(newMetadata);
+
+	// manually set the plug value, since copyInPlace is broken for meshes without construction history
+	if (outMeshObj.apiType() == MFn::Type::kMesh) {
+		mFnMesh1.setMetadata(newMetadata);
+
+		MFnDependencyNode depNodeFn;
+		depNodeFn.setObject(outMeshObj);
+		MPlug meshNodeOutMeshPlug = depNodeFn.findPlug("inMesh", true);
+		meshNodeOutMeshPlug.setValue(newOutputData);
+	}
+}
+
 } // namespace
 
 void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
@@ -178,6 +396,23 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
                             size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
                             size_t uvSetsCount, const uint32_t* faceRanges, size_t faceRangesSize,
                             const prt::AttributeMap** materials, const prt::AttributeMap** reports, const int32_t*) {
+	MStatus stat;
+	adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
+
+	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
+		fStructure = createNewMayaStructure(materials); // Structure to use for creation
+	}
+
+	MFnMesh inputMesh(inMeshObj);
+
+	adsk::Data::Associations newMetadata(inputMesh.metadata(&stat));
+	newMetadata.makeUnique();
+	MCHECK(stat);
+
+	if (fStructure != nullptr && faceRangesSize > 1) {
+		fillMetadata(fStructure, faceRanges, faceRangesSize, materials, reports, newMetadata);
+	}
+
 	MFloatPointArray mayaVertices = toMayaFloatPointArray(vtx, vtxSize);
 	MIntArray mayaFaceCounts = toMayaIntArray(faceCounts, faceCountsSize);
 	MIntArray mayaVertexIndices = toMayaIntArray(vertexIndices, vertexIndicesSize);
@@ -191,218 +426,9 @@ void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, c
 		LOG_DBG << "   mayaVertexIndices.length = " << mayaVertexIndices.length();
 	}
 
-	MStatus stat;
-
-	MFnMeshData dataCreator;
-	MObject newOutputData = dataCreator.create(&stat);
-	MCHECK(stat);
-
-	MFnMesh mFnMesh1;
-	MObject newMeshObj = mFnMesh1.create(mayaVertices.length(), mayaFaceCounts.length(), mayaVertices, mayaFaceCounts,
-	                                mayaVertexIndices, newOutputData, &stat);
-	MCHECK(stat);
-
-	MFnMesh newMesh(newMeshObj);
-	assignTextureCoordinates(newMesh, uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount);
-	assignVertexNormals(newMesh, mayaFaceCounts, mayaVertexIndices, nrm, nrmSize, normalIndices, normalIndicesSize);
-
-	MFnMesh outputMesh(outMeshObj);
-	outputMesh.copyInPlace(newMeshObj);
-
-	// create material metadata
-	adsk::Data::Structure* fStructure; // Structure to use for creation
-	fStructure = adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
-	if ((fStructure == nullptr) && (materials != nullptr) && (faceRangesSize > 1)) {
-		const prt::AttributeMap* mat = materials[0];
-
-		// Register our structure since it is not registered yet.
-		fStructure = adsk::Data::Structure::create();
-		fStructure->setName(PRT_MATERIAL_STRUCTURE.c_str());
-
-		fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_START.c_str());
-		fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_END.c_str());
-
-		size_t keyCount = 0;
-		wchar_t const* const* keys = mat->getKeys(&keyCount);
-		for (int k = 0; k < keyCount; k++) {
-			wchar_t const* key = keys[k];
-
-			adsk::Data::Member::eDataType type;
-			unsigned int size = 0;
-			unsigned int arrayLength = 1;
-
-			// clang-format off
-			switch (mat->getType(key)) {
-				case prt::Attributable::PT_BOOL: type = adsk::Data::Member::kBoolean; size = 1;  break;
-				case prt::Attributable::PT_FLOAT: type = adsk::Data::Member::kDouble; size = 1; break;
-				case prt::Attributable::PT_INT: type = adsk::Data::Member::kInt32; size = 1; break;
-
-				//workaround: using kString type crashes maya when setting metadata elememts. Therefore we use array of kUInt8
-				case prt::Attributable::PT_STRING: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH;  break;
-				case prt::Attributable::PT_BOOL_ARRAY: type = adsk::Data::Member::kBoolean; size = MATERIAL_MAX_STRING_LENGTH; break;
-				case prt::Attributable::PT_INT_ARRAY: type = adsk::Data::Member::kInt32; size = MATERIAL_MAX_STRING_LENGTH; break;
-				case prt::Attributable::PT_FLOAT_ARRAY: type = adsk::Data::Member::kDouble; size = MATERIAL_MAX_FLOAT_ARRAY_LENGTH; break;
-				case prt::Attributable::PT_STRING_ARRAY: type = adsk::Data::Member::kUInt8; size = MATERIAL_MAX_STRING_LENGTH; arrayLength = MATERIAL_MAX_STRING_ARRAY_LENGTH; break;
-
-				case prt::Attributable::PT_UNDEFINED: break;
-				case prt::Attributable::PT_BLIND_DATA: break;
-				case prt::Attributable::PT_BLIND_DATA_ARRAY: break;
-				case prt::Attributable::PT_COUNT: break;
-			}
-			// clang-format on
-
-			if (size > 0) {
-				for (unsigned int i = 0; i < arrayLength; i++) {
-					std::wstring keyToUse = key;
-					if (i > 0)
-						keyToUse = key + std::to_wstring(i);
-					const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
-					fStructure->addMember(type, size, keyToUseNarrow.c_str());
-				}
-			}
-		}
-
-		adsk::Data::Structure::registerStructure(*fStructure);
-	}
-
-	MCHECK(stat);
-	MFnMesh inputMesh(inMeshObj);
-
-	adsk::Data::Associations newMetadata(inputMesh.metadata(&stat));
-	newMetadata.makeUnique();
-	MCHECK(stat);
-	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIAL_CHANNEL);
-	adsk::Data::Stream newStream(*fStructure, PRT_MATERIAL_STREAM);
-
-	newChannel.setDataStream(newStream);
-	newMetadata.setChannel(newChannel);
-
-	if (faceRangesSize > 1) {
-
-		for (size_t fri = 0; fri < faceRangesSize - 1; fri++) {
-
-			if (materials != nullptr) {
-				adsk::Data::Handle handle(*fStructure);
-
-				const prt::AttributeMap* mat = materials[fri];
-
-				size_t keyCount = 0;
-				wchar_t const* const* keys = mat->getKeys(&keyCount);
-
-				for (int k = 0; k < keyCount; k++) {
-
-					wchar_t const* key = keys[k];
-
-					const std::string keyNarrow = prtu::toOSNarrowFromUTF16(key);
-
-					if (!handle.setPositionByMemberName(keyNarrow.c_str()))
-						continue;
-
-					size_t arraySize = 0;
-
-					switch (mat->getType(key)) {
-						case prt::Attributable::PT_BOOL:
-							handle.asBoolean()[0] = mat->getBool(key);
-							break;
-						case prt::Attributable::PT_FLOAT:
-							handle.asDouble()[0] = mat->getFloat(key);
-							break;
-						case prt::Attributable::PT_INT:
-							handle.asInt32()[0] = mat->getInt(key);
-							break;
-
-							// workaround: transporting string as uint8 array, because using asString crashes maya
-						case prt::Attributable::PT_STRING: {
-							const wchar_t* str = mat->getString(key);
-							if (wcslen(str) == 0)
-								break;
-							checkStringLength(str, MATERIAL_MAX_STRING_LENGTH);
-							size_t maxStringLengthTmp = MATERIAL_MAX_STRING_LENGTH;
-							prt::StringUtils::toOSNarrowFromUTF16(str, (char*)handle.asUInt8(), &maxStringLengthTmp);
-							break;
-						}
-						case prt::Attributable::PT_BOOL_ARRAY: {
-							const bool* boolArray;
-							boolArray = mat->getBoolArray(key, &arraySize);
-							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++)
-								handle.asBoolean()[i] = boolArray[i];
-							break;
-						}
-						case prt::Attributable::PT_INT_ARRAY: {
-							const int* intArray;
-							intArray = mat->getIntArray(key, &arraySize);
-							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++)
-								handle.asInt32()[i] = intArray[i];
-							break;
-						}
-						case prt::Attributable::PT_FLOAT_ARRAY: {
-							const double* floatArray;
-							floatArray = mat->getFloatArray(key, &arraySize);
-							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH && i < MATERIAL_MAX_FLOAT_ARRAY_LENGTH;
-							     i++)
-								handle.asDouble()[i] = floatArray[i];
-							break;
-						}
-						case prt::Attributable::PT_STRING_ARRAY: {
-
-							const wchar_t* const* stringArray = mat->getStringArray(key, &arraySize);
-
-							for (unsigned int i = 0; i < arraySize && i < MATERIAL_MAX_STRING_LENGTH; i++) {
-								if (wcslen(stringArray[i]) == 0)
-									continue;
-
-								if (i > 0) {
-									std::wstring keyToUse = key + std::to_wstring(i);
-									const std::string keyToUseNarrow = prtu::toOSNarrowFromUTF16(keyToUse);
-									if (!handle.setPositionByMemberName(keyToUseNarrow.c_str()))
-										continue;
-								}
-
-								checkStringLength(stringArray[i], MATERIAL_MAX_STRING_LENGTH);
-								size_t maxStringLengthTmp = MATERIAL_MAX_STRING_LENGTH;
-								prt::StringUtils::toOSNarrowFromUTF16(stringArray[i], (char*)handle.asUInt8(),
-								                                      &maxStringLengthTmp);
-							}
-							break;
-						}
-
-						case prt::Attributable::PT_UNDEFINED:
-							break;
-						case prt::Attributable::PT_BLIND_DATA:
-							break;
-						case prt::Attributable::PT_BLIND_DATA_ARRAY:
-							break;
-						case prt::Attributable::PT_COUNT:
-							break;
-					}
-				}
-
-				handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_START.c_str());
-				*handle.asInt32() = faceRanges[fri];
-
-				handle.setPositionByMemberName(PRT_MATERIAL_FACE_INDEX_END.c_str());
-				*handle.asInt32() = faceRanges[fri + 1];
-
-				newStream.setElement(static_cast<adsk::Data::IndexCount>(fri), handle);
-			}
-
-			if (reports != nullptr) {
-				// todo
-			}
-		}
-	}
-
-	outputMesh.setMetadata(newMetadata);
-
-	//manually set the plug value, since copyInPlace is broken for meshes without construction history
-	if (outMeshObj.apiType() == MFn::Type::kMesh) {
-		mFnMesh1.setMetadata(newMetadata);
-
-		MFnDependencyNode depNodeFn;
-		depNodeFn.setObject(outMeshObj);
-		MPlug meshNodeOutMeshPlug = depNodeFn.findPlug("inMesh", true);
-		meshNodeOutMeshPlug.setValue(newOutputData);
-	}
+	updateMayaMesh(uvs, uvsSizes, uvCounts, uvCountsSizes, uvIndices, uvIndicesSizes, uvSetsCount, nrm, nrmSize,
+	               normalIndices, normalIndicesSize, mayaVertices, mayaFaceCounts, mayaVertexIndices, outMeshObj,
+	               newMetadata);
 }
 
 prt::Status MayaCallbacks::attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* key, bool value) {
