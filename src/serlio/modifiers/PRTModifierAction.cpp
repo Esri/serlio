@@ -281,6 +281,7 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	mRuleFile.clear();
 	mStartRule.clear();
 	mRuleAttributes.clear();
+	PRTContext::get().theCache.get()->flushAll();
 
 	ResolveMapSPtr resolveMap = getResolveMap();
 	if (!resolveMap) {
