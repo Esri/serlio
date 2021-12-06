@@ -50,8 +50,6 @@ std::filesystem::path getPluginRoot() {
 	std::filesystem::path rootPath;
 #ifdef _WIN32
 	char dllPath[_MAX_PATH];
-	char drive[8];
-	char dir[_MAX_PATH];
 	HMODULE hModule = 0;
 
 	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
