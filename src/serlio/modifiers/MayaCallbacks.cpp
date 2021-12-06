@@ -375,16 +375,6 @@ void updateMayaMesh(double const* const* uvs, size_t const* uvsSizes, uint32_t c
 	outputMesh.copyInPlace(newMeshObj);
 
 	outputMesh.setMetadata(newMetadata);
-
-	// manually set the plug value, since copyInPlace is broken for meshes without construction history
-	if (outMeshObj.apiType() == MFn::Type::kMesh) {
-		mFnMesh1.setMetadata(newMetadata);
-
-		MFnDependencyNode depNodeFn;
-		depNodeFn.setObject(outMeshObj);
-		MPlug meshNodeOutMeshPlug = depNodeFn.findPlug("inMesh", true);
-		meshNodeOutMeshPlug.setValue(newOutputData);
-	}
 }
 
 } // namespace
