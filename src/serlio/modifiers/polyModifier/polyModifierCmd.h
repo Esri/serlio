@@ -457,11 +457,6 @@ private:
 	//
 	MStatus					connectNodes( MObject modifierNode );
 
-	// Mesh caching methods - Only used in the directModifier case
-	//
-	MStatus					cacheMeshData();
-	MStatus					cacheMeshTweaks();
-
 	// Undo methods
 	//
 	MStatus					undoCachedMesh();
