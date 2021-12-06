@@ -266,8 +266,6 @@ void polyModifierCmd::collectNodeState()
 			}
 		}
 	}
-
-	int result;
 }
 
 MStatus polyModifierCmd::createModifierNode( MObject& modifierNode )
