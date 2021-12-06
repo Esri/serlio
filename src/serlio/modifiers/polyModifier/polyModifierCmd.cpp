@@ -319,8 +319,7 @@ void polyModifierCmd::collectNodeState()
 	}
 
 	int result;
-	MGlobal::executeCommand( "constructionHistory -q -tgl", result );
-	fHasRecordHistory = (0 != result);
+	fHasRecordHistory = true;
 }
 
 MStatus polyModifierCmd::createModifierNode( MObject& modifierNode )
