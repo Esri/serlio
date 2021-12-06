@@ -41,11 +41,13 @@ proc string[] collectInitialShapes(string $nodes[]) {
 }
 
 proc int isSerlioInput(string $node){
-	string $hist[] = `listHistory -lv 1 -f true $node`;
+	string $hist[] = `listHistory -f true $node`;
 	if (size($hist) > 1) {
-			if(`nodeType $hist[1]` == "serlio"){
+		for ($node in $hist){
+			if(`nodeType $node` == "serlio"){
 				return true;
 			}
+		}
 	}
 	return false;
 }
