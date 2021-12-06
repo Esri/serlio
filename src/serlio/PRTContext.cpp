@@ -53,7 +53,7 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 	}
 
 	if (ENABLE_LOG_FILE) {
-		const std::wstring logPath = mPluginRootPath + prtu::getDirSeparator<wchar_t>() + L"serlio.log";
+		const std::wstring logPath = (mPluginRootPath / L"serlio.log").wstring();
 		theFileLogHandler =
 		        prt::FileLogHandler::create(prt::LogHandler::ALL, prt::LogHandler::ALL_COUNT, logPath.c_str());
 		prt::addLogHandler(theFileLogHandler);
@@ -63,9 +63,9 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 	LOG_INF << "Initializing Serlio Version " << SRL_VERSION << " ...";
 
 	if (DBG)
-		LOG_DBG << "initialized prt logger, plugin root path is " << mPluginRootPath;
+		LOG_DBG << "initialized prt logger, plugin root path is " << mPluginRootPath.wstring();
 
-	std::vector<std::wstring> extensionPaths = {mPluginRootPath + PRT_EXT_SUBDIR};
+	std::vector<std::wstring> extensionPaths = {(mPluginRootPath / PRT_EXT_SUBDIR).wstring()};
 	extensionPaths.insert(extensionPaths.end(), addExtDirs.begin(), addExtDirs.end());
 	if (DBG)
 		LOG_DBG << "looking for prt extensions at\n" << extensionPaths;
@@ -86,7 +86,8 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRoo
 	}
 	else {
 		theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
-		mResolveMapCache = std::make_unique<ResolveMapCache>(prtu::getProcessTempDir(SRL_TMP_PREFIX));
+		std::filesystem::path serlioTmpDir = prtu::getProcessTempDir(SRL_TMP_PREFIX);
+		mResolveMapCache = std::make_unique<ResolveMapCache>(serlioTmpDir.wstring());
 	}
 }
 

@@ -23,6 +23,7 @@
 
 #include <chrono>
 #include <map>
+#include <filesystem>
 
 class ResolveMapCache {
 public:
@@ -47,7 +48,7 @@ private:
 	using Cache = std::map<KeyType, ResolveMapCacheEntry>;
 	Cache mCache;
 
-	const std::wstring mRPKUnpackPath;
+	const std::filesystem::path mRPKUnpackPath;
 };
 
 using ResolveMapCacheUPtr = std::unique_ptr<ResolveMapCache>;

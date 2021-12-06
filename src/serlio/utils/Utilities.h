@@ -33,6 +33,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <iterator>
 #include <memory>
 #include <ostream>
@@ -78,7 +79,7 @@ using ResolveMapSPtr = std::shared_ptr<const prt::ResolveMap>;
 
 namespace prtu {
 
-std::wstring getPluginRoot();
+std::filesystem::path getPluginRoot();
 
 template <typename C>
 std::vector<const C*> toPtrVec(const std::vector<std::basic_string<C>>& sv) {
@@ -94,20 +95,8 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 	return pv;
 }
 
-// poor mans std::filesystem - we don't want boost or c++17 dependency right now
-SRL_TEST_EXPORTS_API std::wstring filename(const std::wstring& path);
 time_t getFileModificationTime(const std::wstring& p);
-std::wstring temp_directory_path();
-std::wstring getProcessTempDir(const std::wstring& prefix);
-void remove_all(const std::wstring& path);
-std::wstring toGenericPath(const std::wstring& osPath);
-
-template <typename C>
-C getDirSeparator();
-template <>
-char getDirSeparator();
-template <>
-wchar_t getDirSeparator();
+std::filesystem::path getProcessTempDir(const std::wstring& prefix);
 
 int fromHex(wchar_t c);
 wchar_t toHex(int i);

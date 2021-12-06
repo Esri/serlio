@@ -29,6 +29,6 @@ void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, cons
 std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName,
                                               const MELVariable& shadingEngineVariable, MStatus& status);
 
-std::wstring getStingrayShaderPath();
+std::filesystem::path getStingrayShaderPath();
 
 } // namespace MaterialUtils

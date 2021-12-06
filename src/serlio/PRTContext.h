@@ -44,7 +44,7 @@ struct SRL_TEST_EXPORTS_API PRTContext final {
 		return static_cast<bool>(thePRT);
 	}
 
-	const std::wstring mPluginRootPath; // the path where serlio dso resides
+	const std::filesystem::path mPluginRootPath; // the path where serlio dso resides
 	ObjectUPtr thePRT;
 	CacheObjectUPtr theCache;
 	prt::ConsoleLogHandler* theLogHandler = nullptr;
