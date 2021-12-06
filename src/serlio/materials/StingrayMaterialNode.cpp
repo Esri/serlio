@@ -85,7 +85,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	sb.connectAttr(MEL_VAR_SHADER_NODE, L"outColor", MEL_VARIABLE_SHADING_ENGINE, L"surfaceShader");
 
 	// stingray specifics
-	const MELStringLiteral sfxFile(MaterialUtils::getStingrayShaderPath());
+	const MELStringLiteral sfxFile(MaterialUtils::getStingrayShaderPath().generic_wstring());
 	sb.addCmdLine(L"shaderfx -sfxnode " + MEL_VAR_SHADER_NODE.mel() + L" -loadGraph  " + sfxFile.mel() + L";");
 	sb.setAttr(MEL_VAR_SHADER_NODE, L"initgraph", true);
 

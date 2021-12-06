@@ -183,12 +183,10 @@ std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShading
 	return output;
 }
 
-std::wstring getStingrayShaderPath() {
-	static const std::wstring sfxFile = []() {
-		// mel command wants forward slashes
-		const std::wstring shaderPath =
-		        (PRTContext::get().mPluginRootPath.parent_path() / L"shaders/serlioShaderStingray.sfx")
-		                .generic_wstring();
+std::filesystem::path getStingrayShaderPath() {
+	static const std::filesystem::path sfxFile = []() {
+		const std::filesystem::path shaderPath =
+		        (PRTContext::get().mPluginRootPath.parent_path() / L"shaders/serlioShaderStingray.sfx");
 		LOG_DBG << "stingray shader located at " << shaderPath;
 		return shaderPath;
 	}();
