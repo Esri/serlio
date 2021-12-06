@@ -146,18 +146,3 @@ MStatus PRTModifierCommand::initModifierNode(MObject modifierNode) {
 
 	return status;
 }
-
-MStatus PRTModifierCommand::directModifier(MObject mesh) {
-	MStatus status;
-	PRTModifierAction fPRTModifierAction;
-
-	fPRTModifierAction.setMesh(mesh, mesh);
-	fPRTModifierAction.setRandomSeed(mInitialSeed);
-	fPRTModifierAction.updateRuleFiles(MObject::kNullObj, mRulePkg);
-	fPRTModifierAction.clearTweaks(mesh);
-
-	// Now, perform the PRT action
-	status = fPRTModifierAction.doIt();
-
-	return status;
-}

@@ -388,18 +388,6 @@ protected:
 	//
 	virtual MStatus					initModifierNode( MObject modifierNode );
 
-	// directModifier - Derived classes should override this method to provide
-	//					direct modifications on the meshNode in the case where
-	//					no history exists and construction history is turned off.
-	//					(ie. no DG operations desired)
-	//
-	//					This method is called only if history does not exist and
-	//					history is turned off. At this point, a handle to the
-	//					meshNode is passed in so a derived class may directly
-	//					modify the mesh.
-	//
-	virtual MStatus					directModifier( MObject mesh );
-
 	MStatus							doModifyPoly();
 	MStatus							redoModifyPoly();
 	MStatus							undoModifyPoly();
@@ -478,7 +466,6 @@ private:
 	//
 	MStatus					undoCachedMesh();
 	MStatus					undoTweakProcessing();
-	MStatus					undoDirectModifier();
 
 	/////////////////////////////////////
 	// polyModifierCmd Utility Methods //

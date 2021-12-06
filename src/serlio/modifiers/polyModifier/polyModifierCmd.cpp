@@ -122,23 +122,6 @@ MStatus polyModifierCmd::initModifierNode( MObject /* modifierNode */ )
 	return MS::kSuccess;
 }
 
-MStatus polyModifierCmd::directModifier( MObject /* mesh */ )
-//
-//	Description:
-//
-//		Override this method in a derived class to provide an implementation for
-//		directly modifying the mesh (writing on the mesh itself). This method is
-//		only called in the case where history does not exist and history is turned
-//		off (ie. DG operations are not desirable).
-//
-//		The argument 'MObject mesh', is not used by this base class implementation.
-//		However, it may be used by derived classes. To avoid compiler warnings
-//		of unreferenced parameters, we comment out the parameter name.
-//
-{
-	return MS::kSuccess;
-}
-
 MStatus polyModifierCmd::doModifyPoly()
 {
 	MStatus status = MS::kFailure;
@@ -1038,95 +1021,6 @@ MStatus polyModifierCmd::undoTweakProcessing()
 		// so, there is no need to undo the tweak processing on it.
 		//
 	}
-
-	return status;
-}
-
-MStatus polyModifierCmd::undoDirectModifier()
-{
-	MStatus status;
-
-	MFnDependencyNode depNodeFn;
-	MFnDagNode dagNodeFn;
-
-	MObject meshNode = fDagPath.node();
-	depNodeFn.setObject( meshNode );
-	
-	// For the case with tweaks, we cannot write the mesh directly back onto
-	// the cachedInMesh, since the shape can have out of date information from the
-	// cachedInMesh. Thus we temporarily create an duplicate mesh, place our
-	// old mesh on the outMesh attribute of our duplicate mesh, connect the
-	// duplicate mesh shape to the mesh shape, and force a DG evaluation.
-	//
-	// For the case without tweaks, we can simply write onto the outMesh, since
-	// the shape relies solely on an outMesh when there is no history nor tweaks.
-	//
-	if( fHasTweaks )
-	{
-		// Retrieve the inMesh and name of our mesh node (for the DG eval)
-		//
-		depNodeFn.setObject( meshNode );
-		MPlug meshNodeInMeshPlug = depNodeFn.findPlug( "inMesh", true, &status );
-		MCheckStatus( status, "Could not retrieve inMesh" );
-		MString meshNodeName = depNodeFn.name();
-
-		// Duplicate our current mesh
-		//
-		dagNodeFn.setObject( meshNode );
-		MObject dupMeshNode = dagNodeFn.duplicate();
-
-		// The dagNodeFn::duplicate() returns a transform, but we need a shape
-		// so retrieve the DAG path and extend it to the shape.
-		//
-		MDagPath dupMeshDagPath;
-		MDagPath::getAPathTo( dupMeshNode, dupMeshDagPath );
-		dupMeshDagPath.extendToShape();
-
-		// Retrieve the outMesh of the duplicate mesh and set our mesh data back
-		// on it.
-		//
-		depNodeFn.setObject( dupMeshDagPath.node() );
-		MPlug dupMeshNodeOutMeshPlug = depNodeFn.findPlug( "outMesh", true, &status );
-		MCheckStatus( status, "Could not retrieve outMesh" );
-		status = dupMeshNodeOutMeshPlug.setValue( fMeshData );
-
-		// Temporarily connect the duplicate mesh node to our mesh node
-		//
-		MDGModifier dgModifier;
-		dgModifier.connect( dupMeshNodeOutMeshPlug, meshNodeInMeshPlug );
-		status = dgModifier.doIt();
-		MCheckStatus( status, "Could not connect dupMeshNode -> meshNode" );
-
-		// Need to force a DG evaluation now that the input has been changed.
-		//
-		MString cmd("dgeval ");
-		cmd += meshNodeName;
-		cmd += ".inMesh";
-		status = MGlobal::executeCommand( cmd, false, false );
-		MCheckStatus( status, "Could not force DG eval" );
-
-		// Disconnect and delete the duplicate mesh node now
-		//
-		dgModifier.undoIt();
-		MGlobal::deleteNode( dupMeshNode );
-
-		// Restore the tweaks on the mesh
-		//
-		status = undoTweakProcessing();
-	}
-	else
-	{
-		// Restore the original mesh by writing the old mesh data (fMeshData) back
-		// onto the outMesh of our meshNode
-		//
-		depNodeFn.setObject( meshNode );
-		MPlug meshNodeOutMeshPlug = depNodeFn.findPlug( "outMesh", true, &status );
-		MCheckStatus( status, "Could not retrieve outMesh" );
-		status = meshNodeOutMeshPlug.setValue( fMeshData );
-		MCheckStatus( status, "Could not set meshData" );
-	}
-	MFnMesh fnMesh(meshNode);
-	fnMesh.updateSurface();
 
 	return status;
 }
