@@ -125,44 +125,12 @@
 //		(Figure 2. Node with Tweaks)
 //		
 //
-//		The last of the questions deals with whether or not the user has construction
-//		history turned on or off. This will change how the node should be modified
-//		as well as what the node will look like in the DG following the operation. With
-//		history turned on, the user has selected that they would like to keep a
-//		history chain. So in that case, the resulting mesh would look like the above
-//		diagrams following the operation. On the other hand, with history turned off,
-//		the user has selected that they would not like to see a history chain. From here
-//		there are two possible choices to modify the mesh:
-//
-//		(1) Operate on the mesh directly
-//		(2) Use the DG, like in the above diagrams, then collapse the nodes down into the mesh.
-//
-//		The only exception to note out of this case is that if the node already possesses
-//		history (as would be answered by the first question), this preference is ignored.
-//		If a node has history, we continue to use history. The user is imposed with the
-//		task of deleting the history on the object first if they would not like to continue
-//		using history.
-//
-//
-//		With History:
-//
-//        ____                   ____
-//       /    \                 /    \
-//      | Hist | O --------> O | mesh | O
-//       \____/  |           |  \____/  |
-//            outMesh      inMesh    outMesh
-//
-//
-//		Without History:
-//
-//            ____
-//           /    \
-//        O | mesh | O     (All history compressed onto the inMesh attribute)
-//        |  \____/  |
-//      inMesh    outMesh
-//
-//
-//		(Figure 3. Node with History preference)
+//		Since we don't care if the user has turned the construction history off, we 
+//		always generate an modifier node. Otherwise, the user is unable to make any
+//		changes to the serlio node. The user is imposed with the task of deleting
+//		the history on the object first if they would not like to continue
+//		using history. This deviates from the original polyModifierCmd implementation,
+//		where the history is collapsed, but makes more sense for our use case.
 //
 //
 //		This section has described the "why" part of the question regarding this command.
@@ -181,17 +149,12 @@
 //
 //		1) History
 //
-//			For history, there are 4 cases that need to be considered:
+//			For history, there are 2 cases that need to be considered:
 //
-//			(a) History (yes)	-	RecordHistory (yes)
-//			(b) History (yes)	-	RecordHistory (no)
-//			(c) History (no)	-	RecordHistory (yes)
-//			(d) History (no)	-	RecordHistory (no)
+//			(a) History (yes)
+//			(b) History (no)
 //
-//			For (a) and (b), this command treats the node identically. Regardless of
-//			whether recording history is turned on or off, if history already exists
-//			on the node, we treat the node as though recording history is on. As such
-//			the command performs the following steps:
+//			For (a), The command performs the following steps:
 //
 //				(i)		Create a modifier node.
 //				(ii)	Find the node directly upstream to the mesh node.
@@ -200,7 +163,7 @@
 //				(v)		Connect the modifier node to the mesh node.
 //				(vi)	Done!
 //
-//			For (c), polyModifierCmd needs to generate an input mesh to drive the
+//			For (b), polyModifierCmd needs to generate an input mesh to drive the
 //			modifier node. To do this, the mesh node is duplicated and connected
 //			like the upstream node in the previous two cases:
 //
@@ -210,47 +173,19 @@
 //				(iv)	Connect the modifier node to the mesh node
 //				(v)		Done!
 //
-//			For (d), this command is a bit more complicated. There are two approaches
-//			that can be done to respect the fact that no history is desired. The first
-//			involves using the approach in case (c) and simply "baking" or "flattening"
-//			the nodes down into the mesh node. Unfortunately, this presents some
-//			serious problems with undo, as the Maya API in its current state does not
-//			support construction history manipulation. Resorting to the MEL command:
-//			"delete -ch" would be possible, however undoing the operation would not be
-//			trivial as calling an undo from within an undo could destabilize the undo
-//			queue.
-//
-//			The second alternative and one that is currently implemented by this class
-//			is to respect the "No Construction History" preference strictly by
-//			not modifying the history chain at all and simply operating directly on the
-//			mesh. In order to do this and maintain generality, a hook is provided for
-//			derived classes to override and place in the code used to directly modify the
-//			mesh. polyModifierCmd will only call this method under the circumstances
-//			of case (d). To prevent code duplication between the operations done in the
-//			modifierNode and the command's directModifier implementation, the concept of
-//			a factory is used. It is recommended that an instance of such a factory is
-//			stored locally on the command much like it will be on the node. See
-//			polyModifierNode.h and polyModifierFty.h for more details.
-//
-//
 //		2) Tweaks
 //
 //			Tweaks are handled as noted above in the description section. However, how
 //			they are treated is dependent on the state of history. Using the four cases
 //			above:
 //
-//			For (a), (b) and (c), it is as described in the description section:
+//			It is as described in the description section:
 //
 //				(i)		Create a tweak node.
 //				(ii)	Extract the tweaks from the mesh node.
 //				(iii)	Copy the tweaks onto the tweak node.
 //				(iv)	Clear the tweaks from the mesh node.
-//				(v)		Clear the tweaks from the duplicate mesh node (for case (c) only!)
-//
-//			For (d), we have yet another limitation. Tweaks are not handled in this case
-//			because of the same circumstances which give rise to the limitation in the
-//			history section. As such, topological changes may result in some odd behaviour
-//			unless the workaround provided in the limitations section is used.
+//				(v)		Clear the tweaks from the duplicate mesh node (for case (b) only!)
 //
 //
 // How to use:
@@ -287,26 +222,23 @@
 //
 //		4) Add an instance of your polyModifierFty to the command
 //		5) Cache any input parameters for the factory on the command
-//		6) Override the polyModifierCmd::directModifier() method
-//		7) Place your factory setup code and call its doIt() in directModifier()
 //
 //		---
 //
-//		8) Override the MPxCommand::doIt() method
-//		9) Place your setup code inside the doIt()
-//		10) Place the polyModifierCmd setup code inside the doIt()
+//		6) Override the MPxCommand::doIt() method
+//		7) Place your setup code inside the doIt()
+//		8) Place the polyModifierCmd setup code inside the doIt()
 //		    (ie. setMeshNode(), setModifierNodeType())
-//		11) Call polyModifierCmd::doModifyPoly() inside the doIt()
+//		9) Call polyModifierCmd::doModifyPoly() inside the doIt()
 //
 //		---
 //
-//		12) Override the MPxCommand::redoIt() method
-//		13) Call polyModifierCmd::redoModifyPoly() in redoIt()
+//		10) Override the MPxCommand::redoIt() method
+//		11) Call polyModifierCmd::redoModifyPoly() in redoIt()
 //
 //		---
 //
-//		14) Override the MPxCommand::undoIt() method
-//		15) Call polyModifierCmd::undoModifyPoly() in undoIt()
+//		12) Override the MPxCommand::undoIt() method
 //
 //		For more details on each of these steps, please visit the associated method/class
 //		headers.
@@ -316,11 +248,11 @@
 //
 //		There is one limitation in polyModifierCmd:
 //
-//		(1) Duplicate mesh created under the "No History / History turned on" case not undoable
+//		(1) Duplicate mesh created under the "No History" case not undoable
 //
 //		Case (1):
 //
-//			Under the "No History / History turned on" case, history is allowed so the DG
+//			Under the "No History" case, history is allowed so the DG
 //			is used to perform the operation. However, every polyModifierNode requires
 //			an input mesh and without any prior history, a mesh input needs to be created.
 //			polyModifierCmd compensates for this by duplicating the meshNode and marking
