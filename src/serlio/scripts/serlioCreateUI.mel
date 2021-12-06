@@ -20,7 +20,9 @@
 proc string[] appendAarray(string $a0[], string $a1[]) {
 	string $result[] = $a0;
 	for($e in $a1)
-		$result[size($result)] = $e;
+		if(!stringArrayContains($e, $result)){
+			$result[size($result)] = $e;
+		}
 	return $result;
 }
 
