@@ -82,7 +82,9 @@ ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
 		prt::Status status = prt::STATUS_UNSPECIFIED_ERROR;
 		if (DBG)
 			LOG_DBG << "createResolveMap from " << rpk;
-		rmce.mResolveMap.reset(prt::createResolveMap(rpkURI.c_str(), mRPKUnpackPath.wstring().c_str(), &status), PRTDestroyer());
+		const std::wstring mRPKUnpackPathString = mRPKUnpackPath.wstring();
+		rmce.mResolveMap.reset(prt::createResolveMap(rpkURI.c_str(), mRPKUnpackPathString.c_str(), &status),
+		                       PRTDestroyer());
 		if (status != prt::STATUS_OK)
 			return LOOKUP_FAILURE;
 
