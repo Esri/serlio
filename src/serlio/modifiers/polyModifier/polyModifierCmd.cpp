@@ -149,26 +149,10 @@ MStatus polyModifierCmd::doModifyPoly()
 		//
 		collectNodeState();
 
-		if( !fHasHistory && !fHasRecordHistory )
-		{
-			MObject meshNode = fDagPath.node();
-
-			// Pre-process the mesh - Cache old mesh (including tweaks, if applicable)
-			//
-			cacheMeshData();
-			cacheMeshTweaks();
-
-			// Call the directModifier
-			//
-			status = directModifier( meshNode );
-		}
-		else
-		{
-			MObject modifierNode;
-			createModifierNode( modifierNode );
-			initModifierNode( modifierNode );
-			status = connectNodes( modifierNode );
-		}
+		MObject modifierNode;
+		createModifierNode( modifierNode );
+		initModifierNode( modifierNode );
+		status = connectNodes( modifierNode );
 	}
 
 	return status;
@@ -178,25 +162,14 @@ MStatus polyModifierCmd::redoModifyPoly()
 {
 	MStatus status = MS::kSuccess;
 
-	if( !fHasHistory && !fHasRecordHistory )
+	// Call the redo on the DG and DAG modifiers
+	//
+	if( !fHasHistory )
 	{
-		MObject meshNode = fDagPath.node();
-
-		// Call the directModifier - No need to pre-process the mesh data again
-		//							 since we already have it.
-		//
-		status = directModifier( meshNode );
+		fDagModifier.doIt();
 	}
-	else
-	{
-		// Call the redo on the DG and DAG modifiers
-		//
-		if( !fHasHistory )
-		{
-			fDagModifier.doIt();
-		}
-		status = fDGModifier.doIt();
-	}
+	status = fDGModifier.doIt();
+	
 
 	return status;
 }
@@ -205,28 +178,21 @@ MStatus polyModifierCmd::undoModifyPoly()
 {
 	MStatus status = MS::kSuccess;
 
-	if( !fHasHistory && !fHasRecordHistory )
-	{
-		status = undoDirectModifier();
-	}
-	else
-	{
-		fDGModifier.undoIt();
+	fDGModifier.undoIt();
 
-		// undoCachedMesh must be called before undoTweakProcessing because 
-		// undoCachedMesh copies the original mesh *without* tweaks back onto
-		// the existing mesh. Any changes done before the copy will be lost.
-		//
-		if( !fHasHistory )
-		{
-			status = undoCachedMesh();
-			MCheckStatus( status, "undoCachedMesh" );
-			fDagModifier.undoIt();
-		}
-
-		status = undoTweakProcessing();
-		MCheckStatus( status, "undoTweakProcessing" );
+	// undoCachedMesh must be called before undoTweakProcessing because 
+	// undoCachedMesh copies the original mesh *without* tweaks back onto
+	// the existing mesh. Any changes done before the copy will be lost.
+	//
+	if( !fHasHistory )
+	{
+		status = undoCachedMesh();
+		MCheckStatus( status, "undoCachedMesh" );
+		fDagModifier.undoIt();
 	}
+
+	status = undoTweakProcessing();
+	MCheckStatus( status, "undoTweakProcessing" );
 
 	return status;
 }
@@ -319,7 +285,6 @@ void polyModifierCmd::collectNodeState()
 	}
 
 	int result;
-	fHasRecordHistory = true;
 }
 
 MStatus polyModifierCmd::createModifierNode( MObject& modifierNode )
@@ -739,7 +704,7 @@ MStatus polyModifierCmd::processTweaks( modifyPolyData& data )
 		// Only have to clear the tweaks off the duplicate mesh if we do not have history
 		// and we want history.
 		//
-		if( !fHasHistory && fHasRecordHistory )
+		if( !fHasHistory )
 		{
 			depNodeFn.setObject( data.upstreamNodeShape );
 			upstreamTweakPlug = depNodeFn.findPlug( "pnts", true);
@@ -973,7 +938,6 @@ MStatus polyModifierCmd::undoCachedMesh()
 	// Only need to restore the cached mesh if there was no history. Also
 	// check to make sure that we are in the record history state.
 	//
-	MStatusAssert( (fHasRecordHistory), "fHasRecordHistory == true" );
 
 	if( !fHasHistory )
 	{

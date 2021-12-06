@@ -508,7 +508,6 @@ private:
 	//
 	bool				fHasHistory;
 	bool				fHasTweaks;
-	bool				fHasRecordHistory;
 
 	// Cached Tweak Data (for undo)
 	//
