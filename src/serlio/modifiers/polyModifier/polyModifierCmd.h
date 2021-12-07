@@ -428,10 +428,6 @@ private:
 	MIntArray			fTweakIndexArray;
 	MFloatVectorArray	fTweakVectorArray;
 
-	// Cached Mesh Data (for undo in the 'No History'/'History turned off' case)
-	//
-	MObject				fMeshData;
-
 	// DG and DAG Modifier
 	//
 	//	  - We need both DAG and DG modifiers since the MDagModifier::createNode()
