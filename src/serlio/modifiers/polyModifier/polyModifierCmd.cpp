@@ -221,7 +221,6 @@ void polyModifierCmd::collectNodeState()
 	//
 	// - HasHistory (Construction History exists)
 	// - HasTweaks
-	// - HasRecordHistory (Construction History is turned on)
 	//
 	fDagPath.extendToShape();
 	MObject meshNodeShape = fDagPath.node();
