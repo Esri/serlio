@@ -40,7 +40,7 @@ proc string[] collectInitialShapes(string $nodes[]) {
 	return $result;	  
 }
 
-proc int isSerlioInput(string $node){
+proc int isSerlioNodePredecessor(string $node){
 	string $hist[] = `listHistory -f true $node`;
 	if (size($hist) > 1) {
 		for ($node in $hist){
@@ -79,7 +79,7 @@ global proc createPrtNode() {
 				}
 			}
 
-			if (!$alreadyHasExistingPrtNode && !isSerlioInput($node)){
+			if (!$alreadyHasExistingPrtNode && !isSerlioNodePredecessor($node)){
 				select -r $node;
 				serlioAssign $rulePackage;
 			}
