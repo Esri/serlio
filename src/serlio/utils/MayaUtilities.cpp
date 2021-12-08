@@ -22,17 +22,6 @@ int32_t computeSeed(const MFloatPointArray& vertices) {
 	return computeSeed(a);
 }
 
-int32_t computeSeed(const double* vertices, size_t count) {
-	MFloatPoint a(0.0, 0.0, 0.0);
-	for (unsigned int vi = 0; vi < count; vi += 3) {
-		a[0] += static_cast<float>(vertices[vi + 0]);
-		a[1] += static_cast<float>(vertices[vi + 1]);
-		a[2] += static_cast<float>(vertices[vi + 2]);
-	}
-	a = a / static_cast<float>(count);
-	return computeSeed(a);
-}
-
 void statusCheck(const MStatus& status, const char* file, int line) {
 	if (MS::kSuccess != status) {
 		LOG_ERR << "maya status error at " << file << ":" << line << ": " << status.errorString().asChar() << " (code "
