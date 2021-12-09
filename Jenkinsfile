@@ -14,7 +14,7 @@ import com.esri.zrh.jenkins.PslFactory
 
 // -- SETUP
 
-psl.runsHere('production')
+psl.runsHere('testing')
 env.PIPELINE_ARCHIVING_ALLOWED = "true"
 properties([ disableConcurrentBuilds() ])
 
