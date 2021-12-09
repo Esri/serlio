@@ -5,7 +5,7 @@ import groovy.transform.Field
 
 // -- PIPELINE LIBRARIES
 
-@Library('psl')
+@Library('psl@chr11115/maya2022')
 import com.esri.zrh.jenkins.PipelineSupportLibrary 
 import com.esri.zrh.jenkins.PslFactory 
 
