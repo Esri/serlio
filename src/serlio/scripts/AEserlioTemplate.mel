@@ -49,11 +49,7 @@ global proc int prtRPKChange(string $attr, string $varname) {
 	return $oldpkg == $newpkg;
 }
   
-global proc prtShowFileDialog(string $attr) {
-	$node    = prtNode($attr);
-	$plug    = prtPlug($attr);  
-	$filters = `attributeQuery -n $node -nn $plug`;
-
+global proc prtShowFileDialog(string $attr, string $filters) {
 	string $file[];
 	
 	if(startsWith($filters, "@Directory")) {
@@ -70,31 +66,34 @@ global proc prtShowFileDialog(string $attr) {
 	}  
 }  
 
-global proc prtFileBrowse(string $attr, string $varname){
+global proc prtFileBrowse(string $attr, string $varname, string $filters){
 	$varname = prtPlug($varname);
+	$filters = prtPlug($filters);
 	setUITemplate -pst attributeEditorTemplate;
 	rowLayout -nc 4;  
 	text -label `niceName($attr)`;
 	string $control = prtControlName($attr);
 	textField -fileName `getAttr $attr` $control;  	
 	connectControl -fileName $control $attr;
-	symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\")") ($control + "_browse");	
+	symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");	
 	button -label "Reload" -command ("prtReloadRPK(\"" + $attr + "\")");	
 	setParent ..;
 	setUITemplate -ppt; 
 }  
   
-global proc prtFileBrowseReplace(string $attr, string $varname){
+global proc prtFileBrowseReplace(string $attr, string $varname, string $filters){
+	$filters = prtPlug($filters);
 	if(prtRPKChange($attr, $varname)) {	
 		string $control = prtControlName($attr);
 		connectControl $control $attr;
-		symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\")") ($control + "_browse");
+		symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");
 	}
 }
 
-global proc prtFileBrowseReplaceRPK(string $attr, string $varname){
+global proc prtFileBrowseReplaceRPK(string $attr, string $varname, string $filters){
+	$filters = prtPlug($filters);
 	if(prtRPKChange($attr, $varname)) {
-		prtFileBrowseReplace($attr, $varname);
+		prtFileBrowseReplace($attr, $varname, $filters);
 	} else {
 		$varname = prtPlug($varname);
 		$newpkg  = `getAttr $attr`;
@@ -127,7 +126,8 @@ global proc AEserlioTemplate(string $node) {
 	editorTemplate -beginLayout "CGA Rules" -collapse 0;
 	string $varname = ("AEprtTemplate_" + $node);
 	eval ("global string $" + $varname + "=\"" + `getAttr ($node + ".Rule_Package")` + "\"");
-	editorTemplate -callCustom "prtFileBrowse" "prtFileBrowseReplaceRPK" "Rule_Package" $varname;
+	string $filter = niceName($node + ".Rule_Package");
+	editorTemplate -callCustom "prtFileBrowse" "prtFileBrowseReplaceRPK" "Rule_Package" $varname  $filter;
 
 	editorTemplate -l `niceName($node+".Random_Seed")` -adc "Random_Seed";
 
@@ -177,7 +177,7 @@ global proc AEserlioTemplate(string $node) {
 		
 		
 		if(`addAttr -q  -uaf ($longNameWithNode) `) {
-			editorTemplate -callCustom "prtFileBrowse" "prtFileBrowseReplace" $attr $varname;
+			editorTemplate -callCustom "prtFileBrowse" "prtFileBrowseReplace" $attr $varname "All Files (*.*)";
 		} else if(`addAttr -q  -uac ($longNameWithNode) `) {
 			editorTemplate -callCustom "prtColorChooser" "prtColorChooserReplace" $attr $varname;
 			$skip = 3;
