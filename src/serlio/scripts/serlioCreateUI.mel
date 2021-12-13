@@ -20,7 +20,9 @@
 proc string[] appendAarray(string $a0[], string $a1[]) {
 	string $result[] = $a0;
 	for($e in $a1)
-		$result[size($result)] = $e;
+		if(!stringArrayContains($e, $result)){
+			$result[size($result)] = $e;
+		}
 	return $result;
 }
 
@@ -36,6 +38,18 @@ proc string[] collectInitialShapes(string $nodes[]) {
 		}
 	}
 	return $result;	  
+}
+
+proc int isSerlioNodePredecessor(string $node){
+	string $hist[] = `listHistory -f true $node`;
+	if (size($hist) > 1) {
+		for ($node in $hist){
+			if(`nodeType $node` == "serlio"){
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 global proc createPrtNode() {
@@ -65,7 +79,7 @@ global proc createPrtNode() {
 				}
 			}
 
-			if (!$alreadyHasExistingPrtNode){
+			if (!$alreadyHasExistingPrtNode && !isSerlioNodePredecessor($node)){
 				select -r $node;
 				serlioAssign $rulePackage;
 			}
@@ -107,8 +121,7 @@ global proc removePrtNode() {
 	select -r $select;
 }
 
-
-global proc createPrtMaterialNode() {
+global proc createMaterialNode(string $materialType) {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
@@ -119,22 +132,8 @@ global proc createPrtMaterialNode() {
 	
 	for($node in $initialShapes) {
 		select -r $node;
-		serlioCreateMaterial "stingray";
-	}
-}
-
-global proc createArnoldMaterialNode() {
-	string $select[] = `ls -sl`;
-	string $initialShapes[] = collectInitialShapes($select);
-	
-	if(size($initialShapes) == 0) {
-		confirmDialog -title "Missing selection" -message "Please select shapes first in order to create materials." -button "OK";
-		return;
-	}	
-	
-	for($node in $initialShapes) {
-		select -r $node;
-		serlioCreateMaterial "arnold";
+		if(!isSerlioNodePredecessor($node))
+			serlioCreateMaterial $materialType;
 	}
 }
 
@@ -150,8 +149,8 @@ global proc createPrtMenu() {
 		menuItem -divider true;
 		menuItem -label "Attach CityEngine Rule Package..."  -c "createPrtNode" -annotation "Attach a CGA rule package to a geometry";
 		menuItem -label "Remove CityEngine Rule Package"  -c "removePrtNode" -annotation "Remove a CGA rule package from a geometry";
-		menuItem -label "Create Materials"  -c "createPrtMaterialNode" -annotation "Create Materials";
-        menuItem -label "Create Arnold Materials" -c "createArnoldMaterialNode" -annotation "Create Arnold Materials";
+		menuItem -label "Create Materials"  -c "createMaterialNode(\"stingray\")" -annotation "Create Materials";
+		menuItem -label "Create Arnold Materials" -c "createMaterialNode(\"arnold\")" -annotation "Create Arnold Materials";
 		setParent -m ..;
 	}
 }
