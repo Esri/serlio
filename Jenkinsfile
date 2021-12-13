@@ -5,7 +5,7 @@ import groovy.transform.Field
 
 // -- PIPELINE LIBRARIES
 
-@Library('psl@chr11115/maya2022')
+@Library('psl')
 import com.esri.zrh.jenkins.PipelineSupportLibrary 
 import com.esri.zrh.jenkins.PslFactory 
 
@@ -14,7 +14,7 @@ import com.esri.zrh.jenkins.PslFactory
 
 // -- SETUP
 
-psl.runsHere('testing')
+psl.runsHere('development')
 env.PIPELINE_ARCHIVING_ALLOWED = "true"
 properties([ disableConcurrentBuilds() ])
 
