@@ -89,6 +89,7 @@ global proc prtFileBrowseReplace(string $attr, string $varname){
 		string $control = prtControlName($attr);
 		connectControl $control $attr;
 		symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\")") ($control + "_browse");
+		symbolButton -edit -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");
 	}
 }
 
