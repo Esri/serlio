@@ -76,7 +76,7 @@ global proc prtFileBrowse(string $attr, string $varname, string $filters){
 	textField -fileName `getAttr $attr` $control;  	
 	connectControl -fileName $control $attr;
 	symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");	
-	button -label "Reload" -command ("prtReloadRPK(\"" + $attr + "\")");	
+	symbolButton -ann "reload rule package" -image "refresh.png" -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");	
 	setParent ..;
 	setUITemplate -ppt; 
 }  
@@ -87,11 +87,11 @@ global proc prtFileBrowseReplace(string $attr, string $varname, string $filters)
 		string $control = prtControlName($attr);
 		connectControl $control $attr;
 		symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");
+		symbolButton -edit -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");
 	}
 }
 
 global proc prtFileBrowseReplaceRPK(string $attr, string $varname, string $filters){
-	$filters = prtRemoveNodeName($filters);
 	if(prtRPKChange($attr, $varname)) {
 		prtFileBrowseReplace($attr, $varname, $filters);
 	} else {

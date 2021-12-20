@@ -59,4 +59,13 @@
         <MayaEnv expr="XBMLANGPATH+:=2020/icons/" />
         <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
     </Components>
+
+    <Components>
+        <RuntimeRequirements SupportPath="./2022/doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="2022" SeriesMax="2022" />
+        <MayaEnv expr="PATH+:=2022/plug-ins/" />
+        <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2022/plug-ins/" />
+        <MayaEnv expr="MAYA_SCRIPT_PATH+:=2022/scripts/" />
+        <MayaEnv expr="XBMLANGPATH+:=2022/icons/" />
+        <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
+    </Components>
 </ApplicationPackage>

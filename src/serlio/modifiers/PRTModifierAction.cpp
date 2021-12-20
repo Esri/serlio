@@ -62,7 +62,7 @@ const AttributeMapUPtr
 
 AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule,
                                            const prt::ResolveMap& resolveMap, prt::CacheObject& cache,
-                                           const PRTMesh& prtMesh) {
+                                           const PRTMesh& prtMesh, const int32_t seed) {
 	AttributeMapBuilderUPtr mayaCallbacksAttributeBuilder(prt::AttributeMapBuilder::create());
 	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, mayaCallbacksAttributeBuilder);
 
@@ -70,8 +70,6 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 
 	isb->setGeometry(prtMesh.vertexCoords(), prtMesh.vcCount(), prtMesh.indices(), prtMesh.indicesCount(),
 	                 prtMesh.faceCounts(), prtMesh.faceCountsCount());
-
-	const int32_t seed = mu::computeSeed(prtMesh.vertexCoords(), prtMesh.vcCount());
 
 	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), seed, L"", EMPTY_ATTRIBUTES.get(), &resolveMap);
 
@@ -167,7 +165,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
 
 	const AttributeMapUPtr defaultAttributeValues =
-	        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh);
+	        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed);
 	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
 
 	for (const auto& attrObj : cgaAttributes) {
@@ -310,7 +308,7 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 
 	mStartRule = prtu::detectStartRule(info);
 	mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
-	                                           *inPrtMesh);
+	                                           *inPrtMesh, mRandomSeed);
 	if (DBG)
 		LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
@@ -323,36 +321,6 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	}
 
 	return MS::kSuccess;
-}
-
-MStatus PRTModifierAction::clearTweaks(MObject mesh) {
-	MStatus stat;
-	MFnDependencyNode depNodeFn;
-	depNodeFn.setObject(mesh);
-	MPlug tweakPlug = depNodeFn.findPlug("pnts", true);
-	if (!tweakPlug.isNull()) {
-		if (!tweakPlug.isArray()) {
-			return MStatus::kFailure;
-		}
-
-		MPlug tweak;
-		MFloatVector tweakData;
-		int i;
-		int numElements = tweakPlug.numElements();
-
-		for (i = 0; i < numElements; i++) {
-			tweak = tweakPlug.elementByPhysicalIndex(i, &stat);
-			if (stat == MS::kSuccess && !tweak.isNull()) {
-
-				MFnNumericData numDataFn;
-				MObject object = numDataFn.create(MFnNumericData::k3Float);
-				numDataFn.setData(0, 0, 0);
-				tweak.setValue(object);
-			}
-		}
-	}
-		
-	return stat;
 }
 
 MStatus PRTModifierAction::doIt() {

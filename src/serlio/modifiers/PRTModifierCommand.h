@@ -33,7 +33,6 @@ public:
 	MStatus undoIt() override;
 
 	MStatus initModifierNode(MObject modifierNode) override;
-	MStatus directModifier(MObject mesh) override;
 
 private:
 	MString mRulePkg;
