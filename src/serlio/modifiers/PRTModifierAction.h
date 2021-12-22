@@ -107,6 +107,9 @@ private:
 	MStatus createNodeAttributes(const MObject& node, const prt::RuleFileInfo* info);
 	void removeUnusedAttribs(MFnDependencyNode& node);
 
+	template <typename T>
+	MStatus iterateThroughAttributesAndApply(const MObject& node, T attrFunction);
+
 	static MStatus addParameter(MFnDependencyNode& node, MObject& attr, MFnAttribute& tAttr);
 	static MStatus addBoolParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                bool defaultValue);

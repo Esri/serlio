@@ -67,6 +67,7 @@ using CacheObjectUPtr = std::unique_ptr<prt::CacheObject, PRTDestroyer>;
 using AttributeMapUPtr = std::unique_ptr<const prt::AttributeMap, PRTDestroyer>;
 using AttributeMapVector = std::vector<AttributeMapUPtr>;
 using AttributeMapBuilderUPtr = std::unique_ptr<prt::AttributeMapBuilder, PRTDestroyer>;
+using AttributeMapBuilderSPtr = std::shared_ptr<prt::AttributeMapBuilder>;
 using AttributeMapBuilderVector = std::vector<AttributeMapBuilderUPtr>;
 using InitialShapeUPtr = std::unique_ptr<const prt::InitialShape, PRTDestroyer>;
 using InitialShapeBuilderUPtr = std::unique_ptr<prt::InitialShapeBuilder, PRTDestroyer>;
