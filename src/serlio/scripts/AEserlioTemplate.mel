@@ -103,21 +103,35 @@ global proc prtFileBrowseReplaceRPK(string $attr, string $varname){
 	}
 }
 
+global proc prtUpdateEditHighlights(string $attr){
+	int $userSet = `getAttr ($attr + "_user_set")`;
+	string $control = prtControlName($attr);
+
+	symbolButton -edit -visible $userSet ($control + "_user_set");
+
+	if ($userSet){
+		rowColumnLayout -edit -bgc 0.32 0.32 0.32 ($control + "_column_layout");
+	} else {
+		rowColumnLayout -edit -bgc 0.4 0.4 0.4 -noBackground  true ($control + "_column_layout");
+	}
+}
+
 global proc prtAttributeControl(string $attr, string $varname){
 	setUITemplate -pst attributeEditorTemplate;
 	string $control = prtControlName($attr);
-	int $nrOfColumns = 3;
+	int $nrOfColumns = 4;
 	int $isFileAttribute = `addAttr -q -uaf ($attr)`;
 
 	if($isFileAttribute){
-		$nrOfColumns = 5;
+		$nrOfColumns = 6;
 	}
 
-	rowColumnLayout -numberOfColumns $nrOfColumns -adjustableColumn 1 ($control + "_column_layout");
+	rowColumnLayout -numberOfColumns $nrOfColumns -bgc 0.4 0.4 0.4 -noBackground  true -adjustableColumn 2 ($control + "_column_layout");
 
 	$label = `niceName $attr`;
 
-	attrControlGrp -hideMapButton true -label $label -attribute $attr $control;
+	symbolButton -visible false -hlc 0.2715 0.2715 0.2715 -i "pencilCursor.png" -w 25 -h 25 -enable false ($control + "_user_set");
+	attrControlGrp -hideMapButton true -label $label -changeCommand("prtUpdateEditHighlights " + $attr) -attribute $attr $control;
 
 	if ($isFileAttribute){
 		symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\")") ($control + "_browse");
@@ -127,6 +141,7 @@ global proc prtAttributeControl(string $attr, string $varname){
 	connectControl $control $attr;
 	setParent ..;
 	setUITemplate -ppt; 
+	prtUpdateEditHighlights($attr);
 }  
 
 global proc prtAttributeControlReplace(string $attr, string $varname){
@@ -138,6 +153,7 @@ global proc prtAttributeControlReplace(string $attr, string $varname){
 			symbolButton -edit -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");
 	}
 	}
+	prtUpdateEditHighlights($attr);
 }
 
 global proc AEserlioTemplate(string $node) {
