@@ -117,6 +117,12 @@ global proc prtUpdateEditHighlights(string $attr){
 	}
 }
 
+global proc prtSetAttrUserSetAndUpdateUI(string $attr){
+	setAttr ($attr + "_force_default") true;
+	setAttr ($attr + "_user_set") false;
+	prtUpdateEditHighlights($attr);
+}
+
 global proc prtAttributeControl(string $attr, string $varname){
 	setUITemplate -pst attributeEditorTemplate;
 	string $control = prtControlName($attr);
@@ -138,6 +144,7 @@ global proc prtAttributeControl(string $attr, string $varname){
 		symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\")") ($control + "_browse");
 		symbolButton -ann "reload file" -image "refresh.png" -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");	
 	}
+	symbolButton -image "undo_s.png" -annotation "reset rule attribute to default value" -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
 
 	connectControl $control $attr;
 	setParent ..;
@@ -152,7 +159,8 @@ global proc prtAttributeControlReplace(string $attr, string $varname){
 		if (`addAttr -q -uaf ($attr)`){
 			symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\")") ($control + "_browse");
 			symbolButton -edit -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");
-	}
+		}
+			symbolButton -edit -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
 	}
 	prtUpdateEditHighlights($attr);
 }
