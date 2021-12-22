@@ -105,6 +105,12 @@ global proc prtFileBrowseReplaceRPK(string $attr, string $varname){
 }
 
 global proc prtUpdateEditHighlights(string $attr){
+	string $node = plugNode($attr);
+	string $attributeName = plugAttr($attr);
+	int $attributeExists = `attributeExists $attributeName $node`;
+	if (!$attributeExists)
+		return;
+
 	int $userSet = `getAttr ($attr + "_user_set")`;
 	string $control = prtControlName($attr);
 
