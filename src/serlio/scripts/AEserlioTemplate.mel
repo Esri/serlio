@@ -103,19 +103,40 @@ global proc prtFileBrowseReplaceRPK(string $attr, string $varname){
 	}
 }
 
-global proc prtColorChooser(string $attr, string $varname) {
+global proc prtAttributeControl(string $attr, string $varname){
 	setUITemplate -pst attributeEditorTemplate;
 	string $control = prtControlName($attr);
-	colorSliderGrp -label `niceName($attr)` $control;
+	int $nrOfColumns = 3;
+	int $isFileAttribute = `addAttr -q -uaf ($attr)`;
+
+	if($isFileAttribute){
+		$nrOfColumns = 5;
+	}
+
+	rowColumnLayout -numberOfColumns $nrOfColumns -adjustableColumn 1 ($control + "_column_layout");
+
+	$label = `niceName $attr`;
+
+	attrControlGrp -hideMapButton true -label $label -attribute $attr $control;
+
+	if ($isFileAttribute){
+		symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\")") ($control + "_browse");
+		symbolButton -ann "reload file" -image "refresh.png" -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");	
+	}
+
 	connectControl $control $attr;
 	setParent ..;
 	setUITemplate -ppt; 
 }  
 
-global proc prtColorChooserReplace(string $attr, string $varname){
+global proc prtAttributeControlReplace(string $attr, string $varname){
 	if(prtRPKChange($attr, $varname)) {
 		string $control = prtControlName($attr);
 		connectControl $control $attr;
+		if (`addAttr -q -uaf ($attr)`){
+			symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\")") ($control + "_browse");
+			symbolButton -edit -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");
+	}
 	}
 }
 
@@ -177,14 +198,9 @@ global proc AEserlioTemplate(string $node) {
 		}
 		
 		
-		if(`addAttr -q  -uaf ($longNameWithNode) `) {
-			editorTemplate -callCustom "prtFileBrowse" "prtFileBrowseReplace" $attr $varname;
-		} else if(`addAttr -q  -uac ($longNameWithNode) `) {
-			editorTemplate -callCustom "prtColorChooser" "prtColorChooserReplace" $attr $varname;
+		editorTemplate -callCustom "prtAttributeControl" "prtAttributeControlReplace" $attr $varname;
+		if(`addAttr -q  -uac ($longNameWithNode) `) 
 			$skip = 3;
-		} else {
-			editorTemplate  -l `niceName($longNameWithNode)` -adc $attr;
-		}
 	}
 		
 	if ($currentGroupName != "")
