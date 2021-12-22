@@ -404,6 +404,125 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	return MStatus::kSuccess;
 }
 
+MStatus PRTModifierAction::updateUI(const MObject& node) {
+	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
+	                                           const RuleAttribute& ruleAttribute, std::wstring fqAttrName,
+	                                           const PrtAttributeType attrType) {
+		const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(
+		        mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed);
+		MPlug plug(fnNode.object(), fnAttribute.object());
+
+		switch (attrType) {
+			case PrtAttributeType::BOOL: {
+				const auto defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
+				bool boolVal;
+				MCHECK(plug.getValue(boolVal));
+
+				const bool isDefaultValue = defBoolVal == boolVal;
+
+				if (getIsUserSet(fnNode, fnAttribute)) {
+					plug.setBool(boolVal);
+				}
+				else {
+					if (!isDefaultValue) {
+						plug.setBool(defBoolVal);
+					}
+				}
+				break;
+			}
+			case PrtAttributeType::FLOAT: {
+				const auto defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
+				double doubleVal;
+				MCHECK(plug.getValue(doubleVal));
+
+				const bool isDefaultValue = defDoubleVal == doubleVal;
+
+				if (getIsUserSet(fnNode, fnAttribute)) {
+					plug.setDouble(doubleVal);
+				}
+				else {
+					if (!isDefaultValue) {
+						plug.setDouble(defDoubleVal);
+					}
+				}
+				break;
+			}
+			case PrtAttributeType::COLOR: {
+				const wchar_t* defColStr = defaultAttributeValues->getString(fqAttrName.c_str());
+
+				MObject rgb;
+				MCHECK(plug.getValue(rgb));
+				MFnNumericData fRGB(rgb);
+
+				prtu::Color col;
+				MCHECK(fRGB.getData3Float(col[0], col[1], col[2]));
+				const std::wstring colStr = prtu::getColorString(col);
+
+				prtu::Color defaultColor = prtu::parseColor(defColStr);
+				MFnNumericData fdefaultColor;
+				MObject defaultColorObj = fdefaultColor.create(MFnNumericData::Type::k3Float);
+				fdefaultColor.setData3Float(defaultColor[0], defaultColor[1], defaultColor[2]);
+
+				const bool isDefaultValue = std::wcscmp(colStr.c_str(), defColStr) == 0;
+
+				if (getIsUserSet(fnNode, fnAttribute)) {
+					plug.setMObject(rgb);
+				}
+				else {
+					if (!isDefaultValue) {
+						plug.setMObject(defaultColorObj);
+					}
+				}
+				break;
+			}
+			case PrtAttributeType::STRING: {
+				const auto defStringVal = defaultAttributeValues->getString(fqAttrName.c_str());
+
+				MString stringVal;
+				MCHECK(plug.getValue(stringVal));
+
+				const bool isDefaultValue = std::wcscmp(stringVal.asWChar(), defStringVal) == 0;
+
+				if (getIsUserSet(fnNode, fnAttribute)) {
+					plug.setString(stringVal);
+				}
+				else {
+					if (!isDefaultValue) {
+						plug.setString(defStringVal);
+					}
+				}
+				break;
+			}
+			case PrtAttributeType::ENUM: {
+				MFnEnumAttribute eAttr(fnAttribute.object());
+
+				short defEnumVal;
+				short enumVal;
+				MCHECK(eAttr.getDefault(defEnumVal));
+				MCHECK(plug.getValue(enumVal));
+
+				const bool isDefaultValue = defEnumVal == enumVal;
+				if (getIsUserSet(fnNode, fnAttribute)) {
+					plug.setShort(enumVal);
+				}
+				else {
+					if (!isDefaultValue) {
+						plug.setShort(defEnumVal);
+					}
+				}
+				break;
+			}
+
+			default:
+				break;
+		}
+	};
+
+	iterateThroughAttributesAndApply(node, updateUIFromAttributes);
+
+	return MStatus::kSuccess;
+}
+
 // Sets the mesh object for the action  to operate on
 void PRTModifierAction::setMesh(MObject& _inMesh, MObject& _outMesh) {
 	inMesh = _inMesh;

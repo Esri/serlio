@@ -120,6 +120,8 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			// Now, perform the PRT
 			status = fPRTModifierAction.doIt();
 
+			fPRTModifierAction.updateUI(thisMObject());
+
 			currentRulePkgData.setString(rulePkgData.asString());
 
 			// Mark the output mesh as clean
