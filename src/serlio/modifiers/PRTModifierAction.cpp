@@ -58,7 +58,7 @@ constexpr const wchar_t* MAX_KEY = L"max";
 constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
 
 constexpr const wchar_t* ATTRIBUTE_USER_SET_SUFFIX = L"_user_set";
-constexpr const wchar_t* ATTRIBUTE_FORCE_RESET_SUFFIX = L"_force_default";
+constexpr const wchar_t* ATTRIBUTE_FORCE_DEFAULT_SUFFIX = L"_force_default";
 
 const AttributeMapUPtr
         EMPTY_ATTRIBUTES(AttributeMapBuilderUPtr(prt::AttributeMapBuilder::create())->createAttributeMap());
@@ -528,7 +528,7 @@ void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(), [&attrName](const auto& ra) {
 			return (ra.mayaFullName == attrName.asWChar() ||
 			        ra.mayaFullName + ATTRIBUTE_USER_SET_SUFFIX == attrName.asWChar() ||
-			        ra.mayaFullName + ATTRIBUTE_FORCE_RESET_SUFFIX == attrName.asWChar());
+			        ra.mayaFullName + ATTRIBUTE_FORCE_DEFAULT_SUFFIX == attrName.asWChar());
 		});
 		return (it != mRuleAttributes.end());
 	};
@@ -660,8 +660,8 @@ MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, 
 
 		//add hidden force_default attribute
 		MFnNumericAttribute nAttrForceDefault;
-		MObject attrForceDefault = nAttrForceDefault.create(tAttr.name() + ATTRIBUTE_FORCE_RESET_SUFFIX,
-		                                                    tAttr.shortName() + ATTRIBUTE_FORCE_RESET_SUFFIX,
+		MObject attrForceDefault = nAttrForceDefault.create(tAttr.name() + ATTRIBUTE_FORCE_DEFAULT_SUFFIX,
+		                                                    tAttr.shortName() + ATTRIBUTE_FORCE_DEFAULT_SUFFIX,
 		                                                    MFnNumericData::kBoolean, false, &stat);
 
 		if (!(node.hasAttribute(nAttrForceDefault.shortName()))) {
