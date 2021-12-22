@@ -104,6 +104,8 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			// Set the mesh object and component List on the factory
 			fPRTModifierAction.setMesh(iMesh, oMesh);
 
+			fPRTModifierAction.updateUserSetAttributes(thisMObject());
+
 			MDataHandle randomSeed = data.inputValue(mRandomSeed, &status);
 			fPRTModifierAction.setRandomSeed(randomSeed.asInt());
 

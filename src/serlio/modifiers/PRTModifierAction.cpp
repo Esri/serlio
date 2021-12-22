@@ -326,6 +326,84 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 	return MStatus::kSuccess;
 }
 
+MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
+	const auto updateUserSetAttribute = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
+	                                           const RuleAttribute& ruleAttribute, std::wstring fqAttrName,
+	                                           const PrtAttributeType attrType) {
+		const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(
+		        mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed);
+		const MPlug plug(fnNode.object(), fnAttribute.object());
+		bool isDefaultValue = false;
+
+		switch (attrType) {
+			case PrtAttributeType::BOOL: {
+				const auto defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
+				bool boolVal;
+				MCHECK(plug.getValue(boolVal));
+
+				isDefaultValue = defBoolVal == boolVal;
+				break;
+			}
+			case PrtAttributeType::FLOAT: {
+				const auto defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
+				double doubleVal;
+				MCHECK(plug.getValue(doubleVal));
+
+				isDefaultValue = defDoubleVal == doubleVal;
+				break;
+			}
+			case PrtAttributeType::COLOR: {
+				const wchar_t* defColStr = defaultAttributeValues->getString(fqAttrName.c_str());
+
+				MObject rgb;
+				MCHECK(plug.getValue(rgb));
+				MFnNumericData fRGB(rgb);
+
+				prtu::Color col;
+				MCHECK(fRGB.getData3Float(col[0], col[1], col[2]));
+				const std::wstring colStr = prtu::getColorString(col);
+
+				isDefaultValue = std::wcscmp(colStr.c_str(), defColStr) == 0;
+				break;
+			}
+			case PrtAttributeType::STRING: {
+				const auto defStringVal = defaultAttributeValues->getString(fqAttrName.c_str());
+
+				MString stringVal;
+				MCHECK(plug.getValue(stringVal));
+
+				isDefaultValue = std::wcscmp(stringVal.asWChar(), defStringVal) == 0;
+				break;
+			}
+			case PrtAttributeType::ENUM: {
+				MFnEnumAttribute eAttr(fnAttribute.object());
+
+				short defEnumVal;
+				short enumVal;
+				MCHECK(eAttr.getDefault(defEnumVal));
+				MCHECK(plug.getValue(enumVal));
+
+				isDefaultValue = defEnumVal == enumVal;
+				break;
+			}
+
+			default:
+				break;
+		}
+
+		if (getAndResetForceDefault(fnNode, fnAttribute)) {
+			setIsUserSet(fnNode, fnAttribute, false);
+		}
+		else {
+			setIsUserSet(fnNode, fnAttribute, !isDefaultValue);
+		}
+	};
+
+	iterateThroughAttributesAndApply(node, updateUserSetAttribute);
+
+	return MStatus::kSuccess;
+}
+
 // Sets the mesh object for the action  to operate on
 void PRTModifierAction::setMesh(MObject& _inMesh, MObject& _outMesh) {
 	inMesh = _inMesh;
