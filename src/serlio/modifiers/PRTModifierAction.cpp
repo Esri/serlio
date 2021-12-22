@@ -293,7 +293,6 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 			case PrtAttributeType::ENUM: {
 				MFnEnumAttribute eAttr(fnAttribute.object());
 
-				short defEnumVal;
 				short enumVal;
 				MCHECK(plug.getValue(enumVal));
 
