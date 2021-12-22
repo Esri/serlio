@@ -57,6 +57,9 @@ constexpr const wchar_t* MIN_KEY = L"min";
 constexpr const wchar_t* MAX_KEY = L"max";
 constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
 
+constexpr const wchar_t* ATTRIBUTE_USER_SET_SUFFIX = L"_user_set";
+constexpr const wchar_t* ATTRIBUTE_FORCE_RESET_SUFFIX = L"_force_default";
+
 const AttributeMapUPtr
         EMPTY_ATTRIBUTES(AttributeMapBuilderUPtr(prt::AttributeMapBuilder::create())->createAttributeMap());
 
@@ -115,8 +118,8 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 
 		const MFnAttribute attr(attrObj);
 
-		// CGA rule attributes are maya dynamic attributes
-		if (!attr.isDynamic())
+		// CGA rule attributes are maya dynamic attributes and not hidden
+		if (!attr.isDynamic() || attr.isHidden())
 			continue;
 
 		// maya annoyance: color attributes automatically get per-component plugs/child attrs
@@ -522,8 +525,11 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 
 void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 	auto isInUse = [this](const MString& attrName) {
-		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(),
-		                       [&attrName](const auto& ra) { return (ra.mayaFullName == attrName.asWChar()); });
+		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(), [&attrName](const auto& ra) {
+			return (ra.mayaFullName == attrName.asWChar() ||
+			        ra.mayaFullName + ATTRIBUTE_USER_SET_SUFFIX == attrName.asWChar() ||
+			        ra.mayaFullName + ATTRIBUTE_FORCE_RESET_SUFFIX == attrName.asWChar());
+		});
 		return (it != mRuleAttributes.end());
 	};
 
@@ -637,6 +643,33 @@ MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, 
 		MCHECK(tAttr.setHidden(false));
 		MCHECK(tAttr.setStorable(true));
 		MCHECK(node.addAttribute(attr));
+
+		//add hidden user_set attribute
+		MStatus stat;
+		MFnNumericAttribute nAttrUserSet;
+		MObject attrUserSet = nAttrUserSet.create(tAttr.name() + ATTRIBUTE_USER_SET_SUFFIX,
+		                                          tAttr.shortName() + ATTRIBUTE_USER_SET_SUFFIX,
+		                                          MFnNumericData::kBoolean, false, &stat);
+
+		if (!(node.hasAttribute(nAttrUserSet.shortName()))) {
+			MCHECK(nAttrUserSet.setKeyable(true));
+			MCHECK(nAttrUserSet.setHidden(true));
+			MCHECK(nAttrUserSet.setStorable(true));
+			MCHECK(node.addAttribute(attrUserSet));
+		}
+
+		//add hidden force_default attribute
+		MFnNumericAttribute nAttrForceDefault;
+		MObject attrForceDefault = nAttrForceDefault.create(tAttr.name() + ATTRIBUTE_FORCE_RESET_SUFFIX,
+		                                                    tAttr.shortName() + ATTRIBUTE_FORCE_RESET_SUFFIX,
+		                                                    MFnNumericData::kBoolean, false, &stat);
+
+		if (!(node.hasAttribute(nAttrForceDefault.shortName()))) {
+			MCHECK(nAttrForceDefault.setKeyable(true));
+			MCHECK(nAttrForceDefault.setHidden(true));
+			MCHECK(nAttrForceDefault.setStorable(true));
+			MCHECK(node.addAttribute(attrForceDefault));
+		}
 	}
 	return MS::kSuccess;
 }
