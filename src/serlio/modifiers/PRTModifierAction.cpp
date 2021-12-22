@@ -209,8 +209,8 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 
 	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
 
-	const AttributeMapUPtr defaultAttributeValues =
-	        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed);
+	const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(
+	        mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed);
 	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
 
 	for (const auto& attrObj : cgaAttributes) {
@@ -686,7 +686,7 @@ MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, 
 		MCHECK(tAttr.setStorable(true));
 		MCHECK(node.addAttribute(attr));
 
-		//add hidden user_set attribute
+		// add hidden user_set attribute
 		MStatus stat;
 		MFnNumericAttribute nAttrUserSet;
 		MObject attrUserSet = nAttrUserSet.create(tAttr.name() + ATTRIBUTE_USER_SET_SUFFIX,
@@ -700,7 +700,7 @@ MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, 
 			MCHECK(node.addAttribute(attrUserSet));
 		}
 
-		//add hidden force_default attribute
+		// add hidden force_default attribute
 		MFnNumericAttribute nAttrForceDefault;
 		MObject attrForceDefault = nAttrForceDefault.create(tAttr.name() + ATTRIBUTE_FORCE_DEFAULT_SUFFIX,
 		                                                    tAttr.shortName() + ATTRIBUTE_FORCE_DEFAULT_SUFFIX,
