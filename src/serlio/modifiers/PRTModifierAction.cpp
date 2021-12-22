@@ -90,6 +90,48 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 	return AttributeMapUPtr(mayaCallbacksAttributeBuilder->createAttributeMap());
 }
 
+bool getIsUserSet(const MFnDependencyNode& node, const MFnAttribute& attribute) {
+	MString userSetAttributeName = attribute.name() + ATTRIBUTE_USER_SET_SUFFIX;
+
+	MStatus attrStat;
+	MObject userSetAttributeObj = node.attribute(userSetAttributeName, &attrStat);
+	if (attrStat == MS::kSuccess) {
+		const MPlug plug(node.object(), userSetAttributeObj);
+		bool isUserSet = plug.asBool(&attrStat);
+		MCHECK(attrStat);
+		return isUserSet;
+	}
+	return false;
+}
+
+MStatus setIsUserSet(const MFnDependencyNode& node, const MFnAttribute& attribute, bool value) {
+	MString userSetAttributeName = attribute.name() + ATTRIBUTE_USER_SET_SUFFIX;
+
+	MStatus attrStat;
+	MObject userSetAttributeObj = node.attribute(userSetAttributeName, &attrStat);
+	if (attrStat == MS::kSuccess) {
+		MPlug plug(node.object(), userSetAttributeObj);
+
+		MCHECK(plug.setBool(value));
+	}
+	return attrStat;
+}
+
+bool getAndResetForceDefault(const MFnDependencyNode& node, const MFnAttribute& attribute) {
+	MString userSetAttributeName = attribute.name() + ATTRIBUTE_FORCE_DEFAULT_SUFFIX;
+
+	MStatus attrStat;
+	MObject userSetAttributeObj = node.attribute(userSetAttributeName, &attrStat);
+	if (attrStat == MS::kSuccess) {
+		MPlug plug(node.object(), userSetAttributeObj);
+		bool isUserSet = plug.asBool(&attrStat);
+		MCHECK(attrStat);
+		MCHECK(plug.setBool(false));
+		return isUserSet;
+	}
+	return false;
+}
+
 } // namespace
 
 PRTModifierAction::PRTModifierAction() {
