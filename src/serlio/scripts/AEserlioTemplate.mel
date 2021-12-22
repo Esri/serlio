@@ -38,6 +38,7 @@ global proc prtReloadRPK(string $attr) {
 	$attrCurrentRule = $node + ".currentRule_Package";
 	setAttr -type "string" $attrCurrentRule "";
 	dgdirty $node;
+	evalDeferred "refreshEditorTemplates()";
 }
 
 global proc int prtRPKChange(string $attr, string $varname) {
