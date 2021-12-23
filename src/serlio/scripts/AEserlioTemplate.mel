@@ -33,6 +33,11 @@ proc string niceName(string $longName) {
 	return `attributeName -nice $longName`;
 }
   
+proc int prtIsStringAttr(string $attr){
+	string $datatype[] = `addAttr -query -dataType $attr`;
+	return `strcmp "string" $datatype[0]` == 0;
+}
+
 global proc prtReloadRPK(string $attr) {
 	$node = prtGetNodeName($attr);
 	$attrCurrentRule = $node + ".currentRule_Package";
@@ -150,7 +155,11 @@ global proc prtAttributeControl(string $attr, string $varname){
 	}
 	symbolButton -image "undo_s.png" -visible false -annotation "reset rule attribute to default value" -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
 
-	connectControl $control $attr;
+	if(prtIsStringAttr($attr)){
+		connectControl -index 2 $control $attr;
+	} else {
+		connectControl $control $attr;
+	}
 	setParent ..;
 	setUITemplate -ppt; 
 	prtUpdateEditHighlights($attr);
@@ -163,7 +172,11 @@ global proc prtAttributeControlReplace(string $attr, string $varname){
 		if (`addAttr -q -uaf ($attr)`){
 			symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\",\"All Files (*.*)\" )") ($control + "_browse");
 		}
-		connectControl $control $attr;
+		if(prtIsStringAttr($attr)){
+			connectControl -index 2 $control $attr;
+		} else {
+			connectControl $control $attr;
+		}
 		symbolButton -edit -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
 	}
 	prtUpdateEditHighlights($attr);
