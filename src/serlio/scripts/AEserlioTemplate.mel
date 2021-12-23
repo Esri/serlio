@@ -117,8 +117,10 @@ global proc prtUpdateEditHighlights(string $attr){
 
 	if ($userSet){
 		rowColumnLayout -edit -bgc 0.32 0.32 0.32 ($control + "_column_layout");
+		symbolButton -edit -visible true ($control + "_force_default_reset");
 	} else {
 		rowColumnLayout -edit -bgc 0.4 0.4 0.4 -noBackground  true ($control + "_column_layout");
+		symbolButton -edit -visible false ($control + "_force_default_reset");
 	}
 }
 
@@ -148,7 +150,7 @@ global proc prtAttributeControl(string $attr, string $varname){
 	if ($isFileAttribute){
 		symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\")") ($control + "_browse");
 	}
-	symbolButton -image "undo_s.png" -annotation "reset rule attribute to default value" -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
+	symbolButton -image "undo_s.png" -visible false -annotation "reset rule attribute to default value" -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
 
 	connectControl $control $attr;
 	setParent ..;
@@ -163,6 +165,7 @@ global proc prtAttributeControlReplace(string $attr, string $varname){
 		if (`addAttr -q -uaf ($attr)`){
 			symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\")") ($control + "_browse");
 		}
+		symbolButton -edit -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
 	}
 	prtUpdateEditHighlights($attr);
 }
