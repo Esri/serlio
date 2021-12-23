@@ -159,10 +159,11 @@ global proc prtAttributeControl(string $attr, string $varname){
 global proc prtAttributeControlReplace(string $attr, string $varname){
 	if(prtRPKChange($attr, $varname)) {
 		string $control = prtControlName($attr);
-		connectControl $control $attr;
+		attrControlGrp -edit -changeCommand("prtUpdateEditHighlights " + $attr) -attribute $attr $control;
 		if (`addAttr -q -uaf ($attr)`){
 			symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\",\"All Files (*.*)\" )") ($control + "_browse");
 		}
+		connectControl $control $attr;
 		symbolButton -edit -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
 	}
 	prtUpdateEditHighlights($attr);
