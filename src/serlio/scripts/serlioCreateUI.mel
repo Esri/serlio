@@ -135,6 +135,7 @@ global proc createMaterialNode(string $materialType) {
 		if(!isSerlioNodePredecessor($node))
 			serlioCreateMaterial $materialType;
 	}
+	select -r $select;
 }
 
 global proc createPrtMenu() {
