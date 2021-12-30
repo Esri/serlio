@@ -38,6 +38,14 @@ proc int prtIsStringAttr(string $attr){
 	return `strcmp "string" $datatype[0]` == 0;
 }
 
+proc int prtIsFileAttr(string $attr){
+	return `addAttr -q -uaf ($attr)`;
+}
+
+proc int prtIsColorAttr(string $attr){
+	return `addAttr -q -uac ($attr)`;
+}
+
 global proc prtReloadRPK(string $attr) {
 	$node = prtGetNodeName($attr);
 	$attrCurrentRule = $node + ".currentRule_Package";
