@@ -156,7 +156,12 @@ global proc prtAttributeControl(string $attr, string $varname){
 	$label = `niceName $attr`;
 
 	symbolButton -visible false -hlc 0.2715 0.2715 0.2715 -i "pencilCursor.png" -w 25 -h 25 -enable false ($control + "_user_set");
-	attrControlGrp -hideMapButton true -label $label -changeCommand("prtUpdateEditHighlights " + $attr) -attribute $attr $control;
+
+	if (prtIsColorAttr($attr)){
+		colorSliderGrp-label $label $control;
+	} else {
+		attrControlGrp -label $label -attribute $attr $control;
+	}
 
 	if ($isFileAttribute){
 		symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\",\"All Files (*.*)\" )") ($control + "_browse");
@@ -168,6 +173,9 @@ global proc prtAttributeControl(string $attr, string $varname){
 	} else {
 		connectControl $control $attr;
 	}
+	string $changeCommand = "prtUpdateEditHighlights " + $attr;
+	scriptJob -rp -p $control -ac $attr $changeCommand;
+
 	setParent ..;
 	setUITemplate -ppt; 
 	prtUpdateEditHighlights($attr);
@@ -176,16 +184,20 @@ global proc prtAttributeControl(string $attr, string $varname){
 global proc prtAttributeControlReplace(string $attr, string $varname){
 	if(prtRPKChange($attr, $varname)) {
 		string $control = prtControlName($attr);
-		attrControlGrp -edit -changeCommand("prtUpdateEditHighlights " + $attr) -attribute $attr $control;
 		if (prtIsFileAttr($attr)){
 			symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\",\"All Files (*.*)\" )") ($control + "_browse");
 		}
 		if(prtIsStringAttr($attr)){
 			connectControl -index 2 $control $attr;
+		} else if (prtIsColorAttr($attr)){
+			connectControl $control $attr;
 		} else {
+			attrControlGrp -edit -attribute $attr $control;
 			connectControl $control $attr;
 		}
 		symbolButton -edit -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
+		string $changeCommand = "prtUpdateEditHighlights " + $attr;
+		scriptJob -rp -p $control -ac $attr $changeCommand;
 	}
 	prtUpdateEditHighlights($attr);
 }
