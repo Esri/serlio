@@ -132,6 +132,21 @@ void MELScriptBuilder::createTextureShadingNode(const MELVariable& nodeName) {
 	commandStream << mel << "= `shadingNode -asTexture -skipSelect -name " << mel << " file`;\n";
 }
 
+void MELScriptBuilder::cacheUndoState(const MELVariable& undoName) {
+	const auto mel = undoName.mel();
+	commandStream << mel << " = `undoInfo -q -state`;\n";
+}
+
+void MELScriptBuilder::applyCachedUndoState(const MELVariable& undoName) {
+	const auto mel = undoName.mel();
+	commandStream << "undoInfo -stateWithoutFlush " << mel << ";\n";
+}
+
+void MELScriptBuilder::setUndoState(bool undoState) {
+	std::wstring undoString = undoState ? L"on" : L"off";
+	commandStream << "undoInfo -stateWithoutFlush " << undoString << ";\n";
+}
+
 void MELScriptBuilder::addCmdLine(const std::wstring& line) {
 	commandStream << line << L"\n";
 }
