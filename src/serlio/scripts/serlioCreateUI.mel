@@ -41,7 +41,9 @@ proc string[] collectInitialShapes(string $nodes[]) {
 }
 
 proc int isSerlioNodePredecessor(string $node){
-	string $hist[] = `listHistory -f true $node`;
+	string $hist[] = `listHistory -f false $node`;
+	string $future[] = `listHistory -f true $node`;
+	$hist = appendAarray($hist, $future);
 	if (size($hist) > 1) {
 		for ($node in $hist){
 			if(`nodeType $node` == "serlio"){
