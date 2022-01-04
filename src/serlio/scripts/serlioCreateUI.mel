@@ -134,7 +134,7 @@ global proc createMaterialNode(string $materialType) {
 	
 	for($node in $initialShapes) {
 		select -r $node;
-		if(!isSerlioNodePredecessor($node))
+		if(hasNodeTypeInHistory($node, {"serlio"}) && !hasNodeTypeInHistory($node, {"serlioMaterial","serlioArnoldMaterial"}))
 			serlioCreateMaterial $materialType;
 	}
 	select -r $select;
