@@ -98,10 +98,9 @@ global proc createPrtNode() {
 				}
 			}
 
-			if (!$alreadyHasExistingPrtNode && !hasNodeTypeInHistory($node, {"serlio"})){
-				select -r $node;
+			if (!$alreadyHasExistingPrtNode && !hasNodeTypeInHistory($node, {"serlio"}))
 				serlioAssign $rulePackage;
-			}
+
 			$alreadyHasExistingPrtNode = false;
 		}
 	}
