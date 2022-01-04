@@ -54,6 +54,23 @@ proc int hasNodeTypeInHistory(string $node, string $nodeTypes[]){
 	return false;
 }
 
+proc deleteNodeTypesFromHistory(string $node, string $nodeTypes[]){
+	string $nodeHistory[] = `listHistory $node`;
+	
+	for($dpNode in $nodeHistory){
+		string $dpNodeType = `nodeType $dpNode`;
+		if(stringArrayContains($dpNodeType, $nodeTypes)){
+			string $previousDpNodePlug =  `connectionInfo -sfd ($dpNode +".inMesh")`;
+			string $nextDpNodePlugs[] = `connectionInfo -dfs ($dpNode +".outMesh")`;
+			if ($previousDpNodePlug != "") {
+				for($nextDpNodePlug in $nextDpNodePlugs)
+					connectAttr -force $previousDpNodePlug $nextDpNodePlug;
+			}
+			delete $dpNode;
+		}
+	}
+}
+
 global proc createPrtNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
@@ -103,21 +120,7 @@ global proc removePrtNode() {
 	for($node in $initialShapes) {
 		select -r $node;
 		hyperShade -assign "lambert1";
-		string $nodeHistory[] = `listHistory $node`;
-		
-		for($dpNode in $nodeHistory){
-			string $dpNodeType = `nodeType $dpNode`;
-				if($dpNodeType == "serlio" || $dpNodeType == "serlioMaterial" || $dpNodeType == "serlioArnoldMaterial" ){
-					string $previousDpNodePlug =  `connectionInfo -sfd ($dpNode +".inMesh")`;
-					string $nextDpNodePlugs[] = `connectionInfo -dfs ($dpNode +".outMesh")`;
-					if ($previousDpNodePlug != "") {
-						for($nextDpNodePlug in $nextDpNodePlugs){
-							connectAttr -force ( $previousDpNodePlug ) ($nextDpNodePlug);
-						}
-					}
-					delete $dpNode;
-				}
-		}
+		deleteNodeTypesFromHistory($node, {"serlio", "serlioMaterial", "serlioArnoldMaterial"});
 	}
 
 	select -r $select;
