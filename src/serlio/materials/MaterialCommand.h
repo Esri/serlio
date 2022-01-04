@@ -38,4 +38,5 @@ private:
 	MDGModifier fDGModifier;
 	MDagModifier fDagModifier;
 	MDagPath fDagPath;
+	MString fGeometryName;
 };
