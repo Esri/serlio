@@ -118,6 +118,10 @@ void MELScriptBuilder::setsAddFaceRange(const std::wstring& setName, const std::
 	              << "];\n";
 }
 
+void MELScriptBuilder::setsUseInitialShadingGroup(const std::wstring& meshName) {
+	commandStream << "sets -forceElement initialShadingGroup " << meshName << ";";
+}
+
 void MELScriptBuilder::createShader(const std::wstring& shaderType, const MELVariable& nodeName) {
 	const auto mel = nodeName.mel();
 	commandStream << mel << " = `shadingNode -asShader -skipSelect -name " << mel << " " << shaderType << "`;\n";

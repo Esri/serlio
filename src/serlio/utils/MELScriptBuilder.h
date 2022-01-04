@@ -73,6 +73,7 @@ public:
 
 	void setsCreate(const MELVariable& setName);
 	void setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, int faceStart, int faceEnd);
+	void setsUseInitialShadingGroup(const std::wstring& meshName);
 
 	void createShader(const std::wstring& shaderType, const MELVariable& nodeName);
 	void createTextureShadingNode(const MELVariable& nodeName);
