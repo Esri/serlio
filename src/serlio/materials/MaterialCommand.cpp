@@ -115,7 +115,7 @@ MStatus MaterialCommand::doIt(const MArgList& argList) {
 		if (geometryInMesh.isConnected()) {
 			MPlugArray parentPlugArray;
 			MPlug serlioOutMesh;
-			fGeometryName = rootNode.uniqueName();
+			fGeometryName = rootNode.name();
 
 			geometryInMesh.connectedTo(parentPlugArray, true, false);
 
