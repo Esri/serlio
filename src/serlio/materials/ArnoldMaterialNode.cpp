@@ -38,6 +38,7 @@ const std::wstring MATERIAL_BASE_NAME = L"serlioArnoldMaterial";
 std::once_flag pluginDependencyCheckFlag;
 const std::vector<std::string> PLUGIN_DEPENDENCIES = {"mtoa"};
 
+const MELVariable MEL_UNDO_STATE(L"serlioMaterialUndoState");
 const MELVariable MEL_VAR_SHADER_NODE(L"shaderNode");
 const MELVariable MEL_VAR_MAP_FILE(L"mapFile");
 const MELVariable MEL_VAR_MAP_NODE(L"mapNode");
@@ -331,6 +332,10 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	        MaterialUtils::getMaterialsByStructure(*materialStructure, MATERIAL_BASE_NAME);
 
 	MELScriptBuilder scriptBuilder;
+	scriptBuilder.declInt(MEL_UNDO_STATE);
+	scriptBuilder.cacheUndoState(MEL_UNDO_STATE);
+	scriptBuilder.setUndoState(false);
+
 	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
 	scriptBuilder.declString(MEL_VAR_SHADER_NODE);
 	scriptBuilder.declString(MEL_VAR_MAP_FILE);
@@ -382,6 +387,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		LOG_DBG << "assigned arnold shading engine (" << faceRange.first << ":" << faceRange.second
 		        << "): " << shadingEngineName;
 	}
-
+	scriptBuilder.applyCachedUndoState(MEL_UNDO_STATE);
 	return scriptBuilder.execute();
 }

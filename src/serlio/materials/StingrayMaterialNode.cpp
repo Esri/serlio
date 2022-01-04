@@ -51,6 +51,7 @@ const std::wstring MATERIAL_BASE_NAME = L"serlioStingrayMaterial";
 std::once_flag pluginDependencyCheckFlag;
 const std::vector<std::string> PLUGIN_DEPENDENCIES = {"shaderFXPlugin"};
 
+const MELVariable MEL_UNDO_STATE(L"serlioMaterialUndoState");
 const MELVariable MEL_VAR_SHADER_NODE(L"shaderNode");
 const MELVariable MEL_VAR_MAP_FILE(L"mapFile");
 const MELVariable MEL_VAR_MAP_NODE(L"mapNode");
@@ -193,6 +194,10 @@ MStatus StingrayMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	        MaterialUtils::getMaterialsByStructure(*materialStructure, MATERIAL_BASE_NAME);
 
 	MELScriptBuilder scriptBuilder;
+	scriptBuilder.declInt(MEL_UNDO_STATE);
+	scriptBuilder.cacheUndoState(MEL_UNDO_STATE);
+	scriptBuilder.setUndoState(false);
+
 	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
 
 	// declare MEL variables required by appendToMaterialScriptBuilder()
@@ -235,7 +240,7 @@ MStatus StingrayMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		LOG_DBG << "assigned stingray shading engine (" << faceRange.first << ":" << faceRange.second
 		        << "): " << shadingEngineName;
 	}
-
+	scriptBuilder.applyCachedUndoState(MEL_UNDO_STATE);
 	LOG_DBG << "scheduling stringray material script";
 	return scriptBuilder.execute(); // note: script is executed asynchronously
 }
