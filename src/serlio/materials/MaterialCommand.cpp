@@ -20,6 +20,7 @@
 #include "materials/StingrayMaterialNode.h"
 #include "materials/ArnoldMaterialNode.h"
 #include "materials/MaterialCommand.h"
+#include "utils/MELScriptBuilder.h"
 
 #include "utils/MayaUtilities.h"
 
@@ -114,6 +115,7 @@ MStatus MaterialCommand::doIt(const MArgList& argList) {
 		if (geometryInMesh.isConnected()) {
 			MPlugArray parentPlugArray;
 			MPlug serlioOutMesh;
+			fGeometryName = rootNode.name();
 
 			geometryInMesh.connectedTo(parentPlugArray, true, false);
 
@@ -163,6 +165,13 @@ MStatus MaterialCommand::redoIt() {
 
 MStatus MaterialCommand::undoIt() {
 	MStatus status;
+	MELScriptBuilder scriptBuilder;
+
+	//apply initial shading group to avoid other connected shading groups to disrupt undo process
+	scriptBuilder.setsUseInitialShadingGroup(fGeometryName.asWChar());
+	std::wstring output;
+	MCHECK(scriptBuilder.executeSync(output));
+
 	status = fDGModifier.undoIt();
 	if (status == MS::kSuccess) {
 		setResult("PRT undo succeeded!");

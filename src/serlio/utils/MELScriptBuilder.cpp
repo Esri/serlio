@@ -118,6 +118,10 @@ void MELScriptBuilder::setsAddFaceRange(const std::wstring& setName, const std::
 	              << "];\n";
 }
 
+void MELScriptBuilder::setsUseInitialShadingGroup(const std::wstring& meshName) {
+	commandStream << "sets -forceElement initialShadingGroup " << meshName << ";";
+}
+
 void MELScriptBuilder::createShader(const std::wstring& shaderType, const MELVariable& nodeName) {
 	const auto mel = nodeName.mel();
 	commandStream << mel << " = `shadingNode -asShader -skipSelect -name " << mel << " " << shaderType << "`;\n";
@@ -126,6 +130,21 @@ void MELScriptBuilder::createShader(const std::wstring& shaderType, const MELVar
 void MELScriptBuilder::createTextureShadingNode(const MELVariable& nodeName) {
 	const auto mel = nodeName.mel();
 	commandStream << mel << "= `shadingNode -asTexture -skipSelect -name " << mel << " file`;\n";
+}
+
+void MELScriptBuilder::getUndoState(const MELVariable& undoName) {
+	const auto mel = undoName.mel();
+	commandStream << mel << " = `undoInfo -q -state`;\n";
+}
+
+void MELScriptBuilder::setUndoState(const MELVariable& undoName) {
+	const auto mel = undoName.mel();
+	commandStream << "undoInfo -stateWithoutFlush " << mel << ";\n";
+}
+
+void MELScriptBuilder::setUndoState(bool undoState) {
+	std::wstring undoString = undoState ? L"on" : L"off";
+	commandStream << "undoInfo -stateWithoutFlush " << undoString << ";\n";
 }
 
 void MELScriptBuilder::addCmdLine(const std::wstring& line) {

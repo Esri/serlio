@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-proc string[] appendAarray(string $a0[], string $a1[]) {
+proc string[] appendArray(string $a0[], string $a1[]) {
 	string $result[] = $a0;
 	for($e in $a1)
 		if(!stringArrayContains($e, $result)){
@@ -31,25 +31,42 @@ proc string[] collectInitialShapes(string $nodes[]) {
 	for($node in $nodes) {
 	    string $type = `nodeType $node`;
 		if($type == "mesh") {
-			$result = appendAarray($result, {$node});
+			$result = appendArray($result, {$node});
 		} else if($type == "transform") {
 			string $tmp[] = collectInitialShapes(`listRelatives -ni -pa -children $node`);
-			$result = appendAarray($result, $tmp);
+			$result = appendArray($result, $tmp);
 		}
 	}
 	return $result;	  
 }
 
-proc int isSerlioNodePredecessor(string $node){
-	string $hist[] = `listHistory -f true $node`;
-	if (size($hist) > 1) {
-		for ($node in $hist){
-			if(`nodeType $node` == "serlio"){
-				return true;
-			}
-		}
+proc int hasNodeTypeInHistory(string $node, string $nodeTypes[]){
+	string $hist[] = `listHistory -f false $node`;
+	string $future[] = `listHistory -f true $node`;
+	$hist = appendArray($hist, $future);
+	for ($node in $hist){
+		string $nodeType = `nodeType $node`;
+		if(stringArrayContains($nodeType, $nodeTypes))
+			return true;
 	}
 	return false;
+}
+
+proc deleteNodeTypesFromHistory(string $node, string $nodeTypes[]){
+	string $nodeHistory[] = `listHistory $node`;
+	
+	for($dpNode in $nodeHistory){
+		string $dpNodeType = `nodeType $dpNode`;
+		if(stringArrayContains($dpNodeType, $nodeTypes)){
+			string $previousDpNodePlug =  `connectionInfo -sfd ($dpNode +".inMesh")`;
+			string $nextDpNodePlugs[] = `connectionInfo -dfs ($dpNode +".outMesh")`;
+			if ($previousDpNodePlug != "") {
+				for($nextDpNodePlug in $nextDpNodePlugs)
+					connectAttr -force $previousDpNodePlug $nextDpNodePlug;
+			}
+			delete $dpNode;
+		}
+	}
 }
 
 global proc createPrtNode() {
@@ -79,10 +96,9 @@ global proc createPrtNode() {
 				}
 			}
 
-			if (!$alreadyHasExistingPrtNode && !isSerlioNodePredecessor($node)){
-				select -r $node;
+			if (!$alreadyHasExistingPrtNode && !hasNodeTypeInHistory($node, {"serlio"}))
 				serlioAssign $rulePackage;
-			}
+
 			$alreadyHasExistingPrtNode = false;
 		}
 	}
@@ -101,21 +117,7 @@ global proc removePrtNode() {
 	for($node in $initialShapes) {
 		select -r $node;
 		hyperShade -assign "lambert1";
-		string $nodeHistory[] = `listHistory $node`;
-		
-		for($dpNode in $nodeHistory){
-			string $dpNodeType = `nodeType $dpNode`;
-				if($dpNodeType == "serlio" || $dpNodeType == "serlioMaterial" || $dpNodeType == "serlioArnoldMaterial" ){
-					string $previousDpNodePlug =  `connectionInfo -sfd ($dpNode +".inMesh")`;
-					string $nextDpNodePlugs[] = `connectionInfo -dfs ($dpNode +".outMesh")`;
-					if ($previousDpNodePlug != "") {
-						for($nextDpNodePlug in $nextDpNodePlugs){
-							connectAttr -force ( $previousDpNodePlug ) ($nextDpNodePlug);
-						}
-					}
-					delete $dpNode;
-				}
-		}
+		deleteNodeTypesFromHistory($node, {"serlio", "serlioMaterial", "serlioArnoldMaterial"});
 	}
 
 	select -r $select;
@@ -132,9 +134,10 @@ global proc createMaterialNode(string $materialType) {
 	
 	for($node in $initialShapes) {
 		select -r $node;
-		if(!isSerlioNodePredecessor($node))
+		if(hasNodeTypeInHistory($node, {"serlio"}) && !hasNodeTypeInHistory($node, {"serlioMaterial","serlioArnoldMaterial"}))
 			serlioCreateMaterial $materialType;
 	}
+	select -r $select;
 }
 
 global proc createPrtMenu() {
