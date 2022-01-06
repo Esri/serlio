@@ -193,7 +193,6 @@ MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttribut
 		const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar());
 		assert(!ruleAttr.fqName.empty()); // poor mans check for RULE_NOT_FOUND
 
-		const std::wstring fqAttrName = ruleAttr.fqName;
 		[[maybe_unused]] const auto ruleAttrType = ruleAttr.mType;
 
 		if (attrObj.hasFn(MFn::kNumericAttribute)) {
@@ -202,26 +201,26 @@ MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttribut
 			if (nAttr.unitType() == MFnNumericData::kBoolean) {
 				assert(ruleAttrType == prt::AAT_BOOL);
 
-				attrFunction(fNode, fnAttr, ruleAttr, fqAttrName, PrtAttributeType::BOOL);
+				attrFunction(fNode, fnAttr, ruleAttr, PrtAttributeType::BOOL);
 			}
 			else if (nAttr.unitType() == MFnNumericData::kDouble) {
 				assert(ruleAttrType == prt::AAT_FLOAT);
 
-				attrFunction(fNode, fnAttr, ruleAttr, fqAttrName, PrtAttributeType::FLOAT);
+				attrFunction(fNode, fnAttr, ruleAttr, PrtAttributeType::FLOAT);
 			}
 			else if (nAttr.isUsedAsColor()) {
 				assert(ruleAttrType == prt::AAT_STR);
 
-				attrFunction(fNode, fnAttr, ruleAttr, fqAttrName, PrtAttributeType::COLOR);
+				attrFunction(fNode, fnAttr, ruleAttr, PrtAttributeType::COLOR);
 			}
 		}
 		else if (attrObj.hasFn(MFn::kTypedAttribute)) {
 			assert(ruleAttrType == prt::AAT_STR);
 
-			attrFunction(fNode, fnAttr, ruleAttr, fqAttrName, PrtAttributeType::STRING);
+			attrFunction(fNode, fnAttr, ruleAttr, PrtAttributeType::STRING);
 		}
 		else if (attrObj.hasFn(MFn::kEnumAttribute)) {
-			attrFunction(fNode, fnAttr, ruleAttr, fqAttrName, PrtAttributeType::ENUM);
+			attrFunction(fNode, fnAttr, ruleAttr, PrtAttributeType::ENUM);
 		}
 	}
 	return MStatus::kSuccess;
@@ -246,10 +245,11 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 	AttributeMapBuilderSPtr aBuilder(prt::AttributeMapBuilder::create(), PRTDestroyer());
 
 	const auto fillAttributeFromNode = [this, aBuilder](const MFnDependencyNode& fnNode,
-	                                                    const MFnAttribute& fnAttribute,
-	                                                    const RuleAttribute& ruleAttribute, std::wstring fqAttrName,
+	                                                    const MFnAttribute& fnAttribute, const RuleAttribute& ruleAttribute,
 	                                                    const PrtAttributeType attrType) mutable {
 		MPlug plug(fnNode.object(), fnAttribute.object());
+		const std::wstring fqAttrName = ruleAttribute.fqName;
+		const prt::AnnotationArgumentType ruleAttrType = ruleAttribute.mType;
 
 		switch (attrType) {
 			case PrtAttributeType::BOOL: {
@@ -296,7 +296,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 				MCHECK(plug.getValue(enumVal));
 
 				if (getIsUserSet(fnNode, fnAttribute)) {
-					switch (ruleAttribute.mType) {
+					switch (ruleAttrType) {
 						case prt::AAT_STR:
 							aBuilder->setString(fqAttrName.c_str(), eAttr.fieldName(enumVal).asWChar());
 							break;
@@ -307,7 +307,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 							aBuilder->setBool(fqAttrName.c_str(), eAttr.fieldName(enumVal).asInt() != 0);
 							break;
 						default:
-							LOG_ERR << "Cannot handle attribute type " << ruleAttribute.mType << " for attr "
+							LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr "
 							        << fqAttrName;
 					}
 				}
@@ -327,12 +327,12 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 
 MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	const auto updateUserSetAttribute = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
-	                                           const RuleAttribute& ruleAttribute, std::wstring fqAttrName,
-	                                           const PrtAttributeType attrType) {
+	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(
 		        mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed);
 		const MPlug plug(fnNode.object(), fnAttribute.object());
 		bool isDefaultValue = false;
+		const std::wstring fqAttrName = ruleAttribute.fqName;
 
 		switch (attrType) {
 			case PrtAttributeType::BOOL: {
@@ -405,11 +405,11 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 
 MStatus PRTModifierAction::updateUI(const MObject& node) {
 	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
-	                                           const RuleAttribute& ruleAttribute, std::wstring fqAttrName,
-	                                           const PrtAttributeType attrType) {
+	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(
 		        mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed);
 		MPlug plug(fnNode.object(), fnAttribute.object());
+		const std::wstring fqAttrName = ruleAttribute.fqName;
 
 		switch (attrType) {
 			case PrtAttributeType::BOOL: {
