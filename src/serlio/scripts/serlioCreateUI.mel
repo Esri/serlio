@@ -44,12 +44,10 @@ proc int hasNodeTypeInHistory(string $node, string $nodeTypes[]){
 	string $hist[] = `listHistory -f false $node`;
 	string $future[] = `listHistory -f true $node`;
 	$hist = appendArray($hist, $future);
-	if (size($hist) > 1) {
-		for ($node in $hist){
-			string $nodeType = `nodeType $node`;
-			if(stringArrayContains($nodeType, $nodeTypes))
-				return true;
-		}
+	for ($node in $hist){
+		string $nodeType = `nodeType $node`;
+		if(stringArrayContains($nodeType, $nodeTypes))
+			return true;
 	}
 	return false;
 }
