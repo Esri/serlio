@@ -46,6 +46,20 @@ proc int prtIsColorAttr(string $attr){
 	return `addAttr -q -uac ($attr)`;
 }
 
+proc int prtAttributeExists(string $attr){
+	string $node = plugNode($attr);
+	string $attributeName = plugAttr($attr);
+	return`attributeExists $attributeName $node`;
+}
+
+proc prtSetSymbolButtonVisibility(int $visible, string $control){
+	symbolButton -edit -visible $visible $control;
+}
+
+proc prtHighlightBackground(int $highlighted, float $grayScaleColor, string $control){
+	control -edit -bgc $grayScaleColor $grayScaleColor$grayScaleColor -ebg $highlighted $control;
+}
+
 global proc prtReloadRPK(string $attr) {
 	$node = prtGetNodeName($attr);
 	$attrCurrentRule = $node + ".currentRule_Package";
@@ -116,23 +130,15 @@ global proc prtFileBrowseReplaceRPK(string $attr, string $varname, string $filte
 }
 
 global proc prtUpdateEditHighlights(string $attr){
-	string $node = plugNode($attr);
-	string $attributeName = plugAttr($attr);
-	if (!`attributeExists $attributeName $node`)
+	if (!prtAttributeExists($attr))
 		return;
 
 	int $userSet = `getAttr ($attr + "_user_set")`;
 	string $control = prtControlName($attr);
 
-	symbolButton -edit -visible $userSet ($control + "_user_set");
-
-	if ($userSet){
-		rowColumnLayout -edit -bgc 0.32 0.32 0.32 ($control + "_column_layout");
-		symbolButton -edit -visible true ($control + "_force_default_reset");
-	} else {
-		rowColumnLayout -edit -bgc 0.4 0.4 0.4 -noBackground  true ($control + "_column_layout");
-		symbolButton -edit -visible false ($control + "_force_default_reset");
-	}
+	prtSetSymbolButtonVisibility($userSet, $control + "_user_set");
+	prtSetSymbolButtonVisibility($userSet, $control + "_force_default_reset");
+	prtHighlightBackground($userSet, 0.32, $control + "_column_layout");
 }
 
 global proc prtSetAttrUserSetAndUpdateUI(string $attr){
