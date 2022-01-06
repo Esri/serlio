@@ -13,6 +13,8 @@
 
 // utility functions with dependencies on the Maya API
 namespace mu {
+// Standard conversion from meters (PRT) to centimeters (maya)
+constexpr double PRT_TO_SERLIO_SCALE = 100.0f;
 
 int32_t computeSeed(const MFloatPointArray& vertices);
 int32_t computeSeed(const double* vertices, size_t count);

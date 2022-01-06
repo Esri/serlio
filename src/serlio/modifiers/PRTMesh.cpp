@@ -42,9 +42,9 @@ PRTMesh::PRTMesh(const MObject& mesh) {
 	const unsigned int vertexArrayLength = vertexArray.length();
 	mVertexCoordsVec.reserve(3 * vertexArrayLength);
 	for (unsigned int i = 0; i < vertexArrayLength; ++i) {
-		mVertexCoordsVec.push_back(vertexArray[i].x);
-		mVertexCoordsVec.push_back(vertexArray[i].y);
-		mVertexCoordsVec.push_back(vertexArray[i].z);
+		mVertexCoordsVec.push_back(vertexArray[i].x / mu::PRT_TO_SERLIO_SCALE);
+		mVertexCoordsVec.push_back(vertexArray[i].y / mu::PRT_TO_SERLIO_SCALE);
+		mVertexCoordsVec.push_back(vertexArray[i].z / mu::PRT_TO_SERLIO_SCALE);
 	}
 
 	// faces
