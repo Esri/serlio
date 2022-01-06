@@ -132,12 +132,12 @@ void MELScriptBuilder::createTextureShadingNode(const MELVariable& nodeName) {
 	commandStream << mel << "= `shadingNode -asTexture -skipSelect -name " << mel << " file`;\n";
 }
 
-void MELScriptBuilder::cacheUndoState(const MELVariable& undoName) {
+void MELScriptBuilder::getUndoState(const MELVariable& undoName) {
 	const auto mel = undoName.mel();
 	commandStream << mel << " = `undoInfo -q -state`;\n";
 }
 
-void MELScriptBuilder::applyCachedUndoState(const MELVariable& undoName) {
+void MELScriptBuilder::setUndoState(const MELVariable& undoName) {
 	const auto mel = undoName.mel();
 	commandStream << "undoInfo -stateWithoutFlush " << mel << ";\n";
 }

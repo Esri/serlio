@@ -78,8 +78,8 @@ public:
 	void createShader(const std::wstring& shaderType, const MELVariable& nodeName);
 	void createTextureShadingNode(const MELVariable& nodeName);
 
-	void cacheUndoState(const MELVariable& undoName);
-	void applyCachedUndoState(const MELVariable& undoName);
+	void getUndoState(const MELVariable& undoName);
+	void setUndoState(const MELVariable& undoName);
 	void setUndoState(bool undoState);
 
 	void python(const std::wstring& pythonCmd);

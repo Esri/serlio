@@ -333,7 +333,7 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.declInt(MEL_UNDO_STATE);
-	scriptBuilder.cacheUndoState(MEL_UNDO_STATE);
+	scriptBuilder.getUndoState(MEL_UNDO_STATE);
 	scriptBuilder.setUndoState(false);
 
 	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
@@ -387,6 +387,6 @@ MStatus ArnoldMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		LOG_DBG << "assigned arnold shading engine (" << faceRange.first << ":" << faceRange.second
 		        << "): " << shadingEngineName;
 	}
-	scriptBuilder.applyCachedUndoState(MEL_UNDO_STATE);
+	scriptBuilder.setUndoState(MEL_UNDO_STATE);
 	return scriptBuilder.execute();
 }

@@ -195,7 +195,7 @@ MStatus StingrayMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.declInt(MEL_UNDO_STATE);
-	scriptBuilder.cacheUndoState(MEL_UNDO_STATE);
+	scriptBuilder.getUndoState(MEL_UNDO_STATE);
 	scriptBuilder.setUndoState(false);
 
 	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
@@ -240,7 +240,7 @@ MStatus StingrayMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		LOG_DBG << "assigned stingray shading engine (" << faceRange.first << ":" << faceRange.second
 		        << "): " << shadingEngineName;
 	}
-	scriptBuilder.applyCachedUndoState(MEL_UNDO_STATE);
+	scriptBuilder.setUndoState(MEL_UNDO_STATE);
 	LOG_DBG << "scheduling stringray material script";
 	return scriptBuilder.execute(); // note: script is executed asynchronously
 }
