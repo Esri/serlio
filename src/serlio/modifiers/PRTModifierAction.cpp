@@ -917,7 +917,6 @@ MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, 
 			throw stat;
 
 		if (!(node.hasAttribute(nAttrUserSet.shortName()))) {
-			MCHECK(nAttrUserSet.setKeyable(true));
 			MCHECK(nAttrUserSet.setHidden(true));
 			MCHECK(nAttrUserSet.setStorable(true));
 			MCHECK(node.addAttribute(attrUserSet));
@@ -930,7 +929,6 @@ MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, 
 		                                                    MFnNumericData::kBoolean, false, &stat);
 
 		if (!(node.hasAttribute(nAttrForceDefault.shortName()))) {
-			MCHECK(nAttrForceDefault.setKeyable(true));
 			MCHECK(nAttrForceDefault.setHidden(true));
 			MCHECK(nAttrForceDefault.setStorable(true));
 			MCHECK(node.addAttribute(attrForceDefault));
