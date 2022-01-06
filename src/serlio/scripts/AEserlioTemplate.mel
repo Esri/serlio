@@ -151,7 +151,7 @@ global proc prtAttributeControl(string $attr, string $varname){
 		$nrOfColumns = 5;
 	}
 
-	rowColumnLayout -numberOfColumns $nrOfColumns -bgc 0.4 0.4 0.4 -noBackground  true -adjustableColumn 2 ($control + "_column_layout");
+	rowColumnLayout -numberOfColumns $nrOfColumns -adjustableColumn 2 ($control + "_column_layout");
 
 	$label = `niceName $attr`;
 
