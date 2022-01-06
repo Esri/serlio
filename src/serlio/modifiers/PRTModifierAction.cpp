@@ -913,6 +913,8 @@ MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, 
 		MObject attrUserSet = nAttrUserSet.create(tAttr.name() + ATTRIBUTE_USER_SET_SUFFIX,
 		                                          tAttr.shortName() + ATTRIBUTE_USER_SET_SUFFIX,
 		                                          MFnNumericData::kBoolean, false, &stat);
+		if (stat != MS::kSuccess)
+			throw stat;
 
 		if (!(node.hasAttribute(nAttrUserSet.shortName()))) {
 			MCHECK(nAttrUserSet.setKeyable(true));
@@ -933,6 +935,8 @@ MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, 
 			MCHECK(nAttrForceDefault.setStorable(true));
 			MCHECK(node.addAttribute(attrForceDefault));
 		}
+		if (stat != MS::kSuccess)
+			throw stat;
 	}
 	return MS::kSuccess;
 }
