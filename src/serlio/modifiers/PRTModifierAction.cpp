@@ -134,22 +134,6 @@ bool getAndResetForceDefault(const MFnDependencyNode& node, const MFnAttribute& 
 
 enum class PrtAttributeType { BOOL, FLOAT, COLOR, STRING, ENUM };
 
-} // namespace
-
-PRTModifierAction::PRTModifierAction() {
-	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
-
-	mMayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
-
-	optionsBuilder->setString(L"name", FILE_CGA_ERROR);
-	const AttributeMapUPtr errOptions(optionsBuilder->createAttributeMapAndReset());
-	mCGAErrorOptions = prtu::createValidatedOptions(ENC_ID_CGA_ERROR, errOptions.get());
-
-	optionsBuilder->setString(L"name", FILE_CGA_PRINT);
-	const AttributeMapUPtr printOptions(optionsBuilder->createAttributeMapAndReset());
-	mCGAPrintOptions = prtu::createValidatedOptions(ENC_ID_CGA_PRINT, printOptions.get());
-}
-
 std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& node) {
 	std::list<MObject> rawAttrs;
 	std::list<MObject> ignoreList;
@@ -187,12 +171,12 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 const RuleAttribute RULE_NOT_FOUND{};
 
 template <typename T>
-MStatus PRTModifierAction::iterateThroughAttributesAndApply(const MObject& node, T attrFunction) {
+MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttributes& mRuleAttributes, T attrFunction) {
 	MStatus stat;
 	const MFnDependencyNode fNode(node, &stat);
 	MCHECK(stat);
 
-	auto reverseLookupAttribute = [this](const std::wstring& mayaFullAttrName) {
+	auto reverseLookupAttribute = [mRuleAttributes](const std::wstring& mayaFullAttrName) {
 		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(),
 		                       [&mayaFullAttrName](const auto& ra) { return (ra.mayaFullName == mayaFullAttrName); });
 		if (it != mRuleAttributes.end())
@@ -241,6 +225,21 @@ MStatus PRTModifierAction::iterateThroughAttributesAndApply(const MObject& node,
 		}
 	}
 	return MStatus::kSuccess;
+}
+} // namespace
+
+PRTModifierAction::PRTModifierAction() {
+	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
+
+	mMayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
+
+	optionsBuilder->setString(L"name", FILE_CGA_ERROR);
+	const AttributeMapUPtr errOptions(optionsBuilder->createAttributeMapAndReset());
+	mCGAErrorOptions = prtu::createValidatedOptions(ENC_ID_CGA_ERROR, errOptions.get());
+
+	optionsBuilder->setString(L"name", FILE_CGA_PRINT);
+	const AttributeMapUPtr printOptions(optionsBuilder->createAttributeMapAndReset());
+	mCGAPrintOptions = prtu::createValidatedOptions(ENC_ID_CGA_PRINT, printOptions.get());
 }
 
 MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
@@ -320,7 +319,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 		}
 	};
 
-	iterateThroughAttributesAndApply(node, fillAttributeFromNode);
+	iterateThroughAttributesAndApply(node, mRuleAttributes, fillAttributeFromNode);
 	mGenerateAttrs.reset(aBuilder->createAttributeMap());
 
 	return MStatus::kSuccess;
@@ -399,7 +398,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 		}
 	};
 
-	iterateThroughAttributesAndApply(node, updateUserSetAttribute);
+	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUserSetAttribute);
 
 	return MStatus::kSuccess;
 }
@@ -518,7 +517,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 		}
 	};
 
-	iterateThroughAttributesAndApply(node, updateUIFromAttributes);
+	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
 	return MStatus::kSuccess;
 }
