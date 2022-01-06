@@ -198,8 +198,6 @@ MStatus StingrayMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	scriptBuilder.getUndoState(MEL_UNDO_STATE);
 	scriptBuilder.setUndoState(false);
 
-	scriptBuilder.declString(MEL_VARIABLE_SHADING_ENGINE);
-
 	// declare MEL variables required by appendToMaterialScriptBuilder()
 	scriptBuilder.declString(MEL_VAR_SHADER_NODE);
 	scriptBuilder.declString(MEL_VAR_MAP_FILE);
