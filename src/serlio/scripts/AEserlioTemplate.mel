@@ -56,8 +56,8 @@ proc prtSetSymbolButtonVisibility(int $visible, string $control){
 	symbolButton -edit -visible $visible $control;
 }
 
-proc prtHighlightBackground(int $highlighted, float $grayScaleColor, string $control){
-	control -edit -bgc $grayScaleColor $grayScaleColor$grayScaleColor -ebg $highlighted $control;
+proc prtSetBackgroundColor(int $enabled, float $grayScaleColor, string $control){
+	control -edit -bgc $grayScaleColor $grayScaleColor $grayScaleColor -ebg $enabled $control;
 }
 
 global proc prtReloadRPK(string $attr) {
@@ -138,8 +138,8 @@ global proc prtUpdateEditHighlights(string $attr){
 
 	prtSetSymbolButtonVisibility($userSet, $control + "_user_set");
 	prtSetSymbolButtonVisibility($userSet, $control + "_force_default_reset");
-	prtHighlightBackground($userSet, 0.32, $control + "_column_layout");
-	prtHighlightBackground(false, 0.4, $control);
+	prtSetBackgroundColor($userSet, 0.32, $control + "_column_layout");
+	prtSetBackgroundColor(false, 0.4, $control);
 }
 
 global proc prtSetAttrUserSetAndUpdateUI(string $attr){
