@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-proc string[] appendAarray(string $a0[], string $a1[]) {
+proc string[] appendArray(string $a0[], string $a1[]) {
 	string $result[] = $a0;
 	for($e in $a1)
 		if(!stringArrayContains($e, $result)){
@@ -31,10 +31,10 @@ proc string[] collectInitialShapes(string $nodes[]) {
 	for($node in $nodes) {
 	    string $type = `nodeType $node`;
 		if($type == "mesh") {
-			$result = appendAarray($result, {$node});
+			$result = appendArray($result, {$node});
 		} else if($type == "transform") {
 			string $tmp[] = collectInitialShapes(`listRelatives -ni -pa -children $node`);
-			$result = appendAarray($result, $tmp);
+			$result = appendArray($result, $tmp);
 		}
 	}
 	return $result;	  
@@ -43,7 +43,7 @@ proc string[] collectInitialShapes(string $nodes[]) {
 proc int hasNodeTypeInHistory(string $node, string $nodeTypes[]){
 	string $hist[] = `listHistory -f false $node`;
 	string $future[] = `listHistory -f true $node`;
-	$hist = appendAarray($hist, $future);
+	$hist = appendArray($hist, $future);
 	if (size($hist) > 1) {
 		for ($node in $hist){
 			string $nodeType = `nodeType $node`;
