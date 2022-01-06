@@ -194,7 +194,7 @@ MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttribut
 		assert(!ruleAttr.fqName.empty()); // poor mans check for RULE_NOT_FOUND
 
 		const std::wstring fqAttrName = ruleAttr.fqName;
-		const auto ruleAttrType = ruleAttr.mType;
+		[[maybe_unused]] const auto ruleAttrType = ruleAttr.mType;
 
 		if (attrObj.hasFn(MFn::kNumericAttribute)) {
 			MFnNumericAttribute nAttr(attrObj);
