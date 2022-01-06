@@ -63,8 +63,9 @@ MFloatPointArray toMayaFloatPointArray(double const* a, size_t s) {
 	const unsigned int numPoints = static_cast<unsigned int>(s) / 3;
 	MFloatPointArray mfpa(numPoints);
 	for (unsigned int i = 0; i < numPoints; ++i) {
-		mfpa.set(MFloatPoint(static_cast<float>(a[i * 3 + 0]), static_cast<float>(a[i * 3 + 1]),
-		                     static_cast<float>(a[i * 3 + 2])) * mu::PRT_TO_SERLIO_SCALE,
+		mfpa.set(MFloatPoint(static_cast<float>(a[i * 3 + 0] * mu::PRT_TO_SERLIO_SCALE),
+		                     static_cast<float>(a[i * 3 + 1] * mu::PRT_TO_SERLIO_SCALE),
+		                     static_cast<float>(a[i * 3 + 2] * mu::PRT_TO_SERLIO_SCALE)),
 		         i);
 	}
 	return mfpa;
