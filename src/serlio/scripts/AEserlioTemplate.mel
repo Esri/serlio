@@ -139,6 +139,7 @@ global proc prtUpdateEditHighlights(string $attr){
 	prtSetSymbolButtonVisibility($userSet, $control + "_user_set");
 	prtSetSymbolButtonVisibility($userSet, $control + "_force_default_reset");
 	prtHighlightBackground($userSet, 0.32, $control + "_column_layout");
+	prtHighlightBackground(false, 0.4, $control);
 }
 
 global proc prtSetAttrUserSetAndUpdateUI(string $attr){
