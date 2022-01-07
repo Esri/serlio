@@ -33,11 +33,39 @@ proc string niceName(string $longName) {
 	return `attributeName -nice $longName`;
 }
   
+proc int prtIsStringAttr(string $attr){
+	string $datatype[] = `addAttr -query -dataType $attr`;
+	return `strcmp "string" $datatype[0]` == 0;
+}
+
+proc int prtIsFileAttr(string $attr){
+	return `addAttr -q -uaf ($attr)`;
+}
+
+proc int prtIsColorAttr(string $attr){
+	return `addAttr -q -uac ($attr)`;
+}
+
+proc int prtAttributeExists(string $attr){
+	string $node = plugNode($attr);
+	string $attributeName = plugAttr($attr);
+	return`attributeExists $attributeName $node`;
+}
+
+proc prtSetSymbolButtonVisibility(int $visible, string $control){
+	symbolButton -edit -visible $visible $control;
+}
+
+proc prtSetBackgroundColor(int $enabled, float $grayScaleColor, string $control){
+	control -edit -bgc $grayScaleColor $grayScaleColor $grayScaleColor -ebg $enabled $control;
+}
+
 global proc prtReloadRPK(string $attr) {
 	$node = prtGetNodeName($attr);
 	$attrCurrentRule = $node + ".currentRule_Package";
 	setAttr -type "string" $attrCurrentRule "";
 	dgdirty $node;
+	evalDeferred "refreshEditorTemplates()";
 }
 
 global proc int prtRPKChange(string $attr, string $varname) {
@@ -101,20 +129,84 @@ global proc prtFileBrowseReplaceRPK(string $attr, string $varname, string $filte
 	}
 }
 
-global proc prtColorChooser(string $attr, string $varname) {
+global proc prtUpdateEditHighlights(string $attr){
+	if (!prtAttributeExists($attr))
+		return;
+
+	int $userSet = `getAttr ($attr + "_user_set")`;
+	string $control = prtControlName($attr);
+
+	prtSetSymbolButtonVisibility($userSet, $control + "_user_set");
+	prtSetSymbolButtonVisibility($userSet, $control + "_force_default_reset");
+	prtSetBackgroundColor($userSet, 0.32, $control + "_column_layout");
+	prtSetBackgroundColor(false, 0.4, $control);
+}
+
+global proc prtSetAttrUserSetAndUpdateUI(string $attr){
+	setAttr ($attr + "_force_default") true;
+	setAttr ($attr + "_user_set") false;
+	prtUpdateEditHighlights($attr);
+}
+
+global proc prtAttributeControl(string $attr, string $varname){
 	setUITemplate -pst attributeEditorTemplate;
 	string $control = prtControlName($attr);
-	colorSliderGrp -label `niceName($attr)` $control;
-	connectControl $control $attr;
-	setParent ..;
-	setUITemplate -ppt; 
-}  
+	int $nrOfColumns = 4;
+	int $isFileAttribute = `addAttr -q -uaf ($attr)`;
 
-global proc prtColorChooserReplace(string $attr, string $varname){
-	if(prtRPKChange($attr, $varname)) {
-		string $control = prtControlName($attr);
+	if($isFileAttribute){
+		$nrOfColumns = 5;
+	}
+
+	rowColumnLayout -numberOfColumns $nrOfColumns -adjustableColumn 2 ($control + "_column_layout");
+
+	$label = `niceName $attr`;
+
+	symbolButton -visible false -hlc 0.2715 0.2715 0.2715 -i "pencilCursor.png" -w 25 -h 25 -enable false ($control + "_user_set");
+
+	if (prtIsColorAttr($attr)){
+		colorSliderGrp-label $label $control;
+	} else {
+		attrControlGrp -label $label -attribute $attr $control;
+	}
+
+	if ($isFileAttribute){
+		symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\",\"All Files (*.*)\" )") ($control + "_browse");
+	}
+	symbolButton -image "undo_s.png" -visible false -annotation "reset rule attribute to default value" -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
+
+	if(prtIsStringAttr($attr)){
+		connectControl -index 2 $control $attr;
+	} else {
 		connectControl $control $attr;
 	}
+	string $changeCommand = "prtUpdateEditHighlights " + $attr;
+	scriptJob -rp -p $control -ac $attr $changeCommand;
+
+	setParent ..;
+	setUITemplate -ppt; 
+	prtUpdateEditHighlights($attr);
+}  
+
+global proc prtAttributeControlReplace(string $attr, string $varname){
+	if(prtRPKChange($attr, $varname)) {
+		string $control = prtControlName($attr);
+		if (prtIsFileAttr($attr)){
+			symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\",\"All Files (*.*)\" )") ($control + "_browse");
+		}
+		if(prtIsStringAttr($attr)){
+			connectControl -index 2 $control $attr;
+		} else if (prtIsColorAttr($attr)){
+			connectControl $control $attr;
+		} else {
+			attrControlGrp -edit -attribute $attr $control;
+			connectControl $control $attr;
+		}
+		symbolButton -edit -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
+		string $changeCommand = "prtUpdateEditHighlights " + $attr;
+		scriptJob -rp -p $control -ac $attr $changeCommand;
+	}
+	prtUpdateEditHighlights($attr);
 }
 
 global proc AEserlioTemplate(string $node) {
@@ -176,14 +268,9 @@ global proc AEserlioTemplate(string $node) {
 		}
 		
 		
-		if(`addAttr -q  -uaf ($longNameWithNode) `) {
-			editorTemplate -callCustom "prtFileBrowse" "prtFileBrowseReplace" $attr $varname "All Files (*.*)";
-		} else if(`addAttr -q  -uac ($longNameWithNode) `) {
-			editorTemplate -callCustom "prtColorChooser" "prtColorChooserReplace" $attr $varname;
+		editorTemplate -callCustom "prtAttributeControl" "prtAttributeControlReplace" $attr $varname;
+		if(`addAttr -q  -uac ($longNameWithNode) `) 
 			$skip = 3;
-		} else {
-			editorTemplate  -l `niceName($longNameWithNode)` -adc $attr;
-		}
 	}
 		
 	if ($currentGroupName != "")

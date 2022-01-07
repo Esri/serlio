@@ -68,6 +68,8 @@ public:
 
 	MStatus updateRuleFiles(const MObject& node, const MString& rulePkg);
 	MStatus fillAttributesFromNode(const MObject& node);
+	MStatus updateUserSetAttributes(const MObject& node);
+	MStatus updateUI(const MObject& node);
 	void setMesh(MObject& _inMesh, MObject& _outMesh);
 	void setRandomSeed(int32_t randomSeed) {
 		mRandomSeed = randomSeed;
