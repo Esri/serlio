@@ -37,10 +37,6 @@
 
 #include <cassert>
 
-#define CHECK_STATUS(st)                                                                                               \
-	if ((st) != MS::kSuccess) {                                                                                        \
-		break;                                                                                                         \
-	}
 namespace {
 
 constexpr bool DBG = false;
