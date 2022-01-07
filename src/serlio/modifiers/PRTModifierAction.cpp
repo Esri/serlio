@@ -946,12 +946,12 @@ MStatus PRTModifierAction::addBoolParameter(MFnDependencyNode& node, MObject& at
 	nAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	MCHECK(stat);
 
-	MCHECK(addParameter(node, attr, nAttr));
+	stat = addParameter(node, attr, nAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	return MS::kSuccess;
+	return stat;
 }
 
 MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& ruleAttr,
@@ -973,12 +973,12 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& a
 		MCHECK(nAttr.setMax(max));
 	}
 
-	MCHECK(addParameter(node, attr, nAttr));
+	stat = addParameter(node, attr, nAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	return MS::kSuccess;
+	return stat;
 }
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
@@ -1032,12 +1032,12 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 
 	MCHECK(e.fill(annot));
 
-	MCHECK(addParameter(node, attr, e.mAttr));
+	stat = addParameter(node, attr, e.mAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	return MS::kSuccess;
+	return stat;
 }
 
 MStatus PRTModifierAction::addFileParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& ruleAttr,
@@ -1055,12 +1055,12 @@ MStatus PRTModifierAction::addFileParameter(MFnDependencyNode& node, MObject& at
 	MCHECK(sAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str()));
 	MCHECK(stat);
 	MCHECK(sAttr.setUsedAsFilename(true));
-	MCHECK(addParameter(node, attr, sAttr));
+	stat = addParameter(node, attr, sAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	return MS::kSuccess;
+	return stat;
 }
 
 MStatus PRTModifierAction::addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& ruleAttr,
@@ -1082,12 +1082,12 @@ MStatus PRTModifierAction::addColorParameter(MFnDependencyNode& node, MObject& a
 	nAttr.setDefault(color[0], color[1], color[2]);
 
 	MCHECK(stat);
-	MCHECK(addParameter(node, attr, nAttr));
+	stat = addParameter(node, attr, nAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	return MS::kSuccess;
+	return stat;
 }
 
 MStatus PRTModifierAction::addStrParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& ruleAttr,
@@ -1104,7 +1104,7 @@ MStatus PRTModifierAction::addStrParameter(MFnDependencyNode& node, MObject& att
 
 	sAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	MCHECK(stat);
-	MCHECK(addParameter(node, attr, sAttr));
+	stat = addParameter(node, attr, sAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
@@ -1112,5 +1112,5 @@ MStatus PRTModifierAction::addStrParameter(MFnDependencyNode& node, MObject& att
 	if (DBG)
 		LOG_DBG << sAttr.name().asWChar() << " = " << plugValue.asWChar();
 
-	return MS::kSuccess;
+	return stat;
 }
