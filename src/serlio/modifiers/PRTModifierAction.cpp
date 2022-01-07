@@ -221,6 +221,22 @@ MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttribut
 	}
 	return MStatus::kSuccess;
 }
+
+MStatus addHiddenBoolParameter(MFnDependencyNode& node, MFnAttribute& tAttr, const MString& suffix) {
+	MStatus stat;
+
+	MFnNumericAttribute nAttr;
+	MObject attr =
+	        nAttr.create(tAttr.name() + suffix, tAttr.shortName() + suffix, MFnNumericData::kBoolean, false, &stat);
+	MCHECK(stat);
+
+	if (!(node.hasAttribute(nAttr.shortName()))) {
+		MCHECK(nAttr.setHidden(true));
+		MCHECK(nAttr.setStorable(true));
+		stat = node.addAttribute(attr);
+	}
+	return stat;
+}
 } // namespace
 
 PRTModifierAction::PRTModifierAction() {
@@ -897,39 +913,24 @@ T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MS
 
 MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, MFnAttribute& tAttr) {
 	if (!(node.hasAttribute(tAttr.shortName()))) {
+		MStatus stat;
+
 		MCHECK(tAttr.setKeyable(true));
 		MCHECK(tAttr.setHidden(false));
 		MCHECK(tAttr.setStorable(true));
-		MCHECK(node.addAttribute(attr));
+		stat = node.addAttribute(attr);
+		if (stat != MS::kSuccess)
+			return stat;
 
 		// add hidden user_set attribute
-		MStatus stat;
-		MFnNumericAttribute nAttrUserSet;
-		MObject attrUserSet = nAttrUserSet.create(tAttr.name() + ATTRIBUTE_USER_SET_SUFFIX,
-		                                          tAttr.shortName() + ATTRIBUTE_USER_SET_SUFFIX,
-		                                          MFnNumericData::kBoolean, false, &stat);
+		stat = addHiddenBoolParameter(node, tAttr, ATTRIBUTE_USER_SET_SUFFIX);
 		if (stat != MS::kSuccess)
-			throw stat;
-
-		if (!(node.hasAttribute(nAttrUserSet.shortName()))) {
-			MCHECK(nAttrUserSet.setHidden(true));
-			MCHECK(nAttrUserSet.setStorable(true));
-			MCHECK(node.addAttribute(attrUserSet));
-		}
+			return stat;
 
 		// add hidden force_default attribute
-		MFnNumericAttribute nAttrForceDefault;
-		MObject attrForceDefault = nAttrForceDefault.create(tAttr.name() + ATTRIBUTE_FORCE_DEFAULT_SUFFIX,
-		                                                    tAttr.shortName() + ATTRIBUTE_FORCE_DEFAULT_SUFFIX,
-		                                                    MFnNumericData::kBoolean, false, &stat);
+		stat = addHiddenBoolParameter(node, tAttr, ATTRIBUTE_FORCE_DEFAULT_SUFFIX);
 
-		if (!(node.hasAttribute(nAttrForceDefault.shortName()))) {
-			MCHECK(nAttrForceDefault.setHidden(true));
-			MCHECK(nAttrForceDefault.setStorable(true));
-			MCHECK(node.addAttribute(attrForceDefault));
-		}
-		if (stat != MS::kSuccess)
-			throw stat;
+		return stat;
 	}
 	return MS::kSuccess;
 }
