@@ -928,9 +928,7 @@ MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, 
 			return stat;
 
 		// add hidden force_default attribute
-		stat = addHiddenBoolParameter(node, tAttr, ATTRIBUTE_FORCE_DEFAULT_SUFFIX);
-
-		return stat;
+		return addHiddenBoolParameter(node, tAttr, ATTRIBUTE_FORCE_DEFAULT_SUFFIX);
 	}
 	return MS::kSuccess;
 }
