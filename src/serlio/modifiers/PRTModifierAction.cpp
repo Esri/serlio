@@ -944,8 +944,7 @@ MStatus PRTModifierAction::addBoolParameter(MFnDependencyNode& node, MObject& at
 	attr = nAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), MFnNumericData::kBoolean,
 	                    defaultValue, &stat);
 	nAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
-	if (stat != MS::kSuccess)
-		throw stat;
+	MCHECK(stat);
 
 	MCHECK(addParameter(node, attr, nAttr));
 
@@ -964,8 +963,7 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& a
 	attr = nAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), MFnNumericData::kDouble,
 	                    defaultValue, &stat);
 	nAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
-	if (stat != MS::kSuccess)
-		throw stat;
+	MCHECK(stat);
 
 	if (!prtu::isnan(min)) {
 		MCHECK(nAttr.setMin(min));
