@@ -431,13 +431,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 
 				const bool isDefaultValue = defBoolVal == boolVal;
 
-				if (getIsUserSet(fnNode, fnAttribute)) {
-					plug.setBool(boolVal);
-				}
-				else {
-					if (!isDefaultValue) {
-						plug.setBool(defBoolVal);
-					}
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				    plug.setBool(defBoolVal);
 				}
 				break;
 			}
@@ -448,13 +443,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 
 				const bool isDefaultValue = defDoubleVal == doubleVal;
 
-				if (getIsUserSet(fnNode, fnAttribute)) {
-					plug.setDouble(doubleVal);
-				}
-				else {
-					if (!isDefaultValue) {
-						plug.setDouble(defDoubleVal);
-					}
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+					plug.setDouble(defDoubleVal);
 				}
 				break;
 			}
@@ -476,13 +466,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 
 				const bool isDefaultValue = std::wcscmp(colStr.c_str(), defColStr) == 0;
 
-				if (getIsUserSet(fnNode, fnAttribute)) {
-					plug.setMObject(rgb);
-				}
-				else {
-					if (!isDefaultValue) {
-						plug.setMObject(defaultColorObj);
-					}
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				    plug.setMObject(defaultColorObj);
 				}
 				break;
 			}
@@ -494,13 +479,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 
 				const bool isDefaultValue = std::wcscmp(stringVal.asWChar(), defStringVal) == 0;
 
-				if (getIsUserSet(fnNode, fnAttribute)) {
-					plug.setString(stringVal);
-				}
-				else {
-					if (!isDefaultValue) {
-						plug.setString(defStringVal);
-					}
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				    plug.setString(defStringVal);
 				}
 				break;
 			}
@@ -513,13 +493,9 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 				MCHECK(plug.getValue(enumVal));
 
 				const bool isDefaultValue = defEnumVal == enumVal;
-				if (getIsUserSet(fnNode, fnAttribute)) {
-					plug.setShort(enumVal);
-				}
-				else {
-					if (!isDefaultValue) {
-						plug.setShort(defEnumVal);
-					}
+
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+					plug.setShort(defEnumVal);
 				}
 				break;
 			}
