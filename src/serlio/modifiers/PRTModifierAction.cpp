@@ -61,7 +61,7 @@ const AttributeMapUPtr
 
 AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule,
                                            const prt::ResolveMap& resolveMap, prt::CacheObject& cache,
-                                           const PRTMesh& prtMesh, const int32_t seed) {
+                                           const PRTMesh& prtMesh, const int32_t seed, const AttributeMapUPtr& attributeMap) {
 	AttributeMapBuilderUPtr mayaCallbacksAttributeBuilder(prt::AttributeMapBuilder::create());
 	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, mayaCallbacksAttributeBuilder);
 
@@ -70,7 +70,7 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 	isb->setGeometry(prtMesh.vertexCoords(), prtMesh.vcCount(), prtMesh.indices(), prtMesh.indicesCount(),
 	                 prtMesh.faceCounts(), prtMesh.faceCountsCount());
 
-	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), seed, L"", EMPTY_ATTRIBUTES.get(), &resolveMap);
+	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), seed, L"", attributeMap.get(), &resolveMap);
 
 	const InitialShapeUPtr shape(isb->createInitialShapeAndReset());
 	const InitialShapeNOPtrVector shapes = {shape.get()};
@@ -341,7 +341,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	const auto updateUserSetAttribute = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(
-		        mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed);
+		        mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed, mGenerateAttrs);
 		const MPlug plug(fnNode.object(), fnAttribute.object());
 		bool isDefaultValue = false;
 		const std::wstring fqAttrName = ruleAttribute.fqName;
@@ -417,8 +417,8 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 MStatus PRTModifierAction::updateUI(const MObject& node) {
 	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
-		const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(
-		        mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed);
+		const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
+		                                  *inPrtMesh, mRandomSeed, mGenerateAttrs);
 		MPlug plug(fnNode.object(), fnAttribute.object());
 		const std::wstring fqAttrName = ruleAttribute.fqName;
 
@@ -560,7 +560,7 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 
 	mStartRule = prtu::detectStartRule(info);
 	mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
-	                                           *inPrtMesh, mRandomSeed);
+	                                           *inPrtMesh, mRandomSeed, EMPTY_ATTRIBUTES);
 	if (DBG)
 		LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
