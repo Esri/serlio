@@ -142,10 +142,8 @@ global proc prtUpdateEditHighlights(string $attr){
 	prtSetBackgroundColor(false, 0.4, $control);
 }
 
-global proc prtSetAttrUserSetAndUpdateUI(string $attr){
+global proc prtForceDefault(string $attr){
 	setAttr ($attr + "_force_default") true;
-	setAttr ($attr + "_user_set") false;
-	prtUpdateEditHighlights($attr);
 }
 
 global proc prtAttributeControl(string $attr, string $varname){
@@ -173,7 +171,7 @@ global proc prtAttributeControl(string $attr, string $varname){
 	if ($isFileAttribute){
 		symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\",\"All Files (*.*)\" )") ($control + "_browse");
 	}
-	symbolButton -image "undo_s.png" -visible false -annotation "reset rule attribute to default value" -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
+	symbolButton -image "undo_s.png" -visible false -annotation "reset rule attribute to default value" -c ("prtForceDefault (\"" +  $attr +"\")") ($control + "_force_default_reset");
 
 	if(prtIsStringAttr($attr)){
 		connectControl -index 2 $control $attr;
@@ -181,7 +179,7 @@ global proc prtAttributeControl(string $attr, string $varname){
 		connectControl $control $attr;
 	}
 	string $changeCommand = "prtUpdateEditHighlights " + $attr;
-	scriptJob -rp -p $control -ac $attr $changeCommand;
+	scriptJob -rp -p $control -ac  ($attr + "_user_set") $changeCommand;
 
 	setParent ..;
 	setUITemplate -ppt; 
@@ -202,9 +200,9 @@ global proc prtAttributeControlReplace(string $attr, string $varname){
 			attrControlGrp -edit -attribute $attr $control;
 			connectControl $control $attr;
 		}
-		symbolButton -edit -c ("prtSetAttrUserSetAndUpdateUI (\"" +  $attr +"\")") ($control + "_force_default_reset");
+		symbolButton -edit -c ("prtForceDefault (\"" +  $attr +"\")") ($control + "_force_default_reset");
 		string $changeCommand = "prtUpdateEditHighlights " + $attr;
-		scriptJob -rp -p $control -ac $attr $changeCommand;
+		scriptJob -rp -p $control -ac ($attr + "_user_set") $changeCommand;
 	}
 	prtUpdateEditHighlights($attr);
 }
