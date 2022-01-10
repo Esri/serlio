@@ -364,7 +364,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 				break;
 			}
 			case PrtAttributeType::COLOR: {
-				const wchar_t* defColStr = defaultAttributeValues->getString(fqAttrName.c_str());
+				const prtu::Color defCol = prtu::parseColor(defaultAttributeValues->getString(fqAttrName.c_str()));
 
 				MObject rgb;
 				MCHECK(plug.getValue(rgb));
@@ -372,9 +372,8 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 
 				prtu::Color col;
 				MCHECK(fRGB.getData3Float(col[0], col[1], col[2]));
-				const std::wstring colStr = prtu::getColorString(col);
 
-				isDefaultValue = std::wcscmp(colStr.c_str(), defColStr) == 0;
+				isDefaultValue = defCol == col;
 				break;
 			}
 			case PrtAttributeType::STRING: {
