@@ -404,8 +404,8 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 		if (getAndResetForceDefault(fnNode, fnAttribute)) {
 			setIsUserSet(fnNode, fnAttribute, false);
 		}
-		else {
-			setIsUserSet(fnNode, fnAttribute, !isDefaultValue);
+		else if (!isDefaultValue){
+			setIsUserSet(fnNode, fnAttribute, true);
 		}
 	};
 
