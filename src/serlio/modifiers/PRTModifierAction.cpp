@@ -980,9 +980,12 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& a
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
                                             const RuleAttribute& ruleAttr, bool defaultValue, PRTModifierEnum& e) {
+	PRTModifierEnum tmpEnum;
+	tmpEnum.fill(annot);
+
 	short idx = 0;
-	for (int i = static_cast<int>(e.mBVals.length()); --i >= 0;) {
-		if ((e.mBVals[i] != 0) == defaultValue) {
+	for (int i = static_cast<int>(tmpEnum.mBVals.length()); --i >= 0;) {
+		if ((tmpEnum.mBVals[i] != 0) == defaultValue) {
 			idx = static_cast<short>(i);
 			break;
 		}
@@ -993,9 +996,12 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
                                             const RuleAttribute& ruleAttr, double defaultValue, PRTModifierEnum& e) {
+	PRTModifierEnum tmpEnum;
+	tmpEnum.fill(annot);
+
 	short idx = 0;
-	for (int i = static_cast<int>(e.mFVals.length()); --i >= 0;) {
-		if (e.mFVals[i] == defaultValue) {
+	for (int i = static_cast<int>(tmpEnum.mFVals.length()); --i >= 0;) {
+		if (tmpEnum.mFVals[i] == defaultValue) {
 			idx = static_cast<short>(i);
 			break;
 		}
@@ -1007,9 +1013,12 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
                                             const RuleAttribute& ruleAttr, const MString& defaultValue,
                                             PRTModifierEnum& e) {
+	PRTModifierEnum tmpEnum;
+	tmpEnum.fill(annot);
+
 	short idx = 0;
-	for (int i = static_cast<int>(e.mSVals.length()); --i >= 0;) {
-		if (e.mSVals[i] == defaultValue) {
+	for (int i = static_cast<int>(tmpEnum.mSVals.length()); --i >= 0;) {
+		if (tmpEnum.mSVals[i] == defaultValue) {
 			idx = static_cast<short>(i);
 			break;
 		}
