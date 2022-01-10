@@ -389,6 +389,12 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(
 		        mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed, mGenerateAttrs);
+
+		if (getAndResetForceDefault(fnNode, fnAttribute)) {
+			setIsUserSet(fnNode, fnAttribute, false);
+			return;
+		}
+
 		const MPlug plug(fnNode.object(), fnAttribute.object());
 		bool isDefaultValue = false;
 		const std::wstring fqAttrName = ruleAttribute.fqName;
@@ -447,12 +453,8 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 				break;
 		}
 
-		if (getAndResetForceDefault(fnNode, fnAttribute)) {
-			setIsUserSet(fnNode, fnAttribute, false);
-		}
-		else if (!isDefaultValue){
+		if (!isDefaultValue)
 			setIsUserSet(fnNode, fnAttribute, true);
-		}
 	};
 
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUserSetAttribute);
