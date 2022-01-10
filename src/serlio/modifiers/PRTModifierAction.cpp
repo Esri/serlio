@@ -237,6 +237,53 @@ MStatus addHiddenBoolParameter(MFnDependencyNode& node, MFnAttribute& tAttr, con
 	}
 	return stat;
 }
+
+short getDefaultEnumValue(const AttributeMapUPtr& defaultAttributeValues, const MFnEnumAttribute& eAttr,
+                          const RuleAttribute& ruleAttr) {
+	const std::wstring fqAttrName = ruleAttr.fqName;
+	const prt::AnnotationArgumentType ruleAttrType = ruleAttr.mType;
+
+	short minVal;
+	short maxVal;
+	MCHECK(eAttr.getMin(minVal));
+	MCHECK(eAttr.getMax(maxVal));
+
+	switch (ruleAttrType) {
+		case prt::AAT_STR: {
+			const wchar_t* defStringVal = defaultAttributeValues->getString(fqAttrName.c_str());
+
+			for (short currIdx = minVal; currIdx <= maxVal; currIdx++) {
+				const wchar_t* currString = eAttr.fieldName(currIdx).asWChar();
+				if (std::wcscmp(currString, defStringVal) == 0)
+					return currIdx;
+			}
+			break;
+		}
+		case prt::AAT_FLOAT: {
+			const auto defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
+
+			for (short currIdx = minVal; currIdx <= maxVal; currIdx++) {
+				const double currDouble = eAttr.fieldName(currIdx).asDouble();
+				if (currDouble == defDoubleVal)
+					return currIdx;
+			}
+			break;
+		}
+		case prt::AAT_BOOL: {
+			const auto defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
+
+			for (short currIdx = minVal; currIdx <= maxVal; currIdx++) {
+				const int currBool = eAttr.fieldName(currIdx).asInt() != 0;
+				if (currBool == defBoolVal)
+					return currIdx;
+			}
+			break;
+		}
+		default:
+			LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
+	}
+	return 0;
+}
 } // namespace
 
 PRTModifierAction::PRTModifierAction() {
@@ -388,9 +435,8 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 			case PrtAttributeType::ENUM: {
 				MFnEnumAttribute eAttr(fnAttribute.object());
 
-				short defEnumVal;
+				const short defEnumVal = getDefaultEnumValue(defaultAttributeValues, eAttr, ruleAttribute);
 				short enumVal;
-				MCHECK(eAttr.getDefault(defEnumVal));
 				MCHECK(plug.getValue(enumVal));
 
 				isDefaultValue = defEnumVal == enumVal;
@@ -486,9 +532,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 			case PrtAttributeType::ENUM: {
 				MFnEnumAttribute eAttr(fnAttribute.object());
 
-				short defEnumVal;
+				const short defEnumVal = getDefaultEnumValue(defaultAttributeValues, eAttr, ruleAttribute);
 				short enumVal;
-				MCHECK(eAttr.getDefault(defEnumVal));
 				MCHECK(plug.getValue(enumVal));
 
 				const bool isDefaultValue = defEnumVal == enumVal;
