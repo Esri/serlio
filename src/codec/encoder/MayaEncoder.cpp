@@ -80,11 +80,22 @@ struct SerializedGeometry {
 	std::vector<prtx::IndexVector> uvCounts;
 	std::vector<prtx::IndexVector> uvIndices;
 
-	SerializedGeometry(uint32_t numCounts, uint32_t numIndices, uint32_t uvSets)
+	SerializedGeometry(uint32_t numCounts, uint32_t numIndices, uint32_t uvSets, const std::vector<uint32_t>& numUvs,
+	                   const std::vector<uint32_t>& numUvCounts, const std::vector<uint32_t>& numUvIndices)
 	    : uvs(uvSets), uvCounts(uvSets), uvIndices(uvSets) {
 		counts.reserve(numCounts);
 		vertexIndices.reserve(numIndices);
 		normalIndices.reserve(numIndices);
+
+		assert(numUvCounts.size() == uvSets);
+		assert(numUvCounts.size() == uvSets);
+		assert(numUvIndices.size() == uvSets);
+
+		for (uint32_t uvSet = 0; uvSet < uvSets; uvSet++) {
+			uvs[uvSet].reserve(numUvs[uvSet]);
+			uvCounts[uvSet].reserve(numUvCounts[uvSet]);
+			uvIndices[uvSet].reserve(numUvIndices[uvSet]);
+		}
 	}
 
 	bool isEmpty() const {
@@ -430,7 +441,27 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries,
 		}
 		++matsIt;
 	}
-	SerializedGeometry sg(numCounts, numIndices, maxNumUVSets);
+
+	std::vector<uint32_t> numUvs(maxNumUVSets);
+	std::vector<uint32_t> numUvCounts(maxNumUVSets);
+	std::vector<uint32_t> numUvIndices(maxNumUVSets);
+
+	for (const auto& geo : geometries) {
+		const prtx::MeshPtrVector& meshes = geo->getMeshes();
+		for (const auto& mesh : meshes) {
+			const uint32_t numUVSets = mesh->getUVSetsCount();
+
+			for (uint32_t uvSet = 0; uvSet < numUVSets; uvSet++) {
+				numUvs[uvSet] += static_cast<uint32_t>(mesh->getUVCoords(uvSet).size());
+
+				const auto& faceUVCounts = mesh->getFaceUVCounts(uvSet);
+				numUvCounts[uvSet] += static_cast<uint32_t>(faceUVCounts.size());
+				numUvIndices[uvSet] = std::accumulate(faceUVCounts.begin(), faceUVCounts.end(), numUvIndices[uvSet]);
+			}
+		}
+	}
+
+	SerializedGeometry sg(numCounts, numIndices, maxNumUVSets, numUvs, numUvCounts, numUvIndices);
 
 	// PASS 2: copy
 	uint32_t vertexIndexBase = 0u;
