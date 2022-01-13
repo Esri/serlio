@@ -35,38 +35,6 @@
 namespace logging {
 
 struct Logger {};
-
-const std::string LEVELS[] = {"trace", "debug", "info", "warning", "error", "fatal"};
-const std::wstring WLEVELS[] = {L"trace", L"debug", L"info", L"warning", L"error", L"fatal"};
-
-// log to std streams
-template <prt::LogLevel L>
-struct StreamLogger : Logger {
-	explicit StreamLogger(std::wostream& out = std::wcout) : Logger(), mOut(out) {
-		mOut << prefix();
-	}
-	virtual ~StreamLogger() {
-		mOut << std::endl;
-	}
-	StreamLogger<L>& operator<<(std::wostream& (*x)(std::wostream&)) {
-		mOut << x;
-		return *this;
-	}
-	StreamLogger<L>& operator<<(const std::string& x) {
-		std::copy(x.begin(), x.end(), std::ostream_iterator<char, wchar_t>(mOut));
-		return *this;
-	}
-	template <typename T>
-	StreamLogger<L>& operator<<(const T& x) {
-		mOut << x;
-		return *this;
-	}
-	static std::wstring prefix() {
-		return L"[" + WLEVELS[L] + L"] ";
-	}
-	std::wostream& mOut;
-};
-
 // log through the prt logger
 template <prt::LogLevel L>
 struct PRTLogger : Logger {
