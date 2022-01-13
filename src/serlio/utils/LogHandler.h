@@ -101,10 +101,8 @@ struct PRTLogger : Logger {
 
 class LogHandler : public prt::LogHandler {
 public:
-	explicit LogHandler(const std::wstring& name) : mName(name) {}
-
 	void handleLogEvent(const wchar_t* msg, prt::LogLevel) override {
-		std::wcout << L"[" << mName << L"] " << msg << std::endl;
+		std::cout << prtu::toOSNarrowFromUTF16(msg) << std::endl;
 	}
 
 	const prt::LogLevel* getLevels(size_t* count) override {
@@ -116,13 +114,6 @@ public:
 		*dateTime = true;
 		*level = true;
 	}
-
-	void setName(const std::wstring& n) {
-		mName = n;
-	}
-
-private:
-	std::wstring mName;
 };
 
 using LogHandlerPtr = std::unique_ptr<LogHandler>;
