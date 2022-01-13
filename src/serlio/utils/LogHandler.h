@@ -84,7 +84,7 @@ public:
 	}
 };
 
-using LogHandlerPtr = std::unique_ptr<LogHandler>;
+using LogHandlerUPtr = std::unique_ptr<LogHandler>;
 
 } // namespace logging
 
