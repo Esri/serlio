@@ -94,7 +94,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			MDataHandle currentRulePkgData = data.inputValue(currentRulePkg, &status);
 			MCheckStatus(status, "ERROR getting currentRulePkg");
 
-			const bool ruleFileWasChanged = rulePkgData.asString() != currentRulePkgData.asString();
+			const bool ruleFileWasChanged = (rulePkgData.asString() != currentRulePkgData.asString());
 
 			// Copy the inMesh to the outMesh, so you can
 			// perform operations directly on outMesh
