@@ -273,7 +273,7 @@ short getDefaultEnumValue(const AttributeMapUPtr& defaultAttributeValues, const 
 			const auto defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
 
 			for (short currIdx = minVal; currIdx <= maxVal; currIdx++) {
-				const int currBool = eAttr.fieldName(currIdx).asInt() != 0;
+				const bool currBool = (eAttr.fieldName(currIdx).asInt() != 0);
 				if (currBool == defBoolVal)
 					return currIdx;
 			}
