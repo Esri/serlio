@@ -19,8 +19,6 @@
 
 #include "PRTContext.h"
 
-#include "utils/LogHandler.h"
-
 #include <mutex>
 
 namespace {
@@ -48,8 +46,8 @@ PRTContext& PRTContext::get() {
 
 PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRootPath(prtu::getPluginRoot()) {
 	if (ENABLE_LOG_CONSOLE) {
-		theLogHandler = prt::ConsoleLogHandler::create(prt::LogHandler::ALL, prt::LogHandler::ALL_COUNT);
-		prt::addLogHandler(theLogHandler);
+		theLogHandler = std::make_unique<logging::LogHandler>();
+		prt::addLogHandler(theLogHandler.get());
 	}
 
 	if (ENABLE_LOG_FILE) {
@@ -98,9 +96,7 @@ PRTContext::~PRTContext() {
 	thePRT.reset();
 
 	if (ENABLE_LOG_CONSOLE && (theLogHandler != nullptr)) {
-		prt::removeLogHandler(theLogHandler);
-		theLogHandler->destroy();
-		theLogHandler = nullptr;
+		prt::removeLogHandler(theLogHandler.get());
 	}
 
 	if (ENABLE_LOG_FILE && (theFileLogHandler != nullptr)) {
