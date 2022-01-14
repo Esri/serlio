@@ -284,6 +284,49 @@ short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const
 	}
 	return 0;
 }
+
+struct PRTEnumDefaultValue {
+	bool mBool = false;
+	double mDouble = std::numeric_limits<double>::quiet_NaN();
+	MString mString = "";
+};
+short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue& defaultValue) {
+	short idx = 0;
+	for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
+
+		const wchar_t* key = annot->getArgument(arg)->getKey();
+		if (std::wcscmp(key, NULL_KEY) != 0) {
+			continue;
+		}
+
+		switch (annot->getArgument(arg)->getType()) {
+			case prt::AAT_BOOL: {
+				bool val = annot->getArgument(arg)->getBool();
+				if (val == defaultValue.mBool)
+					return idx;
+				idx++;
+				break;
+			}
+			case prt::AAT_FLOAT: {
+				double val = annot->getArgument(arg)->getFloat();
+				if (val == defaultValue.mDouble)
+					return idx;
+				idx++;
+				break;
+			}
+			case prt::AAT_STR: {
+				const MString val = annot->getArgument(arg)->getStr();
+				if (val == defaultValue.mString)
+					return idx;
+				idx++;
+				break;
+			}
+			default:
+				break;
+		}
+	}
+	return 0;
+}
 } // namespace
 
 PRTModifierAction::PRTModifierAction() {
@@ -1003,32 +1046,18 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& a
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
                                             const RuleAttribute& ruleAttr, bool defaultValue, PRTModifierEnum& e) {
-	PRTModifierEnum tmpEnum;
-	tmpEnum.fill(annot);
-
-	short idx = 0;
-	for (int i = static_cast<int>(tmpEnum.mBVals.length()); --i >= 0;) {
-		if ((tmpEnum.mBVals[i] != 0) == defaultValue) {
-			idx = static_cast<short>(i);
-			break;
-		}
-	}
+	PRTEnumDefaultValue defaultEnumVal;
+	defaultEnumVal.mBool = defaultValue;
+	const short idx = getDefaultEnumIdx(annot, defaultEnumVal);
 
 	return addEnumParameter(annot, node, attr, ruleAttr, idx, e);
 }
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
                                             const RuleAttribute& ruleAttr, double defaultValue, PRTModifierEnum& e) {
-	PRTModifierEnum tmpEnum;
-	tmpEnum.fill(annot);
-
-	short idx = 0;
-	for (int i = static_cast<int>(tmpEnum.mFVals.length()); --i >= 0;) {
-		if (tmpEnum.mFVals[i] == defaultValue) {
-			idx = static_cast<short>(i);
-			break;
-		}
-	}
+	PRTEnumDefaultValue defaultEnumVal;
+	defaultEnumVal.mDouble = defaultValue;
+	const short idx = getDefaultEnumIdx(annot, defaultEnumVal);
 
 	return addEnumParameter(annot, node, attr, ruleAttr, idx, e);
 }
@@ -1036,16 +1065,9 @@ MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDep
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
                                             const RuleAttribute& ruleAttr, const MString& defaultValue,
                                             PRTModifierEnum& e) {
-	PRTModifierEnum tmpEnum;
-	tmpEnum.fill(annot);
-
-	short idx = 0;
-	for (int i = static_cast<int>(tmpEnum.mSVals.length()); --i >= 0;) {
-		if (tmpEnum.mSVals[i] == defaultValue) {
-			idx = static_cast<short>(i);
-			break;
-		}
-	}
+	PRTEnumDefaultValue defaultEnumVal;
+	defaultEnumVal.mString = defaultValue;
+	const short idx = getDefaultEnumIdx(annot, defaultEnumVal);
 
 	return addEnumParameter(annot, node, attr, ruleAttr, idx, e);
 }
