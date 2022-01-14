@@ -589,7 +589,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
                                   const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* cb) {
 	if (instances.empty())
 		return;
-	
+
 	const bool emitMaterials = getOptions()->getBool(EO_EMIT_MATERIALS);
 	const bool emitReports = getOptions()->getBool(EO_EMIT_REPORTS);
 
