@@ -119,12 +119,6 @@ private:
 	static MStatus addFileParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                const MString& defaultValue, const std::wstring& ext);
 	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-	                                const RuleAttribute& name, bool defaultValue, PRTModifierEnum& e);
-	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-	                                const RuleAttribute& name, double defaultValue, PRTModifierEnum& e);
-	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-	                                const RuleAttribute& name, const MString& defaultValue, PRTModifierEnum& e);
-	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
 	                                const RuleAttribute& name, short defaultValue, PRTModifierEnum& e);
 	static MStatus addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                 const MString& defaultValue);
