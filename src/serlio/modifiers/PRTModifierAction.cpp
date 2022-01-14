@@ -62,7 +62,8 @@ const AttributeMapUPtr
 
 AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule,
                                            const prt::ResolveMap& resolveMap, prt::CacheObject& cache,
-                                           const PRTMesh& prtMesh, const int32_t seed, const prt::AttributeMap& attributeMap) {
+                                           const PRTMesh& prtMesh, const int32_t seed,
+                                           const prt::AttributeMap& attributeMap) {
 	AttributeMapBuilderUPtr mayaCallbacksAttributeBuilder(prt::AttributeMapBuilder::create());
 	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, mayaCallbacksAttributeBuilder);
 
@@ -345,7 +346,8 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 	AttributeMapBuilderSPtr aBuilder(prt::AttributeMapBuilder::create(), PRTDestroyer());
 
 	const auto fillAttributeFromNode = [this, aBuilder](const MFnDependencyNode& fnNode,
-	                                                    const MFnAttribute& fnAttribute, const RuleAttribute& ruleAttribute,
+	                                                    const MFnAttribute& fnAttribute,
+	                                                    const RuleAttribute& ruleAttribute,
 	                                                    const PrtAttributeType attrType) mutable {
 		MPlug plug(fnNode.object(), fnAttribute.object());
 		const std::wstring fqAttrName = ruleAttribute.fqName;
@@ -407,8 +409,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 							aBuilder->setBool(fqAttrName.c_str(), eAttr.fieldName(enumVal).asInt() != 0);
 							break;
 						default:
-							LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr "
-							        << fqAttrName;
+							LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
 					}
 				}
 				break;
@@ -428,8 +429,9 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	const auto updateUserSetAttribute = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
-		const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(
-		        mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh, mRandomSeed, *mGenerateAttrs);
+		const AttributeMapUPtr defaultAttributeValues =
+		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
+		                                  *inPrtMesh, mRandomSeed, *mGenerateAttrs);
 
 		if (getAndResetForceDefault(fnNode, fnAttribute)) {
 			setIsUserSet(fnNode, fnAttribute, false);
@@ -506,7 +508,8 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 MStatus PRTModifierAction::updateUI(const MObject& node) {
 	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
-		const AttributeMapUPtr defaultAttributeValues = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
+		const AttributeMapUPtr defaultAttributeValues =
+		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
 		                                  *inPrtMesh, mRandomSeed, *mGenerateAttrs);
 		MPlug plug(fnNode.object(), fnAttribute.object());
 		const std::wstring fqAttrName = ruleAttribute.fqName;
@@ -520,7 +523,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 				const bool isDefaultValue = (defBoolVal == boolVal);
 
 				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
-				    plug.setBool(defBoolVal);
+					plug.setBool(defBoolVal);
 				}
 				break;
 			}
@@ -555,7 +558,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 				const bool isDefaultValue = (std::wcscmp(colStr.c_str(), defColStr) == 0);
 
 				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
-				    plug.setMObject(defaultColorObj);
+					plug.setMObject(defaultColorObj);
 				}
 				break;
 			}
@@ -568,7 +571,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 				const bool isDefaultValue = (std::wcscmp(stringVal.asWChar(), defStringVal) == 0);
 
 				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
-				    plug.setString(defStringVal);
+					plug.setString(defStringVal);
 				}
 				break;
 			}
