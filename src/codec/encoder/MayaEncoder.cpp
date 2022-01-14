@@ -87,7 +87,7 @@ struct SerializedGeometry {
 		vertexIndices.reserve(numIndices);
 		normalIndices.reserve(numIndices);
 
-		assert(numUvCounts.size() == uvSets);
+		assert(numUvs.size() == uvSets);
 		assert(numUvCounts.size() == uvSets);
 		assert(numUvIndices.size() == uvSets);
 
