@@ -370,6 +370,17 @@ class SerializedGeometry {
 public:
 	SerializedGeometry(const prtx::GeometryPtrVector& geometries,
 	                   const std::vector<prtx::MaterialPtrVector>& materials) {
+		reserveMemory(geometries, materials);
+		serialize(geometries, materials);
+	}
+
+	bool isEmpty() const {
+		return mCoords.empty() || mCounts.empty() || mVertexIndices.empty();
+	}
+
+private:
+	void reserveMemory(const prtx::GeometryPtrVector& geometries,
+	               const std::vector<prtx::MaterialPtrVector>& materials) {
 		// Allocate memory for geometry
 		uint32_t numCounts = 0;
 		uint32_t numIndices = 0;
@@ -427,15 +438,8 @@ public:
 			mUvCounts[uvSet].reserve(numUvCounts[uvSet]);
 			mUvIndices[uvSet].reserve(numUvIndices[uvSet]);
 		}
-
-		serialize(geometries, materials);
 	}
 
-	bool isEmpty() const {
-		return mCoords.empty() || mCounts.empty() || mVertexIndices.empty();
-	}
-
-private:
 	void serialize(const prtx::GeometryPtrVector& geometries,
 	               const std::vector<prtx::MaterialPtrVector>& materials) {
 		const uint32_t maxNumUVSets = static_cast<uint32_t>(mUvs.size());
