@@ -377,6 +377,9 @@ uint32_t scanValidTextures(const prtx::MaterialPtr& mat) {
 		return highestUVSet + 1;
 }
 
+const prtx::DoubleVector EMPTY_UVS;
+const prtx::IndexVector EMPTY_IDX;
+
 class SerializedGeometry {
 public:
 	SerializedGeometry(const prtx::GeometryPtrVector& geometries,
@@ -438,10 +441,92 @@ public:
 			mUvCounts[uvSet].reserve(numUvCounts[uvSet]);
 			mUvIndices[uvSet].reserve(numUvIndices[uvSet]);
 		}
+
+		serialize(geometries, materials);
 	}
 
 	bool isEmpty() const {
 		return mCoords.empty() || mCounts.empty() || mVertexIndices.empty();
+	}
+
+private:
+	void serialize(const prtx::GeometryPtrVector& geometries,
+	               const std::vector<prtx::MaterialPtrVector>& materials) {
+		const uint32_t maxNumUVSets = static_cast<uint32_t>(mUvs.size());
+
+		// Copy data into serialized geometry
+		uint32_t vertexIndexBase = 0u;
+		uint32_t normalIndexBase = 0u;
+		std::vector<uint32_t> uvIndexBases(maxNumUVSets, 0u);
+		for (const auto& geo : geometries) {
+			const prtx::MeshPtrVector& meshes = geo->getMeshes();
+			for (const auto& mesh : meshes) {
+				// append points
+				const prtx::DoubleVector& verts = mesh->getVertexCoords();
+				mCoords.insert(mCoords.end(), verts.begin(), verts.end());
+
+				// append normals
+				const prtx::DoubleVector& norms = mesh->getVertexNormalsCoords();
+				mNormals.insert(mNormals.end(), norms.begin(), norms.end());
+
+				// append uv sets (uv coords, counts, indices) with special cases:
+				// - if mesh has no uv sets but maxNumUVSets is > 0, insert "0" uv face counts to keep in sync
+				// - if mesh has less uv sets than maxNumUVSets, copy uv set 0 to the missing higher sets
+				const uint32_t numUVSets = mesh->getUVSetsCount();
+				const prtx::DoubleVector& uvs0 = (numUVSets > 0) ? mesh->getUVCoords(0) : EMPTY_UVS;
+				const prtx::IndexVector faceUVCounts0 =
+				        (numUVSets > 0) ? mesh->getFaceUVCounts(0) : prtx::IndexVector(mesh->getFaceCount(), 0);
+				if (DBG)
+					log_debug("-- mesh: numUVSets = %1%") % numUVSets;
+
+				for (uint32_t uvSet = 0; uvSet < mUvs.size(); uvSet++) {
+					// append texture coordinates
+					const prtx::DoubleVector& uvs = (uvSet < numUVSets) ? mesh->getUVCoords(uvSet) : EMPTY_UVS;
+					const auto& src = uvs.empty() ? uvs0 : uvs;
+					auto& tgt = mUvs[uvSet];
+					tgt.insert(tgt.end(), src.begin(), src.end());
+
+					// append uv face counts
+					const prtx::IndexVector& faceUVCounts =
+					        (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVCounts(uvSet) : faceUVCounts0;
+					assert(faceUVCounts.size() == mesh->getFaceCount());
+					auto& tgtCnts = mUvCounts[uvSet];
+					tgtCnts.insert(tgtCnts.end(), faceUVCounts.begin(), faceUVCounts.end());
+					if (DBG)
+						log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
+
+					// append uv vertex indices
+					for (uint32_t fi = 0, faceCount = static_cast<uint32_t>(faceUVCounts.size()); fi < faceCount; ++fi) {
+						const uint32_t* faceUVIdx0 = (numUVSets > 0) ? mesh->getFaceUVIndices(fi, 0) : EMPTY_IDX.data();
+						const uint32_t* faceUVIdx =
+						        (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVIndices(fi, uvSet) : faceUVIdx0;
+						const uint32_t faceUVCnt = faceUVCounts[fi];
+						if (DBG)
+							log_debug("      fi %1%: faceUVCnt = %2%, faceVtxCnt = %3%") % fi % faceUVCnt %
+							        mesh->getFaceVertexCount(fi);
+						for (uint32_t vi = 0; vi < faceUVCnt; vi++)
+							mUvIndices[uvSet].push_back(uvIndexBases[uvSet] + faceUVIdx[vi]);
+					}
+
+					uvIndexBases[uvSet] += static_cast<uint32_t>(src.size()) / 2;
+				} // for all uv sets
+
+				// append counts and indices for vertices and vertex normals
+				for (uint32_t fi = 0, faceCount = mesh->getFaceCount(); fi < faceCount; ++fi) {
+					const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
+					mCounts.push_back(vtxCnt);
+					const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
+					const uint32_t* nrmIdx = mesh->getFaceVertexNormalIndices(fi);
+					for (uint32_t vi = 0; vi < vtxCnt; vi++) {
+						mVertexIndices.push_back(vertexIndexBase + vtxIdx[vi]);
+						mNormalIndices.push_back(normalIndexBase + nrmIdx[vi]);
+					}
+				}
+
+				vertexIndexBase += (uint32_t)verts.size() / 3u;
+				normalIndexBase += (uint32_t)norms.size() / 3u;
+			} // for all meshes
+		}     // for all geometries
 	}
 
 public:
@@ -456,96 +541,7 @@ public:
 	std::vector<prtx::IndexVector> mUvIndices;
 };
 
-const prtx::DoubleVector EMPTY_UVS;
-const prtx::IndexVector EMPTY_IDX;
-
 } // namespace
-
-namespace detail {
-
-SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries,
-                                     const std::vector<prtx::MaterialPtrVector>& materials) {
-	// Initialize serialized geometry
-	SerializedGeometry sg(geometries, materials);
-	const uint32_t maxNumUVSets = static_cast<uint32_t>(sg.mUvs.size());
-
-	// Copy data into serialized geometry
-	uint32_t vertexIndexBase = 0u;
-	uint32_t normalIndexBase = 0u;
-	std::vector<uint32_t> uvIndexBases(maxNumUVSets, 0u);
-	for (const auto& geo : geometries) {
-		const prtx::MeshPtrVector& meshes = geo->getMeshes();
-		for (const auto& mesh : meshes) {
-			// append points
-			const prtx::DoubleVector& verts = mesh->getVertexCoords();
-			sg.mCoords.insert(sg.mCoords.end(), verts.begin(), verts.end());
-
-			// append normals
-			const prtx::DoubleVector& norms = mesh->getVertexNormalsCoords();
-			sg.mNormals.insert(sg.mNormals.end(), norms.begin(), norms.end());
-
-			// append uv sets (uv coords, counts, indices) with special cases:
-			// - if mesh has no uv sets but maxNumUVSets is > 0, insert "0" uv face counts to keep in sync
-			// - if mesh has less uv sets than maxNumUVSets, copy uv set 0 to the missing higher sets
-			const uint32_t numUVSets = mesh->getUVSetsCount();
-			const prtx::DoubleVector& uvs0 = (numUVSets > 0) ? mesh->getUVCoords(0) : EMPTY_UVS;
-			const prtx::IndexVector faceUVCounts0 =
-			        (numUVSets > 0) ? mesh->getFaceUVCounts(0) : prtx::IndexVector(mesh->getFaceCount(), 0);
-			if (DBG)
-				log_debug("-- mesh: numUVSets = %1%") % numUVSets;
-
-			for (uint32_t uvSet = 0; uvSet < sg.mUvs.size(); uvSet++) {
-				// append texture coordinates
-				const prtx::DoubleVector& uvs = (uvSet < numUVSets) ? mesh->getUVCoords(uvSet) : EMPTY_UVS;
-				const auto& src = uvs.empty() ? uvs0 : uvs;
-				auto& tgt = sg.mUvs[uvSet];
-				tgt.insert(tgt.end(), src.begin(), src.end());
-
-				// append uv face counts
-				const prtx::IndexVector& faceUVCounts =
-				        (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVCounts(uvSet) : faceUVCounts0;
-				assert(faceUVCounts.size() == mesh->getFaceCount());
-				auto& tgtCnts = sg.mUvCounts[uvSet];
-				tgtCnts.insert(tgtCnts.end(), faceUVCounts.begin(), faceUVCounts.end());
-				if (DBG)
-					log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
-
-				// append uv vertex indices
-				for (uint32_t fi = 0, faceCount = static_cast<uint32_t>(faceUVCounts.size()); fi < faceCount; ++fi) {
-					const uint32_t* faceUVIdx0 = (numUVSets > 0) ? mesh->getFaceUVIndices(fi, 0) : EMPTY_IDX.data();
-					const uint32_t* faceUVIdx =
-					        (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVIndices(fi, uvSet) : faceUVIdx0;
-					const uint32_t faceUVCnt = faceUVCounts[fi];
-					if (DBG)
-						log_debug("      fi %1%: faceUVCnt = %2%, faceVtxCnt = %3%") % fi % faceUVCnt %
-						        mesh->getFaceVertexCount(fi);
-					for (uint32_t vi = 0; vi < faceUVCnt; vi++)
-						sg.mUvIndices[uvSet].push_back(uvIndexBases[uvSet] + faceUVIdx[vi]);
-				}
-
-				uvIndexBases[uvSet] += static_cast<uint32_t>(src.size()) / 2;
-			} // for all uv sets
-
-			// append counts and indices for vertices and vertex normals
-			for (uint32_t fi = 0, faceCount = mesh->getFaceCount(); fi < faceCount; ++fi) {
-				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
-				sg.mCounts.push_back(vtxCnt);
-				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
-				const uint32_t* nrmIdx = mesh->getFaceVertexNormalIndices(fi);
-				for (uint32_t vi = 0; vi < vtxCnt; vi++) {
-					sg.mVertexIndices.push_back(vertexIndexBase + vtxIdx[vi]);
-					sg.mNormalIndices.push_back(normalIndexBase + nrmIdx[vi]);
-				}
-			}
-
-			vertexIndexBase += (uint32_t)verts.size() / 3u;
-			normalIndexBase += (uint32_t)norms.size() / 3u;
-		} // for all meshes
-	}     // for all geometries
-
-	return sg;
-}
-} // namespace detail
 
 MayaEncoder::MayaEncoder(const std::wstring& id, const prt::AttributeMap* options, prt::Callbacks* callbacks)
     : prtx::GeometryEncoder(id, options, callbacks) {}
@@ -616,7 +612,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 		shapeIDs.push_back(inst.getShapeId());
 	}
 
-	const SerializedGeometry sg = detail::serializeGeometry(geometries, materials);
+	const SerializedGeometry sg(geometries, materials);
 
 	if (sg.isEmpty())
 		return;
