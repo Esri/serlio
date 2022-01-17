@@ -377,17 +377,8 @@ uint32_t scanValidTextures(const prtx::MaterialPtr& mat) {
 		return highestUVSet + 1;
 }
 
-struct SerializedGeometry {
-	prtx::DoubleVector coords;
-	prtx::DoubleVector normals;
-	std::vector<uint32_t> counts;
-	std::vector<uint32_t> vertexIndices;
-	std::vector<uint32_t> normalIndices;
-
-	std::vector<prtx::DoubleVector> uvs;
-	std::vector<prtx::IndexVector> uvCounts;
-	std::vector<prtx::IndexVector> uvIndices;
-
+class SerializedGeometry {
+public:
 	SerializedGeometry(const prtx::GeometryPtrVector& geometries,
 	                   const std::vector<prtx::MaterialPtrVector>& materials) {
 		// Allocate memory for geometry
@@ -413,9 +404,9 @@ struct SerializedGeometry {
 			++matsIt;
 		}
 
-		counts.reserve(numCounts);
-		vertexIndices.reserve(numIndices);
-		normalIndices.reserve(numIndices);
+		mCounts.reserve(numCounts);
+		mVertexIndices.reserve(numIndices);
+		mNormalIndices.reserve(numIndices);
 
 		// Allocate memory for uvs
 		std::vector<uint32_t> numUvs(maxNumUVSets);
@@ -438,20 +429,31 @@ struct SerializedGeometry {
 			}
 		}
 
-		uvs.resize(maxNumUVSets);
-		uvCounts.resize(maxNumUVSets);
-		uvIndices.resize(maxNumUVSets);
+		mUvs.resize(maxNumUVSets);
+		mUvCounts.resize(maxNumUVSets);
+		mUvIndices.resize(maxNumUVSets);
 
 		for (uint32_t uvSet = 0; uvSet < maxNumUVSets; uvSet++) {
-			uvs[uvSet].reserve(numUvs[uvSet]);
-			uvCounts[uvSet].reserve(numUvCounts[uvSet]);
-			uvIndices[uvSet].reserve(numUvIndices[uvSet]);
+			mUvs[uvSet].reserve(numUvs[uvSet]);
+			mUvCounts[uvSet].reserve(numUvCounts[uvSet]);
+			mUvIndices[uvSet].reserve(numUvIndices[uvSet]);
 		}
 	}
 
 	bool isEmpty() const {
-		return coords.empty() || counts.empty() || vertexIndices.empty();
+		return mCoords.empty() || mCounts.empty() || mVertexIndices.empty();
 	}
+
+public:
+	prtx::DoubleVector mCoords;
+	prtx::DoubleVector mNormals;
+	std::vector<uint32_t> mCounts;
+	std::vector<uint32_t> mVertexIndices;
+	std::vector<uint32_t> mNormalIndices;
+
+	std::vector<prtx::DoubleVector> mUvs;
+	std::vector<prtx::IndexVector> mUvCounts;
+	std::vector<prtx::IndexVector> mUvIndices;
 };
 
 const prtx::DoubleVector EMPTY_UVS;
@@ -465,7 +467,7 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries,
                                      const std::vector<prtx::MaterialPtrVector>& materials) {
 	// Initialize serialized geometry
 	SerializedGeometry sg(geometries, materials);
-	const uint32_t maxNumUVSets = static_cast<uint32_t>(sg.uvs.size());
+	const uint32_t maxNumUVSets = static_cast<uint32_t>(sg.mUvs.size());
 
 	// Copy data into serialized geometry
 	uint32_t vertexIndexBase = 0u;
@@ -476,11 +478,11 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries,
 		for (const auto& mesh : meshes) {
 			// append points
 			const prtx::DoubleVector& verts = mesh->getVertexCoords();
-			sg.coords.insert(sg.coords.end(), verts.begin(), verts.end());
+			sg.mCoords.insert(sg.mCoords.end(), verts.begin(), verts.end());
 
 			// append normals
 			const prtx::DoubleVector& norms = mesh->getVertexNormalsCoords();
-			sg.normals.insert(sg.normals.end(), norms.begin(), norms.end());
+			sg.mNormals.insert(sg.mNormals.end(), norms.begin(), norms.end());
 
 			// append uv sets (uv coords, counts, indices) with special cases:
 			// - if mesh has no uv sets but maxNumUVSets is > 0, insert "0" uv face counts to keep in sync
@@ -492,18 +494,18 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries,
 			if (DBG)
 				log_debug("-- mesh: numUVSets = %1%") % numUVSets;
 
-			for (uint32_t uvSet = 0; uvSet < sg.uvs.size(); uvSet++) {
+			for (uint32_t uvSet = 0; uvSet < sg.mUvs.size(); uvSet++) {
 				// append texture coordinates
 				const prtx::DoubleVector& uvs = (uvSet < numUVSets) ? mesh->getUVCoords(uvSet) : EMPTY_UVS;
 				const auto& src = uvs.empty() ? uvs0 : uvs;
-				auto& tgt = sg.uvs[uvSet];
+				auto& tgt = sg.mUvs[uvSet];
 				tgt.insert(tgt.end(), src.begin(), src.end());
 
 				// append uv face counts
 				const prtx::IndexVector& faceUVCounts =
 				        (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVCounts(uvSet) : faceUVCounts0;
 				assert(faceUVCounts.size() == mesh->getFaceCount());
-				auto& tgtCnts = sg.uvCounts[uvSet];
+				auto& tgtCnts = sg.mUvCounts[uvSet];
 				tgtCnts.insert(tgtCnts.end(), faceUVCounts.begin(), faceUVCounts.end());
 				if (DBG)
 					log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
@@ -518,7 +520,7 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries,
 						log_debug("      fi %1%: faceUVCnt = %2%, faceVtxCnt = %3%") % fi % faceUVCnt %
 						        mesh->getFaceVertexCount(fi);
 					for (uint32_t vi = 0; vi < faceUVCnt; vi++)
-						sg.uvIndices[uvSet].push_back(uvIndexBases[uvSet] + faceUVIdx[vi]);
+						sg.mUvIndices[uvSet].push_back(uvIndexBases[uvSet] + faceUVIdx[vi]);
 				}
 
 				uvIndexBases[uvSet] += static_cast<uint32_t>(src.size()) / 2;
@@ -527,12 +529,12 @@ SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries,
 			// append counts and indices for vertices and vertex normals
 			for (uint32_t fi = 0, faceCount = mesh->getFaceCount(); fi < faceCount; ++fi) {
 				const uint32_t vtxCnt = mesh->getFaceVertexCount(fi);
-				sg.counts.push_back(vtxCnt);
+				sg.mCounts.push_back(vtxCnt);
 				const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
 				const uint32_t* nrmIdx = mesh->getFaceVertexNormalIndices(fi);
 				for (uint32_t vi = 0; vi < vtxCnt; vi++) {
-					sg.vertexIndices.push_back(vertexIndexBase + vtxIdx[vi]);
-					sg.normalIndices.push_back(normalIndexBase + nrmIdx[vi]);
+					sg.mVertexIndices.push_back(vertexIndexBase + vtxIdx[vi]);
+					sg.mNormalIndices.push_back(normalIndexBase + nrmIdx[vi]);
 				}
 			}
 
@@ -667,16 +669,16 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 	assert(reportAttrMaps.v.empty() || reportAttrMaps.v.size() == faceRanges.size() - 1);
 	assert(shapeIDs.size() == faceRanges.size() - 1);
 
-	auto puvs = toPtrVec(sg.uvs);
-	auto puvCounts = toPtrVec(sg.uvCounts);
-	auto puvIndices = toPtrVec(sg.uvIndices);
+	auto puvs = toPtrVec(sg.mUvs);
+	auto puvCounts = toPtrVec(sg.mUvCounts);
+	auto puvIndices = toPtrVec(sg.mUvIndices);
 
-	cb->addMesh(initialShape.getName(), sg.coords.data(), sg.coords.size(), sg.normals.data(), sg.normals.size(),
-	            sg.counts.data(), sg.counts.size(), sg.vertexIndices.data(), sg.vertexIndices.size(),
-	            sg.normalIndices.data(), sg.normalIndices.size(),
+	cb->addMesh(initialShape.getName(), sg.mCoords.data(), sg.mCoords.size(), sg.mNormals.data(), sg.mNormals.size(),
+	            sg.mCounts.data(), sg.mCounts.size(), sg.mVertexIndices.data(), sg.mVertexIndices.size(),
+	            sg.mNormalIndices.data(), sg.mNormalIndices.size(),
 
 	            puvs.first.data(), puvs.second.data(), puvCounts.first.data(), puvCounts.second.data(),
-	            puvIndices.first.data(), puvIndices.second.data(), sg.uvs.size(),
+	            puvIndices.first.data(), puvIndices.second.data(), sg.mUvs.size(),
 
 	            faceRanges.data(), faceRanges.size(), matAttrMaps.v.empty() ? nullptr : matAttrMaps.v.data(),
 	            reportAttrMaps.v.empty() ? nullptr : reportAttrMaps.v.data(), shapeIDs.data());
