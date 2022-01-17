@@ -69,40 +69,6 @@ constexpr bool DBG = false;
 constexpr const wchar_t* ENC_NAME = L"Autodesk(tm) Maya(tm) Encoder";
 constexpr const wchar_t* ENC_DESCRIPTION = L"Encodes geometry into the Maya format.";
 
-struct SerializedGeometry {
-	prtx::DoubleVector coords;
-	prtx::DoubleVector normals;
-	std::vector<uint32_t> counts;
-	std::vector<uint32_t> vertexIndices;
-	std::vector<uint32_t> normalIndices;
-
-	std::vector<prtx::DoubleVector> uvs;
-	std::vector<prtx::IndexVector> uvCounts;
-	std::vector<prtx::IndexVector> uvIndices;
-
-	SerializedGeometry(uint32_t numCounts, uint32_t numIndices, uint32_t uvSets, const std::vector<uint32_t>& numUvs,
-	                   const std::vector<uint32_t>& numUvCounts, const std::vector<uint32_t>& numUvIndices)
-	    : uvs(uvSets), uvCounts(uvSets), uvIndices(uvSets) {
-		counts.reserve(numCounts);
-		vertexIndices.reserve(numIndices);
-		normalIndices.reserve(numIndices);
-
-		assert(numUvs.size() == uvSets);
-		assert(numUvCounts.size() == uvSets);
-		assert(numUvIndices.size() == uvSets);
-
-		for (uint32_t uvSet = 0; uvSet < uvSets; uvSet++) {
-			uvs[uvSet].reserve(numUvs[uvSet]);
-			uvCounts[uvSet].reserve(numUvCounts[uvSet]);
-			uvIndices[uvSet].reserve(numUvIndices[uvSet]);
-		}
-	}
-
-	bool isEmpty() const {
-		return coords.empty() || counts.empty() || vertexIndices.empty();
-	}
-};
-
 const prtx::EncodePreparator::PreparationFlags PREP_FLAGS =
         prtx::EncodePreparator::PreparationFlags()
                 .instancing(false)
@@ -411,6 +377,83 @@ uint32_t scanValidTextures(const prtx::MaterialPtr& mat) {
 		return highestUVSet + 1;
 }
 
+struct SerializedGeometry {
+	prtx::DoubleVector coords;
+	prtx::DoubleVector normals;
+	std::vector<uint32_t> counts;
+	std::vector<uint32_t> vertexIndices;
+	std::vector<uint32_t> normalIndices;
+
+	std::vector<prtx::DoubleVector> uvs;
+	std::vector<prtx::IndexVector> uvCounts;
+	std::vector<prtx::IndexVector> uvIndices;
+
+	SerializedGeometry(const prtx::GeometryPtrVector& geometries,
+	                   const std::vector<prtx::MaterialPtrVector>& materials) {
+		// Allocate memory for geometry
+		uint32_t numCounts = 0;
+		uint32_t numIndices = 0;
+		uint32_t maxNumUVSets = 0;
+
+		auto matsIt = materials.cbegin();
+		for (const auto& geo : geometries) {
+			const prtx::MeshPtrVector& meshes = geo->getMeshes();
+			const prtx::MaterialPtrVector& mats = *matsIt;
+			auto matIt = mats.cbegin();
+			for (const auto& mesh : meshes) {
+				numCounts += mesh->getFaceCount();
+				const auto& vtxCnts = mesh->getFaceVertexCounts();
+				numIndices = std::accumulate(vtxCnts.begin(), vtxCnts.end(), numIndices);
+
+				const prtx::MaterialPtr& mat = *matIt;
+				const uint32_t requiredUVSetsByMaterial = scanValidTextures(mat);
+				maxNumUVSets = std::max(maxNumUVSets, std::max(mesh->getUVSetsCount(), requiredUVSetsByMaterial));
+				++matIt;
+			}
+			++matsIt;
+		}
+
+		counts.reserve(numCounts);
+		vertexIndices.reserve(numIndices);
+		normalIndices.reserve(numIndices);
+
+		// Allocate memory for uvs
+		std::vector<uint32_t> numUvs(maxNumUVSets);
+		std::vector<uint32_t> numUvCounts(maxNumUVSets);
+		std::vector<uint32_t> numUvIndices(maxNumUVSets);
+
+		for (const auto& geo : geometries) {
+			const prtx::MeshPtrVector& meshes = geo->getMeshes();
+			for (const auto& mesh : meshes) {
+				const uint32_t numUVSets = mesh->getUVSetsCount();
+
+				for (uint32_t uvSet = 0; uvSet < numUVSets; uvSet++) {
+					numUvs[uvSet] += static_cast<uint32_t>(mesh->getUVCoords(uvSet).size());
+
+					const auto& faceUVCounts = mesh->getFaceUVCounts(uvSet);
+					numUvCounts[uvSet] += static_cast<uint32_t>(faceUVCounts.size());
+					numUvIndices[uvSet] =
+					        std::accumulate(faceUVCounts.begin(), faceUVCounts.end(), numUvIndices[uvSet]);
+				}
+			}
+		}
+
+		std::vector<prtx::DoubleVector> uvs(maxNumUVSets);
+		std::vector<prtx::IndexVector> uvCounts(maxNumUVSets);
+		std::vector<prtx::IndexVector> uvIndices(maxNumUVSets);
+
+		for (uint32_t uvSet = 0; uvSet < maxNumUVSets; uvSet++) {
+			uvs[uvSet].reserve(numUvs[uvSet]);
+			uvCounts[uvSet].reserve(numUvCounts[uvSet]);
+			uvIndices[uvSet].reserve(numUvIndices[uvSet]);
+		}
+	}
+
+	bool isEmpty() const {
+		return coords.empty() || counts.empty() || vertexIndices.empty();
+	}
+};
+
 const prtx::DoubleVector EMPTY_UVS;
 const prtx::IndexVector EMPTY_IDX;
 
@@ -420,50 +463,11 @@ namespace detail {
 
 SerializedGeometry serializeGeometry(const prtx::GeometryPtrVector& geometries,
                                      const std::vector<prtx::MaterialPtrVector>& materials) {
-	// PASS 1: scan
-	uint32_t numCounts = 0;
-	uint32_t numIndices = 0;
-	uint32_t maxNumUVSets = 0;
-	auto matsIt = materials.cbegin();
-	for (const auto& geo : geometries) {
-		const prtx::MeshPtrVector& meshes = geo->getMeshes();
-		const prtx::MaterialPtrVector& mats = *matsIt;
-		auto matIt = mats.cbegin();
-		for (const auto& mesh : meshes) {
-			numCounts += mesh->getFaceCount();
-			const auto& vtxCnts = mesh->getFaceVertexCounts();
-			numIndices = std::accumulate(vtxCnts.begin(), vtxCnts.end(), numIndices);
+	// Initialize serialized geometry
+	SerializedGeometry sg(geometries, materials);
+	const uint32_t maxNumUVSets = static_cast<uint32_t>(sg.uvs.size());
 
-			const prtx::MaterialPtr& mat = *matIt;
-			const uint32_t requiredUVSetsByMaterial = scanValidTextures(mat);
-			maxNumUVSets = std::max(maxNumUVSets, std::max(mesh->getUVSetsCount(), requiredUVSetsByMaterial));
-			++matIt;
-		}
-		++matsIt;
-	}
-
-	std::vector<uint32_t> numUvs(maxNumUVSets);
-	std::vector<uint32_t> numUvCounts(maxNumUVSets);
-	std::vector<uint32_t> numUvIndices(maxNumUVSets);
-
-	for (const auto& geo : geometries) {
-		const prtx::MeshPtrVector& meshes = geo->getMeshes();
-		for (const auto& mesh : meshes) {
-			const uint32_t numUVSets = mesh->getUVSetsCount();
-
-			for (uint32_t uvSet = 0; uvSet < numUVSets; uvSet++) {
-				numUvs[uvSet] += static_cast<uint32_t>(mesh->getUVCoords(uvSet).size());
-
-				const auto& faceUVCounts = mesh->getFaceUVCounts(uvSet);
-				numUvCounts[uvSet] += static_cast<uint32_t>(faceUVCounts.size());
-				numUvIndices[uvSet] = std::accumulate(faceUVCounts.begin(), faceUVCounts.end(), numUvIndices[uvSet]);
-			}
-		}
-	}
-
-	SerializedGeometry sg(numCounts, numIndices, maxNumUVSets, numUvs, numUvCounts, numUvIndices);
-
-	// PASS 2: copy
+	// Copy data into serialized geometry
 	uint32_t vertexIndexBase = 0u;
 	uint32_t normalIndexBase = 0u;
 	std::vector<uint32_t> uvIndexBases(maxNumUVSets, 0u);
