@@ -335,34 +335,6 @@ struct AttributeMapNOPtrVectorOwner {
 	}
 };
 
-struct TextureUVMapping {
-	std::wstring key;
-	uint8_t index;
-	int8_t uvSet;
-};
-
-const std::vector<TextureUVMapping> TEXTURE_UV_MAPPINGS = []() -> std::vector<TextureUVMapping> {
-	// clang-format off
-	return {
-	        // shader key   | idx | uv set  | CGA key
-	        { L"diffuseMap",   0,    0 },  // colormap
-	        { L"bumpMap",      0,    1 },  // bumpmap
-	        { L"diffuseMap",   1,    2 },  // dirtmap
-	        { L"specularMap",  0,    3 },  // specularmap
-	        { L"opacityMap",   0,    4 },  // opacitymap
-	        { L"normalMap",    0,    5 }   // normalmap
-
-#if PRT_VERSION_MAJOR > 1
-	        ,
-	        { L"emissiveMap",  0,    6 },  // emissivemap
-	        { L"occlusionMap", 0,    7 },  // occlusionmap
-	        { L"roughnessMap", 0,    8 },  // roughnessmap
-	        { L"metallicMap",  0,    9 }   // metallicmap
-#endif
-	};
-	// clang-format on
-}();
-
 class SerializedGeometry {
 public:
 	SerializedGeometry(const prtx::GeometryPtrVector& geometries,
@@ -519,8 +491,37 @@ private:
 		}     // for all geometries
 	}
 
+	struct TextureUVMapping {
+		std::wstring key;
+		uint8_t index;
+		int8_t uvSet;
+	};
+
 	// return the highest required uv set (where a valid texture is present)
 	uint32_t scanValidTextures(const prtx::MaterialPtr& mat) {
+
+		// clang-format off
+		static const std::vector<TextureUVMapping> TEXTURE_UV_MAPPINGS = []() -> std::vector<TextureUVMapping> {
+			return {
+					// shader key | idx | uv set  | CGA key
+					{ L"diffuseMap",   0,    0 },  // colormap
+					{ L"bumpMap",      0,    1 },  // bumpmap
+					{ L"diffuseMap",   1,    2 },  // dirtmap
+					{ L"specularMap",  0,    3 },  // specularmap
+					{ L"opacityMap",   0,    4 },  // opacitymap
+					{ L"normalMap",    0,    5 }   // normalmap
+
+					#if PRT_VERSION_MAJOR > 1
+					,
+					{ L"emissiveMap",  0,    6 },  // emissivemap
+					{ L"occlusionMap", 0,    7 },  // occlusionmap
+					{ L"roughnessMap", 0,    8 },  // roughnessmap
+					{ L"metallicMap",  0,    9 }   // metallicmap
+					#endif
+			};
+		}();
+		// clang-format on
+
 		int8_t highestUVSet = -1;
 		for (const auto& t : TEXTURE_UV_MAPPINGS) {
 			const auto& ta = mat->getTextureArray(t.key);
