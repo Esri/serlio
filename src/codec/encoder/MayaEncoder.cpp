@@ -438,9 +438,9 @@ struct SerializedGeometry {
 			}
 		}
 
-		std::vector<prtx::DoubleVector> uvs(maxNumUVSets);
-		std::vector<prtx::IndexVector> uvCounts(maxNumUVSets);
-		std::vector<prtx::IndexVector> uvIndices(maxNumUVSets);
+		uvs.resize(maxNumUVSets);
+		uvCounts.resize(maxNumUVSets);
+		uvIndices.resize(maxNumUVSets);
 
 		for (uint32_t uvSet = 0; uvSet < maxNumUVSets; uvSet++) {
 			uvs[uvSet].reserve(numUvs[uvSet]);
