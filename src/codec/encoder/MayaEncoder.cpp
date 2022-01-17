@@ -363,9 +363,6 @@ const std::vector<TextureUVMapping> TEXTURE_UV_MAPPINGS = []() -> std::vector<Te
 	// clang-format on
 }();
 
-const prtx::DoubleVector EMPTY_UVS;
-const prtx::IndexVector EMPTY_IDX;
-
 class SerializedGeometry {
 public:
 	SerializedGeometry(const prtx::GeometryPtrVector& geometries,
@@ -435,6 +432,9 @@ private:
 	void serialize(const prtx::GeometryPtrVector& geometries,
 	               const std::vector<prtx::MaterialPtrVector>& materials) {
 		const uint32_t maxNumUVSets = static_cast<uint32_t>(mUvs.size());
+
+		const prtx::DoubleVector EMPTY_UVS;
+		const prtx::IndexVector EMPTY_IDX;
 
 		// Copy data into serialized geometry
 		uint32_t vertexIndexBase = 0u;
