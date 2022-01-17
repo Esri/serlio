@@ -474,7 +474,7 @@ private:
 					assert(faceUVCounts.size() == mesh->getFaceCount());
 					auto& tgtCnts = mUvCounts[uvSet];
 					tgtCnts.insert(tgtCnts.end(), faceUVCounts.begin(), faceUVCounts.end());
-					if (DBG)
+					if constexpr (DBG)
 						log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
 
 					// append uv vertex indices
@@ -483,7 +483,7 @@ private:
 						const uint32_t* faceUVIdx =
 						        (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVIndices(fi, uvSet) : faceUVIdx0;
 						const uint32_t faceUVCnt = faceUVCounts[fi];
-						if (DBG)
+						if constexpr (DBG)
 							log_debug("      fi %1%: faceUVCnt = %2%, faceVtxCnt = %3%") % fi % faceUVCnt %
 							        mesh->getFaceVertexCount(fi);
 						for (uint32_t vi = 0; vi < faceUVCnt; vi++)
@@ -544,10 +544,10 @@ MayaEncoder::MayaEncoder(const std::wstring& id, const prt::AttributeMap* option
 
 void MayaEncoder::init(prtx::GenerateContext&) {
 	prt::Callbacks* cb = getCallbacks();
-	if (DBG)
+	if constexpr (DBG)
 		srl_log_debug(L"MayaEncoder::init: cb = %x") % (size_t)cb;
 	auto* oh = dynamic_cast<IMayaCallbacks*>(cb);
-	if (DBG)
+	if constexpr (DBG)
 		srl_log_debug(L"                   oh = %x") % (size_t)oh;
 	if (oh == nullptr)
 		throw prtx::StatusException(prt::STATUS_ILLEGAL_CALLBACK_OBJECT);
@@ -613,7 +613,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 	if (sg.isEmpty())
 		return;
 
-	if (DBG) {
+	if constexpr (DBG) {
 		log_debug("resolvemap: %s") % prtx::PRTUtils::objectToXML(initialShape.getResolveMap());
 		log_debug("encoder #materials = %s") % materials.size();
 	}
@@ -645,7 +645,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 			if (emitReports) {
 				convertReportsToAttributeMap(amb, *repIt);
 				reportAttrMaps.v.push_back(amb->createAttributeMapAndReset());
-				if (DBG)
+				if constexpr (DBG)
 					log_debug("report attr map: %1%") % prtx::PRTUtils::objectToXML(reportAttrMaps.v.back());
 			}
 
@@ -675,7 +675,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 	            faceRanges.data(), faceRanges.size(), matAttrMaps.v.empty() ? nullptr : matAttrMaps.v.data(),
 	            reportAttrMaps.v.empty() ? nullptr : reportAttrMaps.v.data(), shapeIDs.data());
 
-	if (DBG)
+	if constexpr (DBG)
 		srl_log_debug(L"MayaEncoder::convertGeometry: end");
 }
 
