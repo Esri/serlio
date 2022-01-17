@@ -36,6 +36,7 @@
 #include "prt/prt.h"
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -43,7 +44,6 @@
 #include <set>
 #include <sstream>
 #include <vector>
-#include <cassert>
 
 // PRT version < 2.1
 #if ((PRT_VERSION_MAJOR <= 2) && ((PRT_VERSION_MAJOR < 2) || (PRT_VERSION_MINOR < 1)))
@@ -349,7 +349,7 @@ public:
 
 private:
 	void reserveMemory(const prtx::GeometryPtrVector& geometries,
-	               const std::vector<prtx::MaterialPtrVector>& materials) {
+	                   const std::vector<prtx::MaterialPtrVector>& materials) {
 		// Allocate memory for geometry
 		uint32_t numCounts = 0;
 		uint32_t numIndices = 0;
@@ -409,8 +409,7 @@ private:
 		}
 	}
 
-	void serialize(const prtx::GeometryPtrVector& geometries,
-	               const std::vector<prtx::MaterialPtrVector>& materials) {
+	void serialize(const prtx::GeometryPtrVector& geometries, const std::vector<prtx::MaterialPtrVector>& materials) {
 		const uint32_t maxNumUVSets = static_cast<uint32_t>(mUvs.size());
 
 		const prtx::DoubleVector EMPTY_UVS;
@@ -458,7 +457,8 @@ private:
 						log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
 
 					// append uv vertex indices
-					for (uint32_t fi = 0, faceCount = static_cast<uint32_t>(faceUVCounts.size()); fi < faceCount; ++fi) {
+					for (uint32_t fi = 0, faceCount = static_cast<uint32_t>(faceUVCounts.size()); fi < faceCount;
+					     ++fi) {
 						const uint32_t* faceUVIdx0 = (numUVSets > 0) ? mesh->getFaceUVIndices(fi, 0) : EMPTY_IDX.data();
 						const uint32_t* faceUVIdx =
 						        (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVIndices(fi, uvSet) : faceUVIdx0;
