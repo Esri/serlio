@@ -363,20 +363,6 @@ const std::vector<TextureUVMapping> TEXTURE_UV_MAPPINGS = []() -> std::vector<Te
 	// clang-format on
 }();
 
-// return the highest required uv set (where a valid texture is present)
-uint32_t scanValidTextures(const prtx::MaterialPtr& mat) {
-	int8_t highestUVSet = -1;
-	for (const auto& t : TEXTURE_UV_MAPPINGS) {
-		const auto& ta = mat->getTextureArray(t.key);
-		if (ta.size() > t.index && ta[t.index]->isValid())
-			highestUVSet = std::max(highestUVSet, t.uvSet);
-	}
-	if (highestUVSet < 0)
-		return 0;
-	else
-		return highestUVSet + 1;
-}
-
 const prtx::DoubleVector EMPTY_UVS;
 const prtx::IndexVector EMPTY_IDX;
 
@@ -527,6 +513,20 @@ private:
 				normalIndexBase += (uint32_t)norms.size() / 3u;
 			} // for all meshes
 		}     // for all geometries
+	}
+
+	// return the highest required uv set (where a valid texture is present)
+	uint32_t scanValidTextures(const prtx::MaterialPtr& mat) {
+		int8_t highestUVSet = -1;
+		for (const auto& t : TEXTURE_UV_MAPPINGS) {
+			const auto& ta = mat->getTextureArray(t.key);
+			if (ta.size() > t.index && ta[t.index]->isValid())
+				highestUVSet = std::max(highestUVSet, t.uvSet);
+		}
+		if (highestUVSet < 0)
+			return 0;
+		else
+			return highestUVSet + 1;
 	}
 
 public:
