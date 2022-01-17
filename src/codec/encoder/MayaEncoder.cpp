@@ -381,10 +381,13 @@ public:
 private:
 	void reserveMemory(const prtx::GeometryPtrVector& geometries,
 	               const std::vector<prtx::MaterialPtrVector>& materials) {
-		// Allocate memory for geometry
 		uint32_t numCounts = 0;
 		uint32_t numIndices = 0;
 		uint32_t maxNumUVSets = 0;
+
+		std::vector<uint32_t> numUvs(maxNumUVSets);
+		std::vector<uint32_t> numUvCounts(maxNumUVSets);
+		std::vector<uint32_t> numUvIndices(maxNumUVSets);
 
 		auto matsIt = materials.cbegin();
 		for (const auto& geo : geometries) {
@@ -395,6 +398,16 @@ private:
 				numCounts += mesh->getFaceCount();
 				const auto& vtxCnts = mesh->getFaceVertexCounts();
 				numIndices = std::accumulate(vtxCnts.begin(), vtxCnts.end(), numIndices);
+
+				const uint32_t numUVSets = mesh->getUVSetsCount();
+				for (uint32_t uvSet = 0; uvSet < numUVSets; uvSet++) {
+					numUvs[uvSet] += static_cast<uint32_t>(mesh->getUVCoords(uvSet).size());
+
+					const auto& faceUVCounts = mesh->getFaceUVCounts(uvSet);
+					numUvCounts[uvSet] += static_cast<uint32_t>(faceUVCounts.size());
+					numUvIndices[uvSet] =
+					        std::accumulate(faceUVCounts.begin(), faceUVCounts.end(), numUvIndices[uvSet]);
+				}
 
 				const prtx::MaterialPtr& mat = *matIt;
 				const uint32_t requiredUVSetsByMaterial = scanValidTextures(mat);
@@ -407,27 +420,6 @@ private:
 		mCounts.reserve(numCounts);
 		mVertexIndices.reserve(numIndices);
 		mNormalIndices.reserve(numIndices);
-
-		// Allocate memory for uvs
-		std::vector<uint32_t> numUvs(maxNumUVSets);
-		std::vector<uint32_t> numUvCounts(maxNumUVSets);
-		std::vector<uint32_t> numUvIndices(maxNumUVSets);
-
-		for (const auto& geo : geometries) {
-			const prtx::MeshPtrVector& meshes = geo->getMeshes();
-			for (const auto& mesh : meshes) {
-				const uint32_t numUVSets = mesh->getUVSetsCount();
-
-				for (uint32_t uvSet = 0; uvSet < numUVSets; uvSet++) {
-					numUvs[uvSet] += static_cast<uint32_t>(mesh->getUVCoords(uvSet).size());
-
-					const auto& faceUVCounts = mesh->getFaceUVCounts(uvSet);
-					numUvCounts[uvSet] += static_cast<uint32_t>(faceUVCounts.size());
-					numUvIndices[uvSet] =
-					        std::accumulate(faceUVCounts.begin(), faceUVCounts.end(), numUvIndices[uvSet]);
-				}
-			}
-		}
 
 		mUvs.resize(maxNumUVSets);
 		mUvCounts.resize(maxNumUVSets);
