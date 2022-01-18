@@ -189,13 +189,13 @@ const std::set<std::wstring> MATERIAL_ATTRIBUTE_BLACKLIST = {
 
 void convertMaterialToAttributeMap(prtx::PRTUtils::AttributeMapBuilderPtr& aBuilder, const prtx::Material& prtxAttr,
                                    const prtx::WStringVector& keys) {
-	if (DBG)
+	if constexpr (DBG)
 		srl_log_debug(L"-- converting material: %1%") % prtxAttr.name();
 	for (const auto& key : keys) {
 		if (MATERIAL_ATTRIBUTE_BLACKLIST.count(key) > 0)
 			continue;
 
-		if (DBG)
+		if constexpr (DBG)
 			srl_log_debug(L"   key: %1%") % key;
 
 		switch (prtxAttr.getType(key)) {
@@ -264,7 +264,7 @@ void convertMaterialToAttributeMap(prtx::PRTUtils::AttributeMapBuilderPtr& aBuil
 			}
 
 			default:
-				if (DBG)
+				if constexpr (DBG)
 					srl_log_debug(L"ignored atttribute '%s' with type %d") % key % prtxAttr.getType(key);
 				break;
 		}
@@ -437,7 +437,7 @@ private:
 				const prtx::DoubleVector& uvs0 = (numUVSets > 0) ? mesh->getUVCoords(0) : EMPTY_UVS;
 				const prtx::IndexVector faceUVCounts0 =
 				        (numUVSets > 0) ? mesh->getFaceUVCounts(0) : prtx::IndexVector(mesh->getFaceCount(), 0);
-				if (DBG)
+				if constexpr (DBG)
 					log_debug("-- mesh: numUVSets = %1%") % numUVSets;
 
 				for (uint32_t uvSet = 0; uvSet < mUvs.size(); uvSet++) {
