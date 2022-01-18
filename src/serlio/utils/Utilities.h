@@ -196,6 +196,13 @@ SRL_TEST_EXPORTS_API inline std::wstring removeImport(const std::wstring& fqRule
 	return removePrefix(fqRuleName, IMPORT_DELIMITER);
 }
 
+SRL_TEST_EXPORTS_API inline std::wstring getImport(const std::wstring& fqRuleName) {
+	const std::wstring ruleWithoutStyle = removeStyle(fqRuleName);
+	const auto sepPos = ruleWithoutStyle.find(IMPORT_DELIMITER);
+	if (sepPos == std::wstring::npos || sepPos == 0)
+		return {};
+	return fqRuleName.substr(0, sepPos);
+}
 } // namespace prtu
 
 inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {
