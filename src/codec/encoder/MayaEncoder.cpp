@@ -438,7 +438,7 @@ private:
 				const prtx::IndexVector faceUVCounts0 =
 				        (numUVSets > 0) ? mesh->getFaceUVCounts(0) : prtx::IndexVector(mesh->getFaceCount(), 0);
 				if constexpr (DBG)
-					log_debug("-- mesh: numUVSets = %1%") % numUVSets;
+					srl_log_debug("-- mesh: numUVSets = %1%") % numUVSets;
 
 				for (uint32_t uvSet = 0; uvSet < mUvs.size(); uvSet++) {
 					// append texture coordinates
@@ -454,7 +454,7 @@ private:
 					auto& tgtCnts = mUvCounts[uvSet];
 					tgtCnts.insert(tgtCnts.end(), faceUVCounts.begin(), faceUVCounts.end());
 					if constexpr (DBG)
-						log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
+						srl_log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
 
 					// append uv vertex indices
 					for (uint32_t fi = 0, faceCount = static_cast<uint32_t>(faceUVCounts.size()); fi < faceCount;
@@ -464,7 +464,7 @@ private:
 						        (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVIndices(fi, uvSet) : faceUVIdx0;
 						const uint32_t faceUVCnt = faceUVCounts[fi];
 						if constexpr (DBG)
-							log_debug("      fi %1%: faceUVCnt = %2%, faceVtxCnt = %3%") % fi % faceUVCnt %
+							srl_log_debug("      fi %1%: faceUVCnt = %2%, faceVtxCnt = %3%") % fi % faceUVCnt %
 							        mesh->getFaceVertexCount(fi);
 						for (uint32_t vi = 0; vi < faceUVCnt; vi++)
 							mUvIndices[uvSet].push_back(uvIndexBases[uvSet] + faceUVIdx[vi]);
@@ -623,8 +623,8 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 		return;
 
 	if constexpr (DBG) {
-		log_debug("resolvemap: %s") % prtx::PRTUtils::objectToXML(initialShape.getResolveMap());
-		log_debug("encoder #materials = %s") % materials.size();
+		srl_log_debug("resolvemap: %s") % prtx::PRTUtils::objectToXML(initialShape.getResolveMap());
+		srl_log_debug("encoder #materials = %s") % materials.size();
 	}
 
 	uint32_t faceCount = 0;
@@ -655,7 +655,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 				convertReportsToAttributeMap(amb, *repIt);
 				reportAttrMaps.v.push_back(amb->createAttributeMapAndReset());
 				if constexpr (DBG)
-					log_debug("report attr map: %1%") % prtx::PRTUtils::objectToXML(reportAttrMaps.v.back());
+					srl_log_debug("report attr map: %1%") % prtx::PRTUtils::objectToXML(reportAttrMaps.v.back());
 			}
 
 			faceCount += m->getFaceCount();
