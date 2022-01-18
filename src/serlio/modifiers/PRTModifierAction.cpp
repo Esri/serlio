@@ -421,6 +421,7 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 		}
 	};
 
+	updateDynamicEnums();
 	iterateThroughAttributesAndApply(node, mRuleAttributes, fillAttributeFromNode);
 	mGenerateAttrs.reset(aBuilder->createAttributeMap());
 
@@ -599,6 +600,58 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
 	return MStatus::kSuccess;
+}
+
+MStatus PRTModifierAction::updateDynamicEnums() {
+	auto reverseLookupAttribute = [ruleAttributes = mRuleAttributes](const std::wstring& mayaFullAttrName) {
+		auto it = std::find_if(ruleAttributes.begin(), ruleAttributes.end(),
+		                       [&mayaFullAttrName](const auto& ra) { return (ra.mayaFullName == mayaFullAttrName); });
+		if (it != ruleAttributes.end())
+			return *it;
+		return RULE_NOT_FOUND;
+	};
+	
+	for (auto& e : mEnums) {
+		if (e.mValuesAttr != "") {
+			
+			const MString fullAttrName = e.mAttr.name();
+			const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar());
+
+			const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName).c_str();
+			std::wstring attrImport = prtu::getImport(ruleAttr.fqName).c_str();
+			if (!attrImport.empty())
+				attrImport += prtu::IMPORT_DELIMITER;
+
+			const std::wstring prefix = attrStyle + prtu::STYLE_DELIMITER + attrImport;
+
+			const wchar_t* valuesAttr = (MString(prefix.c_str()) + e.mValuesAttr).asWChar();
+			prt::Attributable::PrimitiveType type = mGenerateAttrs->getType(valuesAttr);
+
+			switch (type) { 
+				case prt::Attributable::PT_STRING_ARRAY: {
+					size_t* arr_length;
+					const wchar_t *const *stringArray = mGenerateAttrs->getStringArray(valuesAttr, arr_length);
+					e.mSVals.clear();
+					
+					for (size_t i = 0; i < *arr_length; i++) {
+						if (wcslen(stringArray[i]) == 0)
+							continue;
+
+						std::wstring currString = stringArray[i];
+
+						//remove newlines from strings, because they break the maya UI
+						currString.erase(std::remove(currString.begin(), currString.end(), '\n'), currString.end());
+						
+						MString mCurrString = MString(currString.c_str());
+						e.mSVals.append(mCurrString);
+						e.mAttr.addField(mCurrString, e.mSVals.length());
+					}
+					break;
+				}
+			}
+		}
+	}
+	return MStatus();
 }
 
 // Sets the mesh object for the action  to operate on
