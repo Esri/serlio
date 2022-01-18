@@ -58,6 +58,7 @@ private:
 	MDoubleArray mFVals;
 	MIntArray mBVals;
 	bool mRestricted = true;
+	MString mValuesAttr = "";
 }; // class PRTModifierEnum
 
 class PRTModifierAction : public polyModifierFty {

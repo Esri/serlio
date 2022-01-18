@@ -53,6 +53,7 @@ constexpr const wchar_t* NULL_KEY = L"#NULL#";
 constexpr const wchar_t* MIN_KEY = L"min";
 constexpr const wchar_t* MAX_KEY = L"max";
 constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
+constexpr const wchar_t* VALUES_ATTR_KEY = L"valuesAttr";
 
 constexpr const wchar_t* ATTRIBUTE_USER_SET_SUFFIX = L"_user_set";
 constexpr const wchar_t* ATTRIBUTE_FORCE_DEFAULT_SUFFIX = L"_force_default";
@@ -918,6 +919,9 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 		if (std::wcscmp(key, NULL_KEY) != 0) {
 			if (std::wcscmp(key, RESTRICTED_KEY) == 0) {
 				mRestricted = annot->getArgument(arg)->getBool();
+			}
+			if (std::wcscmp(key, VALUES_ATTR_KEY) == 0) {
+				mValuesAttr = annot->getArgument(arg)->getStr();
 			}
 			continue;
 		}
