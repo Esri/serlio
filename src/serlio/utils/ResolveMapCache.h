@@ -29,7 +29,7 @@ class ResolveMapCache {
 public:
 	using KeyType = std::wstring;
 
-	explicit ResolveMapCache(const std::wstring& unpackPath) : mRPKUnpackPath{unpackPath} {}
+	ResolveMapCache() = default;
 	ResolveMapCache(const ResolveMapCache&) = delete;
 	ResolveMapCache(ResolveMapCache&&) = delete;
 	ResolveMapCache& operator=(ResolveMapCache const&) = delete;
@@ -47,8 +47,6 @@ private:
 	};
 	using Cache = std::map<KeyType, ResolveMapCacheEntry>;
 	Cache mCache;
-
-	const std::filesystem::path mRPKUnpackPath;
 };
 
 using ResolveMapCacheUPtr = std::unique_ptr<ResolveMapCache>;
