@@ -34,7 +34,6 @@ public:
 	ResolveMapCache(ResolveMapCache&&) = delete;
 	ResolveMapCache& operator=(ResolveMapCache const&) = delete;
 	ResolveMapCache& operator=(ResolveMapCache&&) = delete;
-	~ResolveMapCache();
 
 	enum class CacheStatus { HIT, MISS };
 	using LookupResult = std::pair<ResolveMapSPtr, CacheStatus>;
