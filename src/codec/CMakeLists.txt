@@ -6,7 +6,8 @@ cmake_policy(SET CMP0015 NEW)
 
 add_library(${CODEC_TARGET} SHARED
 	CodecMain.cpp
-	encoder/MayaEncoder.cpp)
+	encoder/MayaEncoder.cpp
+	encoder/TextureEncoder.cpp)
 
 if (CMAKE_GENERATOR MATCHES "Visual Studio.+")
 	target_sources(${CODEC_TARGET}
