@@ -102,10 +102,6 @@ std::pair<std::vector<const T*>, std::vector<size_t>> toPtrVec(const std::vector
 	return std::make_pair(pv, ps);
 }
 
-std::wstring uriToPath(const prtx::TexturePtr& t) {
-	return t->getURI()->getPath();
-}
-
 template <typename C, typename FUNC, typename OBJ, typename... ARGS>
 std::basic_string<C> callAPI(FUNC f, OBJ& obj, ARGS&&... args) {
 	std::vector<C> buffer(1024, 0x0);
@@ -257,7 +253,7 @@ const std::set<std::wstring> MATERIAL_ATTRIBUTE_BLACKLIST = {
 };
 
 void convertMaterialToAttributeMap(prtx::PRTUtils::AttributeMapBuilderPtr& aBuilder, const prtx::Material& prtxAttr,
-                                   const prtx::WStringVector& keys) {
+                                   const prtx::WStringVector& keys, IMayaCallbacks* cb, prt::Cache* cache) {
 	if constexpr (DBG)
 		srl_log_debug(L"-- converting material: %1%") % prtxAttr.name();
 	for (const auto& key : keys) {
@@ -316,19 +312,30 @@ void convertMaterialToAttributeMap(prtx::PRTUtils::AttributeMapBuilderPtr& aBuil
 
 			case prtx::Material::PT_TEXTURE: {
 				const auto& t = prtxAttr.getTexture(key);
-				const std::wstring p = uriToPath(t);
-				aBuilder->setString(key.c_str(), p.c_str());
+				const std::wstring p = getTexturePath(t, cb, cache);
+				if (p.length() > 0) {
+					aBuilder->setString(key.c_str(), p.c_str());
+				}
 				break;
 			}
 
 			case prtx::Material::PT_TEXTURE_ARRAY: {
 				const auto& ta = prtxAttr.getTextureArray(key);
 
-				prtx::WStringVector pa(ta.size());
-				std::transform(ta.begin(), ta.end(), pa.begin(), uriToPath);
+				prtx::WStringVector texPaths;
+				texPaths.reserve(ta.size());
 
-				std::vector<const wchar_t*> ppa = toPtrVec(pa);
-				aBuilder->setStringArray(key.c_str(), ppa.data(), ppa.size());
+				for (const auto& tex : ta) {
+					const std::wstring texPath = getTexturePath(tex, cb, cache);
+					if (!texPath.empty())
+						texPaths.push_back(texPath);
+				}
+
+				if (texPaths.size() > 0) {
+					std::vector<const wchar_t*> pTexPaths = toPtrVec(texPaths);
+					aBuilder->setStringArray(key.c_str(), pTexPaths.data(), pTexPaths.size());
+				}
+
 				break;
 			}
 
@@ -658,11 +665,12 @@ void MayaEncoder::encode(prtx::GenerateContext& context, size_t initialShapeInde
 
 	prtx::EncodePreparator::InstanceVector instances;
 	encPrep->fetchFinalizedInstances(instances, PREP_FLAGS);
-	convertGeometry(initialShape, instances, cb);
+	convertGeometry(initialShape, instances, cb, context.getCache());
 }
 
 void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
-                                  const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* cb) {
+                                  const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* cb,
+                                  prt::Cache* cache) {
 	if (instances.empty())
 		return;
 
@@ -716,7 +724,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 			faceRanges.push_back(faceCount);
 
 			if (emitMaterials) {
-				convertMaterialToAttributeMap(amb, *(mat.get()), mat->getKeys());
+				convertMaterialToAttributeMap(amb, *(mat.get()), mat->getKeys(), cb, cache);
 				matAttrMaps.v.push_back(amb->createAttributeMapAndReset());
 			}
 
