@@ -19,8 +19,10 @@
 
 #include "encoder/MayaEncoder.h"
 #include "encoder/IMayaCallbacks.h"
+#include "encoder/TextureEncoder.h"
 
 #include "prtx/Attributable.h"
+#include "prtx/DataBackend.h"
 #include "prtx/Exception.h"
 #include "prtx/ExtensionManager.h"
 #include "prtx/GenerateContext.h"
@@ -33,6 +35,7 @@
 #include "prtx/ShapeIterator.h"
 #include "prtx/URI.h"
 
+#include "prt/MemoryOutputCallbacks.h"
 #include "prt/prt.h"
 
 #include <algorithm>
@@ -101,6 +104,72 @@ std::pair<std::vector<const T*>, std::vector<size_t>> toPtrVec(const std::vector
 
 std::wstring uriToPath(const prtx::TexturePtr& t) {
 	return t->getURI()->getPath();
+}
+
+template <typename C, typename FUNC, typename OBJ, typename... ARGS>
+std::basic_string<C> callAPI(FUNC f, OBJ& obj, ARGS&&... args) {
+	std::vector<C> buffer(1024, 0x0);
+	size_t size = buffer.size();
+	std::invoke(f, obj, args..., buffer.data(), size);
+	if (size == 0)
+		return {}; // error case
+	else if (size > buffer.size()) {
+		buffer.resize(size);
+		std::invoke(f, obj, args..., buffer.data(), size);
+	}
+	return {buffer.data()};
+}
+
+std::wstring getTexturePath(const prtx::TexturePtr& texture, IMayaCallbacks* callbacks, prt::Cache* cache) {
+	if (!texture || !texture->isValid())
+		return L"";
+
+	const prtx::URIPtr& uri = texture->getURI();
+	const std::wstring& uriStr = uri->wstring();
+	const std::wstring& scheme = uri->getScheme();
+
+	if (!uri->isComposite() && (scheme == prtx::URI::SCHEME_FILE || scheme == prtx::URI::SCHEME_UNC)) {
+		// textures from the local file system or a mounted share on Windows can be directly passed to Serlio
+		return uri->getNativeFormat();
+	}
+	else if (uri->isComposite() && (scheme == prtx::URI::SCHEME_RPK)) {
+		// textures from within an RPK can be directly copied out, no need for encoding
+		// just need to make sure we have useful filename for embedded texture blocks without names
+
+		const prtx::BinaryVectorPtr data = prtx::DataBackend::resolveBinaryData(cache, uriStr);
+		const std::wstring fileName = uri->getBaseName() + uri->getExtension();
+		const std::wstring assetPath = callAPI<wchar_t>(&IMayaCallbacks::addAsset, *callbacks, uriStr.c_str(),
+		                                                fileName.c_str(), data->data(), data->size());
+		return assetPath;
+	}
+	else {
+		// all other textures (builtin or from memory) need to be extracted and potentially re-encoded
+		try {
+			prtx::PRTUtils::MemoryOutputCallbacksUPtr moc(prt::MemoryOutputCallbacks::create());
+
+			prtx::AsciiFileNamePreparator namePrep;
+			const prtx::NamePreparator::NamespacePtr& namePrepNamespace = namePrep.newNamespace();
+			const std::wstring validatedFilename =
+			        TextureEncoder::encode(texture, moc.get(), namePrep, namePrepNamespace, {});
+
+			if (moc->getNumBlocks() == 1) {
+				size_t bufferSize = 0;
+				const uint8_t* buffer = moc->getBlock(0, &bufferSize);
+
+				const std::wstring assetPath = callAPI<wchar_t>(&IMayaCallbacks::addAsset, *callbacks, uriStr.c_str(),
+				                                                validatedFilename.c_str(), buffer, bufferSize);
+				if (!assetPath.empty())
+					return assetPath;
+				else
+					srl_log_warn("Received invalid asset path while trying to write asset with URI: %1%") % uriStr;
+			}
+		}
+		catch (std::exception& e) {
+			srl_log_warn("Failed to encode or write texture at %1% to the local filesystem: %2%") % uriStr % e.what();
+		}
+	}
+
+	return {};
 }
 
 // we blacklist all CGA-style material attribute keys, see prtx/Material.h
