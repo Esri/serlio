@@ -68,4 +68,16 @@ public:
 	                     const int32_t* shapeIDs
 	) = 0;
 	// clang-format on
+
+	/**
+	 * Writes an asset (e.g. in-memory texture) to an implementation-defined path. Assets with same uri will be assumed
+	 * to contain identical data.
+	 *
+	 * @param uri the original asset within the RPK
+	 * @param fileName local fileName derived from the URI by the asset encoder. can be used to cache the asset.
+	 * @param [out] result file system path of the locally cached asset. Expected to be valid for the whole process
+	 * life-time.
+	 */
+	virtual void addAsset(const wchar_t* uri, const wchar_t* fileName, const uint8_t* buffer, size_t size,
+	                      wchar_t* result, size_t& resultSize) = 0;
 };

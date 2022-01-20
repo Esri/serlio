@@ -25,6 +25,8 @@
 #include "utils/LogHandler.h"
 #include "utils/MayaUtilities.h"
 #include "utils/Utilities.h"
+#include "utils/AssetCache.h"
+#include "PRTContext.h"
 
 #include "prt/StringUtils.h"
 
@@ -436,6 +438,32 @@ prt::Status MayaCallbacks::attrString(size_t /*isIndex*/, int32_t /*shapeID*/, c
                                       const wchar_t* value) {
 	mAttributeMapBuilder->setString(key, value);
 	return prt::STATUS_OK;
+}
+
+void MayaCallbacks::addAsset(const wchar_t* uri, const wchar_t* fileName, const uint8_t* buffer, size_t size,
+                             wchar_t* result, size_t& resultSize) {
+	if (uri == nullptr || std::wcslen(uri) == 0 || fileName == nullptr || std::wcslen(fileName) == 0) {
+		LOG_WRN << "Skipping asset caching for invalid uri '" << uri << "' or filename '" << fileName << '"';
+		resultSize = 0;
+		return;
+	}
+
+	const std::filesystem::path& assetPath = PRTContext::get().mAssetCache.put(uri, fileName, buffer, size);
+	if (assetPath.empty()) {
+		resultSize = 0;
+		return;
+	}
+
+	const std::wstring pathStr = assetPath.generic_wstring();
+
+	if (resultSize <= pathStr.size()) {  // also check for null-terminator
+		resultSize = pathStr.size() + 1; // ask for space for null-terminator
+		return;
+	}
+
+	wcsncpy_s(result, resultSize, pathStr.c_str(), resultSize);
+	result[resultSize - 1] = 0x0;
+	resultSize = pathStr.length() + 1;
 }
 
 // PRT version >= 2.3
