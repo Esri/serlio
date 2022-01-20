@@ -21,6 +21,7 @@ add_library(${SERLIO_TARGET} SHARED
 	materials/MaterialUtils.cpp
 	materials/StingrayMaterialNode.cpp
 	materials/MaterialCommand.cpp
+	utils/AssetCache.cpp
 	utils/Utilities.cpp
 	utils/ResolveMapCache.cpp
 	utils/MayaUtilities.cpp
@@ -46,6 +47,7 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio.+")
 		materials/MaterialUtils.h
 		materials/StingrayMaterialNode.h
 		materials/MaterialCommand.h
+		utils/AssetCache.h
 		utils/Utilities.h
 		utils/ResolveMapCache.h
 		utils/MayaUtilities.h
