@@ -21,6 +21,7 @@
 
 #include "serlioPlugin.h"
 
+#include "utils/AssetCache.h"
 #include "utils/LogHandler.h"
 #include "utils/ResolveMapCache.h"
 #include "utils/Utilities.h"
@@ -46,6 +47,7 @@ struct SRL_TEST_EXPORTS_API PRTContext final {
 	}
 
 	const std::filesystem::path mPluginRootPath; // the path where serlio dso resides
+	AssetCache mAssetCache;
 	ObjectUPtr thePRT;
 	CacheObjectUPtr theCache;
 	logging::LogHandlerUPtr theLogHandler;
