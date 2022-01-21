@@ -54,9 +54,6 @@ public:
 	MFnEnumAttribute mAttr;
 
 private:
-	MStringArray mSVals;
-	MDoubleArray mFVals;
-	MIntArray mBVals;
 	bool mRestricted = true;
 	MString mValuesAttr = "";
 }; // class PRTModifierEnum
