@@ -629,11 +629,11 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 
 			switch (type) { 
 				case prt::Attributable::PT_STRING_ARRAY: {
-					size_t* arr_length;
-					const wchar_t *const *stringArray = mGenerateAttrs->getStringArray(valuesAttr, arr_length);
+					size_t arr_length = 0;
+					const wchar_t *const *stringArray = mGenerateAttrs->getStringArray(valuesAttr, &arr_length);
 					e.mSVals.clear();
 					
-					for (size_t i = 0; i < *arr_length; i++) {
+					for (size_t i = 0; i < arr_length; i++) {
 						if (wcslen(stringArray[i]) == 0)
 							continue;
 
@@ -646,6 +646,68 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 						e.mSVals.append(mCurrString);
 						e.mAttr.addField(mCurrString, e.mSVals.length());
 					}
+					break;
+				}
+				case prt::Attributable::PT_FLOAT_ARRAY: {
+					size_t arr_length = 0;
+					const double* doubleArray = mGenerateAttrs->getFloatArray(valuesAttr, &arr_length);
+					e.mFVals.clear();
+
+					for (size_t i = 0; i < arr_length; i++) {
+						double currDouble = doubleArray[i];
+
+						e.mFVals.append(currDouble);
+						MString mCurrString = std::to_wstring(currDouble).c_str();
+						e.mAttr.addField(mCurrString, e.mFVals.length());
+					}
+					break;
+				}
+				case prt::Attributable::PT_BOOL_ARRAY: {
+					size_t arr_length = 0;
+					const bool* boolArray = mGenerateAttrs->getBoolArray(valuesAttr, &arr_length);
+					e.mBVals.clear();
+
+					for (size_t i = 0; i < arr_length; i++) {
+						bool currBool = boolArray[i];
+
+						e.mBVals.append(currBool);
+						MString mCurrString = std::to_wstring(currBool).c_str();
+						e.mAttr.addField(mCurrString, e.mBVals.length());
+					}
+					break;
+				}
+				case prt::Attributable::PT_STRING: {
+					size_t arr_length = 0;
+					const wchar_t* currString = mGenerateAttrs->getString(valuesAttr);
+
+					e.mSVals.clear();
+					e.mSVals.append(currString);
+
+					MString mCurrString = currString;
+					e.mAttr.addField(mCurrString, e.mBVals.length());
+					break;
+				}
+				case prt::Attributable::PT_FLOAT: {
+					size_t arr_length = 0;
+					const bool currFloat = mGenerateAttrs->getFloat(valuesAttr);
+
+					e.mFVals.clear();
+					e.mFVals.append(currFloat);
+
+					MString mCurrString = std::to_wstring(currFloat).c_str();
+					e.mAttr.addField(mCurrString, e.mBVals.length());
+					
+					break;
+				}
+				case prt::Attributable::PT_BOOL: {
+					size_t arr_length = 0;
+					const bool currBool = mGenerateAttrs->getBool(valuesAttr);
+
+					e.mBVals.clear();
+					e.mBVals.append(currBool);
+
+					MString mCurrString = std::to_wstring(currBool).c_str();
+					e.mAttr.addField(mCurrString, e.mBVals.length());
 					break;
 				}
 			}
