@@ -461,7 +461,7 @@ void MayaCallbacks::addAsset(const wchar_t* uri, const wchar_t* fileName, const 
 		return;
 	}
 
-	wcsncpy_s(result, resultSize, pathStr.c_str(), resultSize);
+	wcsncpy(result, pathStr.c_str(), resultSize);
 	result[resultSize - 1] = 0x0;
 	resultSize = pathStr.length() + 1;
 }
