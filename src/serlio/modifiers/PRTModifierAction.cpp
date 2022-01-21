@@ -169,19 +169,19 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 
 const RuleAttribute RULE_NOT_FOUND{};
 
+const RuleAttribute reverseLookupAttribute(const std::wstring& mayaFullAttrName, const RuleAttributes& ruleAttributes) {
+	auto it = std::find_if(ruleAttributes.begin(), ruleAttributes.end(),
+	                       [&mayaFullAttrName](const auto& ra) { return (ra.mayaFullName == mayaFullAttrName); });
+	if (it != ruleAttributes.end())
+		return *it;
+	return RULE_NOT_FOUND;
+}
+
 template <typename T>
 MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttributes& mRuleAttributes, T attrFunction) {
 	MStatus stat;
 	const MFnDependencyNode fNode(node, &stat);
 	MCHECK(stat);
-
-	auto reverseLookupAttribute = [mRuleAttributes](const std::wstring& mayaFullAttrName) {
-		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(),
-		                       [&mayaFullAttrName](const auto& ra) { return (ra.mayaFullName == mayaFullAttrName); });
-		if (it != mRuleAttributes.end())
-			return *it;
-		return RULE_NOT_FOUND;
-	};
 
 	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
 
@@ -189,7 +189,7 @@ MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttribut
 		MFnAttribute fnAttr(attrObj);
 
 		const MString fullAttrName = fnAttr.name();
-		const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar());
+		const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar(), mRuleAttributes);
 		assert(!ruleAttr.fqName.empty()); // poor mans check for RULE_NOT_FOUND
 
 		[[maybe_unused]] const auto ruleAttrType = ruleAttr.mType;
@@ -603,24 +603,15 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 }
 
 MStatus PRTModifierAction::updateDynamicEnums() {
-	auto reverseLookupAttribute = [ruleAttributes = mRuleAttributes](const std::wstring& mayaFullAttrName) {
-		auto it = std::find_if(ruleAttributes.begin(), ruleAttributes.end(),
-		                       [&mayaFullAttrName](const auto& ra) { return (ra.mayaFullName == mayaFullAttrName); });
-		if (it != ruleAttributes.end())
-			return *it;
-		return RULE_NOT_FOUND;
-	};
-	
 	const AttributeMapUPtr defaultAttributeValues =
 	        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh,
 	                                  mRandomSeed, *mGenerateAttrs);
-
 
 	for (auto& e : mEnums) {
 		if (e.mValuesAttr.length() > 0) {
 			
 			const MString fullAttrName = e.mAttr.name();
-			const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar());
+			const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar(), mRuleAttributes);
 
 			const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName).c_str();
 			std::wstring attrImport = prtu::getImport(ruleAttr.fqName).c_str();
