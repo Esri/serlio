@@ -641,7 +641,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 						//remove newlines from strings, because they break the maya UI
 						currString.erase(std::remove(currString.begin(), currString.end(), '\n'), currString.end());
 						
-						MString mCurrString = MString(currString.c_str());
+						const MString mCurrString = MString(currString.c_str());
 						e.mAttr.addField(mCurrString, enumIndex);
 					}
 					break;
@@ -651,9 +651,9 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					const double* doubleArray = mGenerateAttrs->getFloatArray(valuesAttr, &arr_length);
 
 					for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
-						double currDouble = doubleArray[enumIndex];
+						const double currDouble = doubleArray[enumIndex];
 
-						MString mCurrString = std::to_wstring(currDouble).c_str();
+						const MString mCurrString = std::to_wstring(currDouble).c_str();
 						e.mAttr.addField(mCurrString, enumIndex);
 					}
 					break;
@@ -663,9 +663,9 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					const bool* boolArray = mGenerateAttrs->getBoolArray(valuesAttr, &arr_length);
 
 					for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
-						bool currBool = boolArray[enumIndex];
+						const bool currBool = boolArray[enumIndex];
 
-						MString mCurrString = std::to_wstring(currBool).c_str();
+						const MString mCurrString = std::to_wstring(currBool).c_str();
 						e.mAttr.addField(mCurrString, enumIndex);
 					}
 					break;
@@ -674,7 +674,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					size_t arr_length = 0;
 					const wchar_t* currString = mGenerateAttrs->getString(valuesAttr);
 
-					MString mCurrString = currString;
+					const MString mCurrString = currString;
 					e.mAttr.addField(mCurrString, 0);
 					break;
 				}
@@ -682,7 +682,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					size_t arr_length = 0;
 					const bool currFloat = mGenerateAttrs->getFloat(valuesAttr);
 
-					MString mCurrString = std::to_wstring(currFloat).c_str();
+					const MString mCurrString = std::to_wstring(currFloat).c_str();
 					e.mAttr.addField(mCurrString, 0);
 					
 					break;
@@ -691,7 +691,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					size_t arr_length = 0;
 					const bool currBool = mGenerateAttrs->getBool(valuesAttr);
 
-					MString mCurrString = std::to_wstring(currBool).c_str();
+					const MString mCurrString = std::to_wstring(currBool).c_str();
 					e.mAttr.addField(mCurrString, 0);
 					break;
 				}
