@@ -612,7 +612,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 	};
 	
 	for (auto& e : mEnums) {
-		if (e.mValuesAttr != "") {
+		if (e.mValuesAttr.length() > 0) {
 			
 			const MString fullAttrName = e.mAttr.name();
 			const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar());
