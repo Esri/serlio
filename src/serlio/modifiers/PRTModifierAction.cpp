@@ -634,8 +634,8 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 						// remove newlines from strings, because they break the maya UI
 						currString.erase(std::remove(currString.begin(), currString.end(), '\n'), currString.end());
 
-						const MString mCurrString = currString.c_str();
-						e.mAttr.addField(mCurrString, enumIndex);
+						const MString mCurrString(currString.c_str());
+						MCHECK(e.mAttr.addField(mCurrString, enumIndex));
 					}
 					break;
 				}
@@ -646,8 +646,8 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 						const double currDouble = doubleArray[enumIndex];
 
-						const MString mCurrString = std::to_wstring(currDouble).c_str();
-						e.mAttr.addField(mCurrString, enumIndex);
+						const MString mCurrString(std::to_wstring(currDouble).c_str());
+						MCHECK(e.mAttr.addField(mCurrString, enumIndex));
 					}
 					break;
 				}
@@ -658,30 +658,29 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 						const bool currBool = boolArray[enumIndex];
 
-						const MString mCurrString = std::to_wstring(currBool).c_str();
-						e.mAttr.addField(mCurrString, enumIndex);
+						const MString mCurrString(std::to_wstring(currBool).c_str());
+						MCHECK(e.mAttr.addField(mCurrString, enumIndex));
 					}
 					break;
 				}
 				case prt::Attributable::PT_STRING: {
 					const MString mCurrString = defaultAttributeValues->getString(valuesAttr);
 
-					e.mAttr.addField(mCurrString, 0);
+					MCHECK(e.mAttr.addField(mCurrString, 0));
 					break;
 				}
 				case prt::Attributable::PT_FLOAT: {
 					const bool currFloat = defaultAttributeValues->getFloat(valuesAttr);
 
-					const MString mCurrString = std::to_wstring(currFloat).c_str();
-					e.mAttr.addField(mCurrString, 0);
-
+					const MString mCurrString(std::to_wstring(currFloat).c_str());
+					MCHECK(e.mAttr.addField(mCurrString, 0));
 					break;
 				}
 				case prt::Attributable::PT_BOOL: {
 					const bool currBool = defaultAttributeValues->getBool(valuesAttr);
 
-					const MString mCurrString = std::to_wstring(currBool).c_str();
-					e.mAttr.addField(mCurrString, 0);
+					const MString mCurrString(std::to_wstring(currBool).c_str());
+					MCHECK(e.mAttr.addField(mCurrString, 0));
 					break;
 				}
 			}
