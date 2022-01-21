@@ -633,9 +633,6 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					const wchar_t *const *stringArray = mGenerateAttrs->getStringArray(valuesAttr, &arr_length);
 					
 					for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
-						if (wcslen(stringArray[enumIndex]) == 0)
-							continue;
-
 						std::wstring currString = stringArray[enumIndex];
 
 						//remove newlines from strings, because they break the maya UI
