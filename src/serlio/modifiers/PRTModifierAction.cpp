@@ -668,9 +668,8 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					break;
 				}
 				case prt::Attributable::PT_STRING: {
-					const wchar_t* currString = mGenerateAttrs->getString(valuesAttr);
+					const MString mCurrString = mGenerateAttrs->getString(valuesAttr);
 
-					const MString mCurrString = currString;
 					e.mAttr.addField(mCurrString, 0);
 					break;
 				}
