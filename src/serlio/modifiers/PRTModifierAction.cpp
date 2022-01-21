@@ -596,17 +596,12 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 		}
 	};
 
-	updateDynamicEnums();
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
 	return MStatus::kSuccess;
 }
 
 MStatus PRTModifierAction::updateDynamicEnums() {
-	const AttributeMapUPtr defaultAttributeValues =
-	        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh,
-	                                  mRandomSeed, *mGenerateAttrs);
-
 	for (auto& e : mEnums) {
 		if (e.mValuesAttr.length() > 0) {
 
@@ -621,12 +616,12 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 			const std::wstring prefix = attrStyle + prtu::STYLE_DELIMITER + attrImport;
 
 			const wchar_t* valuesAttr = (MString(prefix.c_str()) + e.mValuesAttr).asWChar();
-			prt::Attributable::PrimitiveType type = defaultAttributeValues->getType(valuesAttr);
+			prt::Attributable::PrimitiveType type = mGenerateAttrs->getType(valuesAttr);
 
 			switch (type) {
 				case prt::Attributable::PT_STRING_ARRAY: {
 					size_t arr_length = 0;
-					const wchar_t* const* stringArray = defaultAttributeValues->getStringArray(valuesAttr, &arr_length);
+					const wchar_t* const* stringArray = mGenerateAttrs->getStringArray(valuesAttr, &arr_length);
 
 					for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 						std::wstring currString = stringArray[enumIndex];
@@ -641,7 +636,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 				}
 				case prt::Attributable::PT_FLOAT_ARRAY: {
 					size_t arr_length = 0;
-					const double* doubleArray = defaultAttributeValues->getFloatArray(valuesAttr, &arr_length);
+					const double* doubleArray = mGenerateAttrs->getFloatArray(valuesAttr, &arr_length);
 
 					for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 						const double currDouble = doubleArray[enumIndex];
@@ -653,7 +648,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 				}
 				case prt::Attributable::PT_BOOL_ARRAY: {
 					size_t arr_length = 0;
-					const bool* boolArray = defaultAttributeValues->getBoolArray(valuesAttr, &arr_length);
+					const bool* boolArray = mGenerateAttrs->getBoolArray(valuesAttr, &arr_length);
 
 					for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 						const bool currBool = boolArray[enumIndex];
@@ -664,20 +659,20 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					break;
 				}
 				case prt::Attributable::PT_STRING: {
-					const MString mCurrString = defaultAttributeValues->getString(valuesAttr);
+					const MString mCurrString = mGenerateAttrs->getString(valuesAttr);
 
 					MCHECK(e.mAttr.addField(mCurrString, 0));
 					break;
 				}
 				case prt::Attributable::PT_FLOAT: {
-					const bool currFloat = defaultAttributeValues->getFloat(valuesAttr);
+					const bool currFloat = mGenerateAttrs->getFloat(valuesAttr);
 
 					const MString mCurrString(std::to_wstring(currFloat).c_str());
 					MCHECK(e.mAttr.addField(mCurrString, 0));
 					break;
 				}
 				case prt::Attributable::PT_BOOL: {
-					const bool currBool = defaultAttributeValues->getBool(valuesAttr);
+					const bool currBool = mGenerateAttrs->getBool(valuesAttr);
 
 					const MString mCurrString(std::to_wstring(currBool).c_str());
 					MCHECK(e.mAttr.addField(mCurrString, 0));
@@ -750,6 +745,7 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 		sortRuleAttributes(mRuleAttributes);
 
 		createNodeAttributes(node, info.get());
+		updateDynamicEnums();
 	}
 
 	return MS::kSuccess;
