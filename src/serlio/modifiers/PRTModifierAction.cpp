@@ -609,7 +609,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 
 	for (auto& e : mEnums) {
 		if (e.mValuesAttr.length() > 0) {
-			
+
 			const MString fullAttrName = e.mAttr.name();
 			const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar(), mRuleAttributes);
 
@@ -623,17 +623,17 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 			const wchar_t* valuesAttr = (MString(prefix.c_str()) + e.mValuesAttr).asWChar();
 			prt::Attributable::PrimitiveType type = defaultAttributeValues->getType(valuesAttr);
 
-			switch (type) { 
+			switch (type) {
 				case prt::Attributable::PT_STRING_ARRAY: {
 					size_t arr_length = 0;
 					const wchar_t* const* stringArray = defaultAttributeValues->getStringArray(valuesAttr, &arr_length);
-					
+
 					for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 						std::wstring currString = stringArray[enumIndex];
 
-						//remove newlines from strings, because they break the maya UI
+						// remove newlines from strings, because they break the maya UI
 						currString.erase(std::remove(currString.begin(), currString.end(), '\n'), currString.end());
-						
+
 						const MString mCurrString = currString.c_str();
 						e.mAttr.addField(mCurrString, enumIndex);
 					}
@@ -674,7 +674,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 
 					const MString mCurrString = std::to_wstring(currFloat).c_str();
 					e.mAttr.addField(mCurrString, 0);
-					
+
 					break;
 				}
 				case prt::Attributable::PT_BOOL: {
