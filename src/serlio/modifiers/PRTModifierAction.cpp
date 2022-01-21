@@ -668,7 +668,6 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					break;
 				}
 				case prt::Attributable::PT_STRING: {
-					size_t arr_length = 0;
 					const wchar_t* currString = mGenerateAttrs->getString(valuesAttr);
 
 					const MString mCurrString = currString;
@@ -676,7 +675,6 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					break;
 				}
 				case prt::Attributable::PT_FLOAT: {
-					size_t arr_length = 0;
 					const bool currFloat = mGenerateAttrs->getFloat(valuesAttr);
 
 					const MString mCurrString = std::to_wstring(currFloat).c_str();
@@ -685,7 +683,6 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					break;
 				}
 				case prt::Attributable::PT_BOOL: {
-					size_t arr_length = 0;
 					const bool currBool = mGenerateAttrs->getBool(valuesAttr);
 
 					const MString mCurrString = std::to_wstring(currBool).c_str();
