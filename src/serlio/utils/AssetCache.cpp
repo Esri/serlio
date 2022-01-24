@@ -20,7 +20,6 @@
 #include "AssetCache.h"
 
 #include "utils/LogHandler.h"
-#include "utils/stduuid/uuid.h"
 
 #include <cassert>
 #include <fstream>
@@ -89,9 +88,7 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 }
 
 std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName) const {
-	// we use an UUID to have unique entries (filenames might clash across different RPKs)
-	const uuids::uuid uuid = uuids::uuid_system_generator{}();
-	std::wstring cachedAssetName = uuids::to_wstring(uuid);
+	std::wstring cachedAssetName = L"";
 
 	// we append the filename constructed by the encoder from the URI
 	assert(fileName != nullptr);
