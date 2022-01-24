@@ -32,6 +32,8 @@
 #include <maya/MGlobal.h>
 
 namespace {
+constexpr const wchar_t* MAYA_ASSET_FOLDER = L"assets";
+constexpr const wchar_t* SERLIO_ASSET_FOLDER = L"serlio_assets";
 
 bool writeCacheEntry(const std::filesystem::path& assetPath, const uint8_t* buffer, size_t size) noexcept {
 	if (std::filesystem::exists(assetPath))
@@ -106,7 +108,7 @@ std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const s
 	MStatus status;
 	std::filesystem::path workspaceDir = prtu::getWorkspaceRoot(status);
 	MCHECK(status);
-	std::filesystem::path assetsDir = workspaceDir.make_preferred() / "assets" / "serlio_assets";
+	std::filesystem::path assetsDir = workspaceDir.make_preferred() / MAYA_ASSET_FOLDER / SERLIO_ASSET_FOLDER;
 
 	// create dir if it does not exist
 	try {
