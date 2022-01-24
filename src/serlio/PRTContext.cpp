@@ -25,7 +25,6 @@ namespace {
 
 constexpr bool DBG = false;
 
-constexpr const wchar_t* SRL_TMP_FOLDER = L"serlio/asset_cache";
 constexpr const wchar_t* PRT_EXT_SUBDIR = L"ext";
 constexpr prt::LogLevel PRT_LOG_LEVEL = prt::LOG_INFO;
 constexpr bool ENABLE_LOG_CONSOLE = true;
