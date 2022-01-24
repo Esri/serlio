@@ -1,4 +1,5 @@
 #include "utils/MayaUtilities.h"
+#include "utils/MELScriptBuilder.h"
 
 #include <memory>
 
@@ -29,4 +30,13 @@ void statusCheck(const MStatus& status, const char* file, int line) {
 	}
 }
 
+std::filesystem::path getWorkspaceRoot(MStatus& status) {
+	MELScriptBuilder scriptBuilder;
+	scriptBuilder.getWorkspaceDir();
+
+	std::wstring output;
+	status = scriptBuilder.executeSync(output);
+
+	return output;
+}
 } // namespace mu

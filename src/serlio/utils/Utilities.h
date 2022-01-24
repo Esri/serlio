@@ -40,8 +40,6 @@
 #include <string>
 #include <vector>
 
-#include <maya/MStatus.h>
-
 // PRT version >= VERSION_MAJOR.VERSION_MINOR
 #define PRT_VERSION_GTE(VERSION_MAJOR, VERSION_MINOR)                                                                  \
 	((PRT_VERSION_MAJOR >= (VERSION_MAJOR)) &&                                                                         \
@@ -83,8 +81,6 @@ using ResolveMapSPtr = std::shared_ptr<const prt::ResolveMap>;
 namespace prtu {
 
 std::filesystem::path getPluginRoot();
-
-std::filesystem::path getWorkspaceRoot(MStatus &status);
 
 template <typename C>
 std::vector<const C*> toPtrVec(const std::vector<std::basic_string<C>>& sv) {

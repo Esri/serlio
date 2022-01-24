@@ -19,7 +19,6 @@
 
 #include "utils/Utilities.h"
 #include "utils/LogHandler.h"
-#include "utils/MELScriptBuilder.h"
 
 #include "prt/API.h"
 #include "prt/StringUtils.h"
@@ -70,16 +69,6 @@ std::filesystem::path getPluginRoot() {
 #endif
 
 	return rootPath;
-}
-
-std::filesystem::path getWorkspaceRoot(MStatus& status) {
-	MELScriptBuilder scriptBuilder;
-	scriptBuilder.getWorkspaceDir();
-
-	std::wstring output;
-	status = scriptBuilder.executeSync(output);
-
-	return output;
 }
 
 int fromHex(wchar_t c) {

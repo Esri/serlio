@@ -47,4 +47,5 @@ private:
 	T value_;
 };
 
+std::filesystem::path getWorkspaceRoot(MStatus& status);
 } // namespace mu

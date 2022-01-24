@@ -103,7 +103,7 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const size_t hash) const {
 	// we start with the root folder in the current workspace
 	MStatus status;
-	std::filesystem::path workspaceDir = prtu::getWorkspaceRoot(status);
+	std::filesystem::path workspaceDir = mu::getWorkspaceRoot(status);
 	MCHECK(status);
 	std::filesystem::path assetsDir = workspaceDir.make_preferred() / MAYA_ASSET_FOLDER / SERLIO_ASSET_FOLDER;
 
