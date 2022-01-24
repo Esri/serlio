@@ -20,7 +20,7 @@
 #include "AssetCache.h"
 
 #include "utils/LogHandler.h"
-#include "utils/MELScriptBuilder.h"
+#include "utils/MayaUtilities.h"
 
 #include <cassert>
 #include <fstream>
