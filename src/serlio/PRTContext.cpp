@@ -36,32 +36,6 @@ bool verifyMayaEncoder() {
 	const auto mayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
 	return static_cast<bool>(mayaEncOpts);
 }
-
-std::filesystem::path getAssetCacheDir() {
-	return std::filesystem::temp_directory_path() / SRL_TMP_FOLDER;
-}
-
-std::filesystem::path createAndGetAssetCacheDir() {
-	std::filesystem::path assetCacheDir = getAssetCacheDir();
-	try {
-		std::filesystem::create_directories(assetCacheDir);
-	}
-	catch (std::exception& e) {
-		LOG_ERR << "Error while creating the asset cache directory at " << assetCacheDir << ": " << e.what();
-	}
-
-	return assetCacheDir;
-}
-
-void cleanAssetCache() {
-	std::filesystem::path assetCacheDir = getAssetCacheDir();
-	try {
-		std::filesystem::remove_all(assetCacheDir);
-	}
-	catch (std::exception& e) {
-		LOG_ERR << "Error while cleaning the asset cache at " << assetCacheDir << ": " << e.what();
-	}
-}
 } // namespace
 
 PRTContext& PRTContext::get() {
@@ -70,7 +44,7 @@ PRTContext& PRTContext::get() {
 }
 
 PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs)
-    : mPluginRootPath(prtu::getPluginRoot()), mAssetCache(createAndGetAssetCacheDir()) {
+    : mPluginRootPath(prtu::getPluginRoot()) {
 	if (ENABLE_LOG_CONSOLE) {
 		theLogHandler = std::make_unique<logging::LogHandler>();
 		prt::addLogHandler(theLogHandler.get());
@@ -119,8 +93,6 @@ PRTContext::~PRTContext() {
 	// the cache needs to be destructed before PRT, so reset them explicitely in the right order here
 	theCache.reset();
 	thePRT.reset();
-
-	cleanAssetCache();
 
 	if (ENABLE_LOG_CONSOLE && (theLogHandler != nullptr)) {
 		prt::removeLogHandler(theLogHandler.get());

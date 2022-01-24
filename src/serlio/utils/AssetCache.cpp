@@ -20,12 +20,17 @@
 #include "AssetCache.h"
 
 #include "utils/LogHandler.h"
+#include "utils/MELScriptBuilder.h"
 
 #include <cassert>
 #include <fstream>
 #include <functional>
 #include <ostream>
 #include <string_view>
+
+#include <maya/MFileIO.h>
+#include <maya/MGlobal.h>
+
 
 namespace {
 
@@ -46,8 +51,6 @@ void removeCacheEntry(const std::filesystem::path& expiredAssetPath) {
 }
 
 } // namespace
-
-AssetCache::AssetCache(const std::filesystem::path& cacheRootPath) : mCacheRootPath(cacheRootPath) {}
 
 std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileName, const uint8_t* buffer, size_t size) {
 	assert(uri != nullptr);
@@ -88,9 +91,22 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 }
 
 std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const size_t hash) const {
-	// we start with the filename constructed by the encoder from the URI
-	assert(fileName != nullptr);
+	// we start with the root folder in the current workspace
+	MStatus status;
+	std::filesystem::path workspaceDir = prtu::getWorkspaceRoot(status);
+	MCHECK(status);
+	std::filesystem::path assetsDir = workspaceDir.make_preferred() / "assets" / "serlio_assets";
 
+	//create dir if it does not exist
+	try {
+		std::filesystem::create_directories(assetsDir);
+	}
+	catch (std::exception& e) {
+		LOG_ERR << "Error while creating the asset cache directory at " << assetsDir << ": " << e.what();
+	}
+
+	// we then get the filename constructed by the encoder from the URI
+	assert(fileName != nullptr);
 	std::filesystem::path assetFile(fileName);
 	std::filesystem::path cachedAssetName = assetFile.stem();
 	std::wstring hashString = std::to_wstring(hash);
@@ -101,6 +117,6 @@ std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const s
 	std::filesystem::path extension = assetFile.extension();
 	cachedAssetName += extension;
 
-	const std::filesystem::path cachedAssetPath = mCacheRootPath / cachedAssetName;
+	const std::filesystem::path cachedAssetPath = assetsDir / cachedAssetName;
 	return cachedAssetPath;
 }

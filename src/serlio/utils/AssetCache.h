@@ -25,13 +25,10 @@
 
 class AssetCache {
 public:
-	explicit AssetCache(const std::filesystem::path& cacheRootPath);
-
 	std::filesystem::path put(const wchar_t* uri, const wchar_t* fileName, const uint8_t* buffer, size_t size);
 
 private:
 	std::filesystem::path getCachedPath(const wchar_t* fileName, const size_t hash) const;
 
 	std::unordered_map<std::wstring, std::pair<std::filesystem::path, size_t>> mCache;
-	const std::filesystem::path mCacheRootPath;
 };
