@@ -31,7 +31,6 @@
 #include <maya/MFileIO.h>
 #include <maya/MGlobal.h>
 
-
 namespace {
 
 bool writeCacheEntry(const std::filesystem::path& assetPath, const uint8_t* buffer, size_t size) noexcept {
@@ -63,16 +62,23 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 	const auto it = std::find_if(mCache.begin(), mCache.end(),
 	                             [&uri](const auto& p) { return (std::wcscmp(p.first.c_str(), uri) == 0); });
 
+	const std::filesystem::path newAssetPath = getCachedPath(fileName, hash);
+
+	bool fileWasDeletedByUser = false;
 	// reuse cached asset if uri and hash match
 	if ((it != mCache.end()) && (it->second.second == hash)) {
-		const std::filesystem::path& assetPath = it->second.first;
-		return assetPath;
+		if (!std::filesystem::exists(newAssetPath)) {
+			fileWasDeletedByUser = true;
+		}
+		else {
+			const std::filesystem::path& assetPath = it->second.first;
+			return assetPath;
+		}
 	}
 
-	const std::filesystem::path newAssetPath = getCachedPath(fileName, hash);
 	if (newAssetPath.empty()) {
 		LOG_ERR << "Invalid URI, cannot cache the asset: " << uri;
-		return {};		
+		return {};
 	}
 
 	if (!writeCacheEntry(newAssetPath, buffer, size)) {
@@ -80,8 +86,11 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 		return {};
 	}
 
-	if (it == mCache.end()) {
+	if (it == mCache.end() || fileWasDeletedByUser) {
 		mCache.emplace(uri, std::make_pair(newAssetPath, hash));
+	}
+	else if (fileWasDeletedByUser) {
+		it->second = std::make_pair(newAssetPath, hash);
 	}
 	else {
 		// handle hash mismatch
