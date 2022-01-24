@@ -29,10 +29,11 @@
 #include <memory>
 #include <vector>
 
-struct PRTContext;
+class PRTContext;
 using PRTContextUPtr = std::unique_ptr<PRTContext>;
 
-struct SRL_TEST_EXPORTS_API PRTContext final {
+class SRL_TEST_EXPORTS_API PRTContext final {
+public:
 	static PRTContext& get();
 
 	explicit PRTContext(const std::vector<std::wstring>& addExtDirs = {});
@@ -42,15 +43,13 @@ struct SRL_TEST_EXPORTS_API PRTContext final {
 	PRTContext& operator=(PRTContext&&) = delete;
 	~PRTContext();
 
-	bool isAlive() const {
-		return static_cast<bool>(thePRT);
-	}
+	bool isAlive() const;
 
 	const std::filesystem::path mPluginRootPath; // the path where serlio dso resides
 	AssetCache mAssetCache;
-	ObjectUPtr thePRT;
-	CacheObjectUPtr theCache;
-	logging::LogHandlerUPtr theLogHandler;
-	prt::FileLogHandler* theFileLogHandler = nullptr;
+	ObjectUPtr mPRTHandle;
+	CacheObjectUPtr mPRTCache;
+	logging::LogHandlerUPtr mLogHandler;
+	prt::FileLogHandler* mFileLogHandler = nullptr;
 	ResolveMapCacheUPtr mResolveMapCache;
 };

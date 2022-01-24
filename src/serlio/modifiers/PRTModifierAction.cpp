@@ -430,7 +430,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	const auto updateUserSetAttribute = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues =
-		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
+		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().mPRTCache,
 		                                  *inPrtMesh, mRandomSeed, *mGenerateAttrs);
 
 		if (getAndResetForceDefault(fnNode, fnAttribute)) {
@@ -509,7 +509,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues =
-		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
+		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().mPRTCache,
 		                                  *inPrtMesh, mRandomSeed, *mGenerateAttrs);
 		MPlug plug(fnNode.object(), fnAttribute.object());
 		const std::wstring fqAttrName = ruleAttribute.fqName;
@@ -622,7 +622,7 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	mRuleFile.clear();
 	mStartRule.clear();
 	mRuleAttributes.clear();
-	PRTContext::get().theCache.get()->flushAll();
+	PRTContext::get().mPRTCache.get()->flushAll();
 
 	ResolveMapSPtr resolveMap = getResolveMap();
 	if (!resolveMap) {
@@ -643,14 +643,14 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 		return MS::kFailure;
 	}
 
-	RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI, PRTContext::get().theCache.get(), &infoStatus));
+	RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI, PRTContext::get().mPRTCache.get(), &infoStatus));
 	if (!info || infoStatus != prt::STATUS_OK) {
 		LOG_ERR << "could not get rule file info from rule file " << mRuleFile;
 		return MS::kFailure;
 	}
 
 	mStartRule = prtu::detectStartRule(info);
-	mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
+	mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().mPRTCache,
 	                                           *inPrtMesh, mRandomSeed, *EMPTY_ATTRIBUTES);
 	if (DBG)
 		LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
@@ -691,7 +691,7 @@ MStatus PRTModifierAction::doIt() {
 	InitialShapeNOPtrVector shapes = {shape.get()};
 	const prt::Status generateStatus =
 	        prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(),
-	                      outputHandler.get(), PRTContext::get().theCache.get(), nullptr);
+	                      outputHandler.get(), PRTContext::get().mPRTCache.get(), nullptr);
 	if (generateStatus != prt::STATUS_OK)
 		LOG_ERR << "prt generate failed: " << prt::getStatusDescription(generateStatus);
 

@@ -45,15 +45,15 @@ PRTContext& PRTContext::get() {
 PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs)
     : mPluginRootPath(prtu::getPluginRoot()) {
 	if (ENABLE_LOG_CONSOLE) {
-		theLogHandler = std::make_unique<logging::LogHandler>();
-		prt::addLogHandler(theLogHandler.get());
+		mLogHandler = std::make_unique<logging::LogHandler>();
+		prt::addLogHandler(mLogHandler.get());
 	}
 
 	if (ENABLE_LOG_FILE) {
 		const std::wstring logPath = (mPluginRootPath / L"serlio.log").wstring();
-		theFileLogHandler =
+		mFileLogHandler =
 		        prt::FileLogHandler::create(prt::LogHandler::ALL, prt::LogHandler::ALL_COUNT, logPath.c_str());
-		prt::addLogHandler(theFileLogHandler);
+		prt::addLogHandler(mFileLogHandler);
 	}
 
 	// Not the best place, but here we are sure the console logger is running and we are before PRT init info
@@ -69,7 +69,7 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs)
 
 	prt::Status status = prt::STATUS_UNSPECIFIED_ERROR;
 	const auto extensionPathPtrs = prtu::toPtrVec(extensionPaths);
-	thePRT.reset(prt::init(extensionPathPtrs.data(), extensionPathPtrs.size(), PRT_LOG_LEVEL, &status));
+	mPRTHandle.reset(prt::init(extensionPathPtrs.data(), extensionPathPtrs.size(), PRT_LOG_LEVEL, &status));
 
 	// early sanity check for maya encoder
 	if (!verifyMayaEncoder()) {
@@ -77,29 +77,33 @@ PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs)
 		status = prt::STATUS_ENCODER_NOT_FOUND;
 	}
 
-	if (!thePRT || status != prt::STATUS_OK) {
+	if (!mPRTHandle || status != prt::STATUS_OK) {
 		LOG_FTL << "Could not initialize PRT: " << prt::getStatusDescription(status);
-		thePRT.reset();
+		mPRTHandle.reset();
 	}
 	else {
-		theCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
+		mPRTCache.reset(prt::CacheObject::create(prt::CacheObject::CACHE_TYPE_DEFAULT));
 		mResolveMapCache = std::make_unique<ResolveMapCache>();
 	}
+}
+
+bool PRTContext::isAlive() const {
+	return static_cast<bool>(mPRTHandle);
 }
 
 PRTContext::~PRTContext() {
 
 	// the cache needs to be destructed before PRT, so reset them explicitely in the right order here
-	theCache.reset();
-	thePRT.reset();
+	mPRTCache.reset();
+	mPRTHandle.reset();
 
-	if (ENABLE_LOG_CONSOLE && (theLogHandler != nullptr)) {
-		prt::removeLogHandler(theLogHandler.get());
+	if (ENABLE_LOG_CONSOLE && (mLogHandler != nullptr)) {
+		prt::removeLogHandler(mLogHandler.get());
 	}
 
-	if (ENABLE_LOG_FILE && (theFileLogHandler != nullptr)) {
-		prt::removeLogHandler(theFileLogHandler);
-		theFileLogHandler->destroy();
-		theFileLogHandler = nullptr;
+	if (ENABLE_LOG_FILE && (mFileLogHandler != nullptr)) {
+		prt::removeLogHandler(mFileLogHandler);
+		mFileLogHandler->destroy();
+		mFileLogHandler = nullptr;
 	}
 }
