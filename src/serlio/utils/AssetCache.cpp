@@ -35,6 +35,8 @@
 namespace {
 
 bool writeCacheEntry(const std::filesystem::path& assetPath, const uint8_t* buffer, size_t size) noexcept {
+	if (std::filesystem::exists(assetPath))
+		return true;
 	std::ofstream stream(assetPath, std::ofstream::binary | std::ofstream::trunc);
 	if (!stream)
 		return false;
