@@ -28,9 +28,6 @@
 #include <ostream>
 #include <string_view>
 
-#include <maya/MFileIO.h>
-#include <maya/MGlobal.h>
-
 namespace {
 constexpr const wchar_t* MAYA_ASSET_FOLDER = L"assets";
 constexpr const wchar_t* SERLIO_ASSET_FOLDER = L"serlio_assets";
