@@ -460,8 +460,11 @@ void MayaCallbacks::addAsset(const wchar_t* uri, const wchar_t* fileName, const 
 		resultSize = pathStr.size() + 1; // ask for space for null-terminator
 		return;
 	}
-
+#ifdef _WIN32
+	wcsncpy_s(result, resultSize, pathStr.c_str(), resultSize);
+#else
 	wcsncpy(result, pathStr.c_str(), resultSize);
+#endif
 	result[resultSize - 1] = 0x0;
 	resultSize = pathStr.length() + 1;
 }
