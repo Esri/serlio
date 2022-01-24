@@ -101,7 +101,6 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 }
 
 time_t getFileModificationTime(const std::wstring& p);
-std::filesystem::path getProcessTempDir(const std::wstring& prefix);
 
 int fromHex(wchar_t c);
 wchar_t toHex(int i);
