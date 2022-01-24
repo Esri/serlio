@@ -64,7 +64,7 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 		return assetPath;
 	}
 
-	const std::filesystem::path newAssetPath = getCachedPath(fileName);
+	const std::filesystem::path newAssetPath = getCachedPath(fileName, hash);
 	if (newAssetPath.empty()) {
 		LOG_ERR << "Invalid URI, cannot cache the asset: " << uri;
 		return {};		
@@ -87,12 +87,19 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 	return newAssetPath;
 }
 
-std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName) const {
-	std::wstring cachedAssetName = L"";
-
-	// we append the filename constructed by the encoder from the URI
+std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const size_t hash) const {
+	// we start with the filename constructed by the encoder from the URI
 	assert(fileName != nullptr);
-	cachedAssetName.append(L"_").append(fileName);
+
+	std::filesystem::path assetFile(fileName);
+	std::filesystem::path cachedAssetName = assetFile.stem();
+	std::wstring hashString = std::to_wstring(hash);
+
+	// we then append the hash constructed from the texturecontent
+	cachedAssetName += L"_" + hashString;
+
+	std::filesystem::path extension = assetFile.extension();
+	cachedAssetName += extension;
 
 	const std::filesystem::path cachedAssetPath = mCacheRootPath / cachedAssetName;
 	return cachedAssetPath;
