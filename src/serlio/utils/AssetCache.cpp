@@ -108,7 +108,7 @@ std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const s
 	MCHECK(status);
 	std::filesystem::path assetsDir = workspaceDir.make_preferred() / "assets" / "serlio_assets";
 
-	//create dir if it does not exist
+	// create dir if it does not exist
 	try {
 		std::filesystem::create_directories(assetsDir);
 	}
