@@ -198,10 +198,10 @@ SRL_TEST_EXPORTS_API inline std::wstring removeImport(const std::wstring& fqRule
 
 SRL_TEST_EXPORTS_API inline std::wstring getImport(const std::wstring& fqRuleName) {
 	const std::wstring ruleWithoutStyle = removeStyle(fqRuleName);
-	const auto sepPos = ruleWithoutStyle.find(IMPORT_DELIMITER);
+	const auto sepPos = ruleWithoutStyle.rfind(IMPORT_DELIMITER);
 	if (sepPos == std::wstring::npos || sepPos == 0)
 		return {};
-	return fqRuleName.substr(0, sepPos);
+	return ruleWithoutStyle.substr(0, sepPos);
 }
 } // namespace prtu
 
