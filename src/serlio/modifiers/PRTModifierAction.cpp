@@ -167,14 +167,12 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 	return rawAttrs;
 }
 
-const RuleAttribute RULE_NOT_FOUND{};
-
 const RuleAttribute reverseLookupAttribute(const std::wstring& mayaFullAttrName, const RuleAttributes& ruleAttributes) {
 	auto it = std::find_if(ruleAttributes.begin(), ruleAttributes.end(),
 	                       [&mayaFullAttrName](const auto& ra) { return (ra.mayaFullName == mayaFullAttrName); });
 	if (it != ruleAttributes.end())
 		return *it;
-	return RULE_NOT_FOUND;
+	return {};
 }
 
 template <typename T>
