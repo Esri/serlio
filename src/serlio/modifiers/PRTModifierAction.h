@@ -55,7 +55,7 @@ public:
 
 private:
 	bool mRestricted = true;
-	MString mValuesAttr = "";
+	MString mValuesAttr;
 }; // class PRTModifierEnum
 
 class PRTModifierAction : public polyModifierFty {
