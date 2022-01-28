@@ -22,11 +22,11 @@
 
 #include "materials/MaterialInfo.h"
 
+#include "PRTContext.h"
+#include "utils/AssetCache.h"
 #include "utils/LogHandler.h"
 #include "utils/MayaUtilities.h"
 #include "utils/Utilities.h"
-#include "utils/AssetCache.h"
-#include "PRTContext.h"
 
 #include "prt/StringUtils.h"
 
@@ -141,8 +141,9 @@ void assignTextureCoordinates(MFnMesh& fnMesh, double const* const* uvs, size_t 
 	}
 }
 
-void assignVertexNormals(MFnMesh& mFnMesh, const MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices, const double* nrm,
-                         size_t nrmSize, const uint32_t* normalIndices, MAYBE_UNUSED size_t normalIndicesSize) {
+void assignVertexNormals(MFnMesh& mFnMesh, const MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices,
+                         const double* nrm, size_t nrmSize, const uint32_t* normalIndices,
+                         MAYBE_UNUSED size_t normalIndicesSize) {
 	if (nrmSize == 0)
 		return;
 
@@ -358,7 +359,8 @@ void updateMayaMesh(double const* const* uvs, size_t const* uvsSizes, uint32_t c
                     size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
                     size_t uvSetsCount, const double* nrm, size_t nrmSize, const uint32_t* normalIndices,
                     size_t normalIndicesSize, const MFloatPointArray& mayaVertices, const MIntArray& mayaFaceCounts,
-                    MIntArray& mayaVertexIndices, const MObject& outMeshObj, const adsk::Data::Associations& newMetadata) {
+                    MIntArray& mayaVertexIndices, const MObject& outMeshObj,
+                    const adsk::Data::Associations& newMetadata) {
 	MStatus stat;
 
 	MFnMeshData dataCreator;
