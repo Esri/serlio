@@ -56,15 +56,16 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 	const auto it = std::find_if(mCache.begin(), mCache.end(),
 	                             [&uri](const auto& p) { return (std::wcscmp(p.first.c_str(), uri) == 0); });
 
-	const std::filesystem::path newAssetPath = getCachedPath(fileName, hash);
 
 	// reuse cached asset if uri and hash match
-	if ((it != mCache.end()) && (it->second.second == hash)) {
-		if (std::filesystem::exists(newAssetPath)) {
-			const std::filesystem::path& assetPath = it->second.first;
+	if (it != mCache.end()) {
+		const std::filesystem::path& assetPath = it->second;
+		if (std::filesystem::exists(assetPath)) {
 			return assetPath;
 		}
 	}
+
+	const std::filesystem::path newAssetPath = getCachedPath(fileName, hash);
 
 	if (newAssetPath.empty()) {
 		LOG_ERR << "Invalid URI, cannot cache the asset: " << uri;
@@ -76,12 +77,11 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 		return {};
 	}
 
-	const std::pair<std::filesystem::path, size_t> newVal = std::make_pair(newAssetPath, hash);
 	if (it == mCache.end()) {
-		mCache.emplace(uri, newVal);
+		mCache.emplace(key, newAssetPath);
 	}
 	else {
-		it->second = newVal;
+		it->second = newAssetPath;
 	}
 
 	return newAssetPath;

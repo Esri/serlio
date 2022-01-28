@@ -30,5 +30,5 @@ public:
 private:
 	std::filesystem::path getCachedPath(const wchar_t* fileName, const size_t hash) const;
 
-	std::unordered_map<std::wstring, std::pair<std::filesystem::path, size_t>> mCache;
+	std::unordered_map<std::wstring, std::filesystem::path> mCache;
 };
