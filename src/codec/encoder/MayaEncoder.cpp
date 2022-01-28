@@ -118,7 +118,7 @@ std::basic_string<C> callAPI(FUNC f, OBJ& obj, ARGS&&... args) {
 
 std::wstring getTexturePath(const prtx::TexturePtr& texture, IMayaCallbacks* callbacks, prt::Cache* cache) {
 	if (!texture || !texture->isValid())
-		return L"";
+		return {};
 
 	const prtx::URIPtr& uri = texture->getURI();
 	const std::wstring& uriStr = uri->wstring();
