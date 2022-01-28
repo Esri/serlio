@@ -45,11 +45,6 @@ bool writeCacheEntry(const std::filesystem::path& assetPath, const uint8_t* buff
 	return true;
 }
 
-void removeCacheEntry(const std::filesystem::path& expiredAssetPath) {
-	if (std::error_code removeError; !std::filesystem::remove(expiredAssetPath, removeError))
-		LOG_WRN << "Failed to delete expired asset cache entry " << expiredAssetPath << ": " << removeError.message();
-}
-
 } // namespace
 
 std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileName, const uint8_t* buffer, size_t size) {
@@ -63,13 +58,9 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 
 	const std::filesystem::path newAssetPath = getCachedPath(fileName, hash);
 
-	bool fileWasDeletedByUser = false;
 	// reuse cached asset if uri and hash match
 	if ((it != mCache.end()) && (it->second.second == hash)) {
-		if (!std::filesystem::exists(newAssetPath)) {
-			fileWasDeletedByUser = true;
-		}
-		else {
+		if (std::filesystem::exists(newAssetPath)) {
 			const std::filesystem::path& assetPath = it->second.first;
 			return assetPath;
 		}
@@ -85,15 +76,10 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 		return {};
 	}
 
-	if (it == mCache.end() || fileWasDeletedByUser) {
+	if (it == mCache.end()) {
 		mCache.emplace(uri, std::make_pair(newAssetPath, hash));
 	}
-	else if (fileWasDeletedByUser) {
-		it->second = std::make_pair(newAssetPath, hash);
-	}
 	else {
-		// handle hash mismatch
-		removeCacheEntry(it->second.first);
 		it->second = std::make_pair(newAssetPath, hash);
 	}
 
