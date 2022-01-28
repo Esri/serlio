@@ -37,6 +37,7 @@
 
 #include <cassert>
 #include <variant>
+#include <regex>
 
 namespace {
 
@@ -628,12 +629,12 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 				const wchar_t* const* stringArray = mGenerateAttrs->getStringArray(valuesAttr, &arr_length);
 
 				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
-					std::wstring currString = stringArray[enumIndex];
+					const std::wstring currString = stringArray[enumIndex];
 
 					// remove newlines from strings, because they break the maya UI
-					currString.erase(std::remove(currString.begin(), currString.end(), '\n'), currString.end());
+					const std::wstring cleanedString = std::regex_replace(currString, std::wregex(L"\r|\n"), L"");
 
-					const MString mCurrString(currString.c_str());
+					const MString mCurrString(cleanedString.c_str());
 					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
 				}
 				break;
