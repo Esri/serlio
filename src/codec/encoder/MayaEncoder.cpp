@@ -159,6 +159,9 @@ std::wstring getTexturePath(const prtx::TexturePtr& texture, IMayaCallbacks* cal
 				else
 					srl_log_warn("Received invalid asset path while trying to write asset with URI: %1%") % uriStr;
 			}
+			else {
+				srl_log_warn("Failed to get texture at %1%, texture will be missing") % uriStr;
+			}
 		}
 		catch (std::exception& e) {
 			srl_log_warn("Failed to encode or write texture at %1% to the local filesystem: %2%") % uriStr % e.what();
