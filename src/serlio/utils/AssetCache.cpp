@@ -76,11 +76,12 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 		return {};
 	}
 
+	const std::pair<std::filesystem::path, size_t> newVal = std::make_pair(newAssetPath, hash);
 	if (it == mCache.end()) {
-		mCache.emplace(uri, std::make_pair(newAssetPath, hash));
+		mCache.emplace(uri, newVal);
 	}
 	else {
-		it->second = std::make_pair(newAssetPath, hash);
+		it->second = newVal;
 	}
 
 	return newAssetPath;
