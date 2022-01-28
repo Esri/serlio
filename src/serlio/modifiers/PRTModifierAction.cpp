@@ -179,9 +179,10 @@ MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttribut
 		MFnAttribute fnAttr(attrObj);
 
 		const MString fullAttrName = fnAttr.name();
-		RuleAttribute ruleAttr = ruleAttributes.at(fullAttrName.asWChar());
+		auto ruleAttrIt = ruleAttributes.find(fullAttrName.asWChar());
+		assert(ruleAttrIt != ruleAttributes.end()); // Rule not found
+		RuleAttribute ruleAttr = (ruleAttrIt != ruleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
 
-		assert(!ruleAttr.fqName.empty()); // poor mans check for RULE_NOT_FOUND
 
 		[[maybe_unused]] const auto ruleAttrType = ruleAttr.mType;
 
@@ -598,7 +599,9 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 			continue;
 
 		const MString fullAttrName = e.mAttr.name();
-		const RuleAttribute ruleAttr = mRuleAttributes[fullAttrName.asWChar()];
+		const auto ruleAttrIt = mRuleAttributes.find(fullAttrName.asWChar());
+		assert(ruleAttrIt != ruleAttributes.end()); // Rule not found
+		RuleAttribute ruleAttr = (ruleAttrIt != mRuleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
 
 		const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName).c_str();
 		std::wstring attrImport = prtu::getImport(ruleAttr.fqName).c_str();
