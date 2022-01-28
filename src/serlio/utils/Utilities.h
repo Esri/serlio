@@ -97,7 +97,7 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 }
 
 template <class SizeT>
-void hash_combine(SizeT& seed, SizeT value) {
+inline void hash_combine(SizeT& seed, SizeT value) {
 	seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
