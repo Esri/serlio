@@ -313,7 +313,7 @@ void convertMaterialToAttributeMap(prtx::PRTUtils::AttributeMapBuilderPtr& aBuil
 			case prtx::Material::PT_TEXTURE: {
 				const auto& t = prtxAttr.getTexture(key);
 				const std::wstring p = getTexturePath(t, cb, cache);
-				if (p.length() > 0) {
+				if (!p.empty()) {
 					aBuilder->setString(key.c_str(), p.c_str());
 				}
 				break;
@@ -331,7 +331,7 @@ void convertMaterialToAttributeMap(prtx::PRTUtils::AttributeMapBuilderPtr& aBuil
 						texPaths.push_back(texPath);
 				}
 
-				if (texPaths.size() > 0) {
+				if (!texPaths.empty()) {
 					std::vector<const wchar_t*> pTexPaths = toPtrVec(texPaths);
 					aBuilder->setStringArray(key.c_str(), pTexPaths.data(), pTexPaths.size());
 				}
