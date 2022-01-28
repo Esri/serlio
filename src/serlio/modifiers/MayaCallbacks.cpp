@@ -380,6 +380,17 @@ void updateMayaMesh(double const* const* uvs, size_t const* uvsSizes, uint32_t c
 	outputMesh.setMetadata(newMetadata);
 }
 
+void copyStringToWCharPtr(const std::wstring input, wchar_t* result, size_t& resultSize) {
+	if (resultSize <= input.size())    // also check for null-terminator
+		resultSize = input.size() + 1; // ask for space for null-terminator
+#if _MSC_VER >= 1400
+	wcsncpy_s(result, resultSize, input.c_str(), resultSize);
+#else
+	wcsncpy(result, pathStr.c_str(), resultSize);
+#endif
+	result[resultSize - 1] = 0x0;
+	resultSize = input.length() + 1;
+}
 } // namespace
 
 void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
@@ -456,17 +467,7 @@ void MayaCallbacks::addAsset(const wchar_t* uri, const wchar_t* fileName, const 
 
 	const std::wstring pathStr = assetPath.generic_wstring();
 
-	if (resultSize <= pathStr.size()) {  // also check for null-terminator
-		resultSize = pathStr.size() + 1; // ask for space for null-terminator
-		return;
-	}
-#if _MSC_VER >= 1400
-	wcsncpy_s(result, resultSize, pathStr.c_str(), resultSize);
-#else
-	wcsncpy(result, pathStr.c_str(), resultSize);
-#endif
-	result[resultSize - 1] = 0x0;
-	resultSize = pathStr.length() + 1;
+	copyStringToWCharPtr(pathStr, result, resultSize);
 }
 
 // PRT version >= 2.3
