@@ -27,6 +27,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <set>
 
 namespace prt {
 class RuleFileInfo;
@@ -59,18 +60,23 @@ struct RuleAttribute {
 	AttributeGroup groups; // groups can be nested
 	int order = ORDER_NONE;
 	int groupOrder = ORDER_NONE;
+	int globalGroupOrder = ORDER_NONE;
 
 	std::wstring ruleFile;
 	int ruleOrder = ORDER_NONE;
 	bool memberOfStartRuleFile = false;
 };
 
-using RuleAttributes = std::vector<RuleAttribute>;
+struct RuleAttributeCmp {
+	bool operator()(const RuleAttribute& lhs, const RuleAttribute& rhs) const;
+};
 
-SRL_TEST_EXPORTS_API RuleAttributes getRuleAttributes(const std::wstring& ruleFile,
+using RuleAttributeVec = std::vector<RuleAttribute>;
+using RuleAttributeSet = std::set<RuleAttribute, RuleAttributeCmp>;
+
+SRL_TEST_EXPORTS_API RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile,
                                                       const prt::RuleFileInfo* ruleFileInfo);
-AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes);
-void sortRuleAttributes(RuleAttributes& ra);
+void setGlobalGroupOrder(RuleAttributeVec& ruleAttributes);
 std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap);
 std::ostream& operator<<(std::ostream& ostr, const RuleAttribute& ap);
 std::wostream& operator<<(std::wostream& wostr, const AttributeGroupOrder& ago);

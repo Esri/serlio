@@ -83,8 +83,27 @@ std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileIn
 	return importOrderMap;
 }
 
-RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
-	RuleAttributes ra;
+
+void setGlobalGroupOrder(RuleAttributeVec& ruleAttributes) {
+	AttributeGroupOrder globalGroupOrder;
+	for (const auto& attribute : ruleAttributes) {
+		for (auto it = std::rbegin(attribute.groups); it != std::rend(attribute.groups); ++it) {
+			std::vector<std::wstring> g(it, std::rend(attribute.groups));
+			std::reverse(g.begin(), g.end());
+			auto ggoIt = globalGroupOrder.emplace(std::make_pair(attribute.ruleFile, g), ORDER_NONE).first;
+			ggoIt->second = std::min(attribute.groupOrder, ggoIt->second);
+		}
+	}
+
+	for (auto& attribute : ruleAttributes) {
+		const auto it = globalGroupOrder.find(std::make_pair(attribute.ruleFile, attribute.groups));
+		attribute.globalGroupOrder = (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
+	}
+}
+
+
+RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
+	RuleAttributeVec ra;
 
 	std::wstring mainCgaRuleName = std::filesystem::path(ruleFile).stem().wstring();
 
@@ -155,23 +174,13 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 			LOG_DBG << p;
 	}
 
-	return ra;
+	setGlobalGroupOrder(ra);
+	RuleAttributeSet sortedRuleAttributes(ra.begin(), ra.end());
+
+	return sortedRuleAttributes;
 }
 
-AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes) {
-	AttributeGroupOrder globalGroupOrder;
-	for (const auto& attribute : ruleAttributes) {
-		for (auto it = std::rbegin(attribute.groups); it != std::rend(attribute.groups); ++it) {
-			std::vector<std::wstring> g(it, std::rend(attribute.groups));
-			std::reverse(g.begin(), g.end());
-			auto ggoIt = globalGroupOrder.emplace(std::make_pair(attribute.ruleFile,g), ORDER_NONE).first;
-			ggoIt->second = std::min(attribute.groupOrder, ggoIt->second);
-		}
-	}
-	return globalGroupOrder;
-}
-
-void sortRuleAttributes(RuleAttributes& ra) {
+bool RuleAttributeCmp::operator()(const RuleAttribute& lhs, const RuleAttribute& rhs) const {
 	auto lowerCaseOrdering = [](std::wstring a, std::wstring b) {
 		std::transform(a.begin(), a.end(), a.begin(), ::tolower);
 		std::transform(b.begin(), b.end(), b.begin(), ::tolower);
@@ -217,15 +226,6 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return a.groups[i];
 	};
 
-	const AttributeGroupOrder globalGroupOrder = getGlobalGroupOrder(ra);
-	if (DBG)
-		LOG_DBG << "globalGroupOrder:\n" << globalGroupOrder;
-
-	auto getGroupOrder = [&globalGroupOrder](const RuleAttribute& ap) {
-		const auto it = globalGroupOrder.find(std::make_pair(ap.ruleFile,ap.groups));
-		return (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
-	};
-
 	auto compareGroups = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		if (isChildOf(a, b))
 			return false; // child a should be sorted after parent b
@@ -233,8 +233,8 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		if (isChildOf(b, a))
 			return true; // child b should be sorted after parent a
 
-		const auto globalOrderA = getGroupOrder(a);
-		const auto globalOrderB = getGroupOrder(b);
+		const auto globalOrderA = a.globalGroupOrder;
+		const auto globalOrderB = b.globalGroupOrder;
 		if (globalOrderA != globalOrderB)
 			return (globalOrderA < globalOrderB);
 
@@ -262,7 +262,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return compareAttributeOrder(a, b);
 	};
 
-	std::sort(ra.begin(), ra.end(), attributeOrder);
+	return attributeOrder(lhs, rhs);
 }
 
 std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap) {

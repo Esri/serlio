@@ -167,16 +167,8 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 	return rawAttrs;
 }
 
-const RuleAttribute reverseLookupAttribute(const std::wstring& mayaFullAttrName, const RuleAttributes& ruleAttributes) {
-	auto it = std::find_if(ruleAttributes.begin(), ruleAttributes.end(),
-	                       [&mayaFullAttrName](const auto& ra) { return (ra.mayaFullName == mayaFullAttrName); });
-	if (it != ruleAttributes.end())
-		return *it;
-	return {};
-}
-
 template <typename T>
-MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttributes& mRuleAttributes, T attrFunction) {
+MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttributeMap& ruleAttributes, T attrFunction) {
 	MStatus stat;
 	const MFnDependencyNode fNode(node, &stat);
 	MCHECK(stat);
@@ -187,7 +179,8 @@ MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttribut
 		MFnAttribute fnAttr(attrObj);
 
 		const MString fullAttrName = fnAttr.name();
-		const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar(), mRuleAttributes);
+		RuleAttribute ruleAttr = ruleAttributes.at(fullAttrName.asWChar());
+
 		assert(!ruleAttr.fqName.empty()); // poor mans check for RULE_NOT_FOUND
 
 		[[maybe_unused]] const auto ruleAttrType = ruleAttr.mType;
@@ -605,7 +598,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 			continue;
 
 		const MString fullAttrName = e.mAttr.name();
-		const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar(), mRuleAttributes);
+		const RuleAttribute ruleAttr = mRuleAttributes[fullAttrName.asWChar()];
 
 		const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName).c_str();
 		std::wstring attrImport = prtu::getImport(ruleAttr.fqName).c_str();
@@ -739,10 +732,12 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 
 	if (node != MObject::kNullObj) {
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
-		mRuleAttributes = getRuleAttributes(mRuleFile, info.get());
-		sortRuleAttributes(mRuleAttributes);
-
-		createNodeAttributes(node, info.get());
+		RuleAttributeSet ruleAttributes = getRuleAttributes(mRuleFile, info.get());
+		for (const RuleAttribute& ruleAttr : ruleAttributes) {
+			mRuleAttributes[ruleAttr.mayaFullName] = ruleAttr; 
+		}
+		
+		createNodeAttributes(ruleAttributes, node, info.get());
 		updateDynamicEnums();
 	}
 
@@ -781,12 +776,12 @@ MStatus PRTModifierAction::doIt() {
 	return status;
 }
 
-MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const prt::RuleFileInfo* info) {
+MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& nodeObj, const prt::RuleFileInfo* info) {
 	MStatus stat;
 	MFnDependencyNode node(nodeObj, &stat);
 	MCHECK(stat);
 
-	for (const RuleAttribute& p : mRuleAttributes) {
+	for (auto const& p : ruleAttributes) {
 		const std::wstring fqName = p.fqName;
 
 		// only use attributes of current style
@@ -952,10 +947,10 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 
 void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 	auto isInUse = [this](const MString& attrName) {
-		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(), [&attrName](const auto& ra) {
-			return (ra.mayaFullName == attrName.asWChar() ||
-			        ra.mayaFullName + ATTRIBUTE_USER_SET_SUFFIX == attrName.asWChar() ||
-			        ra.mayaFullName + ATTRIBUTE_FORCE_DEFAULT_SUFFIX == attrName.asWChar());
+		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(), [&attrName](const auto& attrPair) {
+			return (attrPair.second.mayaFullName == attrName.asWChar() ||
+			        attrPair.second.mayaFullName + ATTRIBUTE_USER_SET_SUFFIX == attrName.asWChar() ||
+			        attrPair.second.mayaFullName + ATTRIBUTE_FORCE_DEFAULT_SUFFIX == attrName.asWChar());
 		});
 		return (it != mRuleAttributes.end());
 	};
