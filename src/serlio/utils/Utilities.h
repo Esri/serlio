@@ -96,6 +96,21 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 	return pv;
 }
 
+template <class SizeT>
+void hash_combine(SizeT& seed, SizeT value) {
+	seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+struct pair_hash {
+	template <class A, class B>
+	std::size_t operator()(const std::pair<A, B>& v) const {
+		std::size_t seed = 0;
+		hash_combine(seed, std::hash<A>{}(v.first));
+		hash_combine(seed, std::hash<B>{}(v.second));
+		return seed;
+	}
+};
+
 time_t getFileModificationTime(const std::wstring& p);
 
 int fromHex(wchar_t c);

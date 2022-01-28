@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "utils/Utilities.h"
+
 #include <filesystem>
 #include <string>
 #include <unordered_map>
@@ -30,5 +32,5 @@ public:
 private:
 	std::filesystem::path getCachedPath(const wchar_t* fileName, const size_t hash) const;
 
-	std::unordered_map<std::wstring, std::filesystem::path> mCache;
+	std::unordered_map<std::pair<std::wstring, size_t>, std::filesystem::path, prtu::pair_hash> mCache;
 };

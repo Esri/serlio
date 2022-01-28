@@ -49,13 +49,13 @@ bool writeCacheEntry(const std::filesystem::path& assetPath, const uint8_t* buff
 
 std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileName, const uint8_t* buffer, size_t size) {
 	assert(uri != nullptr);
+	std::wstring stringUri(uri);
 
 	const std::string_view bufferView(reinterpret_cast<const char*>(buffer), size);
 	const size_t hash = std::hash<std::string_view>{}(bufferView);
+	const auto key = std::make_pair(stringUri, hash);
 
-	const auto it = std::find_if(mCache.begin(), mCache.end(),
-	                             [&uri](const auto& p) { return (std::wcscmp(p.first.c_str(), uri) == 0); });
-
+	const auto it = mCache.find(key);
 
 	// reuse cached asset if uri and hash match
 	if (it != mCache.end()) {
