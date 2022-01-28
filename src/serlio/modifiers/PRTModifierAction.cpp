@@ -131,6 +131,15 @@ bool getAndResetForceDefault(const MFnDependencyNode& node, const MFnAttribute& 
 	return false;
 }
 
+std::wstring removeSuffix(std::wstring const& fullString) {
+	for (const std::wstring suffix : {ATTRIBUTE_USER_SET_SUFFIX, ATTRIBUTE_FORCE_DEFAULT_SUFFIX}) {
+		if ((fullString.length() >= suffix.length()) &&
+		    (fullString.compare(fullString.length() - suffix.length(), suffix.length(), suffix) == 0))
+				return fullString.substr(0, fullString.length() - suffix.length());
+	}
+	return fullString;
+}
+
 enum class PrtAttributeType { BOOL, FLOAT, COLOR, STRING, ENUM };
 
 std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& node) {
@@ -950,11 +959,8 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 
 void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 	auto isInUse = [this](const MString& attrName) {
-		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(), [&attrName](const auto& attrPair) {
-			return (attrPair.second.mayaFullName == attrName.asWChar() ||
-			        attrPair.second.mayaFullName + ATTRIBUTE_USER_SET_SUFFIX == attrName.asWChar() ||
-			        attrPair.second.mayaFullName + ATTRIBUTE_FORCE_DEFAULT_SUFFIX == attrName.asWChar());
-		});
+		std::wstring attrNameWithoutSuffix = removeSuffix(attrName.asWChar());
+		auto it = mRuleAttributes.find(attrNameWithoutSuffix);
 		return (it != mRuleAttributes.end());
 	};
 
