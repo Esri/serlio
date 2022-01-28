@@ -302,14 +302,14 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 
 		switch (annot->getArgument(arg)->getType()) {
 			case prt::AAT_BOOL: {
-				bool val = annot->getArgument(arg)->getBool();
+				const bool val = annot->getArgument(arg)->getBool();
 				if (val == std::get<bool>(defaultValue))
 					return idx;
 				idx++;
 				break;
 			}
 			case prt::AAT_FLOAT: {
-				double val = annot->getArgument(arg)->getFloat();
+				const double val = annot->getArgument(arg)->getFloat();
 				if (val == std::get<double>(defaultValue))
 					return idx;
 				idx++;
@@ -620,7 +620,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 		const std::wstring prefix = attrStyle + prtu::STYLE_DELIMITER + attrImport;
 
 		const wchar_t* valuesAttr = (MString(prefix.c_str()) + e.mValuesAttr).asWChar();
-		prt::Attributable::PrimitiveType type = mGenerateAttrs->getType(valuesAttr);
+		const prt::Attributable::PrimitiveType type = mGenerateAttrs->getType(valuesAttr);
 
 		switch (type) {
 			case prt::Attributable::PT_STRING_ARRAY: {
@@ -959,7 +959,7 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 
 void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 	auto isInUse = [this](const MString& attrName) {
-		std::wstring attrNameWithoutSuffix = removeSuffix(attrName.asWChar());
+		const std::wstring attrNameWithoutSuffix = removeSuffix(attrName.asWChar());
 		auto it = mRuleAttributes.find(attrNameWithoutSuffix);
 		return (it != mRuleAttributes.end());
 	};
@@ -1015,12 +1015,12 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 
 		switch (annot->getArgument(arg)->getType()) {
 			case prt::AAT_BOOL: {
-				bool val = annot->getArgument(arg)->getBool();
+				const bool val = annot->getArgument(arg)->getBool();
 				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), enumIndex++));
 				break;
 			}
 			case prt::AAT_FLOAT: {
-				double val = annot->getArgument(arg)->getFloat();
+				const double val = annot->getArgument(arg)->getFloat();
 				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), enumIndex++));
 				break;
 			}
