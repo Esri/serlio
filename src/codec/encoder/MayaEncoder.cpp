@@ -332,7 +332,7 @@ void convertMaterialToAttributeMap(prtx::PRTUtils::AttributeMapBuilderPtr& aBuil
 				}
 
 				if (!texPaths.empty()) {
-					std::vector<const wchar_t*> pTexPaths = toPtrVec(texPaths);
+					const std::vector<const wchar_t*> pTexPaths = toPtrVec(texPaths);
 					aBuilder->setStringArray(key.c_str(), pTexPaths.data(), pTexPaths.size());
 				}
 
