@@ -268,8 +268,8 @@ bool RuleAttributeCmp::operator()(const RuleAttribute& lhs, const RuleAttribute&
 std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap) {
 	auto orderVal = [](int order) { return (order == ORDER_NONE) ? L"none" : std::to_wstring(order); };
 	ostr << L"RuleAttribute '" << ap.fqName << L"':" << L" order = " << orderVal(ap.order) << L", groupOrder = "
-	     << orderVal(ap.groupOrder) << L", ruleFile = '" << ap.ruleFile << L"'" << L", groups = [ "
-	     << join<wchar_t>(ap.groups, L" ") << L" ]\n";
+	     << orderVal(ap.groupOrder) << L", globalGroupOrder = " << orderVal(ap.globalGroupOrder) << L", ruleFile = '"
+	     << ap.ruleFile << L"'" << L", groups = [ " << join<wchar_t>(ap.groups, L" ") << L" ]\n";
 	return ostr;
 }
 
