@@ -37,6 +37,6 @@ std::filesystem::path getWorkspaceRoot(MStatus& status) {
 	std::wstring output;
 	status = scriptBuilder.executeSync(output);
 
-	return output;
+	return std::filesystem::path(output).make_preferred();
 }
 } // namespace mu
