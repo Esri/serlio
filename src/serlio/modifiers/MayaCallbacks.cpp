@@ -388,7 +388,7 @@ void copyStringToWCharPtr(const std::wstring input, wchar_t* result, size_t& res
 #if _MSC_VER >= 1400
 	wcsncpy_s(result, resultSize, input.c_str(), resultSize);
 #else
-	wcsncpy(result, pathStr.c_str(), resultSize);
+	wcsncpy(result, input.c_str(), resultSize);
 #endif
 	result[resultSize - 1] = 0x0;
 	resultSize = input.length() + 1;
