@@ -37,7 +37,6 @@
 
 #include <cassert>
 #include <variant>
-#include <regex>
 
 namespace {
 
@@ -634,9 +633,8 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					const std::wstring currString = stringArray[enumIndex];
 
 					// remove newlines from strings, because they break the maya UI
-					const std::wstring cleanedString = std::regex_replace(currString, std::wregex(L"\r|\n"), L"");
-
-					const MString mCurrString(cleanedString.c_str());
+					const size_t cutoffIndex = currString.find_last_of(L"\r\n");
+					const MString mCurrString(currString.substr(0, cutoffIndex).c_str());
 					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
 				}
 				break;
