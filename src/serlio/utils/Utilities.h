@@ -96,6 +96,7 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 	return pv;
 }
 
+//hash_combine function from boost library: https://www.boost.org/doc/libs/1_73_0/boost/container_hash/hash.hpp
 template <class SizeT>
 inline void hash_combine(SizeT& seed, SizeT value) {
 	seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
