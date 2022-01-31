@@ -619,13 +619,13 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 
 		const std::wstring prefix = attrStyle + prtu::STYLE_DELIMITER + attrImport;
 
-		const wchar_t* valuesAttr = (MString(prefix.c_str()) + e.mValuesAttr).asWChar();
-		const prt::Attributable::PrimitiveType type = mGenerateAttrs->getType(valuesAttr);
+		const std::wstring valuesAttr = (MString(prefix.c_str()) + e.mValuesAttr).asWChar();
+		const prt::Attributable::PrimitiveType type = mGenerateAttrs->getType(valuesAttr.c_str());
 
 		switch (type) {
 			case prt::Attributable::PT_STRING_ARRAY: {
 				size_t arr_length = 0;
-				const wchar_t* const* stringArray = mGenerateAttrs->getStringArray(valuesAttr, &arr_length);
+				const wchar_t* const* stringArray = mGenerateAttrs->getStringArray(valuesAttr.c_str(), &arr_length);
 
 				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 					if (stringArray[enumIndex] == nullptr)
@@ -641,7 +641,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 			}
 			case prt::Attributable::PT_FLOAT_ARRAY: {
 				size_t arr_length = 0;
-				const double* doubleArray = mGenerateAttrs->getFloatArray(valuesAttr, &arr_length);
+				const double* doubleArray = mGenerateAttrs->getFloatArray(valuesAttr.c_str(), &arr_length);
 
 				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 					const double currDouble = doubleArray[enumIndex];
@@ -653,7 +653,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 			}
 			case prt::Attributable::PT_BOOL_ARRAY: {
 				size_t arr_length = 0;
-				const bool* boolArray = mGenerateAttrs->getBoolArray(valuesAttr, &arr_length);
+				const bool* boolArray = mGenerateAttrs->getBoolArray(valuesAttr.c_str(), &arr_length);
 
 				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 					const bool currBool = boolArray[enumIndex];
@@ -664,20 +664,20 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 				break;
 			}
 			case prt::Attributable::PT_STRING: {
-				const MString mCurrString = mGenerateAttrs->getString(valuesAttr);
+				const MString mCurrString = mGenerateAttrs->getString(valuesAttr.c_str());
 
 				MCHECK(e.mAttr.addField(mCurrString, 0));
 				break;
 			}
 			case prt::Attributable::PT_FLOAT: {
-				const bool currFloat = mGenerateAttrs->getFloat(valuesAttr);
+				const bool currFloat = mGenerateAttrs->getFloat(valuesAttr.c_str());
 
 				const MString mCurrString(std::to_wstring(currFloat).c_str());
 				MCHECK(e.mAttr.addField(mCurrString, 0));
 				break;
 			}
 			case prt::Attributable::PT_BOOL: {
-				const bool currBool = mGenerateAttrs->getBool(valuesAttr);
+				const bool currBool = mGenerateAttrs->getBool(valuesAttr.c_str());
 
 				const MString mCurrString(std::to_wstring(currBool).c_str());
 				MCHECK(e.mAttr.addField(mCurrString, 0));
