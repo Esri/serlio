@@ -796,7 +796,7 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 	MFnDependencyNode node(nodeObj, &stat);
 	MCHECK(stat);
 
-	for (auto const& p : ruleAttributes) {
+	for (const RuleAttribute& p : ruleAttributes) {
 		const std::wstring fqName = p.fqName;
 
 		// only use attributes of current style
