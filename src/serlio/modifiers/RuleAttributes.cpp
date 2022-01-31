@@ -26,10 +26,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <filesystem>
 #include <ostream>
 #include <string>
 #include <vector>
-#include <filesystem>
 
 namespace {
 
@@ -58,7 +58,7 @@ std::wstring getNiceName(const std::wstring& fqAttrName) {
 
 } // namespace
 
-std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileInfo) {
+std::map<std::wstring, int> getImportOrderMap(const prt::RuleFileInfo* ruleFileInfo) {
 	std::map<std::wstring, int> importOrderMap;
 	int importOrder = 0;
 	for (size_t i = 0; i < ruleFileInfo->getNumAnnotations(); i++) {
@@ -69,7 +69,7 @@ std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileIn
 				const prt::AnnotationArgument* anArg = an->getArgument(argIdx);
 				if (anArg->getType() == prt::AAT_STR) {
 					const wchar_t* anKey = anArg->getKey();
-					if(std::wcscmp(anKey, ANNOT_IMPORTS_KEY) == 0) {
+					if (std::wcscmp(anKey, ANNOT_IMPORTS_KEY) == 0) {
 						const wchar_t* importRuleCharPtr = anArg->getStr();
 						if (importRuleCharPtr != nullptr) {
 							std::wstring importRule = importRuleCharPtr;
@@ -82,7 +82,6 @@ std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileIn
 	}
 	return importOrderMap;
 }
-
 
 void setGlobalGroupOrder(RuleAttributeVec& ruleAttributes) {
 	AttributeGroupOrder globalGroupOrder;
@@ -101,13 +100,12 @@ void setGlobalGroupOrder(RuleAttributeVec& ruleAttributes) {
 	}
 }
 
-
 RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
 	RuleAttributeVec ra;
 
 	std::wstring mainCgaRuleName = std::filesystem::path(ruleFile).stem().wstring();
 
-	const std::map<std::wstring,int> importOrderMap = getImportOrderMap(ruleFileInfo);
+	const std::map<std::wstring, int> importOrderMap = getImportOrderMap(ruleFileInfo);
 
 	for (size_t i = 0; i < ruleFileInfo->getNumAttributes(); i++) {
 		const prt::RuleFileInfo::Entry* attr = ruleFileInfo->getAttribute(i);
@@ -137,8 +135,8 @@ RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile, const prt::Rule
 		}
 
 		const auto importOrder = importOrderMap.find(p.ruleFile);
-		p.ruleOrder =  (importOrder != importOrderMap.end()) ? importOrder->second : ORDER_NONE;
-		
+		p.ruleOrder = (importOrder != importOrderMap.end()) ? importOrder->second : ORDER_NONE;
+
 		bool hidden = false;
 		for (size_t a = 0; a < attr->getNumAnnotations(); a++) {
 			const prt::Annotation* an = attr->getAnnotation(a);
@@ -194,9 +192,9 @@ bool RuleAttributeCmp::operator()(const RuleAttribute& lhs, const RuleAttribute&
 		if (b.memberOfStartRuleFile && !a.memberOfStartRuleFile)
 			return false;
 
-		if(a.ruleOrder != b.ruleOrder)
+		if (a.ruleOrder != b.ruleOrder)
 			return a.ruleOrder < b.ruleOrder;
-		
+
 		return lowerCaseOrdering(a.ruleFile, b.ruleFile);
 	};
 
