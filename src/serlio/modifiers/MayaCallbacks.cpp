@@ -458,8 +458,12 @@ void MayaCallbacks::addAsset(const wchar_t* uri, const wchar_t* fileName, const 
 		resultSize = 0;
 		return;
 	}
-
-	const std::filesystem::path& assetPath = PRTContext::get().mAssetCache.put(uri, fileName, buffer, size);
+	
+	MStatus status;
+	const std::filesystem::path workspaceRoot = mu::getWorkspaceRoot(status);
+	MCHECK(status);
+	const std::filesystem::path& assetPath =
+	        PRTContext::get().mAssetCache.put(uri, fileName, workspaceRoot, buffer, size);
 	if (assetPath.empty()) {
 		resultSize = 0;
 		return;

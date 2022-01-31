@@ -27,10 +27,12 @@
 
 class AssetCache {
 public:
-	std::filesystem::path put(const wchar_t* uri, const wchar_t* fileName, const uint8_t* buffer, size_t size);
+	std::filesystem::path put(const wchar_t* uri, const wchar_t* fileName, const std::filesystem::path workspaceRoot,
+	                          const uint8_t* buffer, size_t size);
 
 private:
-	std::filesystem::path getCachedPath(const wchar_t* fileName, const size_t hash) const;
+	std::filesystem::path getCachedPath(const wchar_t* fileName, const std::filesystem::path workspaceRoot,
+	                                    const size_t hash) const;
 
 	std::unordered_map<std::pair<std::wstring, size_t>, std::filesystem::path, prtu::pair_hash> mCache;
 };

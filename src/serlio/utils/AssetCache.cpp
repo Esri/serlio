@@ -20,7 +20,6 @@
 #include "AssetCache.h"
 
 #include "utils/LogHandler.h"
-#include "utils/MayaUtilities.h"
 
 #include <cassert>
 #include <fstream>
@@ -47,7 +46,7 @@ bool writeCacheEntry(const std::filesystem::path& assetPath, const uint8_t* buff
 
 } // namespace
 
-std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileName, const uint8_t* buffer, size_t size) {
+std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileName, const std::filesystem::path workspaceRoot, const uint8_t* buffer, size_t size) {
 	assert(uri != nullptr);
 	std::wstring stringUri(uri);
 
@@ -65,7 +64,7 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 		}
 	}
 
-	const std::filesystem::path newAssetPath = getCachedPath(fileName, hash);
+	const std::filesystem::path newAssetPath = getCachedPath(fileName, workspaceRoot, hash);
 
 	if (newAssetPath.empty()) {
 		LOG_ERR << "Invalid URI, cannot cache the asset: " << uri;
@@ -87,12 +86,10 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 	return newAssetPath;
 }
 
-std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const size_t hash) const {
+std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const std::filesystem::path workspaceRoot,
+                                                const size_t hash) const {
 	// we start with the root folder in the current workspace
-	MStatus status;
-	std::filesystem::path workspaceDir = mu::getWorkspaceRoot(status);
-	MCHECK(status);
-	std::filesystem::path assetsDir = workspaceDir.make_preferred() / MAYA_ASSET_FOLDER / SERLIO_ASSET_FOLDER;
+	std::filesystem::path assetsDir = workspaceRoot / MAYA_ASSET_FOLDER / SERLIO_ASSET_FOLDER;
 
 	// create dir if it does not exist
 	try {
