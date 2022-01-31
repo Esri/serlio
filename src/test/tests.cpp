@@ -128,7 +128,7 @@ TEST_CASE("default attribute values") {
 	std::wstring ruleFile = L"bin/r1.cgb";
 	RuleFileInfoUPtr ruleInfo(prt::createRuleFileInfo(resolveMap->getString(ruleFile.c_str())));
 
-	RuleAttributes ruleAttrs = getRuleAttributes(ruleFile, ruleInfo.get());
+	RuleAttributeSet ruleAttrs = getRuleAttributes(ruleFile, ruleInfo.get());
 
 	for (const auto& ap : ruleAttrs) {
 		LOG_DBG << ap.fqName;
@@ -145,7 +145,7 @@ const AttributeGroup AG_BK = {L"b", L"k"};
 const AttributeGroup AG_BKP = {L"b", L"k", L"p"};
 
 RuleAttribute getAttr(std::wstring fqName, AttributeGroup ag, int o, int go, std::wstring rf,int ro, bool sr) {
-	return RuleAttribute{fqName, L"", L"", L"", prt::AAT_UNKNOWN, ag, o, go, rf,ro, sr};
+	return RuleAttribute{fqName, L"", L"", L"", prt::AAT_UNKNOWN, ag, o, go, go, rf,ro, sr};
 }
 
 TEST_CASE("global group order") {
@@ -155,14 +155,14 @@ TEST_CASE("global group order") {
 	const RuleAttribute D = getAttr(L"style$D", AG_A, ORDER_NONE, 20, L"foo", ORDER_NONE, true);
 	const RuleAttribute E = getAttr(L"style$E", AG_AK, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-	const RuleAttributes inp = {A, B, C, D, E};
-	const AttributeGroupOrder ago = getGlobalGroupOrder(inp);
-	CHECK(ago.size() == 5);
-	CHECK(ago.at(std::make_pair( L"foo",AG_BKP)) == 10);
-	CHECK(ago.at(std::make_pair( L"foo",AG_BK)) == 10);
-	CHECK(ago.at(std::make_pair( L"foo",AG_B)) == 10);
-	CHECK(ago.at(std::make_pair( L"foo",AG_AK)) == ORDER_NONE);
-	CHECK(ago.at(std::make_pair( L"foo",AG_A)) == 20);
+	RuleAttributeVec inp = {A, B, C, D, E};
+	setGlobalGroupOrder(inp);
+	CHECK(inp.size() == 5);
+	CHECK(inp[0].globalGroupOrder == 10);
+	CHECK(inp[1].globalGroupOrder == 10);
+	CHECK(inp[2].globalGroupOrder == 10);
+	CHECK(inp[3].globalGroupOrder == 20);
+	CHECK(inp[4].globalGroupOrder == ORDER_NONE);
 }
 
 TEST_CASE("rule attribute sorting") {
@@ -171,50 +171,50 @@ TEST_CASE("rule attribute sorting") {
 		const RuleAttribute A = getAttr(L"style$A", AG_NONE, ORDER_NONE, ORDER_NONE, L"bar", ORDER_NONE, true);
 		const RuleAttribute B = getAttr(L"style$B", AG_NONE, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, false);
 
-		RuleAttributes inp = {B, A};
-		const RuleAttributes exp = {A, B};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {B, A};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {A, B};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("rule file 2") {
 		const RuleAttribute A = getAttr(L"style$A", AG_NONE, ORDER_NONE, ORDER_NONE, L"bar", ORDER_NONE, false);
 		const RuleAttribute B = getAttr(L"style$B", AG_NONE, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {B, A};
-		const RuleAttributes exp = {B, A};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {B, A};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {B, A};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("group order") {
 		const RuleAttribute A = getAttr(L"style$A", {L"foo"}, ORDER_NONE, 0, L"foo", ORDER_NONE, true);
 		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, 1, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {B, A};
-		const RuleAttributes exp = {A, B};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {B, A};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {A, B};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("nested groups") {
 		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {A, B};
-		const RuleAttributes exp = {B, A};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {A, B};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {B, A};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("nested groups disjunct") {
 		const RuleAttribute A = getAttr(L"style$A", {L"foo1", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {A, B};
-		const RuleAttributes exp = {B, A};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {A, B};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {B, A};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("nested groups on same level") {
@@ -222,10 +222,10 @@ TEST_CASE("rule attribute sorting") {
 		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 		const RuleAttribute C = getAttr(L"style$C", {L"foo", L"baz"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {C, A, B};
-		const RuleAttributes exp = {B, A, C};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {C, A, B};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {B, A, C};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("nested groups with group order") {
@@ -233,10 +233,13 @@ TEST_CASE("rule attribute sorting") {
 		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 		const RuleAttribute C = getAttr(L"style$C", {L"foo", L"baz"}, ORDER_NONE, 0, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {C, A, B};
-		const RuleAttributes exp = {B, C, A};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {C, A, B};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {B, C, A};
+		for (const auto& ref: inpAsVec){
+			std::wcout << ref;
+		}
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("all properties") {
@@ -246,10 +249,10 @@ TEST_CASE("rule attribute sorting") {
 		const RuleAttribute D = getAttr(L"style$D", {L"First", L"Second"}, 1, 2, L"foo", ORDER_NONE, true);
 		const RuleAttribute E = getAttr(L"style$E", {L"First", L"Second", L"Third"}, ORDER_NONE, 1, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {B, A, C, D, E};
-		const RuleAttributes exp = {A, B, C, D, E};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {B, A, C, D, E};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {A, B, C, D, E};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("review example") {
@@ -261,10 +264,10 @@ TEST_CASE("rule attribute sorting") {
 		const RuleAttribute D = getAttr(L"style$D", AG_A, ORDER_NONE, 20, L"foo", ORDER_NONE, true);
 		const RuleAttribute E = getAttr(L"style$E", AG_AK, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {A, B, C, D, E};
-		const RuleAttributes exp = {A, B, C, D, E};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {A, B, C, D, E};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {A, B, C, D, E};
+		CHECK(inpAsVec == exp);
 	}
 }
 
