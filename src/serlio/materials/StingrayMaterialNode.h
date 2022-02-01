@@ -26,7 +26,7 @@
 #include <array>
 
 class MaterialColor;
-struct PRTContext;
+class PRTContext;
 class MaterialInfo;
 class MaterialTrafo;
 class MELScriptBuilder;

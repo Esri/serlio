@@ -168,18 +168,6 @@ std::wstring toFileURI(const std::wstring& p) {
 	return schema + u16String;
 }
 
-std::filesystem::path getProcessTempDir(const std::wstring& prefix) {
-	std::filesystem::path tmpPath = std::filesystem::temp_directory_path();
-
-	std::wstring n = prefix;
-#ifdef _WIN32
-	n += std::to_wstring(::_getpid()); // prevent warning in win32
-#else
-	n += std::to_wstring(::getpid());
-#endif
-	return tmpPath / n;
-}
-
 time_t getFileModificationTime(const std::wstring& p) {
 	std::wstring pn = std::filesystem::path(p).make_preferred().wstring();
 

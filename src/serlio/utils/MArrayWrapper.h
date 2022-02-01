@@ -168,9 +168,8 @@ template <typename T>
 struct isIterable<T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end(), bool())>>
     : public bool_constant<true> {};
 
-// add inline specifier to isIterableV once we switch to C++17
 template <typename T>
-constexpr bool isIterableV = isIterable<T>::value;
+inline constexpr bool isIterableV = isIterable<T>::value;
 
 } // namespace detail
 

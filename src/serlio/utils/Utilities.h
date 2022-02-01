@@ -96,8 +96,23 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 	return pv;
 }
 
+//hash_combine function from boost library: https://www.boost.org/doc/libs/1_73_0/boost/container_hash/hash.hpp
+template <class SizeT>
+inline void hash_combine(SizeT& seed, SizeT value) {
+	seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+struct pair_hash {
+	template <class A, class B>
+	std::size_t operator()(const std::pair<A, B>& v) const {
+		std::size_t seed = 0;
+		hash_combine(seed, std::hash<A>{}(v.first));
+		hash_combine(seed, std::hash<B>{}(v.second));
+		return seed;
+	}
+};
+
 time_t getFileModificationTime(const std::wstring& p);
-std::filesystem::path getProcessTempDir(const std::wstring& prefix);
 
 int fromHex(wchar_t c);
 wchar_t toHex(int i);

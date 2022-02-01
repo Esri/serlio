@@ -22,6 +22,8 @@
 
 #include "materials/MaterialInfo.h"
 
+#include "PRTContext.h"
+#include "utils/AssetCache.h"
 #include "utils/LogHandler.h"
 #include "utils/MayaUtilities.h"
 #include "utils/Utilities.h"
@@ -43,6 +45,8 @@
 namespace {
 
 constexpr bool DBG = false;
+constexpr const wchar_t* MAYA_ASSET_FOLDER = L"assets";
+constexpr const wchar_t* SERLIO_ASSET_FOLDER = L"serlio_assets";
 
 void checkStringLength(const wchar_t* string, const size_t& maxStringLength) {
 	if (wcslen(string) >= maxStringLength) {
@@ -139,8 +143,9 @@ void assignTextureCoordinates(MFnMesh& fnMesh, double const* const* uvs, size_t 
 	}
 }
 
-void assignVertexNormals(MFnMesh& mFnMesh, const MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices, const double* nrm,
-                         size_t nrmSize, const uint32_t* normalIndices, MAYBE_UNUSED size_t normalIndicesSize) {
+void assignVertexNormals(MFnMesh& mFnMesh, const MIntArray& mayaFaceCounts, MIntArray& mayaVertexIndices,
+                         const double* nrm, size_t nrmSize, const uint32_t* normalIndices,
+                         MAYBE_UNUSED size_t normalIndicesSize) {
 	if (nrmSize == 0)
 		return;
 
@@ -356,7 +361,8 @@ void updateMayaMesh(double const* const* uvs, size_t const* uvsSizes, uint32_t c
                     size_t const* uvCountsSizes, uint32_t const* const* uvIndices, size_t const* uvIndicesSizes,
                     size_t uvSetsCount, const double* nrm, size_t nrmSize, const uint32_t* normalIndices,
                     size_t normalIndicesSize, const MFloatPointArray& mayaVertices, const MIntArray& mayaFaceCounts,
-                    MIntArray& mayaVertexIndices, const MObject& outMeshObj, const adsk::Data::Associations& newMetadata) {
+                    MIntArray& mayaVertexIndices, const MObject& outMeshObj,
+                    const adsk::Data::Associations& newMetadata) {
 	MStatus stat;
 
 	MFnMeshData dataCreator;
@@ -378,6 +384,34 @@ void updateMayaMesh(double const* const* uvs, size_t const* uvsSizes, uint32_t c
 	outputMesh.setMetadata(newMetadata);
 }
 
+void copyStringToWCharPtr(const std::wstring input, wchar_t* result, size_t& resultSize) {
+#if _MSC_VER >= 1400
+	wcsncpy_s(result, resultSize, input.c_str(), resultSize);
+#else
+	wcsncpy(result, input.c_str(), resultSize);
+#endif
+	result[resultSize - 1] = 0x0;
+	resultSize = input.length() + 1;
+}
+
+std::filesystem::path getAssetDir() {
+	MStatus status;
+	const std::filesystem::path workspaceRoot = mu::getWorkspaceRoot(status);
+
+	if (status != MS::kSuccess)
+		return {};
+
+	std::filesystem::path assetDir = workspaceRoot / MAYA_ASSET_FOLDER / SERLIO_ASSET_FOLDER;
+	// create dir if it does not exist
+	try {
+		std::filesystem::create_directories(assetDir);
+	}
+	catch (std::exception& e) {
+		LOG_ERR << "Error while creating the asset cache directory at " << assetDir << ": " << e.what();
+		return {};
+	}
+	return assetDir;
+}
 } // namespace
 
 void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
@@ -436,6 +470,35 @@ prt::Status MayaCallbacks::attrString(size_t /*isIndex*/, int32_t /*shapeID*/, c
                                       const wchar_t* value) {
 	mAttributeMapBuilder->setString(key, value);
 	return prt::STATUS_OK;
+}
+
+void MayaCallbacks::addAsset(const wchar_t* uri, const wchar_t* fileName, const uint8_t* buffer, size_t size,
+                             wchar_t* result, size_t& resultSize) {
+	if (uri == nullptr || std::wcslen(uri) == 0 || fileName == nullptr || std::wcslen(fileName) == 0) {
+		LOG_WRN << "Skipping asset caching for invalid uri '" << uri << "' or filename '" << fileName << '"';
+		resultSize = 0;
+		return;
+	}
+
+	std::filesystem::path assetDir = getAssetDir();
+
+	const std::filesystem::path& assetPath =
+	        (!assetDir.empty()) ? PRTContext::get().mAssetCache.put(uri, fileName, assetDir, buffer, size)
+	                            : std::filesystem::path();
+
+	if (assetPath.empty()) {
+		resultSize = 0;
+		return;
+	}
+
+	const std::wstring pathStr = assetPath.generic_wstring();
+
+	if (resultSize <= pathStr.size()) {  // also check for null-terminator
+		resultSize = pathStr.size() + 1; // ask for space for null-terminator
+		return;
+	}
+
+	copyStringToWCharPtr(pathStr, result, resultSize);
 }
 
 // PRT version >= 2.3

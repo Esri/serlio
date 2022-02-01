@@ -82,6 +82,8 @@ public:
 	void setUndoState(const MELVariable& undoName);
 	void setUndoState(bool undoState);
 
+	void getWorkspaceDir();
+
 	void python(const std::wstring& pythonCmd);
 	void addCmdLine(const std::wstring& line);
 

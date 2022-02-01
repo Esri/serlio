@@ -50,7 +50,8 @@ public:
 
 private:
 	void convertGeometry(const prtx::InitialShape& initialShape,
-	                     const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* callbacks);
+	                     const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* callbacks,
+	                     prt::Cache* cache);
 };
 
 class MayaEncoderFactory : public prtx::EncoderFactory, public prtx::Singleton<MayaEncoderFactory> {

@@ -19,8 +19,10 @@
 
 #include "encoder/MayaEncoder.h"
 #include "encoder/IMayaCallbacks.h"
+#include "encoder/TextureEncoder.h"
 
 #include "prtx/Attributable.h"
+#include "prtx/DataBackend.h"
 #include "prtx/Exception.h"
 #include "prtx/ExtensionManager.h"
 #include "prtx/GenerateContext.h"
@@ -33,6 +35,7 @@
 #include "prtx/ShapeIterator.h"
 #include "prtx/URI.h"
 
+#include "prt/MemoryOutputCallbacks.h"
 #include "prt/prt.h"
 
 #include <algorithm>
@@ -99,8 +102,73 @@ std::pair<std::vector<const T*>, std::vector<size_t>> toPtrVec(const std::vector
 	return std::make_pair(pv, ps);
 }
 
-std::wstring uriToPath(const prtx::TexturePtr& t) {
-	return t->getURI()->getPath();
+template <typename C, typename FUNC, typename OBJ, typename... ARGS>
+std::basic_string<C> callAPI(FUNC f, OBJ& obj, ARGS&&... args) {
+	std::vector<C> buffer(1024, 0x0);
+	size_t size = buffer.size();
+	std::invoke(f, obj, args..., buffer.data(), size);
+	if (size == 0)
+		return {}; // error case
+	else if (size > buffer.size()) {
+		buffer.resize(size);
+		std::invoke(f, obj, args..., buffer.data(), size);
+	}
+	return {buffer.data()};
+}
+
+std::wstring getTexturePath(const prtx::TexturePtr& texture, IMayaCallbacks* callbacks, prt::Cache* cache) {
+	if (!texture || !texture->isValid())
+		return {};
+
+	const prtx::URIPtr& uri = texture->getURI();
+	const std::wstring& uriStr = uri->wstring();
+	const std::wstring& scheme = uri->getScheme();
+
+	if (!uri->isComposite() && (scheme == prtx::URI::SCHEME_FILE || scheme == prtx::URI::SCHEME_UNC)) {
+		// textures from the local file system or a mounted share on Windows can be directly passed to Serlio
+		return uri->getNativeFormat();
+	}
+	else if (uri->isComposite() && (scheme == prtx::URI::SCHEME_RPK)) {
+		// textures from within an RPK can be directly copied out, no need for encoding
+		// just need to make sure we have useful filename for embedded texture blocks without names
+
+		const prtx::BinaryVectorPtr data = prtx::DataBackend::resolveBinaryData(cache, uriStr);
+		const std::wstring fileName = uri->getBaseName() + uri->getExtension();
+		const std::wstring assetPath = callAPI<wchar_t>(&IMayaCallbacks::addAsset, *callbacks, uriStr.c_str(),
+		                                                fileName.c_str(), data->data(), data->size());
+		return assetPath;
+	}
+	else {
+		// all other textures (builtin or from memory) need to be extracted and potentially re-encoded
+		try {
+			prtx::PRTUtils::MemoryOutputCallbacksUPtr moc(prt::MemoryOutputCallbacks::create());
+
+			prtx::AsciiFileNamePreparator namePrep;
+			const prtx::NamePreparator::NamespacePtr& namePrepNamespace = namePrep.newNamespace();
+			const std::wstring validatedFilename =
+			        TextureEncoder::encode(texture, moc.get(), namePrep, namePrepNamespace, {});
+
+			if (moc->getNumBlocks() == 1) {
+				size_t bufferSize = 0;
+				const uint8_t* buffer = moc->getBlock(0, &bufferSize);
+
+				const std::wstring assetPath = callAPI<wchar_t>(&IMayaCallbacks::addAsset, *callbacks, uriStr.c_str(),
+				                                                validatedFilename.c_str(), buffer, bufferSize);
+				if (!assetPath.empty())
+					return assetPath;
+				else
+					srl_log_warn("Received invalid asset path while trying to write asset with URI: %1%") % uriStr;
+			}
+			else {
+				srl_log_warn("Failed to get texture at %1%, texture will be missing") % uriStr;
+			}
+		}
+		catch (std::exception& e) {
+			srl_log_warn("Failed to encode or write texture at %1% to the local filesystem: %2%") % uriStr % e.what();
+		}
+	}
+
+	return {};
 }
 
 // we blacklist all CGA-style material attribute keys, see prtx/Material.h
@@ -188,14 +256,14 @@ const std::set<std::wstring> MATERIAL_ATTRIBUTE_BLACKLIST = {
 };
 
 void convertMaterialToAttributeMap(prtx::PRTUtils::AttributeMapBuilderPtr& aBuilder, const prtx::Material& prtxAttr,
-                                   const prtx::WStringVector& keys) {
-	if (DBG)
+                                   const prtx::WStringVector& keys, IMayaCallbacks* cb, prt::Cache* cache) {
+	if constexpr (DBG)
 		srl_log_debug(L"-- converting material: %1%") % prtxAttr.name();
 	for (const auto& key : keys) {
 		if (MATERIAL_ATTRIBUTE_BLACKLIST.count(key) > 0)
 			continue;
 
-		if (DBG)
+		if constexpr (DBG)
 			srl_log_debug(L"   key: %1%") % key;
 
 		switch (prtxAttr.getType(key)) {
@@ -247,24 +315,35 @@ void convertMaterialToAttributeMap(prtx::PRTUtils::AttributeMapBuilderPtr& aBuil
 
 			case prtx::Material::PT_TEXTURE: {
 				const auto& t = prtxAttr.getTexture(key);
-				const std::wstring p = uriToPath(t);
-				aBuilder->setString(key.c_str(), p.c_str());
+				const std::wstring p = getTexturePath(t, cb, cache);
+				if (!p.empty()) {
+					aBuilder->setString(key.c_str(), p.c_str());
+				}
 				break;
 			}
 
 			case prtx::Material::PT_TEXTURE_ARRAY: {
 				const auto& ta = prtxAttr.getTextureArray(key);
 
-				prtx::WStringVector pa(ta.size());
-				std::transform(ta.begin(), ta.end(), pa.begin(), uriToPath);
+				prtx::WStringVector texPaths;
+				texPaths.reserve(ta.size());
 
-				std::vector<const wchar_t*> ppa = toPtrVec(pa);
-				aBuilder->setStringArray(key.c_str(), ppa.data(), ppa.size());
+				for (const auto& tex : ta) {
+					const std::wstring texPath = getTexturePath(tex, cb, cache);
+					if (!texPath.empty())
+						texPaths.push_back(texPath);
+				}
+
+				if (!texPaths.empty()) {
+					const std::vector<const wchar_t*> pTexPaths = toPtrVec(texPaths);
+					aBuilder->setStringArray(key.c_str(), pTexPaths.data(), pTexPaths.size());
+				}
+
 				break;
 			}
 
 			default:
-				if (DBG)
+				if constexpr (DBG)
 					srl_log_debug(L"ignored atttribute '%s' with type %d") % key % prtxAttr.getType(key);
 				break;
 		}
@@ -437,8 +516,8 @@ private:
 				const prtx::DoubleVector& uvs0 = (numUVSets > 0) ? mesh->getUVCoords(0) : EMPTY_UVS;
 				const prtx::IndexVector faceUVCounts0 =
 				        (numUVSets > 0) ? mesh->getFaceUVCounts(0) : prtx::IndexVector(mesh->getFaceCount(), 0);
-				if (DBG)
-					log_debug("-- mesh: numUVSets = %1%") % numUVSets;
+				if constexpr (DBG)
+					srl_log_debug("-- mesh: numUVSets = %1%") % numUVSets;
 
 				for (uint32_t uvSet = 0; uvSet < mUvs.size(); uvSet++) {
 					// append texture coordinates
@@ -454,7 +533,7 @@ private:
 					auto& tgtCnts = mUvCounts[uvSet];
 					tgtCnts.insert(tgtCnts.end(), faceUVCounts.begin(), faceUVCounts.end());
 					if constexpr (DBG)
-						log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
+						srl_log_debug("   -- uvset %1%: face counts size = %2%") % uvSet % faceUVCounts.size();
 
 					// append uv vertex indices
 					for (uint32_t fi = 0, faceCount = static_cast<uint32_t>(faceUVCounts.size()); fi < faceCount;
@@ -464,7 +543,7 @@ private:
 						        (uvSet < numUVSets && !uvs.empty()) ? mesh->getFaceUVIndices(fi, uvSet) : faceUVIdx0;
 						const uint32_t faceUVCnt = faceUVCounts[fi];
 						if constexpr (DBG)
-							log_debug("      fi %1%: faceUVCnt = %2%, faceVtxCnt = %3%") % fi % faceUVCnt %
+							srl_log_debug("      fi %1%: faceUVCnt = %2%, faceVtxCnt = %3%") % fi % faceUVCnt %
 							        mesh->getFaceVertexCount(fi);
 						for (uint32_t vi = 0; vi < faceUVCnt; vi++)
 							mUvIndices[uvSet].push_back(uvIndexBases[uvSet] + faceUVIdx[vi]);
@@ -589,11 +668,12 @@ void MayaEncoder::encode(prtx::GenerateContext& context, size_t initialShapeInde
 
 	prtx::EncodePreparator::InstanceVector instances;
 	encPrep->fetchFinalizedInstances(instances, PREP_FLAGS);
-	convertGeometry(initialShape, instances, cb);
+	convertGeometry(initialShape, instances, cb, context.getCache());
 }
 
 void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
-                                  const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* cb) {
+                                  const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* cb,
+                                  prt::Cache* cache) {
 	if (instances.empty())
 		return;
 
@@ -623,8 +703,8 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 		return;
 
 	if constexpr (DBG) {
-		log_debug("resolvemap: %s") % prtx::PRTUtils::objectToXML(initialShape.getResolveMap());
-		log_debug("encoder #materials = %s") % materials.size();
+		srl_log_debug("resolvemap: %s") % prtx::PRTUtils::objectToXML(initialShape.getResolveMap());
+		srl_log_debug("encoder #materials = %s") % materials.size();
 	}
 
 	uint32_t faceCount = 0;
@@ -647,7 +727,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 			faceRanges.push_back(faceCount);
 
 			if (emitMaterials) {
-				convertMaterialToAttributeMap(amb, *(mat.get()), mat->getKeys());
+				convertMaterialToAttributeMap(amb, *(mat.get()), mat->getKeys(), cb, cache);
 				matAttrMaps.v.push_back(amb->createAttributeMapAndReset());
 			}
 
@@ -655,7 +735,7 @@ void MayaEncoder::convertGeometry(const prtx::InitialShape& initialShape,
 				convertReportsToAttributeMap(amb, *repIt);
 				reportAttrMaps.v.push_back(amb->createAttributeMapAndReset());
 				if constexpr (DBG)
-					log_debug("report attr map: %1%") % prtx::PRTUtils::objectToXML(reportAttrMaps.v.back());
+					srl_log_debug("report attr map: %1%") % prtx::PRTUtils::objectToXML(reportAttrMaps.v.back());
 			}
 
 			faceCount += m->getFaceCount();

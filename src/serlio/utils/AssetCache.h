@@ -21,31 +21,18 @@
 
 #include "utils/Utilities.h"
 
-#include <chrono>
-#include <map>
 #include <filesystem>
+#include <string>
+#include <unordered_map>
 
-class ResolveMapCache {
+class AssetCache {
 public:
-	using KeyType = std::wstring;
-
-	ResolveMapCache() = default;
-	ResolveMapCache(const ResolveMapCache&) = delete;
-	ResolveMapCache(ResolveMapCache&&) = delete;
-	ResolveMapCache& operator=(ResolveMapCache const&) = delete;
-	ResolveMapCache& operator=(ResolveMapCache&&) = delete;
-
-	enum class CacheStatus { HIT, MISS };
-	using LookupResult = std::pair<ResolveMapSPtr, CacheStatus>;
-	LookupResult get(const std::wstring& rpk);
+	std::filesystem::path put(const wchar_t* uri, const wchar_t* fileName, const std::filesystem::path workspaceRoot,
+	                          const uint8_t* buffer, size_t size);
 
 private:
-	struct ResolveMapCacheEntry {
-		ResolveMapSPtr mResolveMap;
-		time_t mTimeStamp;
-	};
-	using Cache = std::map<KeyType, ResolveMapCacheEntry>;
-	Cache mCache;
-};
+	std::filesystem::path getCachedPath(const wchar_t* fileName, const std::filesystem::path workspaceRoot,
+	                                    const size_t hash) const;
 
-using ResolveMapCacheUPtr = std::unique_ptr<ResolveMapCache>;
+	std::unordered_map<std::pair<std::wstring, size_t>, std::filesystem::path, prtu::pair_hash> mCache;
+};

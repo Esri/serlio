@@ -151,6 +151,10 @@ void MELScriptBuilder::addCmdLine(const std::wstring& line) {
 	commandStream << line << L"\n";
 }
 
+void MELScriptBuilder::getWorkspaceDir() {
+	commandStream << L"workspace -q -rd;\n";
+}
+
 MStatus MELScriptBuilder::executeSync(std::wstring& output) {
 	MStatus status;
 	MString result =
