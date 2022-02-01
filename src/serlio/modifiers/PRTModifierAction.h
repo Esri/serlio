@@ -42,6 +42,8 @@
 
 class PRTModifierAction;
 
+using RuleAttributeMap = std::map<std::wstring, RuleAttribute>;
+
 class PRTModifierEnum {
 	friend class PRTModifierAction;
 
@@ -54,10 +56,8 @@ public:
 	MFnEnumAttribute mAttr;
 
 private:
-	MStringArray mSVals;
-	MDoubleArray mFVals;
-	MIntArray mBVals;
 	bool mRestricted = true;
+	MString mValuesAttr;
 }; // class PRTModifierEnum
 
 class PRTModifierAction : public polyModifierFty {
@@ -97,7 +97,7 @@ private:
 	std::wstring mStartRule;
 	const std::wstring mRuleStyle = L"Default"; // Serlio atm only supports the "Default" style
 	int32_t mRandomSeed = 0;
-	RuleAttributes mRuleAttributes; // TODO: could be cached together with ResolveMap
+	RuleAttributeMap mRuleAttributes; // TODO: could be cached together with ResolveMap
 
 	ResolveMapSPtr getResolveMap();
 
@@ -105,8 +105,10 @@ private:
 	AttributeMapUPtr mGenerateAttrs;
 
 	std::list<PRTModifierEnum> mEnums;
+	MStatus updateDynamicEnums();
 	//	std::map<std::wstring, std::wstring> mBriefName2prtAttr;
-	MStatus createNodeAttributes(const MObject& node, const prt::RuleFileInfo* info);
+	MStatus createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& node,
+	                             const prt::RuleFileInfo* info);
 	void removeUnusedAttribs(MFnDependencyNode& node);
 
 	static MStatus addParameter(MFnDependencyNode& node, MObject& attr, MFnAttribute& tAttr);

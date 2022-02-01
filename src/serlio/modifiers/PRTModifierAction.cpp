@@ -53,6 +53,7 @@ constexpr const wchar_t* NULL_KEY = L"#NULL#";
 constexpr const wchar_t* MIN_KEY = L"min";
 constexpr const wchar_t* MAX_KEY = L"max";
 constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
+constexpr const wchar_t* VALUES_ATTR_KEY = L"valuesAttr";
 
 constexpr const wchar_t* ATTRIBUTE_USER_SET_SUFFIX = L"_user_set";
 constexpr const wchar_t* ATTRIBUTE_FORCE_DEFAULT_SUFFIX = L"_force_default";
@@ -130,6 +131,15 @@ bool getAndResetForceDefault(const MFnDependencyNode& node, const MFnAttribute& 
 	return false;
 }
 
+std::wstring removeSuffix(std::wstring const& fullString) {
+	for (const std::wstring suffix : {ATTRIBUTE_USER_SET_SUFFIX, ATTRIBUTE_FORCE_DEFAULT_SUFFIX}) {
+		if ((fullString.length() >= suffix.length()) &&
+		    (fullString.compare(fullString.length() - suffix.length(), suffix.length(), suffix) == 0))
+			return fullString.substr(0, fullString.length() - suffix.length());
+	}
+	return fullString;
+}
+
 enum class PrtAttributeType { BOOL, FLOAT, COLOR, STRING, ENUM };
 
 std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& node) {
@@ -166,21 +176,11 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 	return rawAttrs;
 }
 
-const RuleAttribute RULE_NOT_FOUND{};
-
 template <typename T>
-MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttributes& mRuleAttributes, T attrFunction) {
+MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttributeMap& ruleAttributes, T attrFunction) {
 	MStatus stat;
 	const MFnDependencyNode fNode(node, &stat);
 	MCHECK(stat);
-
-	auto reverseLookupAttribute = [mRuleAttributes](const std::wstring& mayaFullAttrName) {
-		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(),
-		                       [&mayaFullAttrName](const auto& ra) { return (ra.mayaFullName == mayaFullAttrName); });
-		if (it != mRuleAttributes.end())
-			return *it;
-		return RULE_NOT_FOUND;
-	};
 
 	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
 
@@ -188,8 +188,9 @@ MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttribut
 		MFnAttribute fnAttr(attrObj);
 
 		const MString fullAttrName = fnAttr.name();
-		const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar());
-		assert(!ruleAttr.fqName.empty()); // poor mans check for RULE_NOT_FOUND
+		auto ruleAttrIt = ruleAttributes.find(fullAttrName.asWChar());
+		assert(ruleAttrIt != ruleAttributes.end()); // Rule not found
+		const RuleAttribute ruleAttr = (ruleAttrIt != ruleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
 
 		[[maybe_unused]] const auto ruleAttrType = ruleAttr.mType;
 
@@ -300,14 +301,14 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 
 		switch (annot->getArgument(arg)->getType()) {
 			case prt::AAT_BOOL: {
-				bool val = annot->getArgument(arg)->getBool();
+				const bool val = annot->getArgument(arg)->getBool();
 				if (val == std::get<bool>(defaultValue))
 					return idx;
 				idx++;
 				break;
 			}
 			case prt::AAT_FLOAT: {
-				double val = annot->getArgument(arg)->getFloat();
+				const double val = annot->getArgument(arg)->getFloat();
 				if (val == std::get<double>(defaultValue))
 					return idx;
 				idx++;
@@ -600,6 +601,94 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 	return MStatus::kSuccess;
 }
 
+MStatus PRTModifierAction::updateDynamicEnums() {
+	for (auto& e : mEnums) {
+		if (e.mValuesAttr.length() == 0)
+			continue;
+
+		const MString fullAttrName = e.mAttr.name();
+		const auto ruleAttrIt = mRuleAttributes.find(fullAttrName.asWChar());
+		assert(ruleAttrIt != ruleAttributes.end()); // Rule not found
+		const RuleAttribute ruleAttr = (ruleAttrIt != mRuleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
+
+		const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName).c_str();
+		std::wstring attrImport = prtu::getImport(ruleAttr.fqName).c_str();
+		if (!attrImport.empty())
+			attrImport += prtu::IMPORT_DELIMITER;
+
+		std::wstring valuesAttr = attrStyle + prtu::STYLE_DELIMITER + attrImport;
+		valuesAttr.append(e.mValuesAttr.asWChar());
+
+		const prt::Attributable::PrimitiveType type = mGenerateAttrs->getType(valuesAttr.c_str());
+
+		switch (type) {
+			case prt::Attributable::PT_STRING_ARRAY: {
+				size_t arr_length = 0;
+				const wchar_t* const* stringArray = mGenerateAttrs->getStringArray(valuesAttr.c_str(), &arr_length);
+
+				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
+					if (stringArray[enumIndex] == nullptr)
+						continue;
+					std::wstring_view currStringView = stringArray[enumIndex];
+
+					// remove newlines from strings, because they break the maya UI
+					const size_t cutoffIndex = currStringView.find_first_of(L"\r\n");
+					currStringView = currStringView.substr(0, cutoffIndex);
+
+					const MString mCurrString(currStringView.data(), currStringView.length());
+					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
+				}
+				break;
+			}
+			case prt::Attributable::PT_FLOAT_ARRAY: {
+				size_t arr_length = 0;
+				const double* doubleArray = mGenerateAttrs->getFloatArray(valuesAttr.c_str(), &arr_length);
+
+				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
+					const double currDouble = doubleArray[enumIndex];
+
+					const MString mCurrString(std::to_wstring(currDouble).c_str());
+					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
+				}
+				break;
+			}
+			case prt::Attributable::PT_BOOL_ARRAY: {
+				size_t arr_length = 0;
+				const bool* boolArray = mGenerateAttrs->getBoolArray(valuesAttr.c_str(), &arr_length);
+
+				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
+					const bool currBool = boolArray[enumIndex];
+
+					const MString mCurrString(std::to_wstring(currBool).c_str());
+					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
+				}
+				break;
+			}
+			case prt::Attributable::PT_STRING: {
+				const MString mCurrString = mGenerateAttrs->getString(valuesAttr.c_str());
+
+				MCHECK(e.mAttr.addField(mCurrString, 0));
+				break;
+			}
+			case prt::Attributable::PT_FLOAT: {
+				const bool currFloat = mGenerateAttrs->getFloat(valuesAttr.c_str());
+
+				const MString mCurrString(std::to_wstring(currFloat).c_str());
+				MCHECK(e.mAttr.addField(mCurrString, 0));
+				break;
+			}
+			case prt::Attributable::PT_BOOL: {
+				const bool currBool = mGenerateAttrs->getBool(valuesAttr.c_str());
+
+				const MString mCurrString(std::to_wstring(currBool).c_str());
+				MCHECK(e.mAttr.addField(mCurrString, 0));
+				break;
+			}
+		}
+	}
+	return MStatus();
+}
+
 // Sets the mesh object for the action  to operate on
 void PRTModifierAction::setMesh(MObject& _inMesh, MObject& _outMesh) {
 	inMesh = _inMesh;
@@ -657,10 +746,13 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 
 	if (node != MObject::kNullObj) {
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
-		mRuleAttributes = getRuleAttributes(mRuleFile, info.get());
-		sortRuleAttributes(mRuleAttributes);
+		RuleAttributeSet ruleAttributes = getRuleAttributes(mRuleFile, info.get());
+		for (const RuleAttribute& ruleAttr : ruleAttributes) {
+			mRuleAttributes[ruleAttr.mayaFullName] = ruleAttr;
+		}
 
-		createNodeAttributes(node, info.get());
+		createNodeAttributes(ruleAttributes, node, info.get());
+		updateDynamicEnums();
 	}
 
 	return MS::kSuccess;
@@ -698,12 +790,13 @@ MStatus PRTModifierAction::doIt() {
 	return status;
 }
 
-MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const prt::RuleFileInfo* info) {
+MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& nodeObj,
+                                                const prt::RuleFileInfo* info) {
 	MStatus stat;
 	MFnDependencyNode node(nodeObj, &stat);
 	MCHECK(stat);
 
-	for (const RuleAttribute& p : mRuleAttributes) {
+	for (const RuleAttribute& p : ruleAttributes) {
 		const std::wstring fqName = p.fqName;
 
 		// only use attributes of current style
@@ -869,11 +962,8 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 
 void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 	auto isInUse = [this](const MString& attrName) {
-		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(), [&attrName](const auto& ra) {
-			return (ra.mayaFullName == attrName.asWChar() ||
-			        ra.mayaFullName + ATTRIBUTE_USER_SET_SUFFIX == attrName.asWChar() ||
-			        ra.mayaFullName + ATTRIBUTE_FORCE_DEFAULT_SUFFIX == attrName.asWChar());
-		});
+		const std::wstring attrNameWithoutSuffix = removeSuffix(attrName.asWChar());
+		auto it = mRuleAttributes.find(attrNameWithoutSuffix);
 		return (it != mRuleAttributes.end());
 	};
 
@@ -912,6 +1002,7 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 	mRestricted = true;
 	MStatus stat;
 
+	uint32_t enumIndex = 0;
 	for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
 
 		const wchar_t* key = annot->getArgument(arg)->getKey();
@@ -919,32 +1010,26 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 			if (std::wcscmp(key, RESTRICTED_KEY) == 0) {
 				mRestricted = annot->getArgument(arg)->getBool();
 			}
+			if (std::wcscmp(key, VALUES_ATTR_KEY) == 0) {
+				mValuesAttr = annot->getArgument(arg)->getStr();
+			}
 			continue;
 		}
 
 		switch (annot->getArgument(arg)->getType()) {
 			case prt::AAT_BOOL: {
-				bool val = annot->getArgument(arg)->getBool();
-				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), mBVals.length()));
-				mBVals.append(val);
-				mFVals.append(std::numeric_limits<double>::quiet_NaN());
-				mSVals.append("");
+				const bool val = annot->getArgument(arg)->getBool();
+				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), enumIndex++));
 				break;
 			}
 			case prt::AAT_FLOAT: {
-				double val = annot->getArgument(arg)->getFloat();
-				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), mFVals.length()));
-				mBVals.append(false);
-				mFVals.append(val);
-				mSVals.append("");
+				const double val = annot->getArgument(arg)->getFloat();
+				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), enumIndex++));
 				break;
 			}
 			case prt::AAT_STR: {
 				const wchar_t* val = annot->getArgument(arg)->getStr();
-				MCHECK(mAttr.addField(MString(val), mSVals.length()));
-				mBVals.append(false);
-				mFVals.append(std::numeric_limits<double>::quiet_NaN());
-				mSVals.append(MString(val));
+				MCHECK(mAttr.addField(MString(val), enumIndex++));
 				break;
 			}
 			default:

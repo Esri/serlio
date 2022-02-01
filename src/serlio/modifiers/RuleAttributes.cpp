@@ -26,10 +26,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <filesystem>
 #include <ostream>
 #include <string>
 #include <vector>
-#include <filesystem>
 
 namespace {
 
@@ -58,7 +58,7 @@ std::wstring getNiceName(const std::wstring& fqAttrName) {
 
 } // namespace
 
-std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileInfo) {
+std::map<std::wstring, int> getImportOrderMap(const prt::RuleFileInfo* ruleFileInfo) {
 	std::map<std::wstring, int> importOrderMap;
 	int importOrder = 0;
 	for (size_t i = 0; i < ruleFileInfo->getNumAnnotations(); i++) {
@@ -69,7 +69,7 @@ std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileIn
 				const prt::AnnotationArgument* anArg = an->getArgument(argIdx);
 				if (anArg->getType() == prt::AAT_STR) {
 					const wchar_t* anKey = anArg->getKey();
-					if(std::wcscmp(anKey, ANNOT_IMPORTS_KEY) == 0) {
+					if (std::wcscmp(anKey, ANNOT_IMPORTS_KEY) == 0) {
 						const wchar_t* importRuleCharPtr = anArg->getStr();
 						if (importRuleCharPtr != nullptr) {
 							std::wstring importRule = importRuleCharPtr;
@@ -83,12 +83,29 @@ std::map<std::wstring,int> getImportOrderMap(const prt::RuleFileInfo* ruleFileIn
 	return importOrderMap;
 }
 
-RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
-	RuleAttributes ra;
+void setGlobalGroupOrder(RuleAttributeVec& ruleAttributes) {
+	AttributeGroupOrder globalGroupOrder;
+	for (const auto& attribute : ruleAttributes) {
+		for (auto it = std::rbegin(attribute.groups); it != std::rend(attribute.groups); ++it) {
+			std::vector<std::wstring> g(it, std::rend(attribute.groups));
+			std::reverse(g.begin(), g.end());
+			auto ggoIt = globalGroupOrder.emplace(std::make_pair(attribute.ruleFile, g), ORDER_NONE).first;
+			ggoIt->second = std::min(attribute.groupOrder, ggoIt->second);
+		}
+	}
+
+	for (auto& attribute : ruleAttributes) {
+		const auto it = globalGroupOrder.find(std::make_pair(attribute.ruleFile, attribute.groups));
+		attribute.globalGroupOrder = (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
+	}
+}
+
+RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
+	RuleAttributeVec ra;
 
 	std::wstring mainCgaRuleName = std::filesystem::path(ruleFile).stem().wstring();
 
-	const std::map<std::wstring,int> importOrderMap = getImportOrderMap(ruleFileInfo);
+	const std::map<std::wstring, int> importOrderMap = getImportOrderMap(ruleFileInfo);
 
 	for (size_t i = 0; i < ruleFileInfo->getNumAttributes(); i++) {
 		const prt::RuleFileInfo::Entry* attr = ruleFileInfo->getAttribute(i);
@@ -118,8 +135,8 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 		}
 
 		const auto importOrder = importOrderMap.find(p.ruleFile);
-		p.ruleOrder =  (importOrder != importOrderMap.end()) ? importOrder->second : ORDER_NONE;
-		
+		p.ruleOrder = (importOrder != importOrderMap.end()) ? importOrder->second : ORDER_NONE;
+
 		bool hidden = false;
 		for (size_t a = 0; a < attr->getNumAnnotations(); a++) {
 			const prt::Annotation* an = attr->getAnnotation(a);
@@ -155,23 +172,13 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 			LOG_DBG << p;
 	}
 
-	return ra;
+	setGlobalGroupOrder(ra);
+	RuleAttributeSet sortedRuleAttributes(ra.begin(), ra.end());
+
+	return sortedRuleAttributes;
 }
 
-AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes) {
-	AttributeGroupOrder globalGroupOrder;
-	for (const auto& attribute : ruleAttributes) {
-		for (auto it = std::rbegin(attribute.groups); it != std::rend(attribute.groups); ++it) {
-			std::vector<std::wstring> g(it, std::rend(attribute.groups));
-			std::reverse(g.begin(), g.end());
-			auto ggoIt = globalGroupOrder.emplace(std::make_pair(attribute.ruleFile,g), ORDER_NONE).first;
-			ggoIt->second = std::min(attribute.groupOrder, ggoIt->second);
-		}
-	}
-	return globalGroupOrder;
-}
-
-void sortRuleAttributes(RuleAttributes& ra) {
+bool RuleAttributeCmp::operator()(const RuleAttribute& lhs, const RuleAttribute& rhs) const {
 	auto lowerCaseOrdering = [](std::wstring a, std::wstring b) {
 		std::transform(a.begin(), a.end(), a.begin(), ::tolower);
 		std::transform(b.begin(), b.end(), b.begin(), ::tolower);
@@ -185,9 +192,9 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		if (b.memberOfStartRuleFile && !a.memberOfStartRuleFile)
 			return false;
 
-		if(a.ruleOrder != b.ruleOrder)
+		if (a.ruleOrder != b.ruleOrder)
 			return a.ruleOrder < b.ruleOrder;
-		
+
 		return lowerCaseOrdering(a.ruleFile, b.ruleFile);
 	};
 
@@ -217,15 +224,6 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return a.groups[i];
 	};
 
-	const AttributeGroupOrder globalGroupOrder = getGlobalGroupOrder(ra);
-	if (DBG)
-		LOG_DBG << "globalGroupOrder:\n" << globalGroupOrder;
-
-	auto getGroupOrder = [&globalGroupOrder](const RuleAttribute& ap) {
-		const auto it = globalGroupOrder.find(std::make_pair(ap.ruleFile,ap.groups));
-		return (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
-	};
-
 	auto compareGroups = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		if (isChildOf(a, b))
 			return false; // child a should be sorted after parent b
@@ -233,8 +231,8 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		if (isChildOf(b, a))
 			return true; // child b should be sorted after parent a
 
-		const auto globalOrderA = getGroupOrder(a);
-		const auto globalOrderB = getGroupOrder(b);
+		const auto globalOrderA = a.globalGroupOrder;
+		const auto globalOrderB = b.globalGroupOrder;
 		if (globalOrderA != globalOrderB)
 			return (globalOrderA < globalOrderB);
 
@@ -262,14 +260,14 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return compareAttributeOrder(a, b);
 	};
 
-	std::sort(ra.begin(), ra.end(), attributeOrder);
+	return attributeOrder(lhs, rhs);
 }
 
 std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap) {
 	auto orderVal = [](int order) { return (order == ORDER_NONE) ? L"none" : std::to_wstring(order); };
 	ostr << L"RuleAttribute '" << ap.fqName << L"':" << L" order = " << orderVal(ap.order) << L", groupOrder = "
-	     << orderVal(ap.groupOrder) << L", ruleFile = '" << ap.ruleFile << L"'" << L", groups = [ "
-	     << join<wchar_t>(ap.groups, L" ") << L" ]\n";
+	     << orderVal(ap.groupOrder) << L", globalGroupOrder = " << orderVal(ap.globalGroupOrder) << L", ruleFile = '"
+	     << ap.ruleFile << L"'" << L", groups = [ " << join<wchar_t>(ap.groups, L" ") << L" ]\n";
 	return ostr;
 }
 
