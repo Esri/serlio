@@ -45,6 +45,8 @@
 namespace {
 
 constexpr bool DBG = false;
+constexpr const wchar_t* MAYA_ASSET_FOLDER = L"assets";
+constexpr const wchar_t* SERLIO_ASSET_FOLDER = L"serlio_assets";
 
 void checkStringLength(const wchar_t* string, const size_t& maxStringLength) {
 	if (wcslen(string) >= maxStringLength) {
@@ -391,6 +393,25 @@ void copyStringToWCharPtr(const std::wstring input, wchar_t* result, size_t& res
 	result[resultSize - 1] = 0x0;
 	resultSize = input.length() + 1;
 }
+
+std::filesystem::path getAssetDir() {
+	MStatus status;
+	const std::filesystem::path workspaceRoot = mu::getWorkspaceRoot(status);
+
+	if (status != MS::kSuccess)
+		return std::filesystem::path();
+
+	std::filesystem::path assetDir = workspaceRoot / MAYA_ASSET_FOLDER / SERLIO_ASSET_FOLDER;
+	// create dir if it does not exist
+	try {
+		std::filesystem::create_directories(assetDir);
+	}
+	catch (std::exception& e) {
+		LOG_ERR << "Error while creating the asset cache directory at " << assetDir << ": " << e.what();
+		return std::filesystem::path();
+	}
+	return assetDir;
+}
 } // namespace
 
 void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
@@ -458,12 +479,13 @@ void MayaCallbacks::addAsset(const wchar_t* uri, const wchar_t* fileName, const 
 		resultSize = 0;
 		return;
 	}
-	
-	MStatus status;
-	const std::filesystem::path workspaceRoot = mu::getWorkspaceRoot(status);
-	MCHECK(status);
+
+	std::filesystem::path assetDir = getAssetDir();
+
 	const std::filesystem::path& assetPath =
-	        PRTContext::get().mAssetCache.put(uri, fileName, workspaceRoot, buffer, size);
+	        (!assetDir.empty()) ? PRTContext::get().mAssetCache.put(uri, fileName, assetDir, buffer, size)
+	                            : std::filesystem::path();
+
 	if (assetPath.empty()) {
 		resultSize = 0;
 		return;

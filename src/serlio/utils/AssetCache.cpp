@@ -28,8 +28,6 @@
 #include <string_view>
 
 namespace {
-constexpr const wchar_t* MAYA_ASSET_FOLDER = L"assets";
-constexpr const wchar_t* SERLIO_ASSET_FOLDER = L"serlio_assets";
 
 bool writeCacheEntry(const std::filesystem::path& assetPath, const uint8_t* buffer, size_t size) noexcept {
 	if (std::filesystem::exists(assetPath))
@@ -46,7 +44,8 @@ bool writeCacheEntry(const std::filesystem::path& assetPath, const uint8_t* buff
 
 } // namespace
 
-std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileName, const std::filesystem::path workspaceRoot, const uint8_t* buffer, size_t size) {
+std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileName,
+                                      const std::filesystem::path cacheRootDir, const uint8_t* buffer, size_t size) {
 	assert(uri != nullptr);
 	std::wstring stringUri(uri);
 
@@ -64,7 +63,7 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 		}
 	}
 
-	const std::filesystem::path newAssetPath = getCachedPath(fileName, workspaceRoot, hash);
+	const std::filesystem::path newAssetPath = getCachedPath(fileName, cacheRootDir, hash);
 
 	if (newAssetPath.empty()) {
 		LOG_ERR << "Invalid URI, cannot cache the asset: " << uri;
@@ -86,20 +85,9 @@ std::filesystem::path AssetCache::put(const wchar_t* uri, const wchar_t* fileNam
 	return newAssetPath;
 }
 
-std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const std::filesystem::path workspaceRoot,
+std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const std::filesystem::path cacheRootDir,
                                                 const size_t hash) const {
-	// we start with the root folder in the current workspace
-	std::filesystem::path assetsDir = workspaceRoot / MAYA_ASSET_FOLDER / SERLIO_ASSET_FOLDER;
-
-	// create dir if it does not exist
-	try {
-		std::filesystem::create_directories(assetsDir);
-	}
-	catch (std::exception& e) {
-		LOG_ERR << "Error while creating the asset cache directory at " << assetsDir << ": " << e.what();
-	}
-
-	// we then get the filename constructed by the encoder from the URI
+	// we get the filename constructed by the encoder from the URI
 	assert(fileName != nullptr);
 	std::filesystem::path assetFile(fileName);
 	std::filesystem::path cachedAssetName = assetFile.stem();
@@ -111,6 +99,6 @@ std::filesystem::path AssetCache::getCachedPath(const wchar_t* fileName, const s
 	std::filesystem::path extension = assetFile.extension();
 	cachedAssetName += extension;
 
-	const std::filesystem::path cachedAssetPath = assetsDir / cachedAssetName;
+	const std::filesystem::path cachedAssetPath = cacheRootDir / cachedAssetName;
 	return cachedAssetPath;
 }
