@@ -135,7 +135,7 @@ std::wstring removeSuffix(std::wstring const& fullString) {
 	for (const std::wstring suffix : {ATTRIBUTE_USER_SET_SUFFIX, ATTRIBUTE_FORCE_DEFAULT_SUFFIX}) {
 		if ((fullString.length() >= suffix.length()) &&
 		    (fullString.compare(fullString.length() - suffix.length(), suffix.length(), suffix) == 0))
-				return fullString.substr(0, fullString.length() - suffix.length());
+			return fullString.substr(0, fullString.length() - suffix.length());
 	}
 	return fullString;
 }
@@ -191,7 +191,6 @@ MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttribut
 		auto ruleAttrIt = ruleAttributes.find(fullAttrName.asWChar());
 		assert(ruleAttrIt != ruleAttributes.end()); // Rule not found
 		const RuleAttribute ruleAttr = (ruleAttrIt != ruleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
-
 
 		[[maybe_unused]] const auto ruleAttrType = ruleAttr.mType;
 
@@ -749,9 +748,9 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
 		RuleAttributeSet ruleAttributes = getRuleAttributes(mRuleFile, info.get());
 		for (const RuleAttribute& ruleAttr : ruleAttributes) {
-			mRuleAttributes[ruleAttr.mayaFullName] = ruleAttr; 
+			mRuleAttributes[ruleAttr.mayaFullName] = ruleAttr;
 		}
-		
+
 		createNodeAttributes(ruleAttributes, node, info.get());
 		updateDynamicEnums();
 	}
@@ -791,7 +790,8 @@ MStatus PRTModifierAction::doIt() {
 	return status;
 }
 
-MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& nodeObj, const prt::RuleFileInfo* info) {
+MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& nodeObj,
+                                                const prt::RuleFileInfo* info) {
 	MStatus stat;
 	MFnDependencyNode node(nodeObj, &stat);
 	MCHECK(stat);
