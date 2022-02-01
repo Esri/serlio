@@ -399,7 +399,7 @@ std::filesystem::path getAssetDir() {
 	const std::filesystem::path workspaceRoot = mu::getWorkspaceRoot(status);
 
 	if (status != MS::kSuccess)
-		return std::filesystem::path();
+		return {};
 
 	std::filesystem::path assetDir = workspaceRoot / MAYA_ASSET_FOLDER / SERLIO_ASSET_FOLDER;
 	// create dir if it does not exist
@@ -408,7 +408,7 @@ std::filesystem::path getAssetDir() {
 	}
 	catch (std::exception& e) {
 		LOG_ERR << "Error while creating the asset cache directory at " << assetDir << ": " << e.what();
-		return std::filesystem::path();
+		return {};
 	}
 	return assetDir;
 }

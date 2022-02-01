@@ -41,7 +41,7 @@ std::filesystem::path getWorkspaceRoot(MStatus& status) {
 		return std::filesystem::path(output).make_preferred();
 	}
 	else {
-		return std::filesystem::path();
+		return {};
 	}
 }
 } // namespace mu
