@@ -630,20 +630,13 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 					if (stringArray[enumIndex] == nullptr)
 						continue;
-					const std::wstring_view currStringView = stringArray[enumIndex];
+					std::wstring_view currStringView = stringArray[enumIndex];
 
 					// remove newlines from strings, because they break the maya UI
 					const size_t cutoffIndex = currStringView.find_last_of(L"\r\n");
+					currStringView = currStringView.substr(0, cutoffIndex);
 
-					MString mCurrString;
-					if (cutoffIndex == std::wstring_view::npos) {
-						mCurrString.setWChar(stringArray[enumIndex]);
-					}
-					else {
-						const std::wstring currStringWithoutNewlines(currStringView.substr(0, cutoffIndex));
-						mCurrString.setWChar(currStringWithoutNewlines.c_str());
-					}
-
+					const MString mCurrString(currStringView.data(), currStringView.length());
 					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
 				}
 				break;
