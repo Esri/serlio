@@ -617,9 +617,9 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 		if (!attrImport.empty())
 			attrImport += prtu::IMPORT_DELIMITER;
 
-		const std::wstring prefix = attrStyle + prtu::STYLE_DELIMITER + attrImport;
+		std::wstring valuesAttr = attrStyle + prtu::STYLE_DELIMITER + attrImport;
+		valuesAttr.append(e.mValuesAttr.asWChar());
 
-		const std::wstring valuesAttr = (MString(prefix.c_str()) + e.mValuesAttr).asWChar();
 		const prt::Attributable::PrimitiveType type = mGenerateAttrs->getType(valuesAttr.c_str());
 
 		switch (type) {
