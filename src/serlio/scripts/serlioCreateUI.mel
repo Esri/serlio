@@ -145,9 +145,9 @@ global proc createHelpMenuItems(){
 	string $cgaReference = "https://doc.arcgis.com/en/cityengine/latest/cga/cityengine-cga-introduction.htm";
 	string $rulePackageManual = "https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm";
 
-	menuItem -label "Serlio Website" -c ("launch -web \"" + $serlioWebsite + "\"");
-	menuItem -label "CityEngine CGA Reference" -c ("launch -web \"" + $cgaReference + "\"");
-	menuItem -label "CityEngine Rule Package Manual" -c ("launch -web \"" + $rulePackageManual + "\"");
+	menuItem -label "Serlio Website" -c ("showHelp -absolute \"" + $serlioWebsite + "\"");
+	menuItem -label "CityEngine CGA Reference" -c ("showHelp -absolute \"" + $cgaReference + "\"");
+	menuItem -label "CityEngine Rule Package Manual" -c ("showHelp -absolute \"" + $rulePackageManual + "\"");
 }
 
 global proc createAboutDialog(){
