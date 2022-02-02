@@ -220,6 +220,7 @@ global proc createPrtMenu() {
 		menuItem -label "Remove CityEngine Rule Package"  -c "removePrtNode" -annotation "Remove a CGA rule package from a geometry";
 		menuItem -label "Create Materials"  -c "createMaterialNode(\"stingray\")" -annotation "Create Materials";
 		menuItem -label "Create Arnold Materials" -c "createMaterialNode(\"arnold\")" -annotation "Create Arnold Materials";
+		menuItem -divider true;
 		menuItem -subMenu true -label "Help";
 			createHelpMenuItems();
 			setParent -menu ..;
