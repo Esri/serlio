@@ -140,6 +140,72 @@ global proc createMaterialNode(string $materialType) {
 	select -r $select;
 }
 
+global proc createHelpMenuItems(){
+	string $serlioWebsite = "https://esri.github.io/cityengine/serlio";
+	string $cgaReference = "https://doc.arcgis.com/en/cityengine/latest/cga/cityengine-cga-introduction.htm";
+	string $rulePackageManual = "https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm";
+
+	menuItem -label "Serlio Website" -c ("showHelp -absolute \"" + $serlioWebsite + "\"");
+	menuItem -label "CityEngine CGA Reference" -c ("showHelp -absolute \"" + $cgaReference + "\"");
+	menuItem -label "CityEngine Rule Package Manual" -c ("showHelp -absolute \"" + $rulePackageManual + "\"");
+}
+
+global proc createAboutDialog(){
+	string $pluginPath = `pluginInfo -query -path serlio`;
+	string $iconPath = $pluginPath + "../../icons/serlio.xpm";
+	string $serlioVersion = `pluginInfo -query -version serlio`;
+	string $serlioVendor = `pluginInfo -query -vendor serlio`;
+	string $legalText = "Serlio is free for personal, educational, and non-commercial use. " +
+	                    "Commercial use requires at least one commercial license of the latest CityEngine version installed in the organization. " +
+	                    "Redistribution or web service offerings are not allowed unless expressly permitted.\n" +
+	                    "Serlio is under the same license as the included CityEngine SDK.";
+
+	string $window = `window -title "Serlio: About"
+		-resizeToFitChildren true
+		-iconName "Serlio"
+		-widthHeight 500 210`;
+
+	string $form = `formLayout -numberOfDivisions 100`;
+
+	string $serlioImage = `iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i1 $iconPath`;
+	string $versionText = `text -label ("Version: " + $serlioVersion)`;
+	string $vendorText = `text -label ("Vendor: " + $serlioVendor)`;
+	string $legalField = `scrollField -h 85 -wordWrap true
+		-text $legalText
+		-editable false`;
+
+	string $okButton = `button -label "OK" -command ("deleteUI -window " + $window)`;
+ 
+	formLayout -edit
+		-attachForm    $serlioImage   "top"    5
+		-attachForm    $serlioImage   "left"   5
+		-attachNone    $serlioImage   "bottom"
+		-attachNone    $serlioImage   "right"
+		
+		-attachControl $versionText "top"    5 $serlioImage
+		-attachForm    $versionText "left"   5
+		-attachNone    $versionText "bottom"
+		-attachNone    $versionText "right"
+		
+		-attachControl $vendorText "top"    5 $versionText
+		-attachForm    $vendorText "left"   5
+		-attachNone    $vendorText "bottom"
+		-attachNone    $vendorText "right"
+		
+		-attachControl $legalField "top"    5 $vendorText 
+		-attachForm    $legalField "left"   5
+		-attachControl $legalField "bottom" 5 $okButton
+		-attachForm    $legalField "right"  5
+
+		-attachNone    $okButton "top"
+		-attachForm    $okButton "left"   5
+		-attachForm    $okButton "bottom" 5
+		-attachForm    $okButton "right"  5
+	$form;
+
+	showWindow $window;
+}
+
 global proc createPrtMenu() {
 	global string $gMainWindow;
 	global string $gPrtMenu = "prtMenu"; 
@@ -154,6 +220,11 @@ global proc createPrtMenu() {
 		menuItem -label "Remove CityEngine Rule Package"  -c "removePrtNode" -annotation "Remove a CGA rule package from a geometry";
 		menuItem -label "Create Materials"  -c "createMaterialNode(\"stingray\")" -annotation "Create Materials";
 		menuItem -label "Create Arnold Materials" -c "createMaterialNode(\"arnold\")" -annotation "Create Arnold Materials";
+		menuItem -divider true;
+		menuItem -subMenu true -label "Help" -i "help.png";
+			createHelpMenuItems();
+			setParent -menu ..;
+		menuItem -label "About Serlio" -c "createAboutDialog()" -annotation "Show about dialog";
 		setParent -m ..;
 	}
 }
