@@ -193,7 +193,7 @@ SRL_TEST_EXPORTS_API inline std::wstring getStyle(const std::wstring& fqRuleName
 }
 
 SRL_TEST_EXPORTS_API inline std::wstring removePrefix(const std::wstring& fqRuleName, wchar_t delim) {
-	const auto sepPos = fqRuleName.find(delim);
+	const auto sepPos = fqRuleName.rfind(delim);
 	if (sepPos == std::wstring::npos)
 		return fqRuleName;
 	if (sepPos == fqRuleName.length() - 1)
