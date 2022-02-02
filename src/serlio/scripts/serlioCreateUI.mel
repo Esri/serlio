@@ -152,7 +152,7 @@ global proc createHelpMenuItems(){
 
 global proc createAboutDialog(){
 	string $pluginPath = `pluginInfo -query -path serlio`;
-	string $iconPath = $pluginPath + "/../../doc/img/serlio_32.png";
+	string $iconPath = $pluginPath + "../../icons/serlio.xpm";
 	string $serlioVersion = `pluginInfo -query -version serlio`;
 	string $serlioVendor = `pluginInfo -query -vendor serlio`;
 	string $legalText = "Serlio is free for personal, educational, and non-commercial use. " +
@@ -167,7 +167,7 @@ global proc createAboutDialog(){
 
 	string $form = `formLayout -numberOfDivisions 100`;
 
-	string $serlioImage = `image -h 32 -image $iconPath`;
+	string $serlioImage = `iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i1 $iconPath`;
 	string $versionText = `text -label ("Version: " + $serlioVersion)`;
 	string $vendorText = `text -label ("Vendor: " + $serlioVendor)`;
 	string $legalField = `scrollField -h 85 -wordWrap true
