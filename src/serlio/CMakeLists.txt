@@ -65,6 +65,9 @@ set_target_properties(${SERLIO_TARGET} PROPERTIES
 if (WIN32)
 	# On Windows, Maya requires plugins to have the extension "mll"
 	set_target_properties(${SERLIO_TARGET} PROPERTIES SUFFIX ".mll")
+else()
+	# On linux, we need to remove the "lib" prefix otherwise the plugin will be named "libserlio"
+	set_target_properties(${SERLIO_TARGET} PROPERTIES PREFIX "")
 endif ()
 
 
