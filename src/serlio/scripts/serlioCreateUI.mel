@@ -163,7 +163,7 @@ global proc createAboutDialog(){
 	string $window = `window -title "Serlio: About"
 		-resizeToFitChildren true
 		-iconName "Serlio"
-		-widthHeight 500 200`;
+		-widthHeight 500 210`;
 
 	string $form = `formLayout -numberOfDivisions 100`;
 
