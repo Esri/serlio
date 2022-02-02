@@ -140,6 +140,16 @@ global proc createMaterialNode(string $materialType) {
 	select -r $select;
 }
 
+global proc createHelpMenuItems(){
+	string $serlioWebsite = "https://esri.github.io/cityengine/serlio";
+	string $cgaReference = "https://doc.arcgis.com/en/cityengine/latest/cga/cityengine-cga-introduction.htm";
+	string $rulePackageManual = "https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm";
+
+	menuItem -label "Serlio Website" -c ("launch -web \"" + $serlioWebsite + "\"");
+	menuItem -label "CityEngine CGA Reference" -c ("launch -web \"" + $cgaReference + "\"");
+	menuItem -label "CityEngine Rule Package Manual" -c ("launch -web \"" + $rulePackageManual + "\"");
+}
+
 global proc createPrtMenu() {
 	global string $gMainWindow;
 	global string $gPrtMenu = "prtMenu"; 
@@ -154,6 +164,9 @@ global proc createPrtMenu() {
 		menuItem -label "Remove CityEngine Rule Package"  -c "removePrtNode" -annotation "Remove a CGA rule package from a geometry";
 		menuItem -label "Create Materials"  -c "createMaterialNode(\"stingray\")" -annotation "Create Materials";
 		menuItem -label "Create Arnold Materials" -c "createMaterialNode(\"arnold\")" -annotation "Create Arnold Materials";
+		menuItem -subMenu true -label "Help";
+			createHelpMenuItems();
+			setParent -menu ..;
 		setParent -m ..;
 	}
 }
