@@ -221,7 +221,7 @@ global proc createPrtMenu() {
 		menuItem -label "Create Materials"  -c "createMaterialNode(\"stingray\")" -annotation "Create Materials";
 		menuItem -label "Create Arnold Materials" -c "createMaterialNode(\"arnold\")" -annotation "Create Arnold Materials";
 		menuItem -divider true;
-		menuItem -subMenu true -label "Help";
+		menuItem -subMenu true -label "Help" -i "help.png";
 			createHelpMenuItems();
 			setParent -menu ..;
 		menuItem -label "About" -c "createAboutDialog()" -annotation "Show about dialog";
