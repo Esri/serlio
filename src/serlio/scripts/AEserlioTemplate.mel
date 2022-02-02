@@ -52,8 +52,8 @@ proc int prtAttributeExists(string $attr){
 	return`attributeExists $attributeName $node`;
 }
 
-proc prtSetSymbolButtonVisibility(int $visible, string $control){
-	symbolButton -edit -visible $visible $control;
+proc prtSetVisibility(int $visible, string $control){
+	control -edit -visible $visible $control;
 }
 
 proc prtSetBackgroundColor(int $enabled, float $grayScaleColor, string $control){
@@ -136,8 +136,8 @@ global proc prtUpdateEditHighlights(string $attr){
 	int $userSet = `getAttr ($attr + "_user_set")`;
 	string $control = prtControlName($attr);
 
-	prtSetSymbolButtonVisibility($userSet, $control + "_user_set");
-	prtSetSymbolButtonVisibility($userSet, $control + "_force_default_reset");
+	prtSetVisibility($userSet, $control + "_user_set");
+	prtSetVisibility($userSet, $control + "_force_default_reset");
 	prtSetBackgroundColor($userSet, 0.32, $control + "_column_layout");
 	prtSetBackgroundColor(false, 0.4, $control);
 }
