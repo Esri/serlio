@@ -68,6 +68,10 @@ void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wst
 		sb.setAttr(MEL_VAR_MAP_NODE, L"fileTextureName", MEL_VAR_MAP_FILE);
 
 		sb.connectAttr(MEL_VAR_MAP_NODE, L"outColor", MEL_VAR_SHADER_NODE, L"TEX_" + target);
+
+		if (target.compare(L"opacity_map") == 0)
+			sb.connectAttr(MEL_VAR_MAP_NODE, L"fileHasAlpha", MEL_VAR_SHADER_NODE, L"opacity_map_uses_alpha_channel");
+
 		sb.setAttr(MEL_VAR_SHADER_NODE, L"use_" + target, 1);
 	}
 	else {
