@@ -105,7 +105,7 @@ private:
 	AttributeMapUPtr mGenerateAttrs;
 
 	std::list<PRTModifierEnum> mEnums;
-	MStatus updateDynamicEnums();
+	void updateDynamicEnums();
 	//	std::map<std::wstring, std::wstring> mBriefName2prtAttr;
 	MStatus createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& node,
 	                             const prt::RuleFileInfo* info);

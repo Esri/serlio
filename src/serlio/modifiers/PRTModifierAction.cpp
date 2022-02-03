@@ -601,7 +601,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 	return MStatus::kSuccess;
 }
 
-MStatus PRTModifierAction::updateDynamicEnums() {
+void PRTModifierAction::updateDynamicEnums() {
 	for (auto& e : mEnums) {
 		if (e.mValuesAttr.length() == 0)
 			continue;
@@ -688,7 +688,6 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 				break;
 		}
 	}
-	return MStatus();
 }
 
 // Sets the mesh object for the action  to operate on
