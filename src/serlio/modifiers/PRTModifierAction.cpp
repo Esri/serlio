@@ -329,8 +329,7 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 }
 
 template <typename T>
-T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName,
-                            const T& defaultValue) {
+T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, const T& defaultValue) {
 	T plugValue = defaultValue;
 
 	if (DBG) {
