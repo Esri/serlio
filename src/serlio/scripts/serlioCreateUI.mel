@@ -167,7 +167,7 @@ global proc createAboutDialog(){
 
 	string $form = `formLayout -numberOfDivisions 100`;
 
-	string $serlioImage = `iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i1 $iconPath`;
+	string $serlioImage = `iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $iconPath`;
 	string $versionText = `text -label ("Version: " + $serlioVersion)`;
 	string $vendorText = `text -label ("Vendor: " + $serlioVendor)`;
 	string $legalField = `scrollField -h 85 -wordWrap true
