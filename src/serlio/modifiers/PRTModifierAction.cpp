@@ -684,6 +684,8 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 				MCHECK(e.mAttr.addField(mCurrString, 0));
 				break;
 			}
+			default:
+				break;
 		}
 	}
 	return MStatus();
