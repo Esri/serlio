@@ -124,6 +124,4 @@ private:
 	                                const RuleAttribute& name, short defaultValue, PRTModifierEnum& e);
 	static MStatus addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                 const MString& defaultValue);
-	template <typename T>
-	static T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, const T& defaultValue);
 };

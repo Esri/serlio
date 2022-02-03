@@ -327,6 +327,34 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 	}
 	return 0;
 }
+
+template <typename T>
+T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName,
+                            const T& defaultValue) {
+	T plugValue = defaultValue;
+
+	if (DBG) {
+		LOG_DBG << "node attrs:";
+		mu::forAllAttributes(node, [&node](const MFnAttribute& a) {
+			MString val;
+			node.findPlug(a.object(), true).getValue(val);
+			LOG_DBG << a.name().asWChar() << " = " << val.asWChar();
+		});
+	}
+
+	if (node.hasAttribute(briefName)) {
+		const MPlug plug = node.findPlug(briefName, true);
+		if (plug.isDynamic()) {
+			T d;
+			if (plug.getValue(d) == MS::kSuccess)
+				plugValue = d;
+		}
+		node.removeAttribute(node.attribute(briefName));
+	}
+
+	return plugValue;
+}
+
 } // namespace
 
 PRTModifierAction::PRTModifierAction() {
@@ -1039,32 +1067,6 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 	}
 
 	return MS::kSuccess;
-}
-
-template <typename T>
-T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName,
-                                               const T& defaultValue) {
-	T plugValue = defaultValue;
-
-	if (DBG) {
-		LOG_DBG << "node attrs:";
-		mu::forAllAttributes(node, [&node](const MFnAttribute& a) {
-			MString val;
-			node.findPlug(a.object(), true).getValue(val);
-			LOG_DBG << a.name().asWChar() << " = " << val.asWChar();
-		});
-	}
-
-	if (node.hasAttribute(briefName)) {
-		const MPlug plug = node.findPlug(briefName, true);
-		if (plug.isDynamic()) {
-			T d;
-			if (plug.getValue(d) == MS::kSuccess)
-				plugValue = d;
-		}
-		node.removeAttribute(node.attribute(briefName));
-	}
-	return plugValue;
 }
 
 MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, MFnAttribute& tAttr) {
