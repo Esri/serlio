@@ -35,6 +35,7 @@
 #include "maya/MFnNumericAttribute.h"
 #include "maya/MFnStringData.h"
 #include "maya/MFnTypedAttribute.h"
+#include "maya/MGlobal.h"
 
 #include <cassert>
 #include <variant>
@@ -328,6 +329,11 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 	}
 	return 0;
 }
+
+void displayCGACErrors(MString warningMessage){
+	if (wcsstr(warningMessage.asWChar(), L"major number larger than current"))
+		MGlobal::displayError(warningMessage);
+}
 } // namespace
 
 PRTModifierAction::PRTModifierAction() {
@@ -597,8 +603,10 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacWarnin
 		}
 	};
 
-	if (cgacWarningData.asString() != mCGACWarnings)
+	if (cgacWarningData.asString() != mCGACWarnings) {
 		cgacWarningData.setString(mCGACWarnings);
+		displayCGACErrors(mCGACWarnings);
+	}
 
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
@@ -791,8 +799,13 @@ MStatus PRTModifierAction::doIt() {
 
 	mCGACWarnings = outputHandler->getCGACWarnings().c_str();
 
-	if (generateStatus != prt::STATUS_OK)
-		LOG_ERR << "prt generate failed: " << prt::getStatusDescription(generateStatus);
+	if (generateStatus != prt::STATUS_OK) {
+		std::string generateFailedMessage = "prt generate failed: ";
+		generateFailedMessage.append(prt::getStatusDescription(generateStatus));
+
+		LOG_ERR << generateFailedMessage;
+		MGlobal::displayError(generateFailedMessage.c_str());
+	}
 
 	return status;
 }
