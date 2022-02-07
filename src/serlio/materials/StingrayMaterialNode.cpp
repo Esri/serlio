@@ -89,6 +89,14 @@ const std::array<std::wstring, TEXTURE_SEMANTICS.size()> TEXTURE_TARGETS = {
         L"color_map", L"dirt_map", L"emissive_map", L"metallic_map", L"normal_map", L"roughness_map", L"opacity_map",
 };
 
+const std::array<std::wstring, TEXTURE_SEMANTICS.size()> TEXTURE_TRAFO_TUV = {
+        L"colormap_trafo_tuv",  L"dirtmap_trafo_tuv",      L"emissivemap_trafo_tuv", L"metallicmap_trafo_tuv",
+        L"normalmap_trafo_tuv", L"roughnessmap_trafo_tuv", L"opacitymap_trafo_tuv"};
+
+const std::array<std::wstring, TEXTURE_SEMANTICS.size()> TEXTURE_TRAFO_SUVW = {
+        L"colormap_trafo_suvw",  L"dirtmap_trafo_suvw",      L"emissivemap_trafo_suvw", L"metallicmap_trafo_suvw",
+        L"normalmap_trafo_suvw", L"roughnessmap_trafo_suvw", L"opacitymap_trafo_suvw"};
+
 void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
                                    const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) {
 	// create shader
@@ -121,26 +129,13 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	sb.setAttr(MEL_VAR_SHADER_NODE, L"roughness", matInfo.roughness);
 	sb.setAttr(MEL_VAR_SHADER_NODE, L"metallic", matInfo.metallic);
 
-	// ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
-	// shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"colormap_trafo_tuv", matInfo.colormapTrafo.tuv());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"dirtmap_trafo_tuv", matInfo.dirtmapTrafo.tuv());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"emissivemap_trafo_tuv", matInfo.emissivemapTrafo.tuv());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"metallicmap_trafo_tuv", matInfo.metallicmapTrafo.tuv());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"normalmap_trafo_tuv", matInfo.normalmapTrafo.tuv());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"opacitymap_trafo_tuv", matInfo.opacitymapTrafo.tuv());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"roughnessmap_trafo_tuv", matInfo.roughnessmapTrafo.tuv());
-
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"colormap_trafo_suvw", matInfo.colormapTrafo.suvw());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"dirtmap_trafo_suvw", matInfo.dirtmapTrafo.suvw());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"emissivemap_trafo_suvw", matInfo.emissivemapTrafo.suvw());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"metallicmap_trafo_suvw", matInfo.metallicmapTrafo.suvw());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"normalmap_trafo_suvw", matInfo.normalmapTrafo.suvw());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"opacitymap_trafo_suvw", matInfo.opacitymapTrafo.suvw());
-	sb.setAttr(MEL_VAR_SHADER_NODE, L"roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
-
-	for (size_t t = 0; t < TEXTURE_SEMANTICS.size(); t++)
-		setTexture(sb, TEXTURE_TARGETS[t], matInfo.getTexturePath(TEXTURE_SEMANTICS[t]));
+	for (size_t t = 0; t < TEXTURE_SEMANTICS.size(); t++) {
+		const MaterialInfo::TextureSemantic texSemantic = TEXTURE_SEMANTICS[t];
+		const MaterialTrafo& texTrafo = matInfo.getTextureTrafo(texSemantic);
+		sb.setAttr(MEL_VAR_SHADER_NODE, TEXTURE_TRAFO_TUV[t], texTrafo.tuv());
+		sb.setAttr(MEL_VAR_SHADER_NODE, TEXTURE_TRAFO_SUVW[t], texTrafo.suvw());
+		setTexture(sb, TEXTURE_TARGETS[t], matInfo.getTexturePath(texSemantic));
+	}
 }
 
 } // namespace

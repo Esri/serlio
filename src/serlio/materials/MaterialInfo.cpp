@@ -118,6 +118,10 @@ bool MaterialTrafo::operator==(const MaterialTrafo& other) const noexcept {
 	return this->data == other.data;
 }
 
+bool MaterialTrafo::operator!=(const MaterialTrafo& other) const noexcept {
+	return this->data != other.data;
+}
+
 bool MaterialTrafo::operator<(const MaterialTrafo& rhs) const noexcept {
 	return this->data < rhs.data;
 }
@@ -136,37 +140,36 @@ MaterialInfo::MaterialInfo(adsk::Data::Handle& handle)
       opacity(getDouble(handle, "opacity")), metallic(getDouble(handle, "metallic")),
       roughness(getDouble(handle, "roughness")),
 
-      ambientColor(handle, "ambientColor"), bumpmapTrafo(handle, "bumpmapTrafo"),
-      colormapTrafo(handle, "colormapTrafo"), diffuseColor(handle, "diffuseColor"),
-      dirtmapTrafo(handle, "dirtmapTrafo"), emissiveColor(handle, "emissiveColor"),
-      emissivemapTrafo(handle, "emissivemapTrafo"), metallicmapTrafo(handle, "metallicmapTrafo"),
-      normalmapTrafo(handle, "normalmapTrafo"), occlusionmapTrafo(handle, "occlusionmapTrafo"),
-      opacitymapTrafo(handle, "opacitymapTrafo"), roughnessmapTrafo(handle, "roughnessmapTrafo"),
-      specularColor(handle, "specularColor"), specularmapTrafo(handle, "specularmapTrafo") {}
+      ambientColor(handle, "ambientColor"), diffuseColor(handle, "diffuseColor"),
+      emissiveColor(handle, "emissiveColor"), specularColor(handle, "specularColor"),
+
+      textureTrafos{{{handle, "bumpmapTrafo"},
+                     {handle, "colormapTrafo"},
+                     {handle, "dirtmapTrafo"},
+                     {handle, "emissivemapTrafo"},
+                     {handle, "metallicmapTrafo"},
+                     {handle, "normalmapTrafo"},
+                     {handle, "occlusionmapTrafo"},
+                     {handle, "opacitymapTrafo"},
+                     {handle, "roughnessmapTrafo"},
+                     {handle, "specularmapTrafo"}}} {}
 
 bool MaterialInfo::equals(const MaterialInfo& o) const {
-	for (size_t t = 0; t < static_cast<size_t>(TextureSemantic::COUNT); t++)
+	for (size_t t = 0; t < static_cast<size_t>(TextureSemantic::COUNT); t++) {
 		if (texturePaths[t] != o.texturePaths[t])
 			return false;
+		if (textureTrafos[t] != o.textureTrafos[t])
+			return false;
+	}
 
 	// clang-format off
 	return	opacity == o.opacity &&
 	        metallic == o.metallic &&
 	        roughness == o.roughness &&
 	        ambientColor == o.ambientColor &&
-	        bumpmapTrafo == o.bumpmapTrafo &&
-	        colormapTrafo == o.colormapTrafo &&
-	        diffuseColor == o.diffuseColor &&
-	        dirtmapTrafo == o.dirtmapTrafo &&
-	        emissiveColor == o.emissiveColor &&
-	        emissivemapTrafo == o.emissivemapTrafo &&
-	        metallicmapTrafo == o.metallicmapTrafo &&
-	        normalmapTrafo == o.normalmapTrafo &&
-	        occlusionmapTrafo == o.occlusionmapTrafo &&
-	        opacitymapTrafo == o.opacitymapTrafo &&
-	        roughnessmapTrafo == o.roughnessmapTrafo &&
-	        specularColor == o.specularColor &&
-	        specularmapTrafo == o.specularmapTrafo;
+			diffuseColor == o.diffuseColor &&
+			emissiveColor == o.emissiveColor &&
+			specularColor == o.specularColor;
 	// clang-format on
 }
 
@@ -175,6 +178,10 @@ bool MaterialInfo::operator<(const MaterialInfo& rhs) const {
 		const int c = texturePaths[t].compare(rhs.texturePaths[t]);
 		if (c != 0)
 			return (c < 0);
+		if (textureTrafos[t] > rhs.textureTrafos[t])
+			return false;
+		if (textureTrafos[t] < rhs.textureTrafos[t])
+			return true;
 	}
 
 	// clang-format off
@@ -198,36 +205,6 @@ bool MaterialInfo::operator<(const MaterialInfo& rhs) const {
 
 	if (specularColor > rhs.specularColor) return false;
 	if (specularColor < rhs.specularColor) return true;
-
-	if (specularmapTrafo > rhs.specularmapTrafo) return false;
-	if (specularmapTrafo < rhs.specularmapTrafo) return true;
-
-	if (bumpmapTrafo > rhs.bumpmapTrafo) return false;
-	if (bumpmapTrafo < rhs.bumpmapTrafo) return true;
-
-	if (dirtmapTrafo > rhs.dirtmapTrafo) return false;
-	if (dirtmapTrafo < rhs.dirtmapTrafo) return true;
-
-	if (emissivemapTrafo > rhs.emissivemapTrafo) return false;
-	if (emissivemapTrafo < rhs.emissivemapTrafo) return true;
-
-	if (metallicmapTrafo > rhs.metallicmapTrafo) return false;
-	if (metallicmapTrafo < rhs.metallicmapTrafo) return true;
-
-	if (normalmapTrafo > rhs.normalmapTrafo) return false;
-	if (normalmapTrafo < rhs.normalmapTrafo) return true;
-
-	if (occlusionmapTrafo > rhs.occlusionmapTrafo) return false;
-	if (occlusionmapTrafo < rhs.occlusionmapTrafo) return true;
-
-	if (opacitymapTrafo > rhs.opacitymapTrafo) return false;
-	if (opacitymapTrafo < rhs.opacitymapTrafo) return true;
-
-	if (roughnessmapTrafo > rhs.roughnessmapTrafo) return false;
-	if (roughnessmapTrafo < rhs.roughnessmapTrafo) return true;
-
-	if (specularmapTrafo > rhs.specularmapTrafo) return false;
-	if (specularmapTrafo < rhs.specularmapTrafo) return true;
 	// clang-format on
 
 	return false; // equality

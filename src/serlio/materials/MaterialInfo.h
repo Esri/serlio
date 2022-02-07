@@ -60,10 +60,12 @@ public:
 	double tv() const noexcept;
 	double rw() const noexcept;
 
+	// shaderfx does not support 5 values per input, that's why we split it up in tuv and suvw
 	std::array<double, 2> tuv() const noexcept;
 	std::array<double, 3> suvw() const noexcept;
 
 	bool operator==(const MaterialTrafo& other) const noexcept;
+	bool operator!=(const MaterialTrafo& other) const noexcept;
 	bool operator<(const MaterialTrafo& rhs) const noexcept;
 	bool operator>(const MaterialTrafo& rhs) const noexcept;
 
@@ -93,6 +95,10 @@ public:
 		return texturePaths.at(static_cast<size_t>(textureSemantic));
 	}
 
+	const MaterialTrafo& getTextureTrafo(TextureSemantic textureSemantic) const {
+		return textureTrafos.at(static_cast<size_t>(textureSemantic));
+	}
+
 	double opacity = 1.0;
 	double metallic = 0.0;
 	double roughness = 1.0;
@@ -102,21 +108,11 @@ public:
 	MaterialColor emissiveColor;
 	MaterialColor specularColor;
 
-	MaterialTrafo specularmapTrafo;
-	MaterialTrafo bumpmapTrafo;
-	MaterialTrafo colormapTrafo;
-	MaterialTrafo dirtmapTrafo;
-	MaterialTrafo emissivemapTrafo;
-	MaterialTrafo metallicmapTrafo;
-	MaterialTrafo normalmapTrafo;
-	MaterialTrafo occlusionmapTrafo;
-	MaterialTrafo opacitymapTrafo;
-	MaterialTrafo roughnessmapTrafo;
-
 	bool equals(const MaterialInfo& o) const;
 
 	bool operator<(const MaterialInfo& rhs) const;
 
 private:
 	std::array<std::filesystem::path, static_cast<size_t>(TextureSemantic::COUNT)> texturePaths;
+	std::array<MaterialTrafo, static_cast<size_t>(TextureSemantic::COUNT)> textureTrafos;
 };
