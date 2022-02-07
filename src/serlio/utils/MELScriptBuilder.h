@@ -27,6 +27,7 @@
 #include <cassert>
 #include <sstream>
 #include <string>
+#include <filesystem>
 
 class MaterialColor;
 
@@ -70,6 +71,7 @@ public:
 	void declString(const MELVariable& varName);
 
 	void setVar(const MELVariable& varName, const MELStringLiteral& val);
+	void setVar(const MELVariable& varName, const std::filesystem::path& val);
 
 	void setsCreate(const MELVariable& setName);
 	void setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, int faceStart, int faceEnd);

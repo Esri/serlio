@@ -107,6 +107,11 @@ void MELScriptBuilder::setVar(const MELVariable& varName, const MELStringLiteral
 	commandStream << varName.mel() << " = " << val.mel() << ";\n";
 }
 
+void MELScriptBuilder::setVar(const MELVariable& varName, const std::filesystem::path& val) {
+	MELStringLiteral melVal(val.wstring()); // TODO: handle non-ASCII paths
+	commandStream << varName.mel() << " = " << melVal.mel() << ";\n";
+}
+
 void MELScriptBuilder::setsCreate(const MELVariable& setName) {
 	const auto mel = setName.mel();
 	commandStream << mel << "= `sets -empty -renderable true -noSurfaceShader true -name " << mel << "`;\n";

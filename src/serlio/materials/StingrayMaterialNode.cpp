@@ -59,9 +59,9 @@ const MELVariable MEL_VAR_SHADING_NODE_INDEX(L"shadingNodeIndex");
 
 void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::filesystem::path& tex) {
 	if (!tex.empty()) {
-		sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(tex.stem().wstring()));
+		sb.setVar(MEL_VAR_MAP_NODE, tex.stem());
 
-		sb.setVar(MEL_VAR_MAP_FILE, MELStringLiteral(tex.wstring()));
+		sb.setVar(MEL_VAR_MAP_FILE, tex);
 
 		sb.createTextureShadingNode(MEL_VAR_MAP_NODE);
 		sb.setAttr(MEL_VAR_MAP_NODE, L"fileTextureName", MEL_VAR_MAP_FILE);
