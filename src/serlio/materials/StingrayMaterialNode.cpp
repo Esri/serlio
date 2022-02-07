@@ -57,12 +57,11 @@ const MELVariable MEL_VAR_MAP_FILE(L"mapFile");
 const MELVariable MEL_VAR_MAP_NODE(L"mapNode");
 const MELVariable MEL_VAR_SHADING_NODE_INDEX(L"shadingNodeIndex");
 
-void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wstring& tex) {
+void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::filesystem::path& tex) {
 	if (!tex.empty()) {
-		std::filesystem::path texPath(tex);
-		sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(texPath.stem().wstring()));
+		sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(tex.stem().wstring()));
 
-		sb.setVar(MEL_VAR_MAP_FILE, MELStringLiteral(tex));
+		sb.setVar(MEL_VAR_MAP_FILE, MELStringLiteral(tex.wstring()));
 
 		sb.createTextureShadingNode(MEL_VAR_MAP_NODE);
 		sb.setAttr(MEL_VAR_MAP_NODE, L"fileTextureName", MEL_VAR_MAP_FILE);
@@ -128,14 +127,13 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	sb.setAttr(MEL_VAR_SHADER_NODE, L"roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
 
 	// ignored: bumpMap, specularMap, occlusionmap
-	// TODO: avoid wide/narrow conversion of map strings
-	setTexture(sb, L"color_map", prtu::toUTF16FromOSNarrow(matInfo.colormap));
-	setTexture(sb, L"dirt_map", prtu::toUTF16FromOSNarrow(matInfo.dirtmap));
-	setTexture(sb, L"emissive_map", prtu::toUTF16FromOSNarrow(matInfo.emissiveMap));
-	setTexture(sb, L"metallic_map", prtu::toUTF16FromOSNarrow(matInfo.metallicMap));
-	setTexture(sb, L"normal_map", prtu::toUTF16FromOSNarrow(matInfo.normalMap));
-	setTexture(sb, L"roughness_map", prtu::toUTF16FromOSNarrow(matInfo.roughnessMap));
-	setTexture(sb, L"opacity_map", prtu::toUTF16FromOSNarrow(matInfo.opacityMap));
+	setTexture(sb, L"color_map", matInfo.colormap);
+	setTexture(sb, L"dirt_map", matInfo.dirtmap);
+	setTexture(sb, L"emissive_map", matInfo.emissiveMap);
+	setTexture(sb, L"metallic_map", matInfo.metallicMap);
+	setTexture(sb, L"normal_map", matInfo.normalMap);
+	setTexture(sb, L"roughness_map", matInfo.roughnessMap);
+	setTexture(sb, L"opacity_map", matInfo.opacityMap);
 }
 
 } // namespace

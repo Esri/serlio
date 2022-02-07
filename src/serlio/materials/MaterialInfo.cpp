@@ -35,10 +35,10 @@ void getDoubleArray(std::array<double, N>& array, adsk::Data::Handle& sHandle, c
 	array.fill(0.0);
 }
 
-std::string getTexture(adsk::Data::Handle& sHandle, const std::string& texName) {
-	std::string r;
+std::filesystem::path getTexture(adsk::Data::Handle& sHandle, const std::string& texName) {
+	std::filesystem::path r;
 	if (sHandle.setPositionByMemberName(texName.c_str()))
-		r = (char*)sHandle.asUInt8();
+		r.assign((char*)sHandle.asUInt8());
 	return r;
 }
 

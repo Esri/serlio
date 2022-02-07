@@ -25,6 +25,7 @@
 #include "maya/adskDataHandle.h"
 
 #include <array>
+#include <filesystem>
 
 const std::string PRT_MATERIAL_STRUCTURE = "prtMaterialStructure";
 const std::string PRT_MATERIAL_CHANNEL = "prtMaterialChannel";
@@ -74,16 +75,16 @@ class MaterialInfo {
 public:
 	explicit MaterialInfo(adsk::Data::Handle& handle);
 
-	std::string bumpMap;
-	std::string colormap;
-	std::string dirtmap;
-	std::string emissiveMap;
-	std::string metallicMap;
-	std::string normalMap;
-	std::string occlusionMap;
-	std::string opacityMap;
-	std::string roughnessMap;
-	std::string specularMap;
+	std::filesystem::path bumpMap;
+	std::filesystem::path colormap;
+	std::filesystem::path dirtmap;
+	std::filesystem::path emissiveMap;
+	std::filesystem::path metallicMap;
+	std::filesystem::path normalMap;
+	std::filesystem::path occlusionMap;
+	std::filesystem::path opacityMap;
+	std::filesystem::path roughnessMap;
+	std::filesystem::path specularMap;
 
 	double opacity = 1.0;
 	double metallic = 0.0;
