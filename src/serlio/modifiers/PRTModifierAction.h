@@ -105,8 +105,8 @@ private:
 	AttributeMapUPtr mGenerateAttrs;
 
 	std::list<PRTModifierEnum> mEnums;
-	MStatus updateDynamicEnums();
-	//	std::map<std::wstring, std::wstring> mBriefName2prtAttr;
+	void updateDynamicEnums();
+
 	MStatus createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& node,
 	                             const prt::RuleFileInfo* info);
 	void removeUnusedAttribs(MFnDependencyNode& node);
@@ -124,6 +124,4 @@ private:
 	                                const RuleAttribute& name, short defaultValue, PRTModifierEnum& e);
 	static MStatus addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                 const MString& defaultValue);
-	template <typename T>
-	static T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, const T& defaultValue);
 };

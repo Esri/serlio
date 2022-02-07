@@ -327,6 +327,33 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 	}
 	return 0;
 }
+
+template <typename T>
+T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, const T& defaultValue) {
+	T plugValue = defaultValue;
+
+	if (DBG) {
+		LOG_DBG << "node attrs:";
+		mu::forAllAttributes(node, [&node](const MFnAttribute& a) {
+			MString val;
+			node.findPlug(a.object(), true).getValue(val);
+			LOG_DBG << a.name().asWChar() << " = " << val.asWChar();
+		});
+	}
+
+	if (node.hasAttribute(briefName)) {
+		const MPlug plug = node.findPlug(briefName, true);
+		if (plug.isDynamic()) {
+			T d;
+			if (plug.getValue(d) == MS::kSuccess)
+				plugValue = d;
+		}
+		node.removeAttribute(node.attribute(briefName));
+	}
+
+	return plugValue;
+}
+
 } // namespace
 
 PRTModifierAction::PRTModifierAction() {
@@ -601,7 +628,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 	return MStatus::kSuccess;
 }
 
-MStatus PRTModifierAction::updateDynamicEnums() {
+void PRTModifierAction::updateDynamicEnums() {
 	for (auto& e : mEnums) {
 		if (e.mValuesAttr.length() == 0)
 			continue;
@@ -635,7 +662,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					const size_t cutoffIndex = currStringView.find_first_of(L"\r\n");
 					currStringView = currStringView.substr(0, cutoffIndex);
 
-					const MString mCurrString(currStringView.data(), currStringView.length());
+					const MString mCurrString(currStringView.data(), static_cast<int>(currStringView.length()));
 					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
 				}
 				break;
@@ -684,9 +711,10 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 				MCHECK(e.mAttr.addField(mCurrString, 0));
 				break;
 			}
+			default:
+				break;
 		}
 	}
-	return MStatus();
 }
 
 // Sets the mesh object for the action  to operate on
@@ -1038,32 +1066,6 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 	}
 
 	return MS::kSuccess;
-}
-
-template <typename T>
-T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName,
-                                               const T& defaultValue) {
-	T plugValue = defaultValue;
-
-	if (DBG) {
-		LOG_DBG << "node attrs:";
-		mu::forAllAttributes(node, [&node](const MFnAttribute& a) {
-			MString val;
-			node.findPlug(a.object(), true).getValue(val);
-			LOG_DBG << a.name().asWChar() << " = " << val.asWChar();
-		});
-	}
-
-	if (node.hasAttribute(briefName)) {
-		const MPlug plug = node.findPlug(briefName, true);
-		if (plug.isDynamic()) {
-			T d;
-			if (plug.getValue(d) == MS::kSuccess)
-				plugValue = d;
-		}
-		node.removeAttribute(node.attribute(briefName));
-	}
-	return plugValue;
 }
 
 MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, MFnAttribute& tAttr) {
