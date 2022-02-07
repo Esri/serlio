@@ -75,16 +75,23 @@ class MaterialInfo {
 public:
 	explicit MaterialInfo(adsk::Data::Handle& handle);
 
-	std::filesystem::path bumpMap;
-	std::filesystem::path colormap;
-	std::filesystem::path dirtmap;
-	std::filesystem::path emissiveMap;
-	std::filesystem::path metallicMap;
-	std::filesystem::path normalMap;
-	std::filesystem::path occlusionMap;
-	std::filesystem::path opacityMap;
-	std::filesystem::path roughnessMap;
-	std::filesystem::path specularMap;
+	enum class TextureSemantic {
+		BUMP,
+		COLOR,
+		DIRT,
+		EMISSIVE,
+		METALLIC,
+		NORMAL,
+		OCCLUSION,
+		OPACITY,
+		ROUGHNESS,
+		SPECULAR,
+		COUNT
+	};
+
+	const std::filesystem::path& getTexturePath(TextureSemantic textureSemantic) const {
+		return texturePaths.at(static_cast<size_t>(textureSemantic));
+	}
 
 	double opacity = 1.0;
 	double metallic = 0.0;
@@ -109,4 +116,7 @@ public:
 	bool equals(const MaterialInfo& o) const;
 
 	bool operator<(const MaterialInfo& rhs) const;
+
+private:
+	std::array<std::filesystem::path, static_cast<size_t>(TextureSemantic::COUNT)> texturePaths;
 };

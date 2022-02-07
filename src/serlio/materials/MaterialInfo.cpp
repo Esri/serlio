@@ -127,11 +127,11 @@ bool MaterialTrafo::operator>(const MaterialTrafo& rhs) const noexcept {
 }
 
 MaterialInfo::MaterialInfo(adsk::Data::Handle& handle)
-    : bumpMap(getTexture(handle, "bumpMap")), colormap(getTexture(handle, "diffuseMap")),
-      dirtmap(getTexture(handle, "diffuseMap1")), emissiveMap(getTexture(handle, "emissiveMap")),
-      metallicMap(getTexture(handle, "metallicMap")), normalMap(getTexture(handle, "normalMap")),
-      occlusionMap(getTexture(handle, "occlusionMap")), opacityMap(getTexture(handle, "opacityMap")),
-      roughnessMap(getTexture(handle, "roughnessMap")), specularMap(getTexture(handle, "specularMap")),
+    : texturePaths{getTexture(handle, "bumpMap"),      getTexture(handle, "diffuseMap"),
+                   getTexture(handle, "diffuseMap1"),  getTexture(handle, "emissiveMap"),
+                   getTexture(handle, "metallicMap"),  getTexture(handle, "normalMap"),
+                   getTexture(handle, "occlusionMap"), getTexture(handle, "opacityMap"),
+                   getTexture(handle, "roughnessMap"), getTexture(handle, "specularMap")},
 
       opacity(getDouble(handle, "opacity")), metallic(getDouble(handle, "metallic")),
       roughness(getDouble(handle, "roughness")),
@@ -145,19 +145,12 @@ MaterialInfo::MaterialInfo(adsk::Data::Handle& handle)
       specularColor(handle, "specularColor"), specularmapTrafo(handle, "specularmapTrafo") {}
 
 bool MaterialInfo::equals(const MaterialInfo& o) const {
+	for (size_t t = 0; t < static_cast<size_t>(TextureSemantic::COUNT); t++)
+		if (texturePaths[t] != o.texturePaths[t])
+			return false;
+
 	// clang-format off
-	return
-	        bumpMap == o.bumpMap &&
-	        colormap == o.colormap &&
-	        dirtmap == o.dirtmap &&
-	        emissiveMap == o.emissiveMap &&
-	        metallicMap == o.metallicMap &&
-	        normalMap == o.normalMap &&
-	        occlusionMap == o.occlusionMap &&
-	        opacityMap == o.opacityMap &&
-	        roughnessMap == o.roughnessMap &&
-	        specularMap == o.specularMap &&
-	        opacity == o.opacity &&
+	return	opacity == o.opacity &&
 	        metallic == o.metallic &&
 	        roughness == o.roughness &&
 	        ambientColor == o.ambientColor &&
@@ -178,18 +171,13 @@ bool MaterialInfo::equals(const MaterialInfo& o) const {
 }
 
 bool MaterialInfo::operator<(const MaterialInfo& rhs) const {
-	// clang-format off
-	{ int c = bumpMap.compare(rhs.bumpMap);           if (c != 0) return (c < 0); }
-	{ int c = colormap.compare(rhs.colormap);         if (c != 0) return (c < 0); }
-	{ int c = dirtmap.compare(rhs.dirtmap);           if (c != 0) return (c < 0); }
-	{ int c = emissiveMap.compare(rhs.emissiveMap);   if (c != 0) return (c < 0); }
-	{ int c = metallicMap.compare(rhs.metallicMap);   if (c != 0) return (c < 0); }
-	{ int c = normalMap.compare(rhs.normalMap);       if (c != 0) return (c < 0); }
-	{ int c = occlusionMap.compare(rhs.occlusionMap); if (c != 0) return (c < 0); }
-	{ int c = opacityMap.compare(rhs.opacityMap);     if (c != 0) return (c < 0); }
-	{ int c = roughnessMap.compare(rhs.roughnessMap); if (c != 0) return (c < 0); }
-	{ int c = specularMap.compare(rhs.specularMap);   if (c != 0) return (c < 0); }
+	for (size_t t = 0; t < static_cast<size_t>(TextureSemantic::COUNT); t++) {
+		const int c = texturePaths[t].compare(rhs.texturePaths[t]);
+		if (c != 0)
+			return (c < 0);
+	}
 
+	// clang-format off
 	if (opacity > rhs.opacity) return false;
 	if (opacity < rhs.opacity) return true;
 
