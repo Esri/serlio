@@ -78,6 +78,17 @@ void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::fil
 	}
 }
 
+// ignored: bumpMap, specularMap, occlusionMap
+constexpr std::array<MaterialInfo::TextureSemantic, 7> TEXTURE_SEMANTICS = {
+        MaterialInfo::TextureSemantic::COLOR,    MaterialInfo::TextureSemantic::DIRT,
+        MaterialInfo::TextureSemantic::EMISSIVE, MaterialInfo::TextureSemantic::METALLIC,
+        MaterialInfo::TextureSemantic::NORMAL,   MaterialInfo::TextureSemantic::ROUGHNESS,
+        MaterialInfo::TextureSemantic::OPACITY};
+
+const std::array<std::wstring, TEXTURE_SEMANTICS.size()> TEXTURE_TARGETS = {
+        L"color_map", L"dirt_map", L"emissive_map", L"metallic_map", L"normal_map", L"roughness_map", L"opacity_map",
+};
+
 void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
                                    const std::wstring& shaderBaseName, const std::wstring& shadingEngineName) {
 	// create shader
@@ -97,7 +108,9 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	sb.addCmdLine(MEL_VAR_SHADING_NODE_INDEX.mel() + L" = `shaderfx -sfxnode " + MEL_VAR_SHADER_NODE.mel() +
 	              L" -getNodeIDByName " + nodeIDName.mel() + L"`;");
 
-	const std::wstring blendMode = (matInfo.getTexturePath(MaterialInfo::TextureSemantic::OPACITY).empty() && (matInfo.opacity >= 1.0)) ? L"0" : L"1";
+	const std::wstring blendMode =
+	        (matInfo.getTexturePath(MaterialInfo::TextureSemantic::OPACITY).empty() && (matInfo.opacity >= 1.0)) ? L"0"
+	                                                                                                             : L"1";
 	sb.addCmdLine(L"shaderfx -sfxnode " + MEL_VAR_SHADER_NODE.mel() + L" -edit_stringlist " +
 	              MEL_VAR_SHADING_NODE_INDEX.mel() + L" blendmode " + blendMode + L";");
 
@@ -126,14 +139,8 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	sb.setAttr(MEL_VAR_SHADER_NODE, L"opacitymap_trafo_suvw", matInfo.opacitymapTrafo.suvw());
 	sb.setAttr(MEL_VAR_SHADER_NODE, L"roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
 
-	// ignored: bumpMap, specularMap, occlusionmap
-	setTexture(sb, L"color_map", matInfo.getTexturePath(MaterialInfo::TextureSemantic::COLOR));
-	setTexture(sb, L"dirt_map", matInfo.getTexturePath(MaterialInfo::TextureSemantic::DIRT));
-	setTexture(sb, L"emissive_map", matInfo.getTexturePath(MaterialInfo::TextureSemantic::EMISSIVE));
-	setTexture(sb, L"metallic_map", matInfo.getTexturePath(MaterialInfo::TextureSemantic::METALLIC));
-	setTexture(sb, L"normal_map", matInfo.getTexturePath(MaterialInfo::TextureSemantic::NORMAL));
-	setTexture(sb, L"roughness_map", matInfo.getTexturePath(MaterialInfo::TextureSemantic::ROUGHNESS));
-	setTexture(sb, L"opacity_map", matInfo.getTexturePath(MaterialInfo::TextureSemantic::OPACITY));
+	for (size_t t = 0; t < TEXTURE_SEMANTICS.size(); t++)
+		setTexture(sb, TEXTURE_TARGETS[t], matInfo.getTexturePath(TEXTURE_SEMANTICS[t]));
 }
 
 } // namespace
