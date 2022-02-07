@@ -337,7 +337,7 @@ bool cgacErrorListHasErrors(CGACErrors errorList) {
 	return false;
 }
 
-MString cgacErrorListToString(CGACErrors errorList) {
+MString cgacErrorsToString(CGACErrors errorList) {
 	MString errorString;
 	for (const auto& error : errorList) {
 		if (errorString.length() > 0)
@@ -642,7 +642,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacWarnin
 		}
 	};
 
-	MString cgacErrorString = cgacErrorListToString(mCGACErrors);
+	MString cgacErrorString = cgacErrorsToString(mCGACErrors);
 	if (cgacWarningData.asString() != cgacErrorString) {
 		cgacWarningData.setString(cgacErrorString);
 		if (cgacErrorListHasErrors(mCGACErrors))
