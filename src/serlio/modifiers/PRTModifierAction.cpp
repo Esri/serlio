@@ -635,7 +635,7 @@ MStatus PRTModifierAction::updateDynamicEnums() {
 					const size_t cutoffIndex = currStringView.find_first_of(L"\r\n");
 					currStringView = currStringView.substr(0, cutoffIndex);
 
-					const MString mCurrString(currStringView.data(), currStringView.length());
+					const MString mCurrString(currStringView.data(), static_cast<int>(currStringView.length()));
 					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
 				}
 				break;
