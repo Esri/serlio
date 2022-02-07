@@ -28,6 +28,7 @@
 
 #include "prt/StringUtils.h"
 
+#include "maya/MDataHandle.h"
 #include "maya/MFloatPointArray.h"
 #include "maya/MFnCompoundAttribute.h"
 #include "maya/MFnMesh.h"
@@ -506,7 +507,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	return MStatus::kSuccess;
 }
 
-MStatus PRTModifierAction::updateUI(const MObject& node) {
+MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacWarningData) {
 	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues =
@@ -595,6 +596,9 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 				break;
 		}
 	};
+
+	if (cgacWarningData.asString() != mCGACWarnings)
+		cgacWarningData.setString(mCGACWarnings);
 
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
@@ -784,6 +788,9 @@ MStatus PRTModifierAction::doIt() {
 	const prt::Status generateStatus =
 	        prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(),
 	                      outputHandler.get(), PRTContext::get().mPRTCache.get(), nullptr);
+
+	mCGACWarnings = outputHandler->getCGACWarnings().c_str();
+
 	if (generateStatus != prt::STATUS_OK)
 		LOG_ERR << "prt generate failed: " << prt::getStatusDescription(generateStatus);
 

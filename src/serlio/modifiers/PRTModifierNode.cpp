@@ -96,6 +96,9 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			MDataHandle currentRulePkgData = data.inputValue(currentRulePkg, &status);
 			MCheckStatus(status, "ERROR getting currentRulePkg");
 
+			MDataHandle cgacWarningData = data.inputValue(cgacWarnings, &status);
+			MCheckStatus(status, "ERROR getting cgacWarnings");
+
 			const bool ruleFileWasChanged = (rulePkgData.asString() != currentRulePkgData.asString());
 
 			// Copy the inMesh to the outMesh, so you can
@@ -124,7 +127,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			// Now, perform the PRT
 			status = fPRTModifierAction.doIt();
 
-			fPRTModifierAction.updateUI(thisMObject());
+			fPRTModifierAction.updateUI(thisMObject(), cgacWarningData);
 
 			currentRulePkgData.setString(rulePkgData.asString());
 
