@@ -38,11 +38,13 @@
 namespace {
 const MString NAME_RULE_PKG = "Rule_Package";
 const MString NAME_RANDOM_SEED = "Random_Seed";
+const MString CGAC_WARNINGS = "CGAC_Warnings";
 } // namespace
 
 // Unique Node TypeId
 MTypeId PRTModifierNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::PRT_GEOMETRY_NODE);
 MObject PRTModifierNode::rulePkg;
+MObject PRTModifierNode::cgacWarnings;
 MObject PRTModifierNode::currentRulePkg;
 MObject PRTModifierNode::mRandomSeed;
 
@@ -207,6 +209,16 @@ MStatus PRTModifierNode::initialize()
 	MCHECK(fAttr.setHidden(true));
 	MCHECK(fAttr.setConnectable(false));
 	MCHECK(addAttribute(currentRulePkg));
+
+	cgacWarnings = fAttr.create(CGAC_WARNINGS, "cgacErrors", MFnData::kString,
+	                              stringData.create(&stat2), &stat);
+	MCHECK(stat2);
+	MCHECK(stat);
+	MCHECK(fAttr.setCached(true));
+	MCHECK(fAttr.setStorable(true));
+	MCHECK(fAttr.setHidden(true));
+	MCHECK(fAttr.setConnectable(false));
+	MCHECK(addAttribute(cgacWarnings));
 
 	// Set up a dependency between the input and the output.  This will cause
 	// the output to be marked dirty when the input changes.  The output will
