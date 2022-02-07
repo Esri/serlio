@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "modifiers/MayaCallbacks.h"
 #include "modifiers/PRTMesh.h"
 #include "modifiers/RuleAttributes.h"
 #include "modifiers/polyModifier/polyModifierFty.h"
@@ -93,7 +94,7 @@ private:
 
 	// Set in updateRuleFiles(rulePkg)
 	MString mRulePkg;
-	MString mCGACWarnings;
+	CGACErrorList mCGACErrors;
 	std::wstring mRuleFile;
 	std::wstring mStartRule;
 	const std::wstring mRuleStyle = L"Default"; // Serlio atm only supports the "Default" style

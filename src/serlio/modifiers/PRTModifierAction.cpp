@@ -18,7 +18,6 @@
  */
 
 #include "modifiers/PRTModifierAction.h"
-#include "modifiers/MayaCallbacks.h"
 #include "modifiers/PRTModifierCommand.h"
 #include "modifiers/RuleAttributes.h"
 
@@ -330,9 +329,20 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 	return 0;
 }
 
-void displayCGACErrors(MString warningMessage){
-	if (wcsstr(warningMessage.asWChar(), L"major number larger than current"))
-		MGlobal::displayError(warningMessage);
+bool cgacErrorListHasErrors(CGACErrorList errorList) {
+	for (const auto& error : errorList) {
+		if (error.first == prt::CGAErrorLevel::CGAERROR)
+			return true;
+	}
+	return false;
+}
+
+MString cgacErrorListToString(CGACErrorList errorList) {
+	MString errorString;
+	for (const auto& error : errorList) {
+		errorString += error.second.c_str();
+	}
+	return errorString;
 }
 } // namespace
 
@@ -603,9 +613,11 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacWarnin
 		}
 	};
 
-	if (cgacWarningData.asString() != mCGACWarnings) {
-		cgacWarningData.setString(mCGACWarnings);
-		displayCGACErrors(mCGACWarnings);
+	MString cgacErrorString = cgacErrorListToString(mCGACErrors);
+	if (cgacWarningData.asString() != cgacErrorString) {
+		cgacWarningData.setString(cgacErrorString);
+		if (cgacErrorListHasErrors(mCGACErrors))
+			MGlobal::displayError(cgacErrorString);
 	}
 
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
@@ -797,7 +809,7 @@ MStatus PRTModifierAction::doIt() {
 	        prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(),
 	                      outputHandler.get(), PRTContext::get().mPRTCache.get(), nullptr);
 
-	mCGACWarnings = outputHandler->getCGACWarnings().c_str();
+	mCGACErrors = outputHandler->getCGACErrors();
 
 	if (generateStatus != prt::STATUS_OK) {
 		std::string generateFailedMessage = "prt generate failed: ";

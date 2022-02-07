@@ -33,6 +33,8 @@
 #include <string>
 #include <vector>
 
+using CGACErrorList = std::vector<std::pair<prt::CGAErrorLevel, std::wstring>>;
+
 class MayaCallbacks : public IMayaCallbacks {
 public:
 	MayaCallbacks(const MObject& inMesh, const MObject& outMesh, AttributeMapBuilderUPtr& amb)
@@ -43,14 +45,11 @@ public:
 		LOG_ERR << "GENERATE ERROR: " << message;
 		return prt::STATUS_OK;
 	}
-	prt::Status assetError(size_t /*isIndex*/, prt::CGAErrorLevel /*level*/, const wchar_t* /*key*/,
+	prt::Status assetError(size_t /*isIndex*/, prt::CGAErrorLevel level, const wchar_t* /*key*/,
 	                       const wchar_t* /*uri*/, const wchar_t* message) override {
 		LOG_ERR << "ASSET ERROR: " << message;
 		if (message != nullptr && wcsstr(message, L"CGAC version")) {
-			if (!cgacWarnings.empty())
-				cgacWarnings.append(L"\n");
-
-			cgacWarnings.append(message);
+			cgacErrors.push_back(std::make_pair(level, message));
 		}
 		return prt::STATUS_OK;
 	}
@@ -101,8 +100,8 @@ public:
 
 #endif // PRT version >= 2.1
 
-	const std::wstring& getCGACWarnings() const {
-		return cgacWarnings;
+	const CGACErrorList& getCGACErrors() const {
+		return cgacErrors;
 	}
 
 	// clang-format off
@@ -129,7 +128,7 @@ public:
 
 
 private:
-	std::wstring cgacWarnings;
+	CGACErrorList cgacErrors;
 	MObject outMeshObj;
 	MObject inMeshObj;
 
