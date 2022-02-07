@@ -95,7 +95,6 @@ public:
 
 #endif // PRT version >= 2.1
 
-public:
 	// clang-format off
 	void addMesh(const wchar_t* name,
 	                     const double* vtx, size_t vtxSize,
