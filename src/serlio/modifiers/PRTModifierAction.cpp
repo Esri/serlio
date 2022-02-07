@@ -340,6 +340,9 @@ bool cgacErrorListHasErrors(CGACErrors errorList) {
 MString cgacErrorListToString(CGACErrors errorList) {
 	MString errorString;
 	for (const auto& error : errorList) {
+		if (errorString.length() > 0)
+			errorString += "\n";
+
 		errorString += error.second.c_str();
 	}
 	return errorString;
