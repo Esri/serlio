@@ -65,11 +65,11 @@ void setUvTransformAttrs(MELScriptBuilder& sb, const std::wstring& uvSet, const 
 	}
 }
 
-void createMapShader(MELScriptBuilder& sb, const std::filesystem::path& mapFile, const MaterialTrafo& mapTrafo,
+void createMapShader(MELScriptBuilder& sb, const MaterialInfo& matInfo, MaterialInfo::TextureSemantic texSem,
                      const std::wstring& shaderName, const std::wstring& uvSet, const bool raw, const bool alpha) {
 	sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(shaderName));
 
-	sb.setVar(MEL_VAR_MAP_FILE, mapFile);
+	sb.setVar(MEL_VAR_MAP_FILE, matInfo.getTexturePath(texSem));
 	sb.createTextureShadingNode(MEL_VAR_MAP_NODE);
 	sb.setAttr(MEL_VAR_MAP_NODE, L"fileTextureName", MEL_VAR_MAP_FILE);
 
@@ -80,7 +80,7 @@ void createMapShader(MELScriptBuilder& sb, const std::filesystem::path& mapFile,
 
 	sb.setVar(MEL_VAR_UV_TRAFO_NODE, MELStringLiteral(shaderName + L"_trafo"));
 	sb.createShader(L"aiUvTransform", MEL_VAR_UV_TRAFO_NODE);
-	setUvTransformAttrs(sb, uvSet, mapTrafo);
+	setUvTransformAttrs(sb, uvSet, matInfo.getTextureTrafo(texSem));
 
 	if (alpha)
 		sb.connectAttr(MEL_VAR_MAP_NODE, L"outAlpha", MEL_VAR_UV_TRAFO_NODE, L"passthroughR");
@@ -119,7 +119,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_color_map";
-		createMapShader(sb, matInfo.getTexturePath(MaterialInfo::TextureSemantic::COLOR), matInfo.getTextureTrafo(MaterialInfo::TextureSemantic::COLOR), shaderName, L"map1", false, false);
+		createMapShader(sb, matInfo, MaterialInfo::TextureSemantic::COLOR, shaderName, L"map1", false, false);
 		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColor", MEL_VAR_COLOR_MAP_BLEND_NODE, L"input2");
 	}
 
@@ -133,7 +133,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_bump_map";
-		createMapShader(sb, matInfo.getTexturePath(MaterialInfo::TextureSemantic::BUMP), matInfo.getTextureTrafo(MaterialInfo::TextureSemantic::BUMP), shaderName, L"bumpMap", true, false);
+		createMapShader(sb, matInfo, MaterialInfo::TextureSemantic::BUMP, shaderName, L"bumpMap", true, false);
 
 		sb.setVar(MEL_VAR_BUMP_LUMINANCE_NODE, MELStringLiteral(shadingEngineName + L"_bump_luminance"));
 		sb.createShader(L"luminance", MEL_VAR_BUMP_LUMINANCE_NODE);
@@ -147,7 +147,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_dirt_map";
-		createMapShader(sb, matInfo.getTexturePath(MaterialInfo::TextureSemantic::DIRT), matInfo.getTextureTrafo(MaterialInfo::TextureSemantic::DIRT), shaderName, L"dirtMap", false, false);
+		createMapShader(sb, matInfo, MaterialInfo::TextureSemantic::DIRT, shaderName, L"dirtMap", false, false);
 		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColor", MEL_VAR_DIRTMAP_BLEND_NODE, L"input2");
 	}
 
@@ -171,7 +171,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_specular_map";
-		createMapShader(sb, matInfo.getTexturePath(MaterialInfo::TextureSemantic::SPECULAR), matInfo.getTextureTrafo(MaterialInfo::TextureSemantic::SPECULAR), shaderName, L"specularMap", false, false);
+		createMapShader(sb, matInfo, MaterialInfo::TextureSemantic::SPECULAR, shaderName, L"specularMap", false, false);
 		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColor", MEL_VAR_SPECULARMAP_BLEND_NODE, L"input2");
 	}
 
@@ -191,14 +191,14 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_opacity_map";
-		createMapShader(sb, matInfo.getTexturePath(MaterialInfo::TextureSemantic::OPACITY), matInfo.getTextureTrafo(MaterialInfo::TextureSemantic::OPACITY), shaderName, L"opacityMap", false, true);
+		createMapShader(sb, matInfo, MaterialInfo::TextureSemantic::OPACITY, shaderName, L"opacityMap", false, true);
 		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColorR", MEL_VAR_OPACITYMAP_BLEND_NODE, L"input2R");
 	}
 
 	// normal map
 	if (!matInfo.getTexturePath(MaterialInfo::TextureSemantic::NORMAL).empty()) {
 		std::wstring shaderName = shadingEngineName + L"_normal_map";
-		createMapShader(sb, matInfo.getTexturePath(MaterialInfo::TextureSemantic::NORMAL), matInfo.getTextureTrafo(MaterialInfo::TextureSemantic::NORMAL), shaderName, L"normalMap", true, false);
+		createMapShader(sb, matInfo, MaterialInfo::TextureSemantic::NORMAL, shaderName, L"normalMap", true, false);
 		sb.setVar(MEL_VAR_NORMAL_MAP_CONVERT_NODE, MELStringLiteral(shadingEngineName + L"_normal_map_convert"));
 		sb.createShader(L"aiNormalMap", MEL_VAR_NORMAL_MAP_CONVERT_NODE);
 		sb.setAttr(MEL_VAR_NORMAL_MAP_CONVERT_NODE, L"colorToSigned", true);
@@ -223,7 +223,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_emissive_map";
-		createMapShader(sb, matInfo.getTexturePath(MaterialInfo::TextureSemantic::EMISSIVE), matInfo.getTextureTrafo(MaterialInfo::TextureSemantic::EMISSIVE), shaderName, L"emissiveMap", false, false);
+		createMapShader(sb, matInfo, MaterialInfo::TextureSemantic::EMISSIVE, shaderName, L"emissiveMap", false, false);
 		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColor", MEL_VAR_EMISSIVEMAP_BLEND_NODE, L"input2");
 	}
 
@@ -241,7 +241,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_roughness_map";
-		createMapShader(sb, matInfo.getTexturePath(MaterialInfo::TextureSemantic::ROUGHNESS), matInfo.getTextureTrafo(MaterialInfo::TextureSemantic::ROUGHNESS), shaderName, L"roughnessMap", true, false);
+		createMapShader(sb, matInfo, MaterialInfo::TextureSemantic::ROUGHNESS, shaderName, L"roughnessMap", true, false);
 
 		// in PRT the roughness map only uses the green channel
 		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColorG", MEL_VAR_ROUGHNESSMAP_BLEND_NODE, L"input2R");
@@ -261,7 +261,7 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 	}
 	else {
 		std::wstring shaderName = shadingEngineName + L"_metallic_map";
-		createMapShader(sb, matInfo.getTexturePath(MaterialInfo::TextureSemantic::METALLIC), matInfo.getTextureTrafo(MaterialInfo::TextureSemantic::METALLIC), shaderName, L"metallicMap", true, false);
+		createMapShader(sb, matInfo, MaterialInfo::TextureSemantic::METALLIC, shaderName, L"metallicMap", true, false);
 
 		// in PRT the metallic map only uses the blue channel
 		sb.connectAttr(MEL_VAR_UV_TRAFO_NODE, L"outColorB", MEL_VAR_METALLICMAP_BLEND_NODE, L"input2R");
