@@ -94,7 +94,7 @@ private:
 
 	// Set in updateRuleFiles(rulePkg)
 	MString mRulePkg;
-	CGACErrorList mCGACErrors;
+	CGACErrors mCGACErrors;
 	std::wstring mRuleFile;
 	std::wstring mStartRule;
 	const std::wstring mRuleStyle = L"Default"; // Serlio atm only supports the "Default" style

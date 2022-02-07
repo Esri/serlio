@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-using CGACErrorList = std::vector<std::pair<prt::CGAErrorLevel, std::wstring>>;
+using CGACErrors = std::vector<std::pair<prt::CGAErrorLevel, std::wstring>>;
 
 class MayaCallbacks : public IMayaCallbacks {
 public:
@@ -100,7 +100,7 @@ public:
 
 #endif // PRT version >= 2.1
 
-	const CGACErrorList& getCGACErrors() const {
+	const CGACErrors& getCGACErrors() const {
 		return cgacErrors;
 	}
 
@@ -128,7 +128,7 @@ public:
 
 
 private:
-	CGACErrorList cgacErrors;
+	CGACErrors cgacErrors;
 	MObject outMeshObj;
 	MObject inMeshObj;
 

@@ -329,7 +329,7 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 	return 0;
 }
 
-bool cgacErrorListHasErrors(CGACErrorList errorList) {
+bool cgacErrorListHasErrors(CGACErrors errorList) {
 	for (const auto& error : errorList) {
 		if (error.first == prt::CGAErrorLevel::CGAERROR)
 			return true;
@@ -337,7 +337,7 @@ bool cgacErrorListHasErrors(CGACErrorList errorList) {
 	return false;
 }
 
-MString cgacErrorListToString(CGACErrorList errorList) {
+MString cgacErrorListToString(CGACErrors errorList) {
 	MString errorString;
 	for (const auto& error : errorList) {
 		errorString += error.second.c_str();
