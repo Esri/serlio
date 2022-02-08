@@ -414,13 +414,17 @@ std::filesystem::path getAssetDir() {
 }
 
 void detectAndAppendCGACErrors(prt::CGAErrorLevel level, const wchar_t* message, CGACErrors& cgacErrors) {
-	if (message != nullptr && std::wcsstr(message, L"CGAC version"))
-		cgacErrors.push_back(std::make_pair(level, message));
+	if (message != nullptr && (std::wcsstr(message, L"CGAC version") || std::wcsstr(message, L"Non-recognized builtin method"))) {
+		const bool shouldBeLogged =
+		        (std::wcsstr(message, L"newer than current") || (level == prt::CGAErrorLevel::CGAERROR));
+		cgacErrors.push_back(std::make_tuple(level, shouldBeLogged, message));
+	}
 }
 } // namespace
 
 prt::Status MayaCallbacks::generateError(size_t /*isIndex*/, prt::Status /*status*/, const wchar_t* message) {
 	LOG_ERR << "GENERATE ERROR: " << message;
+	detectAndAppendCGACErrors(prt::CGAErrorLevel::CGAERROR, message, cgacErrors);
 	return prt::STATUS_OK;
 }
 

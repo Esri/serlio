@@ -331,7 +331,15 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 
 bool cgacErrorListHasErrors(CGACErrors errorList) {
 	for (const auto& error : errorList) {
-		if (error.first == prt::CGAErrorLevel::CGAERROR)
+		if (std::get<0>(error) == prt::CGAErrorLevel::CGAERROR)
+			return true;
+	}
+	return false;
+}
+
+bool cgacErrorsShouldBeLogged(CGACErrors errorList) {
+	for (const auto& error : errorList) {
+		if (std::get<1>(error))
 			return true;
 	}
 	return false;
@@ -343,7 +351,7 @@ MString cgacErrorsToString(CGACErrors errorList) {
 		if (errorString.length() > 0)
 			errorString += "\n";
 
-		errorString += error.second.c_str();
+		errorString += std::get<2>(error).c_str();
 	}
 	return errorString;
 }
@@ -645,8 +653,14 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacWarnin
 	MString cgacErrorString = cgacErrorsToString(mCGACErrors);
 	if (cgacWarningData.asString() != cgacErrorString) {
 		cgacWarningData.setString(cgacErrorString);
-		if (cgacErrorListHasErrors(mCGACErrors))
-			MGlobal::displayError(cgacErrorString);
+		if (cgacErrorsShouldBeLogged(mCGACErrors)) {
+			if (cgacErrorListHasErrors(mCGACErrors)) {
+				MGlobal::displayError(cgacErrorString);
+			}
+			else {
+				MGlobal::displayWarning(cgacErrorString);
+			}
+		}
 	}
 
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
