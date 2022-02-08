@@ -412,6 +412,11 @@ std::filesystem::path getAssetDir() {
 	}
 	return assetDir;
 }
+
+void detectAndAppendCGACErrors(prt::CGAErrorLevel level, const wchar_t* message, CGACErrors& cgacErrors) {
+	if (message != nullptr && std::wcsstr(message, L"CGAC version"))
+		cgacErrors.push_back(std::make_pair(level, message));
+}
 } // namespace
 
 prt::Status MayaCallbacks::generateError(size_t /*isIndex*/, prt::Status /*status*/, const wchar_t* message) {
@@ -422,9 +427,7 @@ prt::Status MayaCallbacks::generateError(size_t /*isIndex*/, prt::Status /*statu
 prt::Status MayaCallbacks::assetError(size_t /*isIndex*/, prt::CGAErrorLevel level, const wchar_t* /*key*/,
                                       const wchar_t* /*uri*/, const wchar_t* message) {
 	LOG_ERR << "ASSET ERROR: " << message;
-	if (message != nullptr && std::wcsstr(message, L"CGAC version")) {
-		cgacErrors.push_back(std::make_pair(level, message));
-	}
+	detectAndAppendCGACErrors(level, message, cgacErrors);
 	return prt::STATUS_OK;
 }
 
