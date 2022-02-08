@@ -217,7 +217,6 @@ MStatus PRTModifierNode::initialize()
 	                              stringData.create(&stat2), &stat);
 	MCHECK(stat2);
 	MCHECK(stat);
-	MCHECK(fAttr.setCached(true));
 	MCHECK(fAttr.setStorable(true));
 	MCHECK(fAttr.setHidden(true));
 	MCHECK(fAttr.setConnectable(false));
