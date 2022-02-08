@@ -48,7 +48,7 @@ public:
 	prt::Status assetError(size_t /*isIndex*/, prt::CGAErrorLevel level, const wchar_t* /*key*/,
 	                       const wchar_t* /*uri*/, const wchar_t* message) override {
 		LOG_ERR << "ASSET ERROR: " << message;
-		if (message != nullptr && wcsstr(message, L"CGAC version")) {
+		if (message != nullptr && std::wcsstr(message, L"CGAC version")) {
 			cgacErrors.push_back(std::make_pair(level, message));
 		}
 		return prt::STATUS_OK;
