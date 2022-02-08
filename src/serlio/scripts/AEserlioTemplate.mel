@@ -125,7 +125,7 @@ global proc prtFileBrowse(string $attr, string $varname, string $filters){
 
 	string $node = prtGetNodeName($attr);
 
-	iconTextStaticLabel -st "iconOnly" -i "warningIcon.svg" -l "warning" -visible false ($node + "_CGAC_Warnings");
+	iconTextStaticLabel -st "iconOnly" -i "caution.png" -l "warning" -visible false ($node + "_CGAC_Warnings");
 	updateCGACWarning($node);
 
 	string $changeCommand = "updateCGACWarning " + $node;
