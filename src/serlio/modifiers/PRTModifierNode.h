@@ -38,7 +38,7 @@ public:
 public:
 	// non-dynamic node attributes
 	static MObject rulePkg;
-	static MObject cgacWarnings;
+	static MObject cgacProblems;
 	static MObject currentRulePkg;
 	static MTypeId id;
 	static MObject mRandomSeed;

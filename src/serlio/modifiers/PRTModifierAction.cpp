@@ -329,7 +329,7 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 	return 0;
 }
 
-bool cgacErrorListHasErrors(CGACErrors errorList) {
+bool cgacProblemsHaveErrors(CGACErrors errorList) {
 	for (const auto& error : errorList) {
 		if (error.errorLevel == prt::CGAErrorLevel::CGAERROR)
 			return true;
@@ -337,7 +337,7 @@ bool cgacErrorListHasErrors(CGACErrors errorList) {
 	return false;
 }
 
-bool cgacErrorsShouldBeLogged(CGACErrors errorList) {
+bool cgacProblemsShouldBeLogged(CGACErrors errorList) {
 	for (const auto& error : errorList) {
 		if (error.shouldBeLogged)
 			return true;
@@ -345,7 +345,7 @@ bool cgacErrorsShouldBeLogged(CGACErrors errorList) {
 	return false;
 }
 
-MString cgacErrorsToString(CGACErrors errorList) {
+MString cgacProblemsToString(CGACErrors errorList) {
 	MString errorString;
 	for (const auto& error : errorList) {
 		if (errorString.length() > 0)
@@ -561,7 +561,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	return MStatus::kSuccess;
 }
 
-MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacWarningData) {
+MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProblemData) {
 	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues =
@@ -651,11 +651,11 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacWarnin
 		}
 	};
 
-	MString cgacErrorString = cgacErrorsToString(mCGACErrors);
-	if (cgacWarningData.asString() != cgacErrorString) {
-		cgacWarningData.setString(cgacErrorString);
-		if (cgacErrorsShouldBeLogged(mCGACErrors)) {
-			if (cgacErrorListHasErrors(mCGACErrors)) {
+	MString cgacErrorString = cgacProblemsToString(mCGACProblems);
+	if (cgacProblemData.asString() != cgacErrorString) {
+		cgacProblemData.setString(cgacErrorString);
+		if (cgacProblemsShouldBeLogged(mCGACProblems)) {
+			if (cgacProblemsHaveErrors(mCGACProblems)) {
 				MGlobal::displayError(cgacErrorString);
 			}
 			else {
@@ -854,7 +854,7 @@ MStatus PRTModifierAction::doIt() {
 	        prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(),
 	                      outputHandler.get(), PRTContext::get().mPRTCache.get(), nullptr);
 
-	mCGACErrors = outputHandler->getCGACErrors();
+	mCGACProblems = outputHandler->getCGACErrors();
 
 	if (generateStatus != prt::STATUS_OK) {
 		std::string generateFailedMessage = "prt generate failed: ";

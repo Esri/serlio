@@ -94,24 +94,24 @@ global proc prtShowFileDialog(string $attr, string $filters) {
 	}  
 }  
 
-global proc updateCGACWarning(string $node){
-	string $attr = $node + ".CGAC_Warnings";
+global proc updateCGACProblems(string $node){
+	string $attr = $node + ".CGAC_Problems";
 
 	if (!prtAttributeExists($attr))
 		return;
 
-	string $cgacErrors = `getAttr ($attr)`;
-	int $hasErrors = (size($cgacErrors) > 0);
-	string $control = prtControlName($node) + "_CGAC_Warnings";
+	string $cgacProblems = `getAttr ($attr)`;
+	int $hasProblems = (size($cgacProblems) > 0);
+	string $control = prtControlName($node) + "_CGAC_Problems";
 
-	prtSetVisibility($hasErrors, $control);
-	
-	int $displayErrorIcon = size(`match "Error:" $cgacErrors`) > 0;
+	prtSetVisibility($hasProblems, $control);
+
+	int $displayErrorIcon = size(`match "Error:" $cgacProblems`) > 0;
 	string $icon = "caution.png";
 	if ($displayErrorIcon)
 		$icon = "error.png";
-	
-	iconTextStaticLabel -e -ann $cgacErrors -i $icon $control;
+
+	iconTextStaticLabel -e -ann $cgacProblems -i $icon $control;
 }
 
 global proc prtFileBrowse(string $attr, string $varname, string $filters){
@@ -131,11 +131,11 @@ global proc prtFileBrowse(string $attr, string $varname, string $filters){
 
 	string $node = prtGetNodeName($attr);
 
-	iconTextStaticLabel -st "iconOnly" -i "caution.png" -l "warning" -visible false ($node + "_CGAC_Warnings");
-	updateCGACWarning($node);
+	iconTextStaticLabel -st "iconOnly" -i "caution.png" -l "error" -visible false ($node + "_CGAC_Problems");
+	updateCGACProblems($node);
 
-	string $changeCommand = "updateCGACWarning " + $node;
-	scriptJob -rp -p $control -ac ($node + ".CGAC_Warnings") $changeCommand;
+	string $changeCommand = "updateCGACProblems " + $node;
+	scriptJob -rp -p $control -ac ($node + ".CGAC_Problems") $changeCommand;
 
 	symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");	
 	symbolButton -ann "reload rule package" -image "refresh.png" -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");	
