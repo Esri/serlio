@@ -413,11 +413,52 @@ std::filesystem::path getAssetDir() {
 	return assetDir;
 }
 
+struct cgaToCEMapping {
+	std::wstring cgaVersion;
+	std::wstring cityEngineVersion;
+};
+
+const std::vector<cgaToCEMapping> cgacToCEVersion = {
+        // clang-format off
+	{L"1.17", L"2021.1"},
+	{L"1.16", L"2021.0"},
+	{L"1.15", L"2020.1"},
+	{L"1.14", L"2020.0"},
+	{L"1.13", L"2019.1"},
+	{L"1.12", L"2019.0"},
+	{L"1.11", L"2018.1"},
+	{L"1.10", L"2018.0"},
+	{L"1.9", L"2017.1"},
+	{L"1.8", L"2017.0"},
+	{L"1.7", L"2016.1"},
+	{L"1.6", L"2016.0"},
+	{L"1.5", L"2015.2"},
+	{L"1.5", L"2015.1"},
+	{L"1.5", L"2015.0"},
+	{L"1.4", L"2014.1"},
+	{L"1.3", L"2014.1"},
+	{L"1.2", L"2014.0"},
+	{L"1.1", L"2013.1"}
+        // clang-format on
+};
+
+void replaceCGAWithCEVersion(std::wstring& string) {
+	replaceAllSubstrings(string, L"CGAC version", L"CityEngine version");
+	for (const auto& entry: cgacToCEVersion) {
+		// pad search and replace string with spaces or braces (to avoid replacing wrong substrings)
+		replaceAllSubstrings(string, L" " + entry.cgaVersion + L" ", L" " + entry.cityEngineVersion + L" ");
+		replaceAllSubstrings(string, L"(" + entry.cgaVersion + L")", L"(" + entry.cityEngineVersion + L")");
+	}
+}
+
 void detectAndAppendCGACErrors(prt::CGAErrorLevel level, const wchar_t* message, CGACErrors& cgacErrors) {
 	if (message != nullptr && (std::wcsstr(message, L"CGAC version") || std::wcsstr(message, L"Non-recognized builtin method"))) {
 		const bool shouldBeLogged =
 		        (std::wcsstr(message, L"newer than current") || (level == prt::CGAErrorLevel::CGAERROR));
-		cgacErrors.push_back(std::make_tuple(level, shouldBeLogged, message));
+
+		std::wstring stringMessage = message;
+		replaceCGAWithCEVersion(stringMessage);
+		cgacErrors.push_back(std::make_tuple(level, shouldBeLogged, stringMessage));
 	}
 }
 } // namespace

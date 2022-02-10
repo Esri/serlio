@@ -230,6 +230,17 @@ inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars
 	}
 }
 
+inline void replaceAllSubstrings(std::wstring& src, const std::wstring& search, const std::wstring& replace) {
+	for (size_t pos = 0;; pos += replace.length()) {
+		// Locate the substring to replace
+		pos = src.find(search, pos);
+		if (pos == std::wstring::npos)
+			break;
+		// Replace
+		src.replace(pos, search.length(), replace);
+	}
+}
+
 inline bool startsWithAnyOf(const std::string& s, const std::vector<std::string>& sv) {
 	for (const auto& v : sv) {
 		if (s.find(v) == 0)
