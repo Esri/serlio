@@ -105,7 +105,13 @@ global proc updateCGACWarning(string $node){
 	string $control = prtControlName($node) + "_CGAC_Warnings";
 
 	prtSetVisibility($hasErrors, $control);
-	iconTextStaticLabel -e -ann $cgacErrors $control;
+	
+	int $displayErrorIcon = size(`match "Error:" $cgacErrors`) > 0;
+	string $icon = "caution.png";
+	if ($displayErrorIcon)
+		$icon = "error.png";
+	
+	iconTextStaticLabel -e -ann $cgacErrors -i $icon $control;
 }
 
 global proc prtFileBrowse(string $attr, string $varname, string $filters){

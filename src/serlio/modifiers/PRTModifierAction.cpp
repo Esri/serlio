@@ -351,6 +351,7 @@ MString cgacErrorsToString(CGACErrors errorList) {
 		if (errorString.length() > 0)
 			errorString += "\n";
 
+		errorString += std::get<0>(error) == prt::CGAErrorLevel::CGAERROR ? "Error: " : "Warning: ";
 		errorString += std::get<2>(error).c_str();
 	}
 	return errorString;
