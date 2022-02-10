@@ -33,7 +33,12 @@
 #include <string>
 #include <vector>
 
-using CGACErrors = std::vector<std::tuple<prt::CGAErrorLevel, bool, std::wstring>>;
+struct CGACError {
+	prt::CGAErrorLevel errorLevel;
+	bool shouldBeLogged;
+	std::wstring errorString;
+};
+using CGACErrors = std::vector<CGACError>;
 
 class MayaCallbacks : public IMayaCallbacks {
 public:

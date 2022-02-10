@@ -331,7 +331,7 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 
 bool cgacErrorListHasErrors(CGACErrors errorList) {
 	for (const auto& error : errorList) {
-		if (std::get<0>(error) == prt::CGAErrorLevel::CGAERROR)
+		if (error.errorLevel == prt::CGAErrorLevel::CGAERROR)
 			return true;
 	}
 	return false;
@@ -339,7 +339,7 @@ bool cgacErrorListHasErrors(CGACErrors errorList) {
 
 bool cgacErrorsShouldBeLogged(CGACErrors errorList) {
 	for (const auto& error : errorList) {
-		if (std::get<1>(error))
+		if (error.shouldBeLogged)
 			return true;
 	}
 	return false;
@@ -351,8 +351,8 @@ MString cgacErrorsToString(CGACErrors errorList) {
 		if (errorString.length() > 0)
 			errorString += "\n";
 
-		errorString += std::get<0>(error) == prt::CGAErrorLevel::CGAERROR ? "Error: " : "Warning: ";
-		errorString += std::get<2>(error).c_str();
+		errorString += error.errorLevel == prt::CGAErrorLevel::CGAERROR ? "Error: " : "Warning: ";
+		errorString += error.errorString.c_str();
 	}
 	return errorString;
 }
