@@ -57,10 +57,11 @@ const MELVariable MEL_VAR_MAP_FILE(L"mapFile");
 const MELVariable MEL_VAR_MAP_NODE(L"mapNode");
 const MELVariable MEL_VAR_SHADING_NODE_INDEX(L"shadingNodeIndex");
 
-void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wstring& textureNodeBaseName,
-                const std::wstring& tex) {
+void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wstring& tex,
+                const std::wstring& alphaTarget = {}) {
 	if (!tex.empty()) {
-		sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(textureNodeBaseName));
+		std::filesystem::path texPath(tex);
+		sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(texPath.stem().wstring()));
 
 		sb.setVar(MEL_VAR_MAP_FILE, MELStringLiteral(tex));
 
@@ -68,6 +69,10 @@ void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wst
 		sb.setAttr(MEL_VAR_MAP_NODE, L"fileTextureName", MEL_VAR_MAP_FILE);
 
 		sb.connectAttr(MEL_VAR_MAP_NODE, L"outColor", MEL_VAR_SHADER_NODE, L"TEX_" + target);
+
+		if (!alphaTarget.empty())
+			sb.connectAttr(MEL_VAR_MAP_NODE, L"fileHasAlpha", MEL_VAR_SHADER_NODE, alphaTarget);
+
 		sb.setAttr(MEL_VAR_SHADER_NODE, L"use_" + target, 1);
 	}
 	else {
@@ -125,13 +130,13 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 
 	// ignored: bumpMap, specularMap, occlusionmap
 	// TODO: avoid wide/narrow conversion of map strings
-	setTexture(sb, L"color_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.colormap));
-	setTexture(sb, L"dirt_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.dirtmap));
-	setTexture(sb, L"emissive_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.emissiveMap));
-	setTexture(sb, L"metallic_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.metallicMap));
-	setTexture(sb, L"normal_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.normalMap));
-	setTexture(sb, L"roughness_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.roughnessMap));
-	setTexture(sb, L"opacity_map", shaderBaseName, prtu::toUTF16FromOSNarrow(matInfo.opacityMap));
+	setTexture(sb, L"color_map", prtu::toUTF16FromOSNarrow(matInfo.colormap));
+	setTexture(sb, L"dirt_map", prtu::toUTF16FromOSNarrow(matInfo.dirtmap));
+	setTexture(sb, L"emissive_map", prtu::toUTF16FromOSNarrow(matInfo.emissiveMap));
+	setTexture(sb, L"metallic_map", prtu::toUTF16FromOSNarrow(matInfo.metallicMap));
+	setTexture(sb, L"normal_map", prtu::toUTF16FromOSNarrow(matInfo.normalMap));
+	setTexture(sb, L"roughness_map", prtu::toUTF16FromOSNarrow(matInfo.roughnessMap));
+	setTexture(sb, L"opacity_map", prtu::toUTF16FromOSNarrow(matInfo.opacityMap), L"opacity_map_uses_alpha_channel");
 }
 
 } // namespace
