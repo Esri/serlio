@@ -413,12 +413,7 @@ std::filesystem::path getAssetDir() {
 	return assetDir;
 }
 
-struct cgaToCEMapping {
-	std::wstring cgaVersion;
-	std::wstring cityEngineVersion;
-};
-
-const std::vector<cgaToCEMapping> cgacToCEVersion = {
+const std::map<std::wstring, std::wstring> cgacToCEVersion = {
         // clang-format off
 	{L"1.17", L"2021.1"},
 	{L"1.16", L"2021.0"},
@@ -440,13 +435,38 @@ const std::vector<cgaToCEMapping> cgacToCEVersion = {
         // clang-format on
 };
 
-void replaceCGAWithCEVersion(std::wstring& string) {
-	replaceAllSubstrings(string, std::wstring(L"CGAC version"), std::wstring(L"CityEngine version"));
-	for (const auto& entry: cgacToCEVersion) {
-		// pad search and replace string with spaces or braces (to avoid replacing wrong substrings)
-		replaceAllSubstrings(string, L" " + entry.cgaVersion + L" ", L" " + entry.cityEngineVersion + L" ");
-		replaceAllSubstrings(string, L"(" + entry.cgaVersion + L")", L"(" + entry.cityEngineVersion + L")");
+void replaceCGACVersionBetween(std::wstring& errorString, const std::wstring prefix, const std::wstring suffix) {
+	size_t versionStartPos = errorString.find(prefix);
+	if (versionStartPos != std::wstring::npos)
+		versionStartPos += prefix.length();
+
+	const size_t versionEndPos = errorString.find(suffix, versionStartPos);
+
+	if ((versionStartPos == std::wstring::npos) || (versionEndPos == std::wstring::npos))
+		return;
+
+	const size_t versionLength = versionEndPos - versionStartPos;
+	const std::wstring cgacV1 = errorString.substr(versionStartPos, versionLength);
+
+	std::wstring CEVersion;
+	const auto it = cgacToCEVersion.find(cgacV1);
+	if (it != cgacToCEVersion.end()) {
+		CEVersion = it->second;
 	}
+	else {
+		CEVersion = L"newer than 2021.1";
+	}
+	errorString.replace(versionStartPos, versionLength, CEVersion);
+}
+
+
+void replaceCGAWithCEVersion(std::wstring& errorString) {
+	// a typical CGAC version error string looks like:
+	// Potentially unsupported CGAC version X.YY : major number smaller than current (A.BB)
+	replaceAllSubstrings(errorString, std::wstring(L"CGAC version"), std::wstring(L"CityEngine version"));
+
+	replaceCGACVersionBetween(errorString, L"CityEngine version ", L" ");
+	replaceCGACVersionBetween(errorString, L"(", L")");
 }
 
 void detectAndAppendCGACErrors(prt::CGAErrorLevel level, const wchar_t* message, CGACErrors& cgacErrors) {
