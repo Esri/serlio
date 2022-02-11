@@ -443,7 +443,7 @@ const std::vector<cgaToCEMapping> cgacToCEVersion = {
 };
 
 void replaceCGAWithCEVersion(std::wstring& string) {
-	replaceAllSubstrings(string, L"CGAC version", L"CityEngine version");
+	replaceAllSubstrings(string, std::wstring(L"CGAC version"), std::wstring(L"CityEngine version"));
 	for (const auto& entry: cgacToCEVersion) {
 		// pad search and replace string with spaces or braces (to avoid replacing wrong substrings)
 		replaceAllSubstrings(string, L" " + entry.cgaVersion + L" ", L" " + entry.cityEngineVersion + L" ");

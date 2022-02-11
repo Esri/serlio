@@ -230,14 +230,13 @@ inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars
 	}
 }
 
-inline void replaceAllSubstrings(std::wstring& src, const std::wstring& search, const std::wstring& replace) {
-	for (size_t pos = 0;; pos += replace.length()) {
-		// Locate the substring to replace
-		pos = src.find(search, pos);
-		if (pos == std::wstring::npos)
-			break;
-		// Replace
-		src.replace(pos, search.length(), replace);
+template <typename C>
+void replaceAllSubstrings(std::basic_string<C>& str, const std::basic_string<C>& oldStr,
+                                 const std::basic_string<C>& newStr) {
+	typename std::basic_string<C>::size_type pos = 0;
+	while ((pos = str.find(oldStr, pos)) != std::basic_string<C>::npos) {
+		str.replace(pos, oldStr.length(), newStr);
+		pos += newStr.length();
 	}
 }
 
