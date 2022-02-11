@@ -351,7 +351,7 @@ MString cgacProblemsToString(CGACErrors errorList) {
 		if (errorString.length() > 0)
 			errorString += "\n";
 
-		errorString += error.errorLevel == prt::CGAErrorLevel::CGAERROR ? "Error: " : "Warning: ";
+		errorString += (error.errorLevel == prt::CGAErrorLevel::CGAERROR) ? "Error: " : "Warning: ";
 		errorString += error.errorString.c_str();
 	}
 	return errorString;
