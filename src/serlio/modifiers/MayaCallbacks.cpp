@@ -419,7 +419,7 @@ void detectAndAppendCGACErrors(prt::CGAErrorLevel level, const wchar_t* message,
 		        (std::wcsstr(message, L"newer than current") || (level == prt::CGAErrorLevel::CGAERROR));
 
 		std::wstring stringMessage = message;
-		prtu::replaceCGAWithCEVersion(stringMessage);
+		prtu::replaceCGACWithCEVersion(stringMessage);
 		cgacErrors.emplace_back(level, shouldBeLogged, stringMessage);
 	}
 }

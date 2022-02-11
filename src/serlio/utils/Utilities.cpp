@@ -263,7 +263,7 @@ AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::Attribu
 	return AttributeMapUPtr(validatedOptions);
 }
 
-void replaceCGAWithCEVersion(std::wstring& errorString) {
+void replaceCGACWithCEVersion(std::wstring& errorString) {
 	// a typical CGAC version error string looks like:
 	// Potentially unsupported CGAC version X.YY : major number smaller than current (A.BB)
 	replaceAllSubstrings(errorString, std::wstring(L"CGAC version"), std::wstring(L"CityEngine version"));
