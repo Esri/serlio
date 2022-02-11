@@ -218,6 +218,8 @@ SRL_TEST_EXPORTS_API inline std::wstring getImport(const std::wstring& fqRuleNam
 		return {};
 	return ruleWithoutStyle.substr(0, sepPos);
 }
+
+SRL_TEST_EXPORTS_API void replaceCGAWithCEVersion(std::wstring& errorString);
 } // namespace prtu
 
 inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {
