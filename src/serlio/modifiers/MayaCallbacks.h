@@ -37,6 +37,9 @@ struct CGACError {
 	prt::CGAErrorLevel errorLevel;
 	bool shouldBeLogged;
 	std::wstring errorString;
+
+	CGACError(prt::CGAErrorLevel errorLevel, bool shouldBeLogged, const std::wstring& errorString)
+	    : errorLevel(errorLevel), shouldBeLogged(shouldBeLogged), errorString(errorString) {}
 };
 using CGACErrors = std::vector<CGACError>;
 
