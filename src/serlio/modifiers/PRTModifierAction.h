@@ -39,10 +39,13 @@
 
 #include <list>
 #include <map>
+#include <variant>
+
 
 class PRTModifierAction;
 
 using RuleAttributeMap = std::map<std::wstring, RuleAttribute>;
+using PRTEnumDefaultValue = std::variant<bool, double, MString>;
 
 class PRTModifierEnum {
 	friend class PRTModifierAction;
@@ -121,7 +124,7 @@ private:
 	static MStatus addFileParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                const MString& defaultValue, const std::wstring& ext);
 	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-	                                const RuleAttribute& name, short defaultValue, PRTModifierEnum& e);
+	                                const RuleAttribute& name, const PRTEnumDefaultValue& defaultValue, PRTModifierEnum& e);
 	static MStatus addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                 const MString& defaultValue);
 };

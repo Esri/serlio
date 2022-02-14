@@ -36,7 +36,6 @@
 #include "maya/MFnTypedAttribute.h"
 
 #include <cassert>
-#include <variant>
 
 namespace {
 
@@ -287,8 +286,6 @@ short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const
 	}
 	return 0;
 }
-
-using PRTEnumDefaultValue = std::variant<bool, double, MString>;
 
 short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue& defaultValue) {
 	short idx = 0;
@@ -887,8 +884,7 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 				const bool value = mGenerateAttrs->getBool(fqName.c_str());
 				if (attrTrait.first == AttributeTrait::ENUM) {
 					mEnums.emplace_front();
-					const short enumIndex = getDefaultEnumIdx(attrTrait.second.mAnnot, value);
-					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, enumIndex, mEnums.front()));
+					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums.front()));
 				}
 				else {
 					MCHECK(addBoolParameter(node, attr, p, value));
@@ -901,8 +897,7 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 				switch (attrTrait.first) {
 					case AttributeTrait::ENUM: {
 						mEnums.emplace_front();
-						const short enumIndex = getDefaultEnumIdx(attrTrait.second.mAnnot, value);
-						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, enumIndex, mEnums.front()));
+						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums.front()));
 						break;
 					}
 					case AttributeTrait::RANGE: {
@@ -952,8 +947,7 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 				switch (attrTrait.first) {
 					case AttributeTrait::ENUM: {
 						mEnums.emplace_front();
-						const short enumIndex = getDefaultEnumIdx(attrTrait.second.mAnnot, mvalue);
-						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, enumIndex, mEnums.front()));
+						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, mvalue, mEnums.front()));
 						break;
 					}
 					case AttributeTrait::FILE:
@@ -1137,11 +1131,14 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& a
 }
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-                                            const RuleAttribute& ruleAttr, short defaultValue, PRTModifierEnum& e) {
+                                            const RuleAttribute& ruleAttr, const PRTEnumDefaultValue& defaultValue,
+                                            PRTModifierEnum& e) {
 	MStatus stat;
 
-	short plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultValue);
-	attr = e.mAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), defaultValue, &stat);
+	const short defaultEnumIndex = getDefaultEnumIdx(annot, defaultValue);
+
+	short plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultEnumIndex);
+	attr = e.mAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), defaultEnumIndex, &stat);
 	e.mAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	MCHECK(stat);
 
