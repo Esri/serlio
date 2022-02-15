@@ -48,4 +48,7 @@ private:
 };
 
 std::filesystem::path getWorkspaceRoot(MStatus& status);
+
+MStatus setEnumOptions(const std::wstring& node, const std::wstring& attr,
+                       const std::vector<std::wstring>& enumOptions);
 } // namespace mu

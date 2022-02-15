@@ -85,6 +85,19 @@ void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attr
 	setAttr(node, attribute, color.r(), color.g(), color.b());
 }
 
+void MELScriptBuilder::setAttrEnumOptions(const MELVariable& node, const std::wstring& attribute,
+                                          const std::vector<std::wstring>& enumOptions) {
+	std::wstring enumString;
+
+	for (const std::wstring& enumOption : enumOptions) {
+		if (!enumString.empty())
+			enumString.append(L":");
+		enumString.append(enumOption);
+	}
+
+	commandStream << "addAttr -e -en \"" << enumString << "\" " << composeAttributeExpression(node, attribute) << ";\n";
+}
+
 void MELScriptBuilder::connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,
                                    const std::wstring& dstAttr) {
 	commandStream << "connectAttr -force " << composeAttributeExpression(srcNode, srcAttr) << " "
