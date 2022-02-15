@@ -1094,12 +1094,11 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 
 		const wchar_t* key = annot->getArgument(arg)->getKey();
 		if (std::wcscmp(key, NULL_KEY) != 0) {
-			if (std::wcscmp(key, RESTRICTED_KEY) == 0) {
+			if (std::wcscmp(key, RESTRICTED_KEY) == 0)
 				mRestricted = annot->getArgument(arg)->getBool();
-			}
-			if (std::wcscmp(key, VALUES_ATTR_KEY) == 0) {
+
+			if (std::wcscmp(key, VALUES_ATTR_KEY) == 0)
 				mValuesAttr = annot->getArgument(arg)->getStr();
-			}
 			continue;
 		}
 
@@ -1179,13 +1178,11 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& a
 	nAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	MCHECK(stat);
 
-	if (!prtu::isnan(min)) {
+	if (!prtu::isnan(min))
 		MCHECK(nAttr.setMin(min));
-	}
 
-	if (!prtu::isnan(max)) {
+	if (!prtu::isnan(max))
 		MCHECK(nAttr.setMax(max));
-	}
 
 	stat = addParameter(node, attr, nAttr);
 
