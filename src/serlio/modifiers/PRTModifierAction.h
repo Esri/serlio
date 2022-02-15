@@ -41,7 +41,6 @@
 #include <map>
 #include <variant>
 
-
 class PRTModifierAction;
 
 using RuleAttributeMap = std::map<std::wstring, RuleAttribute>;
