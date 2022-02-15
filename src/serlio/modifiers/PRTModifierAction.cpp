@@ -240,6 +240,74 @@ MStatus addHiddenBoolParameter(MFnDependencyNode& node, MFnAttribute& tAttr, con
 	return stat;
 }
 
+bool updateCustomEnumValue(const prt::AttributeMap& defaultAttributeValues, MFnEnumAttribute& eAttr,
+                           const RuleAttribute& ruleAttr, const MObject& node) {
+	const std::wstring fqAttrName = ruleAttr.fqName;
+	const prt::AnnotationArgumentType ruleAttrType = ruleAttr.mType;
+
+	short minVal;
+	short maxVal;
+	MCHECK(eAttr.getMin(minVal));
+	MCHECK(eAttr.getMax(maxVal));
+
+	MString defMStringVal;
+
+	switch (ruleAttrType) {
+		case prt::AAT_STR: {
+			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
+			if (defStringVal == nullptr)
+				return false;
+			defMStringVal = defStringVal;
+			break;
+		}
+		case prt::AAT_FLOAT: {
+			const auto defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
+			defMStringVal = std::to_wstring(defDoubleVal).c_str();
+			break;
+		}
+		case prt::AAT_BOOL: {
+			const auto defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
+			defMStringVal = std::to_wstring(defBoolVal).c_str();
+			break;
+		}
+		default: {
+			LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
+			return false;
+		}
+	}
+
+	MStatus status;
+	short idx = eAttr.fieldIndex(defMStringVal, &status);
+
+	const bool needToAddCustomDefaultValue = (status != MStatus::kSuccess);
+	const bool needToRemoveCustomDefaultValue = ((idx > 0) && (minVal == 0));
+
+	if (needToAddCustomDefaultValue || needToRemoveCustomDefaultValue) {
+		std::vector<MString> enumOptions;
+
+		for (short currIdx = 1; currIdx <= maxVal; currIdx++)
+			enumOptions.emplace_back(eAttr.fieldName(currIdx).asWChar());
+
+		MStatus stat;
+		const MFnDependencyNode fNode(node, &stat);
+		MCHECK(stat);
+		// clear enum options
+		MCHECK(mu::setEnumOptions(fNode.name().asWChar(), eAttr.name().asWChar(), {}));
+		// adding enums through MFnEnumAttribute does not cause issues, when the enum option string contains ":"
+		short currIdx = 1;
+		for (const MString& option : enumOptions)
+			MCHECK(eAttr.addField(option, currIdx++));
+	}
+	else {
+		return false;
+	}
+
+	if (needToAddCustomDefaultValue)
+		MCHECK(eAttr.addField(defMStringVal, 0));
+
+	return true;
+}
+
 short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const MFnEnumAttribute& eAttr,
                           const RuleAttribute& ruleAttr) {
 	const std::wstring fqAttrName = ruleAttr.fqName;
@@ -531,8 +599,9 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 }
 
 MStatus PRTModifierAction::updateUI(const MObject& node) {
-	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
-	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
+	const auto updateUIFromAttributes = [this, node](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
+	                                                 const RuleAttribute& ruleAttribute,
+	                                                 const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues =
 		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().mPRTCache,
 		                                  *inPrtMesh, mRandomSeed, *mGenerateAttrs);
@@ -608,8 +677,9 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 				MCHECK(plug.getValue(enumVal));
 
 				const bool isDefaultValue = (defEnumVal == enumVal);
-
-				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				const bool hasNewCustomDefault =
+				        updateCustomEnumValue(*defaultAttributeValues, eAttr, ruleAttribute, node);
+				if (hasNewCustomDefault || (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)) {
 					plug.setShort(defEnumVal);
 				}
 				break;
