@@ -616,9 +616,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 
 				const bool isDefaultValue = (defBoolVal == boolVal);
 
-				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
 					plug.setBool(defBoolVal);
-				}
 				break;
 			}
 			case PrtAttributeType::FLOAT: {
@@ -628,9 +627,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 
 				const bool isDefaultValue = (defDoubleVal == doubleVal);
 
-				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
 					plug.setDouble(defDoubleVal);
-				}
 				break;
 			}
 			case PrtAttributeType::COLOR: {
@@ -651,9 +649,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 
 				const bool isDefaultValue = (std::wcscmp(colStr.c_str(), defColStr) == 0);
 
-				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
 					plug.setMObject(defaultColorObj);
-				}
 				break;
 			}
 			case PrtAttributeType::STRING: {
@@ -664,9 +661,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 
 				const bool isDefaultValue = (std::wcscmp(stringVal.asWChar(), defStringVal) == 0);
 
-				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
 					plug.setString(defStringVal);
-				}
 				break;
 			}
 			case PrtAttributeType::ENUM: {
@@ -679,9 +675,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 				const bool isDefaultValue = (defEnumVal == enumVal);
 				const bool hasNewCustomDefault =
 				        updateCustomEnumValue(*defaultAttributeValues, eAttr, ruleAttribute, node);
-				if (hasNewCustomDefault || (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)) {
+				if (hasNewCustomDefault || (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue))
 					plug.setShort(defEnumVal);
-				}
 				break;
 			}
 
