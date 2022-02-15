@@ -660,7 +660,7 @@ void PRTModifierAction::updateDynamicEnums() {
 					currStringView = currStringView.substr(0, cutoffIndex);
 
 					const MString mCurrString(currStringView.data(), static_cast<int>(currStringView.length()));
-					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
+					MCHECK(e.mAttr.addField(mCurrString, enumIndex + 1));
 				}
 				break;
 			}
@@ -672,7 +672,7 @@ void PRTModifierAction::updateDynamicEnums() {
 					const double currDouble = doubleArray[enumIndex];
 
 					const MString mCurrString(std::to_wstring(currDouble).c_str());
-					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
+					MCHECK(e.mAttr.addField(mCurrString, enumIndex + 1));
 				}
 				break;
 			}
@@ -684,28 +684,28 @@ void PRTModifierAction::updateDynamicEnums() {
 					const bool currBool = boolArray[enumIndex];
 
 					const MString mCurrString(std::to_wstring(currBool).c_str());
-					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
+					MCHECK(e.mAttr.addField(mCurrString, enumIndex + 1));
 				}
 				break;
 			}
 			case prt::Attributable::PT_STRING: {
 				const MString mCurrString = mGenerateAttrs->getString(valuesAttr.c_str());
 
-				MCHECK(e.mAttr.addField(mCurrString, 0));
+				MCHECK(e.mAttr.addField(mCurrString, 1));
 				break;
 			}
 			case prt::Attributable::PT_FLOAT: {
 				const bool currFloat = mGenerateAttrs->getFloat(valuesAttr.c_str());
 
 				const MString mCurrString(std::to_wstring(currFloat).c_str());
-				MCHECK(e.mAttr.addField(mCurrString, 0));
+				MCHECK(e.mAttr.addField(mCurrString, 1));
 				break;
 			}
 			case prt::Attributable::PT_BOOL: {
 				const bool currBool = mGenerateAttrs->getBool(valuesAttr.c_str());
 
 				const MString mCurrString(std::to_wstring(currBool).c_str());
-				MCHECK(e.mAttr.addField(mCurrString, 0));
+				MCHECK(e.mAttr.addField(mCurrString, 1));
 				break;
 			}
 			default:
@@ -1024,7 +1024,7 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 	mRestricted = true;
 	MStatus stat;
 
-	uint32_t enumIndex = 0;
+	uint32_t enumIndex = 1;
 	for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
 
 		const wchar_t* key = annot->getArgument(arg)->getKey();
