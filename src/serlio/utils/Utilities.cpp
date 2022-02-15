@@ -42,6 +42,60 @@ struct IUnknown;
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
+#include <map>
+
+namespace {
+const std::wstring TOO_NEW_CE_VERSION = L"newer than 2021.1";
+const std::wstring CGAC_VERSION_STRING = L"CGAC version ";
+const std::wstring CE_VERSION_STRING = L"CityEngine version ";
+
+const std::map<std::wstring, std::wstring> cgacToCEVersion = {
+        // clang-format off
+	{L"1.17", L"2021.1"},
+	{L"1.16", L"2021.0"},
+	{L"1.15", L"2020.1"},
+	{L"1.14", L"2020.0"},
+	{L"1.13", L"2019.1"},
+	{L"1.12", L"2019.0"},
+	{L"1.11", L"2018.1"},
+	{L"1.10", L"2018.0"},
+	{L"1.9", L"2017.1"},
+	{L"1.8", L"2017.0"},
+	{L"1.7", L"2016.1"},
+	{L"1.6", L"2016.0"},
+	{L"1.5", L"2015.0 - 2015.2"},
+	{L"1.4", L"2014.1"},
+	{L"1.3", L"2014.1"},
+	{L"1.2", L"2014.0"},
+	{L"1.1", L"2013.1"},
+	{L"1.0", L"2013.0"}
+        // clang-format on
+};
+
+void replaceCGACVersionBetween(std::wstring& errorString, const std::wstring prefix, const std::wstring suffix) {
+	size_t versionStartPos = errorString.find(prefix);
+	if (versionStartPos != std::wstring::npos)
+		versionStartPos += prefix.length();
+
+	const size_t versionEndPos = errorString.find(suffix, versionStartPos);
+
+	if ((versionStartPos == std::wstring::npos) || (versionEndPos == std::wstring::npos))
+		return;
+
+	const size_t versionLength = versionEndPos - versionStartPos;
+	const std::wstring cgacV1 = errorString.substr(versionStartPos, versionLength);
+
+	std::wstring CEVersion;
+	const auto it = cgacToCEVersion.find(cgacV1);
+	if (it != cgacToCEVersion.end()) {
+		CEVersion = it->second;
+	}
+	else {
+		CEVersion = TOO_NEW_CE_VERSION;
+	}
+	errorString.replace(versionStartPos, versionLength, CEVersion);
+}
+}
 
 namespace prtu {
 
@@ -211,6 +265,15 @@ AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::Attribu
 	if (s != prt::STATUS_OK)
 		return {};
 	return AttributeMapUPtr(validatedOptions);
+}
+
+void replaceCGACWithCEVersion(std::wstring& errorString) {
+	// a typical CGAC version error string looks like:
+	// Potentially unsupported CGAC version X.YY : major number smaller than current (A.BB)
+	replaceAllSubstrings(errorString, CGAC_VERSION_STRING, CE_VERSION_STRING);
+
+	replaceCGACVersionBetween(errorString, CE_VERSION_STRING, L" ");
+	replaceCGACVersionBetween(errorString, L"(", L")");
 }
 
 } // namespace prtu

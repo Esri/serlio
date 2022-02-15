@@ -18,7 +18,6 @@
  */
 
 #include "modifiers/PRTModifierAction.h"
-#include "modifiers/MayaCallbacks.h"
 #include "modifiers/PRTModifierCommand.h"
 #include "modifiers/RuleAttributes.h"
 
@@ -28,12 +27,14 @@
 
 #include "prt/StringUtils.h"
 
+#include "maya/MDataHandle.h"
 #include "maya/MFloatPointArray.h"
 #include "maya/MFnCompoundAttribute.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnNumericAttribute.h"
 #include "maya/MFnStringData.h"
 #include "maya/MFnTypedAttribute.h"
+#include "maya/MGlobal.h"
 
 #include <cassert>
 #include <variant>
@@ -328,6 +329,34 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 	return 0;
 }
 
+bool cgacProblemsHaveErrors(CGACErrors errorList) {
+	for (const auto& error : errorList) {
+		if (error.errorLevel == prt::CGAErrorLevel::CGAERROR)
+			return true;
+	}
+	return false;
+}
+
+bool cgacProblemsShouldBeLogged(CGACErrors errorList) {
+	for (const auto& error : errorList) {
+		if (error.shouldBeLogged)
+			return true;
+	}
+	return false;
+}
+
+MString cgacProblemsToString(CGACErrors errorList) {
+	MString errorString;
+	for (const auto& error : errorList) {
+		if (errorString.length() > 0)
+			errorString += "\n";
+
+		errorString += (error.errorLevel == prt::CGAErrorLevel::CGAERROR) ? "Error: " : "Warning: ";
+		errorString += error.errorString.c_str();
+	}
+	return errorString;
+}
+
 template <typename T>
 T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, const T& defaultValue) {
 	T plugValue = defaultValue;
@@ -353,7 +382,6 @@ T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, c
 
 	return plugValue;
 }
-
 } // namespace
 
 PRTModifierAction::PRTModifierAction() {
@@ -533,7 +561,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	return MStatus::kSuccess;
 }
 
-MStatus PRTModifierAction::updateUI(const MObject& node) {
+MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProblemData) {
 	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues =
@@ -622,6 +650,19 @@ MStatus PRTModifierAction::updateUI(const MObject& node) {
 				break;
 		}
 	};
+
+	MString cgacErrorString = cgacProblemsToString(mCGACProblems);
+	if (cgacProblemData.asString() != cgacErrorString) {
+		cgacProblemData.setString(cgacErrorString);
+		if (cgacProblemsShouldBeLogged(mCGACProblems)) {
+			if (cgacProblemsHaveErrors(mCGACProblems)) {
+				MGlobal::displayError(cgacErrorString);
+			}
+			else {
+				MGlobal::displayWarning(cgacErrorString);
+			}
+		}
+	}
 
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
@@ -812,8 +853,16 @@ MStatus PRTModifierAction::doIt() {
 	const prt::Status generateStatus =
 	        prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(),
 	                      outputHandler.get(), PRTContext::get().mPRTCache.get(), nullptr);
-	if (generateStatus != prt::STATUS_OK)
-		LOG_ERR << "prt generate failed: " << prt::getStatusDescription(generateStatus);
+
+	mCGACProblems = outputHandler->getCGACErrors();
+
+	if (generateStatus != prt::STATUS_OK) {
+		std::string generateFailedMessage = "prt generate failed: ";
+		generateFailedMessage.append(prt::getStatusDescription(generateStatus));
+
+		LOG_ERR << generateFailedMessage;
+		MGlobal::displayError(generateFailedMessage.c_str());
+	}
 
 	return status;
 }

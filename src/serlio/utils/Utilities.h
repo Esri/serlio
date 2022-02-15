@@ -218,6 +218,8 @@ SRL_TEST_EXPORTS_API inline std::wstring getImport(const std::wstring& fqRuleNam
 		return {};
 	return ruleWithoutStyle.substr(0, sepPos);
 }
+
+SRL_TEST_EXPORTS_API void replaceCGACWithCEVersion(std::wstring& errorString);
 } // namespace prtu
 
 inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {
@@ -227,6 +229,16 @@ inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars
 		if (pos == std::wstring::npos)
 			break;
 		s[pos++] = L'_';
+	}
+}
+
+template <typename C>
+void replaceAllSubstrings(std::basic_string<C>& str, const std::basic_string<C>& oldStr,
+                                 const std::basic_string<C>& newStr) {
+	typename std::basic_string<C>::size_type pos = 0;
+	while ((pos = str.find(oldStr, pos)) != std::basic_string<C>::npos) {
+		str.replace(pos, oldStr.length(), newStr);
+		pos += newStr.length();
 	}
 }
 

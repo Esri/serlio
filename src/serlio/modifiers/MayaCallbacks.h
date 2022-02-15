@@ -33,42 +33,35 @@
 #include <string>
 #include <vector>
 
+struct CGACError {
+	prt::CGAErrorLevel errorLevel;
+	bool shouldBeLogged;
+	std::wstring errorString;
+
+	CGACError(prt::CGAErrorLevel errorLevel, bool shouldBeLogged, const std::wstring& errorString)
+	    : errorLevel(errorLevel), shouldBeLogged(shouldBeLogged), errorString(errorString) {}
+};
+using CGACErrors = std::vector<CGACError>;
+
 class MayaCallbacks : public IMayaCallbacks {
 public:
 	MayaCallbacks(const MObject& inMesh, const MObject& outMesh, AttributeMapBuilderUPtr& amb)
 	    : inMeshObj(inMesh), outMeshObj(outMesh), mAttributeMapBuilder(amb) {}
 
 	// prt::Callbacks interface
-	prt::Status generateError(size_t /*isIndex*/, prt::Status /*status*/, const wchar_t* message) override {
-		LOG_ERR << "GENERATE ERROR: " << message;
-		return prt::STATUS_OK;
-	}
-	prt::Status assetError(size_t /*isIndex*/, prt::CGAErrorLevel /*level*/, const wchar_t* /*key*/,
-	                       const wchar_t* /*uri*/, const wchar_t* message) override {
-		LOG_ERR << "ASSET ERROR: " << message;
-		return prt::STATUS_OK;
-	}
+	prt::Status generateError(size_t /*isIndex*/, prt::Status /*status*/, const wchar_t* message) override;
+	prt::Status assetError(size_t /*isIndex*/, prt::CGAErrorLevel level, const wchar_t* /*key*/, const wchar_t* /*uri*/,
+	                       const wchar_t* message) override;
+
 	prt::Status cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel /*level*/, int32_t /*methodId*/,
-	                     int32_t /*pc*/, const wchar_t* message) override {
-		LOG_ERR << "CGA ERROR: " << message;
-		return prt::STATUS_OK;
-	}
-	prt::Status cgaPrint(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* txt) override {
-		LOG_INF << "CGA PRINT: " << txt;
-		return prt::STATUS_OK;
-	}
-	prt::Status cgaReportBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
-	                          bool /*value*/) override {
-		return prt::STATUS_OK;
-	}
+	                     int32_t /*pc*/, const wchar_t* message) override;
+	prt::Status cgaPrint(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* txt) override;
+	prt::Status cgaReportBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, bool /*value*/) override;
 	prt::Status cgaReportFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
-	                           double /*value*/) override {
-		return prt::STATUS_OK;
-	}
+	                           double /*value*/) override;
 	prt::Status cgaReportString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
-	                            const wchar_t* /*value*/) override {
-		return prt::STATUS_OK;
-	}
+	                            const wchar_t* /*value*/) override;
+
 	prt::Status attrBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, bool /*value*/) override;
 	prt::Status attrFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/, double /*value*/) override;
 	prt::Status attrString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
@@ -95,7 +88,8 @@ public:
 
 #endif // PRT version >= 2.1
 
-public:
+	const CGACErrors& getCGACErrors() const;
+
 	// clang-format off
 	void addMesh(const wchar_t* name,
 	                     const double* vtx, size_t vtxSize,
@@ -118,8 +112,8 @@ public:
 	void addAsset(const wchar_t* uri, const wchar_t* fileName, const uint8_t* buffer, size_t size, wchar_t* result,
 	              size_t& resultSize) override;
 
-
 private:
+	CGACErrors cgacErrors;
 	MObject outMeshObj;
 	MObject inMeshObj;
 

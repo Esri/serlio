@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "modifiers/MayaCallbacks.h"
 #include "modifiers/PRTMesh.h"
 #include "modifiers/RuleAttributes.h"
 #include "modifiers/polyModifier/polyModifierFty.h"
@@ -69,7 +70,7 @@ public:
 	MStatus updateRuleFiles(const MObject& node, const MString& rulePkg);
 	MStatus fillAttributesFromNode(const MObject& node);
 	MStatus updateUserSetAttributes(const MObject& node);
-	MStatus updateUI(const MObject& node);
+	MStatus updateUI(const MObject& node, MDataHandle& cgacProblemData);
 	void setMesh(MObject& _inMesh, MObject& _outMesh);
 	void setRandomSeed(int32_t randomSeed) {
 		mRandomSeed = randomSeed;
@@ -93,6 +94,7 @@ private:
 
 	// Set in updateRuleFiles(rulePkg)
 	MString mRulePkg;
+	CGACErrors mCGACProblems;
 	std::wstring mRuleFile;
 	std::wstring mStartRule;
 	const std::wstring mRuleStyle = L"Default"; // Serlio atm only supports the "Default" style

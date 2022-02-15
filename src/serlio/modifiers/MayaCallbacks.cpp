@@ -412,7 +412,61 @@ std::filesystem::path getAssetDir() {
 	}
 	return assetDir;
 }
+
+void detectAndAppendCGACErrors(prt::CGAErrorLevel level, const wchar_t* message, CGACErrors& cgacErrors) {
+	if (message != nullptr && (std::wcsstr(message, L"CGAC version") || std::wcsstr(message, L"Non-recognized builtin method"))) {
+		const bool shouldBeLogged =
+		        (std::wcsstr(message, L"newer than current") || (level == prt::CGAErrorLevel::CGAERROR));
+
+		std::wstring stringMessage = message;
+		prtu::replaceCGACWithCEVersion(stringMessage);
+		cgacErrors.emplace_back(level, shouldBeLogged, stringMessage);
+	}
+}
 } // namespace
+
+prt::Status MayaCallbacks::generateError(size_t /*isIndex*/, prt::Status /*status*/, const wchar_t* message) {
+	LOG_ERR << "GENERATE ERROR: " << message;
+	detectAndAppendCGACErrors(prt::CGAErrorLevel::CGAERROR, message, cgacErrors);
+	return prt::STATUS_OK;
+}
+
+prt::Status MayaCallbacks::assetError(size_t /*isIndex*/, prt::CGAErrorLevel level, const wchar_t* /*key*/,
+                                      const wchar_t* /*uri*/, const wchar_t* message) {
+	LOG_ERR << "ASSET ERROR: " << message;
+	detectAndAppendCGACErrors(level, message, cgacErrors);
+	return prt::STATUS_OK;
+}
+
+prt::Status MayaCallbacks::cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel /*level*/,
+                                    int32_t /*methodId*/, int32_t /*pc*/, const wchar_t* message) {
+	LOG_ERR << "CGA ERROR: " << message;
+	return prt::STATUS_OK;
+}
+
+prt::Status MayaCallbacks::cgaPrint(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* txt) {
+	LOG_INF << "CGA PRINT: " << txt;
+	return prt::STATUS_OK;
+}
+
+prt::Status MayaCallbacks::cgaReportBool(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+                                         bool /*value*/) {
+	return prt::STATUS_OK;
+}
+
+prt::Status MayaCallbacks::cgaReportFloat(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+                                          double /*value*/) {
+	return prt::STATUS_OK;
+}
+
+prt::Status MayaCallbacks::cgaReportString(size_t /*isIndex*/, int32_t /*shapeID*/, const wchar_t* /*key*/,
+                                           const wchar_t* /*value*/) {
+	return prt::STATUS_OK;
+}
+
+const CGACErrors& MayaCallbacks::getCGACErrors() const {
+	return cgacErrors;
+}
 
 void MayaCallbacks::addMesh(const wchar_t*, const double* vtx, size_t vtxSize, const double* nrm, size_t nrmSize,
                             const uint32_t* faceCounts, size_t faceCountsSize, const uint32_t* vertexIndices,

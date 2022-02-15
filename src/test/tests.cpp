@@ -285,6 +285,43 @@ TEST_CASE("join") {
 	CHECK(join<wchar_t>(input3, L" ") == L"");
 }
 
+TEST_CASE("replaceCGACWithCEVersion") {
+	SECTION("do nothing") {
+		std::wstring inp = L"No CGA and CGAC versions found - assuming unreleased CGA 2020.0 and CGAC 1.14";
+		const std::wstring exp = L"No CGA and CGAC versions found - assuming unreleased CGA 2020.0 and CGAC 1.14";
+		prtu::replaceCGACWithCEVersion(inp);
+		CHECK(inp == exp);
+	}
+
+	SECTION("major number larger than current") {
+		std::wstring inp = L"Unsupported CGAC version 2.0 : major number larger than current (1.17)";
+		const std::wstring exp = L"Unsupported CityEngine version newer than 2021.1 : major number larger than current (2021.1)";
+		prtu::replaceCGACWithCEVersion(inp);
+		CHECK(inp == exp);
+	}
+
+	SECTION("major number smaller than current") {
+		std::wstring inp = L"Potentially unsupported CGAC version 1.0 : major number smaller than current (2.0)";
+		const std::wstring exp = L"Potentially unsupported CityEngine version 2013.0 : major number smaller than current (newer than 2021.1)";
+		prtu::replaceCGACWithCEVersion(inp);
+		CHECK(inp == exp);
+	}
+
+	SECTION("minor number larger than current") {
+		std::wstring inp = L"Potentially unsupported CGAC version 1.17 : newer than current (1.5)";
+		const std::wstring exp = L"Potentially unsupported CityEngine version 2021.1 : newer than current (2015.0 - 2015.2)";
+		prtu::replaceCGACWithCEVersion(inp);
+		CHECK(inp == exp);
+	}
+
+	SECTION("problematic CityEngine version") {
+		std::wstring inp = L"Potentially problematic CGAC version 1.3 : recompiling with current CGA Compiler (1.17) is recommended.";
+		const std::wstring exp = L"Potentially problematic CityEngine version 2014.1 : recompiling with current CGA Compiler (2021.1) is recommended.";
+		prtu::replaceCGACWithCEVersion(inp);
+		CHECK(inp == exp);
+	}
+}
+
 TEST_CASE("toFileURI") {
 #if _WIN32
 	SECTION("windows") {
