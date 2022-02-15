@@ -46,6 +46,10 @@ proc int prtIsColorAttr(string $attr){
 	return `addAttr -q -uac ($attr)`;
 }
 
+proc int prtIsEnumAttr(string $attr){
+	return (`addAttr -q -at ($attr)` == "enum");
+}
+
 proc int prtAttributeExists(string $attr){
 	string $node = plugNode($attr);
 	string $attributeName = plugAttr($attr);
