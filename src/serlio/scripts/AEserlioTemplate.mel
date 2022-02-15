@@ -160,7 +160,7 @@ global proc prtAttributeControl(string $attr, string $varname){
 
 	$label = `niceName $attr`;
 
-	iconTextStaticLabel -st "iconOnly" -visible false -hlc 0.2715 0.2715 0.2715 -i "pencilCursor.png" -w 25 -h 25 -enable false ($control + "_user_set");
+	iconTextStaticLabel -st "iconOnly" -visible false -i "pencilCursor.png" -w 25 -h 25 -enable false ($control + "_user_set");
 
 	if (prtIsColorAttr($attr)){
 		colorSliderGrp-label $label $control;
@@ -179,7 +179,7 @@ global proc prtAttributeControl(string $attr, string $varname){
 		connectControl $control $attr;
 	}
 	string $changeCommand = "prtUpdateEditHighlights " + $attr;
-	scriptJob -rp -p $control -ac  ($attr + "_user_set") $changeCommand;
+	scriptJob -p $control -ac ($attr + "_user_set") $changeCommand;
 
 	setParent ..;
 	setUITemplate -ppt; 
@@ -202,7 +202,7 @@ global proc prtAttributeControlReplace(string $attr, string $varname){
 		}
 		symbolButton -edit -c ("prtForceDefault (\"" +  $attr +"\")") ($control + "_force_default_reset");
 		string $changeCommand = "prtUpdateEditHighlights " + $attr;
-		scriptJob -rp -p $control -ac ($attr + "_user_set") $changeCommand;
+		scriptJob -p $control -ac ($attr + "_user_set") $changeCommand;
 	}
 	prtUpdateEditHighlights($attr);
 }
