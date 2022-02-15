@@ -45,9 +45,9 @@ struct IUnknown;
 #include <map>
 
 namespace {
-constexpr const wchar_t* TOO_NEW_CE_VERSION = L"newer than 2021.1";
-constexpr const wchar_t* CGAC_VERSION_STRING = L"CGAC version ";
-constexpr const wchar_t* CE_VERSION_STRING = L"CityEngine version ";
+const std::wstring TOO_NEW_CE_VERSION = L"newer than 2021.1";
+const std::wstring CGAC_VERSION_STRING = L"CGAC version ";
+const std::wstring CE_VERSION_STRING = L"CityEngine version ";
 
 const std::map<std::wstring, std::wstring> cgacToCEVersion = {
         // clang-format off
@@ -270,7 +270,7 @@ AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::Attribu
 void replaceCGACWithCEVersion(std::wstring& errorString) {
 	// a typical CGAC version error string looks like:
 	// Potentially unsupported CGAC version X.YY : major number smaller than current (A.BB)
-	replaceAllSubstrings(errorString, std::wstring(CGAC_VERSION_STRING), std::wstring(CE_VERSION_STRING));
+	replaceAllSubstrings(errorString, CGAC_VERSION_STRING, CE_VERSION_STRING);
 
 	replaceCGACVersionBetween(errorString, CE_VERSION_STRING, L" ");
 	replaceCGACVersionBetween(errorString, L"(", L")");
