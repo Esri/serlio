@@ -135,7 +135,7 @@ NumberOfNodes=81
 	posx=1 v=2003 1636.499512
 	posy=1 v=2003 871.666687
 	normalspace=2 e=0 v=5012 1
-	blendmode=2 e=0 v=5012 1
+	blendmode=2 e=0 v=5012 2
 	group=-1
 	ISC=13
 		SVT=5022 3002 1 0 0 
@@ -2231,7 +2231,7 @@ nodes = [
 		} 
 		id = "abbaabba-abba-abba-abba-abbaabbaabb9" 
 		options = [ 
-			"dd7fcf97-0627-48ab-b29a-95b5685bb123"
+			"3b55d6c6-4398-4dbc-b9ef-570aff8696ae"
 			"2b136447-676e-4943-997b-04a28ae68497"
 		] 
 		position = [ 
