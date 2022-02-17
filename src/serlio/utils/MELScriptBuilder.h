@@ -77,6 +77,7 @@ public:
 
 	void createShader(const std::wstring& shaderType, const MELVariable& nodeName);
 	void createTextureShadingNode(const MELVariable& nodeName);
+	void forceValidTextureAlphaChannel(const MELVariable& nodeName);
 
 	void getUndoState(const MELVariable& undoName);
 	void setUndoState(const MELVariable& undoName);
