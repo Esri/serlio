@@ -67,8 +67,8 @@ void setUvTransformAttrs(MELScriptBuilder& sb, const std::wstring& uvSet, const 
 
 void createMapShader(MELScriptBuilder& sb, const std::string& tex, const MaterialTrafo& mapTrafo,
                      const std::wstring& shaderName, const std::wstring& uvSet, const bool raw, const bool alpha) {
-	sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(shaderName));
 	std::filesystem::path texPath(tex);
+	sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(texPath.stem().wstring()));
 
 	sb.setVar(MEL_VAR_MAP_FILE, MELStringLiteral(prtu::toUTF16FromOSNarrow(tex)));
 	sb.createTextureShadingNode(MEL_VAR_MAP_NODE);
