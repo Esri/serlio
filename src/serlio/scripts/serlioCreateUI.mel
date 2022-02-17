@@ -123,6 +123,15 @@ global proc removePrtNode() {
 	select -r $select;
 }
 
+global proc displayTextures(){
+	string $panels[] = `getPanel -typ "modelPanel"`;
+	for ($panel in $panels){
+		string $camera = `modelEditor -q -camera $panel`;
+		if (`camera -q -orthographic $camera` == false)
+			modelEditor -e -dtx true $panel;
+	}
+}
+
 global proc createMaterialNode(string $materialType) {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
@@ -137,6 +146,7 @@ global proc createMaterialNode(string $materialType) {
 		if(hasNodeTypeInHistory($node, {"serlio"}) && !hasNodeTypeInHistory($node, {"serlioMaterial","serlioArnoldMaterial"}))
 			serlioCreateMaterial $materialType;
 	}
+	displayTextures();
 	select -r $select;
 }
 
