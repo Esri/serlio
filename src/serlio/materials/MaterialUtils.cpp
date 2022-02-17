@@ -16,6 +16,10 @@
 
 namespace {
 
+constexpr const wchar_t* RGBA8_FORMAT = L"RGBA8";
+constexpr const wchar_t* FORMAT_STRING = L"format";
+constexpr const wchar_t* FILE_PREFIX = L"file:/";
+
 MObject findNamedObject(const std::wstring& name, MFn::Type fnType) {
 	MStatus status;
 	MItDependencyNodes nodeIt(fnType, &status);
@@ -191,6 +195,16 @@ std::filesystem::path getStingrayShaderPath() {
 		return shaderPath;
 	}();
 	return sfxFile;
+}
+
+bool textureHasAlphaChannel(std::wstring path) {
+	const prt::AttributeMap* textureMetadata = prt::createTextureMetadata((FILE_PREFIX + path).c_str());
+	if (textureMetadata == nullptr)
+		return false;
+	const wchar_t* format = textureMetadata->getString(FORMAT_STRING);
+	if (format != nullptr && std::wcscmp(format, RGBA8_FORMAT) == 0)
+		return true;
+	return false;
 }
 
 } // namespace MaterialUtils
