@@ -72,7 +72,7 @@ void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wst
 
 		if (!alphaTarget.empty())
 			sb.setAttr(MEL_VAR_SHADER_NODE, alphaTarget,
-			           MaterialUtils::textureHasAlphaChannel(texPath));
+			           MaterialUtils::textureHasAlphaChannel(texPath.wstring()));
 
 		sb.setAttr(MEL_VAR_SHADER_NODE, L"use_" + target, 1);
 	}
