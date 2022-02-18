@@ -627,8 +627,9 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 }
 
 MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProblemData) {
-	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
-	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
+	const auto updateUIFromAttributes = [this, node](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
+	                                                 const RuleAttribute& ruleAttribute,
+	                                                 const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues =
 		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().mPRTCache,
 		                                  *inPrtMesh, mRandomSeed, *mGenerateAttrs);
