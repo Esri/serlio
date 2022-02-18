@@ -734,14 +734,19 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 	return MStatus::kSuccess;
 }
 
-void PRTModifierAction::updateDynamicEnums() {
+void PRTModifierAction::updateDynamicEnums(const MObject& node) {
 	for (auto& e : mEnums) {
 		if (e.mValuesAttr.length() == 0)
 			continue;
 
+		short maxEnumVal; 
+		e.mAttr.getMax(maxEnumVal);
+		if (maxEnumVal > 0)
+			clearEnumValues(node, e.mAttr);
+
 		const MString fullAttrName = e.mAttr.name();
 		const auto ruleAttrIt = mRuleAttributes.find(fullAttrName.asWChar());
-		assert(ruleAttrIt != ruleAttributes.end()); // Rule not found
+		assert(ruleAttrIt != mRuleAttributes.end()); // Rule not found
 		const RuleAttribute ruleAttr = (ruleAttrIt != mRuleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
 
 		const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName).c_str();
@@ -886,7 +891,7 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 		}
 
 		createNodeAttributes(ruleAttributes, node, info.get());
-		updateDynamicEnums();
+		updateDynamicEnums(node);
 	}
 
 	return MS::kSuccess;

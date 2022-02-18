@@ -109,7 +109,7 @@ private:
 	AttributeMapUPtr mGenerateAttrs;
 
 	std::list<PRTModifierEnum> mEnums;
-	void updateDynamicEnums();
+	void updateDynamicEnums(const MObject& node);
 
 	MStatus createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& node,
 	                             const prt::RuleFileInfo* info);
