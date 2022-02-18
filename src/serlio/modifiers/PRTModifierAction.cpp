@@ -240,6 +240,13 @@ MStatus addHiddenBoolParameter(MFnDependencyNode& node, MFnAttribute& tAttr, con
 	}
 	return stat;
 }
+void clearEnumValues(const MObject& node, const MFnEnumAttribute& enumAttr) {
+	MStatus stat;
+	const MFnDependencyNode fNode(node, &stat);
+	MCHECK(stat);
+	// clear enum options
+	MCHECK(mu::setEnumOptions(fNode.name().asWChar(), enumAttr.name().asWChar(), {}));
+}
 
 bool updateCustomEnumValue(const prt::AttributeMap& defaultAttributeValues, MFnEnumAttribute& eAttr,
                            const RuleAttribute& ruleAttr, const MObject& node) {
@@ -289,11 +296,7 @@ bool updateCustomEnumValue(const prt::AttributeMap& defaultAttributeValues, MFnE
 		for (short currIdx = 1; currIdx <= maxVal; currIdx++)
 			enumOptions.emplace_back(eAttr.fieldName(currIdx).asWChar());
 
-		MStatus stat;
-		const MFnDependencyNode fNode(node, &stat);
-		MCHECK(stat);
-		// clear enum options
-		MCHECK(mu::setEnumOptions(fNode.name().asWChar(), eAttr.name().asWChar(), {}));
+		clearEnumValues(node, eAttr);
 		// adding enums through MFnEnumAttribute does not cause issues, when the enum option string contains ":"
 		short currIdx = 1;
 		for (const MString& option : enumOptions)
