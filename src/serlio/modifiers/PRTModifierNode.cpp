@@ -38,11 +38,13 @@
 namespace {
 const MString NAME_RULE_PKG = "Rule_Package";
 const MString NAME_RANDOM_SEED = "Random_Seed";
+const MString CGAC_PROBLEMS = "CGAC_Problems";
 } // namespace
 
 // Unique Node TypeId
 MTypeId PRTModifierNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::PRT_GEOMETRY_NODE);
 MObject PRTModifierNode::rulePkg;
+MObject PRTModifierNode::cgacProblems;
 MObject PRTModifierNode::currentRulePkg;
 MObject PRTModifierNode::mRandomSeed;
 
@@ -94,6 +96,9 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			MDataHandle currentRulePkgData = data.inputValue(currentRulePkg, &status);
 			MCheckStatus(status, "ERROR getting currentRulePkg");
 
+			MDataHandle cgacProblemData = data.inputValue(cgacProblems, &status);
+			MCheckStatus(status, "ERROR getting cgacErrors");
+
 			const bool ruleFileWasChanged = (rulePkgData.asString() != currentRulePkgData.asString());
 
 			// Copy the inMesh to the outMesh, so you can
@@ -122,7 +127,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			// Now, perform the PRT
 			status = fPRTModifierAction.doIt();
 
-			fPRTModifierAction.updateUI(thisMObject());
+			fPRTModifierAction.updateUI(thisMObject(), cgacProblemData);
 
 			currentRulePkgData.setString(rulePkgData.asString());
 
@@ -207,6 +212,14 @@ MStatus PRTModifierNode::initialize()
 	MCHECK(fAttr.setHidden(true));
 	MCHECK(fAttr.setConnectable(false));
 	MCHECK(addAttribute(currentRulePkg));
+
+	cgacProblems = fAttr.create(CGAC_PROBLEMS, "cgacErrors", MFnData::kString,
+	                              stringData.create(&stat2), &stat);
+	MCHECK(stat2);
+	MCHECK(stat);
+	MCHECK(fAttr.setHidden(true));
+	MCHECK(fAttr.setConnectable(false));
+	MCHECK(addAttribute(cgacProblems));
 
 	// Set up a dependency between the input and the output.  This will cause
 	// the output to be marked dirty when the input changes.  The output will

@@ -98,15 +98,49 @@ global proc prtShowFileDialog(string $attr, string $filters) {
 	}  
 }  
 
+global proc updateCGACProblems(string $node){
+	string $attr = $node + ".CGAC_Problems";
+
+	if (!prtAttributeExists($attr))
+		return;
+
+	string $cgacProblems = `getAttr ($attr)`;
+	int $hasProblems = (size($cgacProblems) > 0);
+	string $control = prtControlName($node) + "_CGAC_Problems";
+
+	prtSetVisibility($hasProblems, $control);
+
+	int $displayErrorIcon = size(`match "Error:" $cgacProblems`) > 0;
+	string $icon = "caution.png";
+	if ($displayErrorIcon)
+		$icon = "error.png";
+
+	iconTextStaticLabel -e -ann $cgacProblems -i $icon $control;
+}
+
 global proc prtFileBrowse(string $attr, string $varname, string $filters){
 	$varname = prtRemoveNodeName($varname);
 	$filters = prtRemoveNodeName($filters);
 	setUITemplate -pst attributeEditorTemplate;
-	rowLayout -nc 4;  
+	rowLayout
+		-nc 5 
+		-adj 2
+		-cw 3 25
+		-cw 4 25
+		-cw 5 25;
 	text -label `niceName($attr)`;
 	string $control = prtControlName($attr);
 	textField -fileName `getAttr $attr` $control;  	
 	connectControl -fileName $control $attr;
+
+	string $node = prtGetNodeName($attr);
+
+	iconTextStaticLabel -st "iconOnly" -i "caution.png" -l "error" -visible false ($node + "_CGAC_Problems");
+	updateCGACProblems($node);
+
+	string $changeCommand = "updateCGACProblems " + $node;
+	scriptJob -rp -p $control -ac ($node + ".CGAC_Problems") $changeCommand;
+
 	symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");	
 	symbolButton -ann "reload rule package" -image "refresh.png" -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");	
 	setParent ..;
