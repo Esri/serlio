@@ -21,6 +21,7 @@
 
 #include "modifiers/MayaCallbacks.h"
 #include "modifiers/PRTMesh.h"
+#include "modifiers/PRTModifierEnum.h"
 #include "modifiers/RuleAttributes.h"
 #include "modifiers/polyModifier/polyModifierFty.h"
 
@@ -31,7 +32,6 @@
 #include "prt/API.h"
 
 #include "maya/MDoubleArray.h"
-#include "maya/MFnEnumAttribute.h"
 #include "maya/MIntArray.h"
 #include "maya/MObject.h"
 #include "maya/MPlugArray.h"
@@ -46,34 +46,6 @@ class PRTModifierAction;
 
 using RuleAttributeMap = std::map<std::wstring, RuleAttribute>;
 using PRTEnumDefaultValue = std::variant<bool, double, MString>;
-
-class PRTModifierEnum {
-	friend class PRTModifierAction;
-
-public:
-	PRTModifierEnum() = default;
-
-	MStatus fill(const prt::Annotation* annot);
-	bool updateOptions(const MObject& node, const RuleAttributeMap& ruleAttributes,
-	               const prt::AttributeMap& defaultAttributeValues);
-
-	bool isDynamic();
-
-public:
-	MFnEnumAttribute mAttr;
-
-private:
-	bool mRestricted = true;
-	MString mValuesAttr;
-	MString mCustomDefaultValue;
-	std::vector<MString> mEnumOptions;
-
-	const std::vector<MString> getEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
-	                                           const prt::AttributeMap& defaultAttributeValues);
-	const std::vector<MString> getDynamicEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
-	                                                  const prt::AttributeMap& defaultAttributeValues);
-	void updateCustomEnumValue(const RuleAttribute& ruleAttr, const prt::AttributeMap& defaultAttributeValues);
-}; // class PRTModifierEnum
 
 class PRTModifierAction : public polyModifierFty {
 	friend class PRTModifierEnum;
@@ -136,7 +108,8 @@ private:
 	static MStatus addFileParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                const MString& defaultValue, const std::wstring& ext);
 	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-	                                const RuleAttribute& name, const PRTEnumDefaultValue& defaultValue, PRTModifierEnum& e);
+	                                const RuleAttribute& name, const PRTEnumDefaultValue& defaultValue,
+	                                PRTModifierEnum& e);
 	static MStatus addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                 const MString& defaultValue);
 };
