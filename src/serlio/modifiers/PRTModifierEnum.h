@@ -36,7 +36,7 @@ public:
 
 	MStatus fill(const prt::Annotation* annot);
 	std::pair<bool, short> updateOptions(const MObject& node, const RuleAttributeMap& ruleAttributes,
-	                                      const prt::AttributeMap& defaultAttributeValues, short selectedEnumIdx = 0);
+	                                     const prt::AttributeMap& defaultAttributeValues, short selectedEnumIdx = 0);
 
 	bool isDynamic();
 
@@ -49,9 +49,9 @@ private:
 	MString mCustomDefaultValue;
 	std::vector<MString> mEnumOptions;
 
-	const std::vector<MString> getEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
+	const std::vector<MString> getEnumOptions(const RuleAttribute& ruleAttr,
 	                                          const prt::AttributeMap& defaultAttributeValues);
-	const std::vector<MString> getDynamicEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
+	const std::vector<MString> getDynamicEnumOptions(const RuleAttribute& ruleAttr,
 	                                                 const prt::AttributeMap& defaultAttributeValues);
 	void updateCustomEnumValue(const RuleAttribute& ruleAttr, const prt::AttributeMap& defaultAttributeValues);
 }; // class PRTModifierEnum

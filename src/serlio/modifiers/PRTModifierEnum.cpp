@@ -55,7 +55,7 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 	assert(ruleAttrIt != mRuleAttributes.end()); // Rule not found
 	const RuleAttribute ruleAttr = (ruleAttrIt != mRuleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
 
-	const std::vector<MString>& newEnumOptions = getEnumOptions(node, ruleAttr, defaultAttributeValues);
+	const std::vector<MString>& newEnumOptions = getEnumOptions(ruleAttr, defaultAttributeValues);
 
 	updateCustomEnumValue(ruleAttr, defaultAttributeValues);
 
@@ -93,10 +93,10 @@ bool PRTModifierEnum::isDynamic() {
 	return mValuesAttr.length() > 0;
 }
 
-const std::vector<MString> PRTModifierEnum::getEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
+const std::vector<MString> PRTModifierEnum::getEnumOptions(const RuleAttribute& ruleAttr,
                                                            const prt::AttributeMap& defaultAttributeValues) {
 	if (isDynamic()) {
-		return getDynamicEnumOptions(node, ruleAttr, defaultAttributeValues);
+		return getDynamicEnumOptions(ruleAttr, defaultAttributeValues);
 	}
 	else {
 		std::vector<MString> enumOptions;
@@ -147,7 +147,7 @@ void PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
 	mCustomDefaultValue = defMStringVal;
 }
 
-const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
+const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute& ruleAttr,
                                                                   const prt::AttributeMap& defaultAttributeValues) {
 	std::vector<MString> enumOptions;
 	if (!isDynamic())
