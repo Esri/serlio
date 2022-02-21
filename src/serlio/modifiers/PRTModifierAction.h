@@ -54,6 +54,7 @@ public:
 	PRTModifierEnum() = default;
 
 	MStatus fill(const prt::Annotation* annot);
+	bool isDynamic();
 
 public:
 	MFnEnumAttribute mAttr;

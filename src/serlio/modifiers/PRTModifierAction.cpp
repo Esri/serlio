@@ -452,6 +452,10 @@ T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, c
 }
 } // namespace
 
+
+bool PRTModifierEnum::isDynamic() {
+	return mValuesAttr.length() > 0;
+}
 PRTModifierAction::PRTModifierAction() {
 	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
 
