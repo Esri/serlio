@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include "modifiers/PRTModifierAction.h"
 #include "modifiers/RuleAttributes.h"
 
 #include "utils/Utilities.h"
