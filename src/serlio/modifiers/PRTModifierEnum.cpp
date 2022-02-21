@@ -178,8 +178,8 @@ const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const MObject&
 				const size_t cutoffIndex = currStringView.find_first_of(L"\r\n");
 				currStringView = currStringView.substr(0, cutoffIndex);
 
-				const MString mCurrString(currStringView.data(), static_cast<int>(currStringView.length()));
-				enumOptions.emplace_back(mCurrString);
+				const MString currMString(currStringView.data(), static_cast<int>(currStringView.length()));
+				enumOptions.emplace_back(currMString);
 			}
 			break;
 		}
@@ -190,8 +190,8 @@ const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const MObject&
 			for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 				const double currDouble = doubleArray[enumIndex];
 
-				const MString mCurrString(std::to_wstring(currDouble).c_str());
-				enumOptions.emplace_back(mCurrString);
+				const MString currMString(std::to_wstring(currDouble).c_str());
+				enumOptions.emplace_back(currMString);
 			}
 			break;
 		}
@@ -202,29 +202,29 @@ const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const MObject&
 			for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 				const bool currBool = boolArray[enumIndex];
 
-				const MString mCurrString(std::to_wstring(currBool).c_str());
-				enumOptions.emplace_back(mCurrString);
+				const MString currMString(std::to_wstring(currBool).c_str());
+				enumOptions.emplace_back(currMString);
 			}
 			break;
 		}
 		case prt::Attributable::PT_STRING: {
-			const MString mCurrString = defaultAttributeValues.getString(valuesAttr.c_str());
+			const MString currMString = defaultAttributeValues.getString(valuesAttr.c_str());
 
-			enumOptions.emplace_back(mCurrString);
+			enumOptions.emplace_back(currMString);
 			break;
 		}
 		case prt::Attributable::PT_FLOAT: {
 			const bool currFloat = defaultAttributeValues.getFloat(valuesAttr.c_str());
 
-			const MString mCurrString(std::to_wstring(currFloat).c_str());
-			enumOptions.emplace_back(mCurrString);
+			const MString currMString(std::to_wstring(currFloat).c_str());
+			enumOptions.emplace_back(currMString);
 			break;
 		}
 		case prt::Attributable::PT_BOOL: {
 			const bool currBool = defaultAttributeValues.getBool(valuesAttr.c_str());
 
-			const MString mCurrString(std::to_wstring(currBool).c_str());
-			enumOptions.emplace_back(mCurrString);
+			const MString currMString(std::to_wstring(currBool).c_str());
+			enumOptions.emplace_back(currMString);
 			break;
 		}
 		default:
