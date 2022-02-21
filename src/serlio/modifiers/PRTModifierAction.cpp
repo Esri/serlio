@@ -248,70 +248,6 @@ void clearEnumValues(const MObject& node, const MFnEnumAttribute& enumAttr) {
 	MCHECK(mu::setEnumOptions(fNode.name().asWChar(), enumAttr.name().asWChar(), {}));
 }
 
-bool updateCustomEnumValue(const prt::AttributeMap& defaultAttributeValues, MFnEnumAttribute& eAttr,
-                           const RuleAttribute& ruleAttr, const MObject& node) {
-	const std::wstring fqAttrName = ruleAttr.fqName;
-	const prt::AnnotationArgumentType ruleAttrType = ruleAttr.mType;
-
-	short minVal;
-	short maxVal;
-	MCHECK(eAttr.getMin(minVal));
-	MCHECK(eAttr.getMax(maxVal));
-
-	MString defMStringVal;
-
-	switch (ruleAttrType) {
-		case prt::AAT_STR: {
-			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
-			if (defStringVal == nullptr)
-				return false;
-			defMStringVal = defStringVal;
-			break;
-		}
-		case prt::AAT_FLOAT: {
-			const auto defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
-			defMStringVal = std::to_wstring(defDoubleVal).c_str();
-			break;
-		}
-		case prt::AAT_BOOL: {
-			const auto defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
-			defMStringVal = std::to_wstring(defBoolVal).c_str();
-			break;
-		}
-		default: {
-			LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
-			return false;
-		}
-	}
-
-	MStatus status;
-	short idx = eAttr.fieldIndex(defMStringVal, &status);
-
-	const bool needToAddCustomDefaultValue = (status != MStatus::kSuccess);
-	const bool needToRemoveCustomDefaultValue = ((idx > 0) && (minVal == 0));
-
-	if (needToAddCustomDefaultValue || needToRemoveCustomDefaultValue) {
-		std::vector<MString> enumOptions;
-
-		for (short currIdx = 1; currIdx <= maxVal; currIdx++)
-			enumOptions.emplace_back(eAttr.fieldName(currIdx).asWChar());
-
-		clearEnumValues(node, eAttr);
-		// adding enums through MFnEnumAttribute does not cause issues, when the enum option string contains ":"
-		short currIdx = 1;
-		for (const MString& option : enumOptions)
-			MCHECK(eAttr.addField(option, currIdx++));
-	}
-	else {
-		return false;
-	}
-
-	if (needToAddCustomDefaultValue)
-		MCHECK(eAttr.addField(defMStringVal, 0));
-
-	return true;
-}
-
 short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const MFnEnumAttribute& eAttr,
                           const RuleAttribute& ruleAttr) {
 	const std::wstring fqAttrName = ruleAttr.fqName;
@@ -890,7 +826,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 
 				const bool isDefaultValue = (defEnumVal == enumVal);
 				const bool hasNewCustomDefault =
-				        updateCustomEnumValue(*defaultAttributeValues, eAttr, ruleAttribute, node);
+				        mEnums[ruleAttribute.mayaFullName].updateOptions(node, mRuleAttributes, *defaultAttributeValues);
 				if (hasNewCustomDefault || (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue))
 					plug.setShort(defEnumVal);
 				break;
@@ -917,100 +853,6 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
 	return MStatus::kSuccess;
-}
-
-void PRTModifierAction::updateDynamicEnums(const MObject& node) {
-	for (auto& e : mEnums) {
-		if (e.mValuesAttr.length() == 0)
-			continue;
-
-		short maxEnumVal; 
-		e.mAttr.getMax(maxEnumVal);
-		if (maxEnumVal > 0)
-			clearEnumValues(node, e.mAttr);
-
-		const MString fullAttrName = e.mAttr.name();
-		const auto ruleAttrIt = mRuleAttributes.find(fullAttrName.asWChar());
-		assert(ruleAttrIt != mRuleAttributes.end()); // Rule not found
-		const RuleAttribute ruleAttr = (ruleAttrIt != mRuleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
-
-		const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName).c_str();
-		std::wstring attrImport = prtu::getImport(ruleAttr.fqName).c_str();
-		if (!attrImport.empty())
-			attrImport += prtu::IMPORT_DELIMITER;
-
-		std::wstring valuesAttr = attrStyle + prtu::STYLE_DELIMITER + attrImport;
-		valuesAttr.append(e.mValuesAttr.asWChar());
-
-		const prt::Attributable::PrimitiveType type = mGenerateAttrs->getType(valuesAttr.c_str());
-
-		switch (type) {
-			case prt::Attributable::PT_STRING_ARRAY: {
-				size_t arr_length = 0;
-				const wchar_t* const* stringArray = mGenerateAttrs->getStringArray(valuesAttr.c_str(), &arr_length);
-
-				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
-					if (stringArray[enumIndex] == nullptr)
-						continue;
-					std::wstring_view currStringView = stringArray[enumIndex];
-
-					// remove newlines from strings, because they break the maya UI
-					const size_t cutoffIndex = currStringView.find_first_of(L"\r\n");
-					currStringView = currStringView.substr(0, cutoffIndex);
-
-					const MString mCurrString(currStringView.data(), static_cast<int>(currStringView.length()));
-					MCHECK(e.mAttr.addField(mCurrString, enumIndex + 1));
-				}
-				break;
-			}
-			case prt::Attributable::PT_FLOAT_ARRAY: {
-				size_t arr_length = 0;
-				const double* doubleArray = mGenerateAttrs->getFloatArray(valuesAttr.c_str(), &arr_length);
-
-				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
-					const double currDouble = doubleArray[enumIndex];
-
-					const MString mCurrString(std::to_wstring(currDouble).c_str());
-					MCHECK(e.mAttr.addField(mCurrString, enumIndex + 1));
-				}
-				break;
-			}
-			case prt::Attributable::PT_BOOL_ARRAY: {
-				size_t arr_length = 0;
-				const bool* boolArray = mGenerateAttrs->getBoolArray(valuesAttr.c_str(), &arr_length);
-
-				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
-					const bool currBool = boolArray[enumIndex];
-
-					const MString mCurrString(std::to_wstring(currBool).c_str());
-					MCHECK(e.mAttr.addField(mCurrString, enumIndex + 1));
-				}
-				break;
-			}
-			case prt::Attributable::PT_STRING: {
-				const MString mCurrString = mGenerateAttrs->getString(valuesAttr.c_str());
-
-				MCHECK(e.mAttr.addField(mCurrString, 1));
-				break;
-			}
-			case prt::Attributable::PT_FLOAT: {
-				const bool currFloat = mGenerateAttrs->getFloat(valuesAttr.c_str());
-
-				const MString mCurrString(std::to_wstring(currFloat).c_str());
-				MCHECK(e.mAttr.addField(mCurrString, 1));
-				break;
-			}
-			case prt::Attributable::PT_BOOL: {
-				const bool currBool = mGenerateAttrs->getBool(valuesAttr.c_str());
-
-				const MString mCurrString(std::to_wstring(currBool).c_str());
-				MCHECK(e.mAttr.addField(mCurrString, 1));
-				break;
-			}
-			default:
-				break;
-		}
-	}
 }
 
 // Sets the mesh object for the action  to operate on
@@ -1076,7 +918,9 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 		}
 
 		createNodeAttributes(ruleAttributes, node, info.get());
-		updateDynamicEnums(node);
+		for (auto& enumPair : mEnums) {
+			enumPair.second.updateOptions(node, mRuleAttributes, *mGenerateAttrs);
+		}
 	}
 
 	return MS::kSuccess;
@@ -1190,8 +1034,8 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 			case prt::Attributable::PT_BOOL: {
 				const bool value = mGenerateAttrs->getBool(fqName.c_str());
 				if (attrTrait.first == AttributeTrait::ENUM) {
-					mEnums.emplace_front();
-					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums.front()));
+					mEnums.try_emplace(p.mayaFullName);
+					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums[p.mayaFullName]));
 				}
 				else {
 					MCHECK(addBoolParameter(node, attr, p, value));
@@ -1203,8 +1047,8 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 
 				switch (attrTrait.first) {
 					case AttributeTrait::ENUM: {
-						mEnums.emplace_front();
-						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums.front()));
+						mEnums.try_emplace(p.mayaFullName);
+						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums[p.mayaFullName]));
 						break;
 					}
 					case AttributeTrait::RANGE: {
@@ -1253,8 +1097,9 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 
 				switch (attrTrait.first) {
 					case AttributeTrait::ENUM: {
-						mEnums.emplace_front();
-						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, mvalue, mEnums.front()));
+						mEnums.try_emplace(p.mayaFullName);
+						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, mvalue,
+						                        mEnums[p.mayaFullName]));
 						break;
 					}
 					case AttributeTrait::FILE:

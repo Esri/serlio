@@ -120,8 +120,7 @@ private:
 	// init in fillAttributesFromNode()
 	AttributeMapUPtr mGenerateAttrs;
 
-	std::list<PRTModifierEnum> mEnums;
-	void updateDynamicEnums(const MObject& node);
+	std::map<std::wstring, PRTModifierEnum> mEnums;
 
 	MStatus createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& node,
 	                             const prt::RuleFileInfo* info);
