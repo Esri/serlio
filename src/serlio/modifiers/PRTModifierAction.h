@@ -54,6 +54,9 @@ public:
 	PRTModifierEnum() = default;
 
 	MStatus fill(const prt::Annotation* annot);
+	bool updateOptions(const MObject& node, const RuleAttributeMap& ruleAttributes,
+	               const prt::AttributeMap& defaultAttributeValues);
+
 	bool isDynamic();
 
 public:
@@ -63,6 +66,7 @@ private:
 	bool mRestricted = true;
 	MString mValuesAttr;
 	MString mCustomDefaultValue;
+	std::vector<MString> mEnumOptions;
 
 	const std::vector<MString> getEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
 	                                           const prt::AttributeMap& defaultAttributeValues);

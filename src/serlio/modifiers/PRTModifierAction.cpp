@@ -452,6 +452,46 @@ T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, c
 }
 } // namespace
 
+bool PRTModifierEnum::updateOptions(const MObject& node, const RuleAttributeMap& mRuleAttributes,
+                                const prt::AttributeMap& defaultAttributeValues) {
+	const MString fullAttrName = mAttr.name();
+	const auto ruleAttrIt = mRuleAttributes.find(fullAttrName.asWChar());
+	assert(ruleAttrIt != mRuleAttributes.end()); // Rule not found
+	const RuleAttribute ruleAttr = (ruleAttrIt != mRuleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
+	
+	const std::vector<MString>& newEnumOptions = getEnumOptions(node, ruleAttr, defaultAttributeValues);
+	
+	updateCustomEnumValue(ruleAttr, defaultAttributeValues);
+
+	MStatus status;
+	const short defaultIdx = mAttr.fieldIndex(mCustomDefaultValue, &status);
+	if ((status == MStatus::kSuccess) && (newEnumOptions == mEnumOptions))
+		return false;
+
+	// Workaround, since setting enum values, when none are available through mel causes an Error...
+	MString defaultValue;
+	if (mAttr.getDefault(defaultValue) == MStatus::kSuccess)
+		clearEnumValues(node, mAttr);
+
+	mEnumOptions = newEnumOptions;
+
+	auto itr = std::find(mEnumOptions.cbegin(), mEnumOptions.cend(), mCustomDefaultValue);
+	
+	int customDefaultIdx = 0;
+	int currIdx = 1;
+	
+	for (const MString& option : mEnumOptions) {
+		mAttr.addField(option, currIdx);
+		if (option == mCustomDefaultValue)
+			customDefaultIdx = currIdx;
+		currIdx++;
+	}
+
+	if (customDefaultIdx == 0)
+		mAttr.addField(mCustomDefaultValue, 0);
+
+	return true;
+}
 
 bool PRTModifierEnum::isDynamic() {
 	return mValuesAttr.length() > 0;
