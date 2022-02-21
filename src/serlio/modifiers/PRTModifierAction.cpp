@@ -52,8 +52,6 @@ constexpr const wchar_t* FILE_CGA_PRINT = L"CGAPrint.txt";
 constexpr const wchar_t* NULL_KEY = L"#NULL#";
 constexpr const wchar_t* MIN_KEY = L"min";
 constexpr const wchar_t* MAX_KEY = L"max";
-constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
-constexpr const wchar_t* VALUES_ATTR_KEY = L"valuesAttr";
 
 constexpr const wchar_t* ATTRIBUTE_USER_SET_SUFFIX = L"_user_set";
 constexpr const wchar_t* ATTRIBUTE_FORCE_DEFAULT_SUFFIX = L"_force_default";
@@ -983,47 +981,6 @@ void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 			continue;
 		node.removeAttribute(attr);
 	}
-}
-
-MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
-	mRestricted = true;
-	MStatus stat;
-
-	uint32_t enumIndex = 1;
-	for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
-
-		const wchar_t* key = annot->getArgument(arg)->getKey();
-		if (std::wcscmp(key, NULL_KEY) != 0) {
-			if (std::wcscmp(key, RESTRICTED_KEY) == 0)
-				mRestricted = annot->getArgument(arg)->getBool();
-
-			if (std::wcscmp(key, VALUES_ATTR_KEY) == 0)
-				mValuesAttr = annot->getArgument(arg)->getStr();
-			continue;
-		}
-
-		switch (annot->getArgument(arg)->getType()) {
-			case prt::AAT_BOOL: {
-				const bool val = annot->getArgument(arg)->getBool();
-				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), enumIndex++));
-				break;
-			}
-			case prt::AAT_FLOAT: {
-				const double val = annot->getArgument(arg)->getFloat();
-				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), enumIndex++));
-				break;
-			}
-			case prt::AAT_STR: {
-				const wchar_t* val = annot->getArgument(arg)->getStr();
-				MCHECK(mAttr.addField(MString(val), enumIndex++));
-				break;
-			}
-			default:
-				break;
-		}
-	}
-
-	return MS::kSuccess;
 }
 
 MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, MFnAttribute& tAttr) {

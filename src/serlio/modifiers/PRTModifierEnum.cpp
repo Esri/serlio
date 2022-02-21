@@ -27,6 +27,10 @@
 
 namespace {
 
+constexpr const wchar_t* NULL_KEY = L"#NULL#";
+constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
+constexpr const wchar_t* VALUES_ATTR_KEY = L"valuesAttr";
+
 void clearEnumValues(const MObject& node, const MFnEnumAttribute& enumAttr) {
 	// Workaround: since setting enum values through mel, when none are available causes an Error...
 	MString defaultValue;
@@ -227,4 +231,45 @@ const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const MObject&
 			break;
 	}
 	return enumOptions;
+}
+
+MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
+	mRestricted = true;
+	MStatus stat;
+
+	uint32_t enumIndex = 1;
+	for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
+
+		const wchar_t* key = annot->getArgument(arg)->getKey();
+		if (std::wcscmp(key, NULL_KEY) != 0) {
+			if (std::wcscmp(key, RESTRICTED_KEY) == 0)
+				mRestricted = annot->getArgument(arg)->getBool();
+
+			if (std::wcscmp(key, VALUES_ATTR_KEY) == 0)
+				mValuesAttr = annot->getArgument(arg)->getStr();
+			continue;
+		}
+
+		switch (annot->getArgument(arg)->getType()) {
+			case prt::AAT_BOOL: {
+				const bool val = annot->getArgument(arg)->getBool();
+				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), enumIndex++));
+				break;
+			}
+			case prt::AAT_FLOAT: {
+				const double val = annot->getArgument(arg)->getFloat();
+				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), enumIndex++));
+				break;
+			}
+			case prt::AAT_STR: {
+				const wchar_t* val = annot->getArgument(arg)->getStr();
+				MCHECK(mAttr.addField(MString(val), enumIndex++));
+				break;
+			}
+			default:
+				break;
+		}
+	}
+
+	return MS::kSuccess;
 }
