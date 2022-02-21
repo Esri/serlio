@@ -28,6 +28,10 @@
 namespace {
 
 void clearEnumValues(const MObject& node, const MFnEnumAttribute& enumAttr) {
+	// Workaround: since setting enum values through mel, when none are available causes an Error...
+	MString defaultValue;
+	if (enumAttr.getDefault(defaultValue) != MStatus::kSuccess)
+		return;
 	MStatus stat;
 	const MFnDependencyNode fNode(node, &stat);
 	MCHECK(stat);
@@ -53,10 +57,7 @@ bool PRTModifierEnum::updateOptions(const MObject& node, const RuleAttributeMap&
 	if ((status == MStatus::kSuccess) && (newEnumOptions == mEnumOptions))
 		return false;
 
-	// Workaround, since setting enum values, when none are available through mel causes an Error...
-	MString defaultValue;
-	if (mAttr.getDefault(defaultValue) == MStatus::kSuccess)
-		clearEnumValues(node, mAttr);
+	clearEnumValues(node, mAttr);
 
 	mEnumOptions = newEnumOptions;
 
