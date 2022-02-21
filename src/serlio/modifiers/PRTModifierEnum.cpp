@@ -207,9 +207,11 @@ const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttr
 			break;
 		}
 		case prt::Attributable::PT_STRING: {
-			const MString currMString = defaultAttributeValues.getString(valuesAttr.c_str());
+			const wchar_t* currString = defaultAttributeValues.getString(valuesAttr.c_str());
+			if (currString == nullptr)
+				break;
 
-			enumOptions.emplace_back(currMString);
+			enumOptions.emplace_back(currString);
 			break;
 		}
 		case prt::Attributable::PT_FLOAT: {
