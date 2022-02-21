@@ -65,7 +65,7 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 		return std::make_pair(false, selectedEnumIdx);
 
 	const MString oldSelectedOption = mAttr.fieldName(selectedEnumIdx);
-	
+
 	clearEnumValues(node, mAttr);
 
 	mEnumOptions = newEnumOptions;
