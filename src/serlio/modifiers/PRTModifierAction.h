@@ -62,6 +62,9 @@ public:
 private:
 	bool mRestricted = true;
 	MString mValuesAttr;
+
+	const std::vector<MString> getDynamicEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
+	                                                  const prt::AttributeMap& defaultAttributeValues);
 }; // class PRTModifierEnum
 
 class PRTModifierAction : public polyModifierFty {

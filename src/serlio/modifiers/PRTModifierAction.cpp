@@ -456,6 +456,92 @@ T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, c
 bool PRTModifierEnum::isDynamic() {
 	return mValuesAttr.length() > 0;
 }
+const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
+                                                                   const prt::AttributeMap& defaultAttributeValues) {
+	std::vector<MString> enumOptions;
+	if (!isDynamic())
+		return enumOptions;
+	const MString fullAttrName = mAttr.name();
+
+	const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName).c_str();
+	std::wstring attrImport = prtu::getImport(ruleAttr.fqName).c_str();
+	if (!attrImport.empty())
+		attrImport += prtu::IMPORT_DELIMITER;
+
+	std::wstring valuesAttr = attrStyle + prtu::STYLE_DELIMITER + attrImport;
+	valuesAttr.append(mValuesAttr.asWChar());
+
+	const prt::Attributable::PrimitiveType type = defaultAttributeValues.getType(valuesAttr.c_str());
+
+	switch (type) {
+		case prt::Attributable::PT_STRING_ARRAY: {
+			size_t arr_length = 0;
+			const wchar_t* const* stringArray = defaultAttributeValues.getStringArray(valuesAttr.c_str(), &arr_length);
+
+			for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
+				if (stringArray[enumIndex] == nullptr)
+					continue;
+				std::wstring_view currStringView = stringArray[enumIndex];
+
+				// remove newlines from strings, because they break the maya UI
+				const size_t cutoffIndex = currStringView.find_first_of(L"\r\n");
+				currStringView = currStringView.substr(0, cutoffIndex);
+
+				const MString mCurrString(currStringView.data(), static_cast<int>(currStringView.length()));
+				enumOptions.emplace_back(mCurrString);
+			}
+			break;
+		}
+		case prt::Attributable::PT_FLOAT_ARRAY: {
+			size_t arr_length = 0;
+			const double* doubleArray = defaultAttributeValues.getFloatArray(valuesAttr.c_str(), &arr_length);
+
+			for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
+				const double currDouble = doubleArray[enumIndex];
+
+				const MString mCurrString(std::to_wstring(currDouble).c_str());
+				enumOptions.emplace_back(mCurrString);
+			}
+			break;
+		}
+		case prt::Attributable::PT_BOOL_ARRAY: {
+			size_t arr_length = 0;
+			const bool* boolArray = defaultAttributeValues.getBoolArray(valuesAttr.c_str(), &arr_length);
+
+			for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
+				const bool currBool = boolArray[enumIndex];
+
+				const MString mCurrString(std::to_wstring(currBool).c_str());
+				enumOptions.emplace_back(mCurrString);
+			}
+			break;
+		}
+		case prt::Attributable::PT_STRING: {
+			const MString mCurrString = defaultAttributeValues.getString(valuesAttr.c_str());
+
+			enumOptions.emplace_back(mCurrString);
+			break;
+		}
+		case prt::Attributable::PT_FLOAT: {
+			const bool currFloat = defaultAttributeValues.getFloat(valuesAttr.c_str());
+
+			const MString mCurrString(std::to_wstring(currFloat).c_str());
+			enumOptions.emplace_back(mCurrString);
+			break;
+		}
+		case prt::Attributable::PT_BOOL: {
+			const bool currBool = defaultAttributeValues.getBool(valuesAttr.c_str());
+
+			const MString mCurrString(std::to_wstring(currBool).c_str());
+			enumOptions.emplace_back(mCurrString);
+			break;
+		}
+		default:
+			break;
+	}
+	return enumOptions;
+}
+
 PRTModifierAction::PRTModifierAction() {
 	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
 
