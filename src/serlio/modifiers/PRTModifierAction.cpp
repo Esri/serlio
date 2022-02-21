@@ -626,16 +626,21 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 				break;
 			}
 			case PrtAttributeType::ENUM: {
-				MFnEnumAttribute eAttr(fnAttribute.object());
+				PRTModifierEnum& modifierEnum = mEnums[ruleAttribute.mayaFullName];
 
-				const short defEnumVal = getDefaultEnumValue(*defaultAttributeValues, eAttr, ruleAttribute);
 				short enumVal;
 				MCHECK(plug.getValue(enumVal));
+				const auto newEnumOptions =
+				        modifierEnum.updateOptions(node, mRuleAttributes, *defaultAttributeValues, enumVal);
+				const bool hasNewEnumOptions = newEnumOptions.first;
+				enumVal = newEnumOptions.second;
+
+				const short defEnumVal =
+				        getDefaultEnumValue(*defaultAttributeValues, modifierEnum.mAttr, ruleAttribute);
+
 
 				const bool isDefaultValue = (defEnumVal == enumVal);
-				const bool hasNewCustomDefault = mEnums[ruleAttribute.mayaFullName].updateOptions(
-				        node, mRuleAttributes, *defaultAttributeValues);
-				if (hasNewCustomDefault || (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue))
+				if (hasNewEnumOptions || (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue))
 					plug.setShort(defEnumVal);
 				break;
 			}
