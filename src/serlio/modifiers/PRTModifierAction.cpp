@@ -457,6 +457,26 @@ bool PRTModifierEnum::isDynamic() {
 	return mValuesAttr.length() > 0;
 }
 
+const std::vector<MString> PRTModifierEnum::getEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
+                                                            const prt::AttributeMap& defaultAttributeValues) {
+	if (isDynamic()) {
+		return getDynamicEnumOptions(node, ruleAttr, defaultAttributeValues);
+	}
+	else {
+		std::vector<MString> enumOptions;
+
+		short minVal;
+		short maxVal;
+		MCHECK(mAttr.getMin(minVal));
+		MCHECK(mAttr.getMax(maxVal));
+
+		for (short currIdx = 1; currIdx <= maxVal; currIdx++)
+			enumOptions.emplace_back(mAttr.fieldName(currIdx));
+
+		return enumOptions;
+	}
+}
+
 void PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
                                             const prt::AttributeMap& defaultAttributeValues) {
 	const std::wstring fqAttrName = ruleAttr.fqName;

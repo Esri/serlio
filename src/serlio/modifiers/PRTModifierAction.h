@@ -64,6 +64,8 @@ private:
 	MString mValuesAttr;
 	MString mCustomDefaultValue;
 
+	const std::vector<MString> getEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
+	                                           const prt::AttributeMap& defaultAttributeValues);
 	const std::vector<MString> getDynamicEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
 	                                                  const prt::AttributeMap& defaultAttributeValues);
 	void updateCustomEnumValue(const RuleAttribute& ruleAttr, const prt::AttributeMap& defaultAttributeValues);
