@@ -45,9 +45,11 @@ void clearEnumValues(const MObject& node, const MFnEnumAttribute& enumAttr) {
 
 } // namespace
 
+// This function updates all enum options and returns a pair, where the first argument indicates if the options have
+// changed and the second argument corresponds to the new index of the currently selected item
 std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const RuleAttributeMap& mRuleAttributes,
-                                                       const prt::AttributeMap& defaultAttributeValues,
-                                                       short selectedEnumIdx) {
+                                                      const prt::AttributeMap& defaultAttributeValues,
+                                                      short selectedEnumIdx) {
 	const MString fullAttrName = mAttr.name();
 	const auto ruleAttrIt = mRuleAttributes.find(fullAttrName.asWChar());
 	assert(ruleAttrIt != mRuleAttributes.end()); // Rule not found
