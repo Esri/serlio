@@ -456,6 +456,41 @@ T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, c
 bool PRTModifierEnum::isDynamic() {
 	return mValuesAttr.length() > 0;
 }
+
+void PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
+                                            const prt::AttributeMap& defaultAttributeValues) {
+	const std::wstring fqAttrName = ruleAttr.fqName;
+	const prt::AnnotationArgumentType ruleAttrType = ruleAttr.mType;
+
+	MString defMStringVal;
+
+	switch (ruleAttrType) {
+		case prt::AAT_STR: {
+			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
+			if (defStringVal == nullptr)
+				return;
+			defMStringVal = defStringVal;
+			break;
+		}
+		case prt::AAT_FLOAT: {
+			const auto defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
+			defMStringVal = std::to_wstring(defDoubleVal).c_str();
+			break;
+		}
+		case prt::AAT_BOOL: {
+			const auto defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
+			defMStringVal = std::to_wstring(defBoolVal).c_str();
+			break;
+		}
+		default: {
+			LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
+			return;
+		}
+	}
+
+	mCustomDefaultValue = defMStringVal;
+}
+
 const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
                                                                    const prt::AttributeMap& defaultAttributeValues) {
 	std::vector<MString> enumOptions;
