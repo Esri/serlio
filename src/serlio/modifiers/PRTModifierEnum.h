@@ -28,8 +28,6 @@
 #include "maya/MObject.h"
 #include "maya/MString.h"
 
-using RuleAttributeMap = std::map<std::wstring, RuleAttribute>;
-
 class PRTModifierEnum {
 	friend class PRTModifierAction;
 

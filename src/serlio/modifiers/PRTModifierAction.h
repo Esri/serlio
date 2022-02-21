@@ -44,7 +44,6 @@
 
 class PRTModifierAction;
 
-using RuleAttributeMap = std::map<std::wstring, RuleAttribute>;
 using PRTEnumDefaultValue = std::variant<bool, double, MString>;
 
 class PRTModifierAction : public polyModifierFty {
