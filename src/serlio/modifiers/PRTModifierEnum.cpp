@@ -60,7 +60,6 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 	updateCustomEnumValue(ruleAttr, defaultAttributeValues);
 
 	MStatus status;
-	const short defaultIdx = mAttr.fieldIndex(mCustomDefaultValue, &status);
 	if ((status == MStatus::kSuccess) && (newEnumOptions == mEnumOptions))
 		return std::make_pair(false, selectedEnumIdx);
 
