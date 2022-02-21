@@ -68,8 +68,6 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 
 	mEnumOptions = newEnumOptions;
 
-	auto itr = std::find(mEnumOptions.cbegin(), mEnumOptions.cend(), mCustomDefaultValue);
-
 	int customDefaultIdx = 0;
 	int newSelectedEnumIdx = 0;
 	int currIdx = 1;
