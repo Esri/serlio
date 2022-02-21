@@ -62,6 +62,7 @@ public:
 private:
 	bool mRestricted = true;
 	MString mValuesAttr;
+	MString mCustomDefaultValue;
 
 	const std::vector<MString> getDynamicEnumOptions(const MObject& node, const RuleAttribute& ruleAttr,
 	                                                  const prt::AttributeMap& defaultAttributeValues);
