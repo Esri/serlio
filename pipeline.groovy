@@ -94,9 +94,7 @@ Map taskGenSerlioInstallers() {
 }
 
 // -- TASK BUILDERS
-
-def taskBuildSerlio(cfg) {
-	final String appName = 'serlio'
+def taskBuildCMake(cfg, target){
 	final List deps = [ cfg.maya ]
 	List defs = [
 		[ key: 'maya_DIR',          val: cfg.maya.p ],
@@ -106,9 +104,14 @@ def taskBuildSerlio(cfg) {
 	unstash(name: SOURCE_STASH)
 	deps.each { d -> papl.fetchDependency(d, cfg) }
 	papl.jpe.dir(path: 'build') {
-		papl.runCMakeBuild(SOURCES, BUILD_TARGET, cfg, defs)
+		papl.runCMakeBuild(SOURCES, target, cfg, defs)
 	}
-	
+}
+
+def taskBuildSerlio(cfg) {
+	final String appName = 'serlio'
+
+	taskBuildCMake(cfg, BUILD_TARGET)
 	def buildProps = papl.jpe.readProperties(file: 'build/deployment.properties')
 	final String artifactPattern = "${buildProps.package_file}.*"
 	final def artifactVersion = { p -> buildProps.package_version_base }
@@ -122,17 +125,7 @@ def taskBuildSerlio(cfg) {
 
 def taskBuildSerlioTests(cfg) {
 	final String appName = 'serlio-test'
-	final List deps = [ cfg.maya ]
-	List defs = [
-		[ key: 'maya_DIR',          val: cfg.maya.p ],
-		[ key: 'SRL_VERSION_BUILD', val: env.BUILD_NUMBER ]
-	]
-	cepl.cleanCurrentDir()
-	unstash(name: SOURCE_STASH)
-	deps.each { d -> papl.fetchDependency(d, cfg) }
-	papl.jpe.dir(path: 'build') {
-		papl.runCMakeBuild(SOURCES, 'build_and_run_tests', cfg, defs)
-	}
+	taskBuildCMake(cfg, 'build_and_run_tests')
 	papl.jpe.junit('build/test/serlio_test_report.xml')
 }
 
