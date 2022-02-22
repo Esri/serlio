@@ -198,7 +198,7 @@ std::filesystem::path getStingrayShaderPath() {
 }
 
 bool textureHasAlphaChannel(std::wstring path) {
-	const prt::AttributeMap* textureMetadata = prt::createTextureMetadata(prtu::toFileURI(path).c_str());
+	const AttributeMapUPtr textureMetadata(prt::createTextureMetadata(prtu::toFileURI(path).c_str()));
 	if (textureMetadata == nullptr)
 		return false;
 	const wchar_t* format = textureMetadata->getString(FORMAT_STRING);
