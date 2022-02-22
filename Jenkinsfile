@@ -28,6 +28,10 @@ node {
 	impl = load('pipeline.groovy')
 }
 
+stage('serlio-checkout'){
+	impl.checkout()
+}
+
 stage('serlio') {
 	impl.pipeline()
 }

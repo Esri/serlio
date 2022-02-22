@@ -18,6 +18,7 @@ import com.esri.zrh.jenkins.ce.PrtAppPipelineLibrary
 @Field final String REPO_CREDS   = 'jenkins-github-serlio-deployer-key'
 @Field final String SOURCES      = "serlio.git/src"
 @Field final String BUILD_TARGET = 'package'
+@Field final String SOURCE_STASH = 'serlio-src'
 
 // TODO: abusing grp field to distinguish maya versions per task
 @Field final List CONFIGS = [
@@ -41,10 +42,29 @@ import com.esri.zrh.jenkins.ce.PrtAppPipelineLibrary
 
 @Field String myBranch = env.BRANCH_NAME
 
+// checkout and stash repo
+def checkout(){
+	cepl.runParallel(taskGenSourceCheckout())
+}
+
 // entry point for standalone pipeline
 def pipeline(String branchName = null) {
 	cepl.runParallel(getTasks(branchName))
 	papl.finalizeRun('serlio', myBranch)
+}
+
+Map taskGenSourceCheckout(){
+	final List srcCfgs = [ [ ba: psl.BA_CHECKOUT ] ]
+	Map tasks = [:]
+	// checkout serlio.git
+	def taskSRL = {
+		cepl.cleanCurrentDir()
+		final String localDir = 'srl'
+		papl.checkout(REPO, myBranch, REPO_CREDS)
+		stash(name: SOURCE_STASH)
+	}
+	tasks << cepl.generateTasks("checkout-and-stash-srl", taskSRL, srcCfgs)
+	return tasks
 }
 
 // entry point for embedded pipeline
