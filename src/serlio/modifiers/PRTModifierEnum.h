@@ -40,6 +40,7 @@ public:
 	bool isDynamic();
 	size_t getOptionIndex(std::wstring fieldName);
 	std::wstring getOptionName(size_t fieldIndex);
+	size_t getOptionCount();
 
 public:
 	MFnEnumAttribute mAttr;

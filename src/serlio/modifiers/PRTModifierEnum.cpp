@@ -99,6 +99,10 @@ std::wstring PRTModifierEnum::getOptionName(size_t fieldIndex) {
 	}
 }
 
+size_t PRTModifierEnum::getOptionCount() {
+	return mEnumOptions.size() + 1;
+}
+
 std::vector<std::wstring> PRTModifierEnum::getEnumOptions(const RuleAttribute& ruleAttr,
                                                            const prt::AttributeMap& defaultAttributeValues) {
 	if (isDynamic()) {
