@@ -38,6 +38,8 @@ public:
 	                                     const prt::AttributeMap& defaultAttributeValues, short selectedEnumIdx = 0);
 
 	bool isDynamic();
+	size_t getOptionIndex(std::wstring fieldName);
+	std::wstring getOptionName(size_t fieldIndex);
 
 public:
 	MFnEnumAttribute mAttr;
