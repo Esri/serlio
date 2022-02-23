@@ -48,9 +48,9 @@ private:
 	MString mCustomDefaultValue;
 	std::vector<MString> mEnumOptions;
 
-	const std::vector<MString> getEnumOptions(const RuleAttribute& ruleAttr,
+	std::vector<MString> getEnumOptions(const RuleAttribute& ruleAttr,
 	                                          const prt::AttributeMap& defaultAttributeValues);
-	const std::vector<MString> getDynamicEnumOptions(const RuleAttribute& ruleAttr,
+	std::vector<MString> getDynamicEnumOptions(const RuleAttribute& ruleAttr,
 	                                                 const prt::AttributeMap& defaultAttributeValues);
 	void updateCustomEnumValue(const RuleAttribute& ruleAttr, const prt::AttributeMap& defaultAttributeValues);
 }; // class PRTModifierEnum

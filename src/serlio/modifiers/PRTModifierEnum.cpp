@@ -92,7 +92,7 @@ bool PRTModifierEnum::isDynamic() {
 	return mValuesAttr.length() > 0;
 }
 
-const std::vector<MString> PRTModifierEnum::getEnumOptions(const RuleAttribute& ruleAttr,
+std::vector<MString> PRTModifierEnum::getEnumOptions(const RuleAttribute& ruleAttr,
                                                            const prt::AttributeMap& defaultAttributeValues) {
 	if (isDynamic()) {
 		return getDynamicEnumOptions(ruleAttr, defaultAttributeValues);
@@ -146,7 +146,7 @@ void PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
 	mCustomDefaultValue = defMStringVal;
 }
 
-const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute& ruleAttr,
+std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute& ruleAttr,
                                                                   const prt::AttributeMap& defaultAttributeValues) {
 	std::vector<MString> enumOptions;
 	if (!isDynamic())
