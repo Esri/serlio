@@ -57,10 +57,10 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 
 	const std::vector<MString>& newEnumOptions = getEnumOptions(ruleAttr, defaultAttributeValues);
 
-	updateCustomEnumValue(ruleAttr, defaultAttributeValues);
+	const bool hasNewCustomDefaultValue = updateCustomEnumValue(ruleAttr, defaultAttributeValues);
 
 	MStatus status;
-	if ((status == MStatus::kSuccess) && (newEnumOptions == mEnumOptions))
+	if ((status == MStatus::kSuccess) && (newEnumOptions == mEnumOptions) && !hasNewCustomDefaultValue)
 		return std::make_pair(false, selectedEnumIdx);
 
 	const MString oldSelectedOption = mAttr.fieldName(selectedEnumIdx);
@@ -112,7 +112,7 @@ std::vector<MString> PRTModifierEnum::getEnumOptions(const RuleAttribute& ruleAt
 	}
 }
 
-void PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
+bool PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
                                             const prt::AttributeMap& defaultAttributeValues) {
 	const std::wstring fqAttrName = ruleAttr.fqName;
 	const prt::AnnotationArgumentType ruleAttrType = ruleAttr.mType;
@@ -123,7 +123,7 @@ void PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
 		case prt::AAT_STR: {
 			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
 			if (defStringVal == nullptr)
-				return;
+				return false;
 			defMStringVal = defStringVal;
 			break;
 		}
@@ -139,11 +139,13 @@ void PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
 		}
 		default: {
 			LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
-			return;
+			return false;
 		}
 	}
-
+	if (mCustomDefaultValue == defMStringVal)
+		return false;
 	mCustomDefaultValue = defMStringVal;
+	return true;
 }
 
 std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute& ruleAttr,

@@ -52,5 +52,5 @@ private:
 	                                          const prt::AttributeMap& defaultAttributeValues);
 	std::vector<MString> getDynamicEnumOptions(const RuleAttribute& ruleAttr,
 	                                                 const prt::AttributeMap& defaultAttributeValues);
-	void updateCustomEnumValue(const RuleAttribute& ruleAttr, const prt::AttributeMap& defaultAttributeValues);
+	bool updateCustomEnumValue(const RuleAttribute& ruleAttr, const prt::AttributeMap& defaultAttributeValues);
 }; // class PRTModifierEnum
