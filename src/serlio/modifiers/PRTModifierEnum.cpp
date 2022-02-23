@@ -153,8 +153,8 @@ const std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttr
 		return enumOptions;
 	const MString fullAttrName = mAttr.name();
 
-	const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName).c_str();
-	std::wstring attrImport = prtu::getImport(ruleAttr.fqName).c_str();
+	const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName);
+	std::wstring attrImport = prtu::getImport(ruleAttr.fqName);
 	if (!attrImport.empty())
 		attrImport += prtu::IMPORT_DELIMITER;
 
