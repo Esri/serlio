@@ -233,8 +233,11 @@ MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
 			if (std::wcscmp(key, RESTRICTED_KEY) == 0)
 				mRestricted = annot->getArgument(arg)->getBool();
 
-			if (std::wcscmp(key, VALUES_ATTR_KEY) == 0)
+			if (std::wcscmp(key, VALUES_ATTR_KEY) == 0) {
 				mValuesAttr = annot->getArgument(arg)->getStr();
+				// Add empty option, because it is not considered an enum by addAttr in mel otherwise (bug)
+				MCHECK(mAttr.addField(" ", 1));
+			}
 			continue;
 		}
 
