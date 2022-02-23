@@ -58,8 +58,10 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 	int newSelectedEnumIdx = 0;
 	int currIdx = 1;
 
+	std::vector<std::wstring> wstringOptions;
+
 	for (const MString& option : mEnumOptions) {
-		MCHECK(mAttr.addField(option, currIdx));
+		wstringOptions.emplace_back(option.asWChar());
 		if (option == mCustomDefaultValue)
 			customDefaultIdx = currIdx;
 		if (option == oldSelectedOption)
@@ -67,8 +69,12 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 		currIdx++;
 	}
 
-	if (customDefaultIdx == 0)
-		MCHECK(mAttr.addField(mCustomDefaultValue, 0));
+	if (customDefaultIdx == 0) {
+		MCHECK(mu::setEnumOptions(node, mAttr, wstringOptions, mCustomDefaultValue.asWChar()));
+	}
+	else {
+		MCHECK(mu::setEnumOptions(node, mAttr, wstringOptions, {}));
+	}
 
 	return std::make_pair(true, newSelectedEnumIdx);
 }
