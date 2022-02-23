@@ -5,9 +5,12 @@
 #include "maya/MFloatPointArray.h"
 #include "maya/MFnAttribute.h"
 #include "maya/MFnDependencyNode.h"
+#include "maya/MFnEnumAttribute.h"
 #include "maya/MObject.h"
 #include "maya/MStatus.h"
 #include "maya/MString.h"
+
+#include <optional>
 
 #define MCHECK(status) mu::statusCheck((status), __FILE__, __LINE__);
 
@@ -49,6 +52,7 @@ private:
 
 std::filesystem::path getWorkspaceRoot(MStatus& status);
 
-MStatus setEnumOptions(const std::wstring& node, const std::wstring& attr,
-                       const std::vector<std::wstring>& enumOptions);
+MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
+                       const std::vector<std::wstring>& enumOptions,
+                       const std::optional<std::wstring>& customDefaultOption);
 } // namespace mu

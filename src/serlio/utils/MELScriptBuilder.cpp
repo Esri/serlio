@@ -26,7 +26,7 @@
 
 namespace {
 
-constexpr bool MEL_ENABLE_DISPLAY = false;
+constexpr bool MEL_ENABLE_DISPLAY = true;
 
 std::wstring composeAttributeExpression(const MELVariable& node, const std::wstring& attribute) {
 	assert(!attribute.empty() && attribute[0] != L'.'); // to catch refactoring bugs
@@ -86,16 +86,23 @@ void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attr
 }
 
 void MELScriptBuilder::setAttrEnumOptions(const MELVariable& node, const std::wstring& attribute,
-                                          const std::vector<std::wstring>& enumOptions) {
+                                          const std::vector<std::wstring>& enumOptions,
+                                          const std::optional<std::wstring>& customDefaultOption) {
 	std::wstring enumString;
 
+	if (customDefaultOption.has_value())
+		enumString.append(customDefaultOption.value() + L"=0");
+	int idx = 1;
 	for (const std::wstring& enumOption : enumOptions) {
 		if (!enumString.empty())
 			enumString.append(L":");
-		enumString.append(enumOption);
+		enumString.append(enumOption + L"=" + std::to_wstring(idx++));
 	}
+	// Don't update to an empty enum
+	if (enumString.empty())
+		enumString.append(L" ");
 
-	commandStream << "addAttr -e -en \"" << enumString << "\" " << composeAttributeExpression(node, attribute) << ";\n";
+	commandStream << "addAttr -e -en " << MELStringLiteral(enumString).mel() << " " << composeAttributeExpression(node, attribute) << ";\n";
 }
 
 void MELScriptBuilder::connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,
@@ -172,6 +179,8 @@ MStatus MELScriptBuilder::executeSync(std::wstring& output) {
 	MStatus status;
 	MString result =
 	        MGlobal::executeCommandStringResult(commandStream.str().c_str(), MEL_ENABLE_DISPLAY, false, &status);
+	MString statusString = status.errorString();
+	bool hasError = status.error();
 	commandStream.clear();
 	output.assign(result.asWChar());
 	return status;

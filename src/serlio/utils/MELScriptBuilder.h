@@ -63,7 +63,9 @@ public:
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const wchar_t* val) = delete;
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const char* val) = delete;
 
-	void setAttrEnumOptions(const MELVariable& node, const std::wstring& attribute, const std::vector<std::wstring>& enumOptions);
+	void setAttrEnumOptions(const MELVariable& node, const std::wstring& attribute,
+	                        const std::vector<std::wstring>& enumOptions,
+	                        const std::optional<std::wstring>& customDefaultOption);
 
 	void connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,
 	                 const std::wstring& dstAttr);
