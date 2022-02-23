@@ -43,14 +43,14 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 	assert(ruleAttrIt != mRuleAttributes.end()); // Rule not found
 	const RuleAttribute ruleAttr = (ruleAttrIt != mRuleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
 
-	const std::vector<MString>& newEnumOptions = getEnumOptions(ruleAttr, defaultAttributeValues);
+	const std::vector<std::wstring>& newEnumOptions = getEnumOptions(ruleAttr, defaultAttributeValues);
 
 	const bool hasNewCustomDefaultValue = updateCustomEnumValue(ruleAttr, defaultAttributeValues);
 
 	if ((newEnumOptions == mEnumOptions) && !hasNewCustomDefaultValue)
 		return std::make_pair(false, selectedEnumIdx);
 
-	const MString oldSelectedOption = mAttr.fieldName(selectedEnumIdx);
+	const std::wstring oldSelectedOption = mAttr.fieldName(selectedEnumIdx).asWChar();
 
 	mEnumOptions = newEnumOptions;
 
@@ -58,10 +58,8 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 	int newSelectedEnumIdx = 0;
 	int currIdx = 1;
 
-	std::vector<std::wstring> wstringOptions;
 
-	for (const MString& option : mEnumOptions) {
-		wstringOptions.emplace_back(option.asWChar());
+	for (const std::wstring& option : mEnumOptions) {
 		if (option == mCustomDefaultValue)
 			customDefaultIdx = currIdx;
 		if (option == oldSelectedOption)
@@ -70,10 +68,10 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 	}
 
 	if (customDefaultIdx == 0) {
-		MCHECK(mu::setEnumOptions(node, mAttr, wstringOptions, mCustomDefaultValue.asWChar()));
+		MCHECK(mu::setEnumOptions(node, mAttr, mEnumOptions, mCustomDefaultValue));
 	}
 	else {
-		MCHECK(mu::setEnumOptions(node, mAttr, wstringOptions, {}));
+		MCHECK(mu::setEnumOptions(node, mAttr, mEnumOptions, {}));
 	}
 
 	return std::make_pair(true, newSelectedEnumIdx);
@@ -83,13 +81,13 @@ bool PRTModifierEnum::isDynamic() {
 	return mValuesAttr.length() > 0;
 }
 
-std::vector<MString> PRTModifierEnum::getEnumOptions(const RuleAttribute& ruleAttr,
+std::vector<std::wstring> PRTModifierEnum::getEnumOptions(const RuleAttribute& ruleAttr,
                                                            const prt::AttributeMap& defaultAttributeValues) {
 	if (isDynamic()) {
 		return getDynamicEnumOptions(ruleAttr, defaultAttributeValues);
 	}
 	else {
-		std::vector<MString> enumOptions;
+		std::vector<std::wstring> enumOptions;
 
 		short minVal;
 		short maxVal;
@@ -97,7 +95,7 @@ std::vector<MString> PRTModifierEnum::getEnumOptions(const RuleAttribute& ruleAt
 		MCHECK(mAttr.getMax(maxVal));
 
 		for (short currIdx = 1; currIdx <= maxVal; currIdx++)
-			enumOptions.emplace_back(mAttr.fieldName(currIdx));
+			enumOptions.emplace_back(mAttr.fieldName(currIdx).asWChar());
 
 		return enumOptions;
 	}
@@ -108,24 +106,24 @@ bool PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
 	const std::wstring fqAttrName = ruleAttr.fqName;
 	const prt::AnnotationArgumentType ruleAttrType = ruleAttr.mType;
 
-	MString defMStringVal;
+	std::wstring defWStringVal;
 
 	switch (ruleAttrType) {
 		case prt::AAT_STR: {
 			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
 			if (defStringVal == nullptr)
 				return false;
-			defMStringVal = defStringVal;
+			defWStringVal = defStringVal;
 			break;
 		}
 		case prt::AAT_FLOAT: {
 			const auto defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
-			defMStringVal = std::to_wstring(defDoubleVal).c_str();
+			defWStringVal = std::to_wstring(defDoubleVal).c_str();
 			break;
 		}
 		case prt::AAT_BOOL: {
 			const auto defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
-			defMStringVal = std::to_wstring(defBoolVal).c_str();
+			defWStringVal = std::to_wstring(defBoolVal).c_str();
 			break;
 		}
 		default: {
@@ -133,15 +131,15 @@ bool PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
 			return false;
 		}
 	}
-	if (mCustomDefaultValue == defMStringVal)
+	if (mCustomDefaultValue == defWStringVal)
 		return false;
-	mCustomDefaultValue = defMStringVal;
+	mCustomDefaultValue = defWStringVal;
 	return true;
 }
 
-std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute& ruleAttr,
+std::vector<std::wstring> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute& ruleAttr,
                                                                   const prt::AttributeMap& defaultAttributeValues) {
-	std::vector<MString> enumOptions;
+	std::vector<std::wstring> enumOptions;
 	if (!isDynamic())
 		return enumOptions;
 	const MString fullAttrName = mAttr.name();
@@ -152,7 +150,7 @@ std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute&
 		attrImport += prtu::IMPORT_DELIMITER;
 
 	std::wstring valuesAttr = attrStyle + prtu::STYLE_DELIMITER + attrImport;
-	valuesAttr.append(mValuesAttr.asWChar());
+	valuesAttr.append(mValuesAttr);
 
 	const prt::Attributable::PrimitiveType type = defaultAttributeValues.getType(valuesAttr.c_str());
 
@@ -170,8 +168,7 @@ std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute&
 				const size_t cutoffIndex = currStringView.find_first_of(L"\r\n");
 				currStringView = currStringView.substr(0, cutoffIndex);
 
-				const MString currMString(currStringView.data(), static_cast<int>(currStringView.length()));
-				enumOptions.emplace_back(currMString);
+				enumOptions.emplace_back(currStringView);
 			}
 			break;
 		}
@@ -182,8 +179,7 @@ std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute&
 			for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 				const double currDouble = doubleArray[enumIndex];
 
-				const MString currMString(std::to_wstring(currDouble).c_str());
-				enumOptions.emplace_back(currMString);
+				enumOptions.emplace_back(std::to_wstring(currDouble));
 			}
 			break;
 		}
@@ -194,8 +190,7 @@ std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute&
 			for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 				const bool currBool = boolArray[enumIndex];
 
-				const MString currMString(std::to_wstring(currBool).c_str());
-				enumOptions.emplace_back(currMString);
+				enumOptions.emplace_back(std::to_wstring(currBool));
 			}
 			break;
 		}
@@ -210,15 +205,13 @@ std::vector<MString> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute&
 		case prt::Attributable::PT_FLOAT: {
 			const bool currFloat = defaultAttributeValues.getFloat(valuesAttr.c_str());
 
-			const MString currMString(std::to_wstring(currFloat).c_str());
-			enumOptions.emplace_back(currMString);
+			enumOptions.emplace_back(std::to_wstring(currFloat));
 			break;
 		}
 		case prt::Attributable::PT_BOOL: {
 			const bool currBool = defaultAttributeValues.getBool(valuesAttr.c_str());
 
-			const MString currMString(std::to_wstring(currBool).c_str());
-			enumOptions.emplace_back(currMString);
+			enumOptions.emplace_back(std::to_wstring(currBool));
 			break;
 		}
 		default:

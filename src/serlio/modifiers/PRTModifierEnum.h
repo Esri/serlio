@@ -44,13 +44,13 @@ public:
 
 private:
 	bool mRestricted = true;
-	MString mValuesAttr;
-	MString mCustomDefaultValue;
-	std::vector<MString> mEnumOptions;
+	std::wstring mValuesAttr;
+	std::wstring mCustomDefaultValue;
+	std::vector<std::wstring> mEnumOptions;
 
-	std::vector<MString> getEnumOptions(const RuleAttribute& ruleAttr,
+	std::vector<std::wstring> getEnumOptions(const RuleAttribute& ruleAttr,
 	                                          const prt::AttributeMap& defaultAttributeValues);
-	std::vector<MString> getDynamicEnumOptions(const RuleAttribute& ruleAttr,
+	std::vector<std::wstring> getDynamicEnumOptions(const RuleAttribute& ruleAttr,
 	                                                 const prt::AttributeMap& defaultAttributeValues);
 	bool updateCustomEnumValue(const RuleAttribute& ruleAttr, const prt::AttributeMap& defaultAttributeValues);
 }; // class PRTModifierEnum
