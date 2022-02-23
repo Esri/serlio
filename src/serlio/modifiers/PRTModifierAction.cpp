@@ -845,8 +845,9 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 			case prt::Attributable::PT_BOOL: {
 				const bool value = mGenerateAttrs->getBool(fqName.c_str());
 				if (attrTrait.first == AttributeTrait::ENUM) {
-					mEnums.try_emplace(p.mayaFullName);
-					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums[p.mayaFullName]));
+					auto currEnumItr = mEnums.try_emplace(p.mayaFullName);
+					PRTModifierEnum& currEnum = currEnumItr.first->second;
+					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, currEnum));
 				}
 				else {
 					MCHECK(addBoolParameter(node, attr, p, value));
@@ -858,8 +859,9 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 
 				switch (attrTrait.first) {
 					case AttributeTrait::ENUM: {
-						mEnums.try_emplace(p.mayaFullName);
-						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums[p.mayaFullName]));
+						auto currEnumItr = mEnums.try_emplace(p.mayaFullName);
+						PRTModifierEnum& currEnum = currEnumItr.first->second;
+						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, currEnum));
 						break;
 					}
 					case AttributeTrait::RANGE: {
@@ -908,9 +910,9 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 
 				switch (attrTrait.first) {
 					case AttributeTrait::ENUM: {
-						mEnums.try_emplace(p.mayaFullName);
-						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, mvalue,
-						                        mEnums[p.mayaFullName]));
+						auto currEnumItr = mEnums.try_emplace(p.mayaFullName);
+						PRTModifierEnum& currEnum = currEnumItr.first->second;
+						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, mvalue, currEnum));
 						break;
 					}
 					case AttributeTrait::FILE:
