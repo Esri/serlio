@@ -31,18 +31,6 @@ constexpr const wchar_t* NULL_KEY = L"#NULL#";
 constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
 constexpr const wchar_t* VALUES_ATTR_KEY = L"valuesAttr";
 
-void clearEnumValues(const MObject& node, const MFnEnumAttribute& enumAttr) {
-	// Workaround: since setting enum values through mel, when none are available causes an Error...
-	MString defaultValue;
-	if (enumAttr.getDefault(defaultValue) != MStatus::kSuccess)
-		return;
-	MStatus stat;
-	const MFnDependencyNode fNode(node, &stat);
-	MCHECK(stat);
-	// clear enum options
-	MCHECK(mu::setEnumOptions(fNode.name().asWChar(), enumAttr.name().asWChar(), {}));
-}
-
 } // namespace
 
 // This function updates all enum options and returns a pair, where the first argument indicates if the options have
@@ -63,8 +51,6 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 		return std::make_pair(false, selectedEnumIdx);
 
 	const MString oldSelectedOption = mAttr.fieldName(selectedEnumIdx);
-
-	clearEnumValues(node, mAttr);
 
 	mEnumOptions = newEnumOptions;
 
