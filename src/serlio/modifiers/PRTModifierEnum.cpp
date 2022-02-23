@@ -58,7 +58,6 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 	int newSelectedEnumIdx = 0;
 	int currIdx = 1;
 
-
 	for (const std::wstring& option : mEnumOptions) {
 		if (option == mCustomDefaultValue)
 			customDefaultIdx = currIdx;
@@ -167,7 +166,6 @@ std::vector<std::wstring> PRTModifierEnum::getDynamicEnumOptions(const RuleAttri
 				// remove newlines from strings, because they break the maya UI
 				const size_t cutoffIndex = currStringView.find_first_of(L"\r\n");
 				currStringView = currStringView.substr(0, cutoffIndex);
-
 				enumOptions.emplace_back(currStringView);
 			}
 			break;
@@ -178,7 +176,6 @@ std::vector<std::wstring> PRTModifierEnum::getDynamicEnumOptions(const RuleAttri
 
 			for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 				const double currDouble = doubleArray[enumIndex];
-
 				enumOptions.emplace_back(std::to_wstring(currDouble));
 			}
 			break;
@@ -189,7 +186,6 @@ std::vector<std::wstring> PRTModifierEnum::getDynamicEnumOptions(const RuleAttri
 
 			for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
 				const bool currBool = boolArray[enumIndex];
-
 				enumOptions.emplace_back(std::to_wstring(currBool));
 			}
 			break;
@@ -198,19 +194,16 @@ std::vector<std::wstring> PRTModifierEnum::getDynamicEnumOptions(const RuleAttri
 			const wchar_t* currString = defaultAttributeValues.getString(valuesAttr.c_str());
 			if (currString == nullptr)
 				break;
-
 			enumOptions.emplace_back(currString);
 			break;
 		}
 		case prt::Attributable::PT_FLOAT: {
 			const bool currFloat = defaultAttributeValues.getFloat(valuesAttr.c_str());
-
 			enumOptions.emplace_back(std::to_wstring(currFloat));
 			break;
 		}
 		case prt::Attributable::PT_BOOL: {
 			const bool currBool = defaultAttributeValues.getBool(valuesAttr.c_str());
-
 			enumOptions.emplace_back(std::to_wstring(currBool));
 			break;
 		}
