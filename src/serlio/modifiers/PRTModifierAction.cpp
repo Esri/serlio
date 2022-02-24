@@ -239,37 +239,6 @@ MStatus addHiddenBoolParameter(MFnDependencyNode& node, MFnAttribute& tAttr, con
 	return stat;
 }
 
-short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const PRTModifierEnum& mAttr,
-                          const RuleAttribute& ruleAttr) {
-	const std::wstring fqAttrName = ruleAttr.fqName;
-	const prt::AnnotationArgumentType ruleAttrType = ruleAttr.mType;
-
-	size_t maxVal = mAttr.getOptionCount();
-
-	switch (ruleAttrType) {
-		case prt::AAT_STR: {
-			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
-
-			if (defStringVal != 0)
-				return static_cast<short>(mAttr.getOptionIndex(defStringVal));
-			break;
-		}
-		case prt::AAT_FLOAT: {
-			const double defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
-			return static_cast<short>(mAttr.getOptionIndex(std::to_wstring(defDoubleVal)));
-			break;
-		}
-		case prt::AAT_BOOL: {
-			const bool defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
-			return static_cast<short>(mAttr.getOptionIndex(std::to_wstring(defBoolVal)));
-			break;
-		}
-		default:
-			LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
-	}
-	return 0;
-}
-
 short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue& defaultValue) {
 	short idx = 0;
 	for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
@@ -519,7 +488,8 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 			case PrtAttributeType::ENUM: {
 				MFnEnumAttribute eAttr(fnAttribute.object());
 
-				const short defEnumVal = getDefaultEnumValue(*defaultAttributeValues, mEnums[ruleAttribute.mayaFullName], ruleAttribute);
+				const short defEnumVal =
+				        mEnums[ruleAttribute.mayaFullName].getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
 				short enumVal;
 				MCHECK(plug.getValue(enumVal));
 
@@ -617,8 +587,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 				const bool hasNewEnumOptions = newEnumInfo.first;
 				enumVal = newEnumInfo.second;
 
-				const short defEnumVal =
-				        getDefaultEnumValue(*defaultAttributeValues, modifierEnum, ruleAttribute);
+				const short defEnumVal = modifierEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
 
 				const bool isDefaultValue = (defEnumVal == enumVal);
 				if (hasNewEnumOptions || (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue))

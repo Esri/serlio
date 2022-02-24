@@ -103,6 +103,37 @@ size_t PRTModifierEnum::getOptionCount() const {
 	return mEnumOptions.size() + 1;
 }
 
+short PRTModifierEnum::getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues,
+                                           const RuleAttribute& ruleAttr) const {
+	const std::wstring fqAttrName = ruleAttr.fqName;
+	const prt::AnnotationArgumentType ruleAttrType = ruleAttr.mType;
+
+	size_t maxVal = getOptionCount();
+
+	switch (ruleAttrType) {
+		case prt::AAT_STR: {
+			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
+
+			if (defStringVal != 0)
+				return static_cast<short>(getOptionIndex(defStringVal));
+			break;
+		}
+		case prt::AAT_FLOAT: {
+			const double defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
+			return static_cast<short>(getOptionIndex(std::to_wstring(defDoubleVal)));
+			break;
+		}
+		case prt::AAT_BOOL: {
+			const bool defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
+			return static_cast<short>(getOptionIndex(std::to_wstring(defBoolVal)));
+			break;
+		}
+		default:
+			LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
+	}
+	return 0;
+}
+
 std::vector<std::wstring> PRTModifierEnum::getEnumOptions(const RuleAttribute& ruleAttr,
                                                            const prt::AttributeMap& defaultAttributeValues) {
 	if (isDynamic()) {
