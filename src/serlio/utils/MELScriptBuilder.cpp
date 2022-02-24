@@ -27,6 +27,7 @@
 namespace {
 
 constexpr bool MEL_ENABLE_DISPLAY = true;
+const std::wstring ENUM_BANNED_CHARS = L"=:\\;\r\n";
 
 std::wstring composeAttributeExpression(const MELVariable& node, const std::wstring& attribute) {
 	assert(!attribute.empty() && attribute[0] != L'.'); // to catch refactoring bugs
@@ -90,13 +91,27 @@ void MELScriptBuilder::setAttrEnumOptions(const MELVariable& node, const std::ws
                                           const std::optional<std::wstring>& customDefaultOption) {
 	std::wstring enumString;
 
-	if (customDefaultOption.has_value())
-		enumString.append(customDefaultOption.value() + L"=0");
+	if (customDefaultOption.has_value()) {
+		std::wstring customDefaultOptionString = customDefaultOption.value();
+		if (customDefaultOptionString == L"") {
+			enumString.append(L" =0");
+		}
+		else {
+			replaceAllOf(customDefaultOptionString, ENUM_BANNED_CHARS);
+			enumString.append(customDefaultOptionString + L"=0");
+		}
+	}
 	int idx = 1;
-	for (const std::wstring& enumOption : enumOptions) {
+	for (std::wstring enumOption : enumOptions) {
 		if (!enumString.empty())
 			enumString.append(L":");
-		enumString.append(enumOption + L"=" + std::to_wstring(idx++));
+		if (enumOption == L"") {
+			enumString.append(enumOption + L" =" + std::to_wstring(idx++));
+		}
+		else {
+			replaceAllOf(enumOption, ENUM_BANNED_CHARS);
+			enumString.append(enumOption + L"=" + std::to_wstring(idx++));
+		}
 	}
 	// Don't update to an empty enum
 	if (enumString.empty())
