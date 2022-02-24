@@ -40,7 +40,6 @@ public:
 	bool isDynamic() const;
 	size_t getOptionIndex(std::wstring optionName) const;
 	MString getOptionName(size_t optionIndex) const;
-	size_t getOptionCount() const;
 	short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const RuleAttribute& ruleAttr) const;
 
 public:

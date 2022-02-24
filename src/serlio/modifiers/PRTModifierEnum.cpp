@@ -99,16 +99,10 @@ MString PRTModifierEnum::getOptionName(size_t optionIndex) const {
 	}
 }
 
-size_t PRTModifierEnum::getOptionCount() const {
-	return mEnumOptions.size() + 1;
-}
-
 short PRTModifierEnum::getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues,
                                            const RuleAttribute& ruleAttr) const {
 	const std::wstring fqAttrName = ruleAttr.fqName;
 	const prt::AnnotationArgumentType ruleAttrType = ruleAttr.mType;
-
-	size_t maxVal = getOptionCount();
 
 	switch (ruleAttrType) {
 		case prt::AAT_STR: {
