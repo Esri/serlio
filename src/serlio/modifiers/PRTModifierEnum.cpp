@@ -88,14 +88,14 @@ size_t PRTModifierEnum::getOptionIndex(std::wstring fieldName) {
 	return std::distance(mEnumOptions.begin(), iter);
 }
 
-std::wstring PRTModifierEnum::getOptionName(size_t fieldIndex) {
+MString PRTModifierEnum::getOptionName(size_t fieldIndex) {
 	if (fieldIndex == 0) {
-		return mCustomDefaultValue;
+		return MString(mCustomDefaultValue.c_str());
 	}
 	else {
 		if ((fieldIndex > mEnumOptions.size()) || (fieldIndex <= 0))
 			return {};
-		return mEnumOptions[fieldIndex - 1];
+		return MString(mEnumOptions[fieldIndex - 1].c_str());
 	}
 }
 
