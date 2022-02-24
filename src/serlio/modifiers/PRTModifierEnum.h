@@ -37,10 +37,10 @@ public:
 	std::pair<bool, short> updateOptions(const MObject& node, const RuleAttributeMap& ruleAttributes,
 	                                     const prt::AttributeMap& defaultAttributeValues, short selectedEnumIdx = 0);
 
-	bool isDynamic();
-	size_t getOptionIndex(std::wstring fieldName);
-	std::wstring getOptionName(size_t fieldIndex);
-	size_t getOptionCount();
+	bool isDynamic() const;
+	size_t getOptionIndex(std::wstring fieldName) const;
+	MString getOptionName(size_t fieldIndex) const;
+	size_t getOptionCount() const;
 
 public:
 	MFnEnumAttribute mAttr;

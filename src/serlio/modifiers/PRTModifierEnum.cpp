@@ -76,11 +76,11 @@ std::pair<bool, short> PRTModifierEnum::updateOptions(const MObject& node, const
 	return std::make_pair(true, newSelectedEnumIdx);
 }
 
-bool PRTModifierEnum::isDynamic() {
+bool PRTModifierEnum::isDynamic() const {
 	return mValuesAttr.length() > 0;
 }
 
-size_t PRTModifierEnum::getOptionIndex(std::wstring fieldName) {
+size_t PRTModifierEnum::getOptionIndex(std::wstring fieldName) const {
 	const auto iter = std::find(mEnumOptions.begin(), mEnumOptions.end(), fieldName);
 	//return first index, if element is not available
 	if (iter == mEnumOptions.end())
@@ -88,7 +88,7 @@ size_t PRTModifierEnum::getOptionIndex(std::wstring fieldName) {
 	return std::distance(mEnumOptions.begin(), iter);
 }
 
-MString PRTModifierEnum::getOptionName(size_t fieldIndex) {
+MString PRTModifierEnum::getOptionName(size_t fieldIndex) const {
 	if (fieldIndex == 0) {
 		return MString(mCustomDefaultValue.c_str());
 	}
@@ -99,7 +99,7 @@ MString PRTModifierEnum::getOptionName(size_t fieldIndex) {
 	}
 }
 
-size_t PRTModifierEnum::getOptionCount() {
+size_t PRTModifierEnum::getOptionCount() const {
 	return mEnumOptions.size() + 1;
 }
 
