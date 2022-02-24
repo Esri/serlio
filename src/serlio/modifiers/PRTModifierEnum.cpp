@@ -80,22 +80,22 @@ bool PRTModifierEnum::isDynamic() const {
 	return mValuesAttr.length() > 0;
 }
 
-size_t PRTModifierEnum::getOptionIndex(std::wstring fieldName) const {
-	const auto iter = std::find(mEnumOptions.begin(), mEnumOptions.end(), fieldName);
+size_t PRTModifierEnum::getOptionIndex(std::wstring optionName) const {
+	const auto iter = std::find(mEnumOptions.begin(), mEnumOptions.end(), optionName);
 	//return first index, if element is not available
 	if (iter == mEnumOptions.end())
 		return 0;
 	return std::distance(mEnumOptions.begin(), iter);
 }
 
-MString PRTModifierEnum::getOptionName(size_t fieldIndex) const {
-	if (fieldIndex == 0) {
+MString PRTModifierEnum::getOptionName(size_t optionIndex) const {
+	if (optionIndex == 0) {
 		return MString(mCustomDefaultValue.c_str());
 	}
 	else {
-		if ((fieldIndex > mEnumOptions.size()) || (fieldIndex <= 0))
+		if ((optionIndex > mEnumOptions.size()) || (optionIndex <= 0))
 			return {};
-		return MString(mEnumOptions[fieldIndex - 1].c_str());
+		return MString(mEnumOptions[optionIndex - 1].c_str());
 	}
 }
 
