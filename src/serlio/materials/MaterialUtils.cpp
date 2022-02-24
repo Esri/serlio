@@ -4,6 +4,7 @@
 #include "utils/MELScriptBuilder.h"
 #include "utils/MItDependencyNodesWrapper.h"
 #include "utils/MayaUtilities.h"
+#include "utils/Utilities.h"
 
 #include "PRTContext.h"
 
@@ -15,6 +16,9 @@
 #include "maya/adskDataAssociations.h"
 
 namespace {
+
+constexpr const wchar_t* RGBA8_FORMAT = L"RGBA8";
+constexpr const wchar_t* FORMAT_STRING = L"format";
 
 MObject findNamedObject(const std::wstring& name, MFn::Type fnType) {
 	MStatus status;
@@ -191,6 +195,16 @@ std::filesystem::path getStingrayShaderPath() {
 		return shaderPath;
 	}();
 	return sfxFile;
+}
+
+bool textureHasAlphaChannel(std::wstring path) {
+	const AttributeMapUPtr textureMetadata(prt::createTextureMetadata(prtu::toFileURI(path).c_str()));
+	if (textureMetadata == nullptr)
+		return false;
+	const wchar_t* format = textureMetadata->getString(FORMAT_STRING);
+	if (format != nullptr && std::wcscmp(format, RGBA8_FORMAT) == 0)
+		return true;
+	return false;
 }
 
 } // namespace MaterialUtils

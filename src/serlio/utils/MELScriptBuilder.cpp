@@ -132,6 +132,11 @@ void MELScriptBuilder::createTextureShadingNode(const MELVariable& nodeName) {
 	commandStream << mel << "= `shadingNode -asTexture -skipSelect -name " << mel << " file`;\n";
 }
 
+void MELScriptBuilder::forceValidTextureAlphaChannel(const MELVariable& nodeName) {
+	commandStream << "setAttr " << composeAttributeExpression(nodeName, L"alphaIsLuminance") << "(!`getAttr "
+	              << composeAttributeExpression(nodeName, L"fileHasAlpha") << "`);";
+}
+
 void MELScriptBuilder::getUndoState(const MELVariable& undoName) {
 	const auto mel = undoName.mel();
 	commandStream << mel << " = `undoInfo -q -state`;\n";

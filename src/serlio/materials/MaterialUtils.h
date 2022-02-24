@@ -31,4 +31,5 @@ std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShading
 
 std::filesystem::path getStingrayShaderPath();
 
+bool textureHasAlphaChannel(std::wstring path);
 } // namespace MaterialUtils

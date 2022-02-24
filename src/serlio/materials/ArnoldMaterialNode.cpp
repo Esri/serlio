@@ -65,11 +65,12 @@ void setUvTransformAttrs(MELScriptBuilder& sb, const std::wstring& uvSet, const 
 	}
 }
 
-void createMapShader(MELScriptBuilder& sb, const std::string& mapFile, const MaterialTrafo& mapTrafo,
+void createMapShader(MELScriptBuilder& sb, const std::string& tex, const MaterialTrafo& mapTrafo,
                      const std::wstring& shaderName, const std::wstring& uvSet, const bool raw, const bool alpha) {
-	sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(shaderName));
+	std::filesystem::path texPath(tex);
+	sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(texPath.stem().wstring()));
 
-	sb.setVar(MEL_VAR_MAP_FILE, MELStringLiteral(prtu::toUTF16FromOSNarrow(mapFile)));
+	sb.setVar(MEL_VAR_MAP_FILE, MELStringLiteral(prtu::toUTF16FromOSNarrow(tex)));
 	sb.createTextureShadingNode(MEL_VAR_MAP_NODE);
 	sb.setAttr(MEL_VAR_MAP_NODE, L"fileTextureName", MEL_VAR_MAP_FILE);
 
@@ -82,8 +83,12 @@ void createMapShader(MELScriptBuilder& sb, const std::string& mapFile, const Mat
 	sb.createShader(L"aiUvTransform", MEL_VAR_UV_TRAFO_NODE);
 	setUvTransformAttrs(sb, uvSet, mapTrafo);
 
-	if (alpha)
+	if (alpha) {
 		sb.connectAttr(MEL_VAR_MAP_NODE, L"outAlpha", MEL_VAR_UV_TRAFO_NODE, L"passthroughR");
+		sb.forceValidTextureAlphaChannel(MEL_VAR_MAP_NODE);
+		sb.setAttr(MEL_VAR_MAP_NODE, L"alphaIsLuminance",
+		           !MaterialUtils::textureHasAlphaChannel(texPath.wstring()));
+	}
 	else
 		sb.connectAttr(MEL_VAR_MAP_NODE, L"outColor", MEL_VAR_UV_TRAFO_NODE, L"passthrough");
 }
