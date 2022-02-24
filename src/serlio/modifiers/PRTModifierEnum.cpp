@@ -246,7 +246,7 @@ std::vector<std::wstring> PRTModifierEnum::getDynamicEnumOptions(const RuleAttri
 			break;
 		}
 		case prt::Attributable::PT_FLOAT: {
-			const bool currFloat = defaultAttributeValues.getFloat(valuesAttr.c_str());
+			const double currFloat = defaultAttributeValues.getFloat(valuesAttr.c_str());
 			enumOptions.emplace_back(std::to_wstring(currFloat));
 			break;
 		}
