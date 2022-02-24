@@ -26,7 +26,7 @@
 
 namespace {
 
-constexpr bool MEL_ENABLE_DISPLAY = true;
+constexpr bool MEL_ENABLE_DISPLAY = false;
 const std::wstring ENUM_BANNED_CHARS = L"=:\\;\r\n";
 
 std::wstring composeAttributeExpression(const MELVariable& node, const std::wstring& attribute) {
