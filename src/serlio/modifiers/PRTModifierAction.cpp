@@ -255,7 +255,7 @@ short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const
 			break;
 		}
 		case prt::AAT_FLOAT: {
-			const float defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
+			const double defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
 			return static_cast<short>(mAttr.getOptionIndex(std::to_wstring(defDoubleVal)));
 			break;
 		}
