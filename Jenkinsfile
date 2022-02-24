@@ -57,8 +57,9 @@ stage('serlio-checkout'){
 
 stage('serlio') {
 	cepl.runParallel(getTasks(branchName))
-	papl.finalizeRun('serlio', myBranch)
 }
+
+papl.finalizeRun('serlio', myBranch)
 
 // -- TASK GENERATORS
 
