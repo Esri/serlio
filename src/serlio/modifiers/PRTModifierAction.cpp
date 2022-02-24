@@ -633,7 +633,6 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 				const short defEnumVal =
 				        getDefaultEnumValue(*defaultAttributeValues, modifierEnum, ruleAttribute);
 
-
 				const bool isDefaultValue = (defEnumVal == enumVal);
 				if (hasNewEnumOptions || (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue))
 					plug.setShort(defEnumVal);
