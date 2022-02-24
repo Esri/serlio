@@ -139,12 +139,12 @@ bool PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
 			break;
 		}
 		case prt::AAT_FLOAT: {
-			const auto defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
+			const double defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
 			defWStringVal = std::to_wstring(defDoubleVal).c_str();
 			break;
 		}
 		case prt::AAT_BOOL: {
-			const auto defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
+			const bool defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
 			defWStringVal = std::to_wstring(defBoolVal).c_str();
 			break;
 		}
