@@ -479,7 +479,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 
 		switch (attrType) {
 			case PrtAttributeType::BOOL: {
-				const auto defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
+				const bool defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
 				bool boolVal;
 				MCHECK(plug.getValue(boolVal));
 
@@ -487,7 +487,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 				break;
 			}
 			case PrtAttributeType::FLOAT: {
-				const auto defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
+				const double defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
 				double doubleVal;
 				MCHECK(plug.getValue(doubleVal));
 
@@ -552,7 +552,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 
 		switch (attrType) {
 			case PrtAttributeType::BOOL: {
-				const auto defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
+				const bool defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
 				bool boolVal;
 				MCHECK(plug.getValue(boolVal));
 
@@ -563,7 +563,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 				break;
 			}
 			case PrtAttributeType::FLOAT: {
-				const auto defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
+				const double defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
 				double doubleVal;
 				MCHECK(plug.getValue(doubleVal));
 
