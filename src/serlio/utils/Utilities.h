@@ -232,6 +232,16 @@ inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars
 	}
 }
 
+inline void replaceAllOf(std::wstring& s, const std::wstring& bannedChars) {
+	std::wstring::size_type pos = 0;
+	while (pos < s.size()) {
+		pos = s.find_first_of(bannedChars, pos);
+		if (pos == std::wstring::npos)
+			break;
+		s[pos++] = L'_';
+	}
+}
+
 template <typename C>
 void replaceAllSubstrings(std::basic_string<C>& str, const std::basic_string<C>& oldStr,
                                  const std::basic_string<C>& newStr) {
