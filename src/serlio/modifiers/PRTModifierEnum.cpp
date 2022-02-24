@@ -82,7 +82,7 @@ bool PRTModifierEnum::isDynamic() const {
 
 size_t PRTModifierEnum::getOptionIndex(std::wstring optionName) const {
 	const auto iter = std::find(mEnumOptions.begin(), mEnumOptions.end(), optionName);
-	//return first index, if element is not available
+	// return first index, if element is not available
 	if (iter == mEnumOptions.end())
 		return 0;
 	return std::distance(mEnumOptions.begin(), iter) + 1;
@@ -135,7 +135,7 @@ short PRTModifierEnum::getDefaultEnumValue(const prt::AttributeMap& defaultAttri
 }
 
 std::vector<std::wstring> PRTModifierEnum::getEnumOptions(const RuleAttribute& ruleAttr,
-                                                           const prt::AttributeMap& defaultAttributeValues) {
+                                                          const prt::AttributeMap& defaultAttributeValues) {
 	if (isDynamic()) {
 		return getDynamicEnumOptions(ruleAttr, defaultAttributeValues);
 	}
@@ -191,7 +191,7 @@ bool PRTModifierEnum::updateCustomEnumValue(const RuleAttribute& ruleAttr,
 }
 
 std::vector<std::wstring> PRTModifierEnum::getDynamicEnumOptions(const RuleAttribute& ruleAttr,
-                                                                  const prt::AttributeMap& defaultAttributeValues) {
+                                                                 const prt::AttributeMap& defaultAttributeValues) {
 	std::vector<std::wstring> enumOptions;
 	if (!isDynamic())
 		return enumOptions;

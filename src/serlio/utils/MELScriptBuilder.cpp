@@ -116,7 +116,8 @@ void MELScriptBuilder::setAttrEnumOptions(const MELVariable& node, const std::ws
 	if (enumString.empty())
 		enumString.append(L" ");
 
-	commandStream << "addAttr -e -en " << MELStringLiteral(enumString).mel() << " " << composeAttributeExpression(node, attribute) << ";\n";
+	commandStream << "addAttr -e -en " << MELStringLiteral(enumString).mel() << " "
+	              << composeAttributeExpression(node, attribute) << ";\n";
 }
 
 void MELScriptBuilder::connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,

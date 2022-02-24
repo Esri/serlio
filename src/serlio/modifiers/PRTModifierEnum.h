@@ -53,8 +53,8 @@ private:
 	std::vector<std::wstring> mEnumOptions;
 
 	std::vector<std::wstring> getEnumOptions(const RuleAttribute& ruleAttr,
-	                                          const prt::AttributeMap& defaultAttributeValues);
+	                                         const prt::AttributeMap& defaultAttributeValues);
 	std::vector<std::wstring> getDynamicEnumOptions(const RuleAttribute& ruleAttr,
-	                                                 const prt::AttributeMap& defaultAttributeValues);
+	                                                const prt::AttributeMap& defaultAttributeValues);
 	bool updateCustomEnumValue(const RuleAttribute& ruleAttr, const prt::AttributeMap& defaultAttributeValues);
 }; // class PRTModifierEnum
