@@ -55,7 +55,7 @@ stage('prepare'){
 }
 
 stage('serlio') {
-	cepl.runParallel(getTasks(branchName))
+	cepl.runParallel(getTasks())
 }
 
 papl.finalizeRun('serlio', env.BRANCH_NAME)
@@ -76,10 +76,7 @@ Map taskGenSourceCheckout(){
 	return tasks
 }
 
-// entry point for embedded pipeline
 Map getTasks(String branchName = null) {
-	if (branchName) env.BRANCH_NAME = branchName
-
 	Map tasks = [:]
 	tasks << taskGenSerlio()
 	tasks << taskGenSerlioTests()
