@@ -85,7 +85,7 @@ size_t PRTModifierEnum::getOptionIndex(std::wstring optionName) const {
 	//return first index, if element is not available
 	if (iter == mEnumOptions.end())
 		return 0;
-	return std::distance(mEnumOptions.begin(), iter);
+	return std::distance(mEnumOptions.begin(), iter) + 1;
 }
 
 MString PRTModifierEnum::getOptionName(size_t optionIndex) const {
