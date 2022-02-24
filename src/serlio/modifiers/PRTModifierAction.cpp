@@ -250,31 +250,18 @@ short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const
 		case prt::AAT_STR: {
 			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
 
-			for (short currIdx = 0; currIdx <= maxVal; currIdx++) {
-				const wchar_t* currString = mAttr.getOptionName(currIdx).asWChar();
-				if (std::wcscmp(currString, defStringVal) == 0)
-					return currIdx;
-			}
+			if (defStringVal != 0)
+				return mAttr.getOptionIndex(defStringVal);
 			break;
 		}
 		case prt::AAT_FLOAT: {
-			const auto defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
-
-			for (short currIdx = 0; currIdx <= maxVal; currIdx++) {
-				const double currDouble = mAttr.getOptionName(currIdx).asDouble();
-				if (currDouble == defDoubleVal)
-					return currIdx;
-			}
+			const float defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
+			return mAttr.getOptionIndex(std::to_wstring(defDoubleVal));
 			break;
 		}
 		case prt::AAT_BOOL: {
-			const auto defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
-
-			for (short currIdx = 0; currIdx <= maxVal; currIdx++) {
-				const bool currBool = mAttr.getOptionName(currIdx).asInt();
-				if (currBool == defBoolVal)
-					return currIdx;
-			}
+			const bool defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
+			return mAttr.getOptionIndex(std::to_wstring(defBoolVal));
 			break;
 		}
 		default:
