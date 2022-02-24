@@ -251,17 +251,17 @@ short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const
 			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
 
 			if (defStringVal != 0)
-				return mAttr.getOptionIndex(defStringVal);
+				return static_cast<short>(mAttr.getOptionIndex(defStringVal));
 			break;
 		}
 		case prt::AAT_FLOAT: {
 			const float defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
-			return mAttr.getOptionIndex(std::to_wstring(defDoubleVal));
+			return static_cast<short>(mAttr.getOptionIndex(std::to_wstring(defDoubleVal)));
 			break;
 		}
 		case prt::AAT_BOOL: {
 			const bool defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
-			return mAttr.getOptionIndex(std::to_wstring(defBoolVal));
+			return static_cast<short>(mAttr.getOptionIndex(std::to_wstring(defBoolVal)));
 			break;
 		}
 		default:
