@@ -51,7 +51,7 @@ properties([ disableConcurrentBuilds() ])
 
 // -- PIPELINE
 
-stage('serlio-checkout'){
+stage('prepare'){
 	cepl.runParallel(taskGenSourceCheckout())
 }
 
@@ -73,7 +73,7 @@ Map taskGenSourceCheckout(){
 		papl.checkout(REPO, myBranch, REPO_CREDS)
 		stash(name: SOURCE_STASH)
 	}
-	tasks << cepl.generateTasks("checkout-and-stash-srl", taskSRL, srcCfgs)
+	tasks << cepl.generateTasks("prepare", taskSRL, srcCfgs)
 	return tasks
 }
 
