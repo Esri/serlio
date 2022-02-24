@@ -47,7 +47,6 @@ properties([ disableConcurrentBuilds() ])
 	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, maya: PrtAppPipelineLibrary.Dependencies.MAYA2022 ],
 	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, maya: PrtAppPipelineLibrary.Dependencies.MAYA2022 ],
 ]
-@Field String myBranch = env.BRANCH_NAME
 
 // -- PIPELINE
 
@@ -59,7 +58,7 @@ stage('serlio') {
 	cepl.runParallel(getTasks(branchName))
 }
 
-papl.finalizeRun('serlio', myBranch)
+papl.finalizeRun('serlio', env.BRANCH_NAME)
 
 // -- TASK GENERATORS
 
@@ -70,7 +69,7 @@ Map taskGenSourceCheckout(){
 	def taskSRL = {
 		cepl.cleanCurrentDir()
 		final String localDir = 'srl'
-		papl.checkout(REPO, myBranch, REPO_CREDS)
+		papl.checkout(REPO, env.BRANCH_NAME, REPO_CREDS)
 		stash(name: SOURCE_STASH)
 	}
 	tasks << cepl.generateTasks("prepare", taskSRL, srcCfgs)
@@ -79,7 +78,7 @@ Map taskGenSourceCheckout(){
 
 // entry point for embedded pipeline
 Map getTasks(String branchName = null) {
-	if (branchName) myBranch = branchName
+	if (branchName) env.BRANCH_NAME = branchName
 
 	Map tasks = [:]
 	tasks << taskGenSerlio()
@@ -128,7 +127,7 @@ def taskBuildSerlio(cfg) {
 	def classifierExtractor = { p ->
 		return cepl.getArchiveClassifier(cfg) + '-' + cfg.grp
 	}
-	papl.publish(appName, myBranch, artifactPattern, artifactVersion, cfg, classifierExtractor)
+	papl.publish(appName, env.BRANCH_NAME, artifactPattern, artifactVersion, cfg, classifierExtractor)
 }
 
 def taskBuildSerlioTests(cfg) {
@@ -173,7 +172,7 @@ def taskBuildSerlioInstaller(cfg) {
 			def classifierExtractor = { p ->
 				return cepl.getArchiveClassifier(cfg) + '-' + cfg.grp
 			}
-			papl.publish(appName, myBranch, artifactPattern, artifactVersion, cfg, classifierExtractor)
+			papl.publish(appName, env.BRANCH_NAME, artifactPattern, artifactVersion, cfg, classifierExtractor)
 		}
 	}
 }
