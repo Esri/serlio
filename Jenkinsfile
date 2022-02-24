@@ -31,6 +31,8 @@ properties([ disableConcurrentBuilds() ])
 @Field final String SOURCES      = "serlio.git/src"
 @Field final String BUILD_TARGET = 'package'
 @Field final String SOURCE_STASH = 'serlio-src'
+
+@Field final List CHECKOUT_CONFIG = [ [ ba: psl.BA_CHECKOUT ] ]
 // TODO: abusing grp field to distinguish maya versions per task
 @Field final List CONFIGS = [
 	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2018', maya: PrtAppPipelineLibrary.Dependencies.MAYA2018 ],
@@ -63,16 +65,8 @@ papl.finalizeRun('serlio', env.BRANCH_NAME)
 // -- TASK GENERATORS
 
 Map taskGenSourceCheckout(){
-	final List srcCfgs = [ [ ba: psl.BA_CHECKOUT ] ]
 	Map tasks = [:]
-	// checkout serlio.git
-	def taskSRL = {
-		cepl.cleanCurrentDir()
-		final String localDir = 'srl'
-		papl.checkout(REPO, env.BRANCH_NAME, REPO_CREDS)
-		stash(name: SOURCE_STASH)
-	}
-	tasks << cepl.generateTasks("prepare", taskSRL, srcCfgs)
+	tasks << taskGenSerlioSourceCheckout()
 	return tasks
 }
 
@@ -82,6 +76,10 @@ Map getTasks(String branchName = null) {
 	tasks << taskGenSerlioTests()
 	tasks << taskGenSerlioInstallers()
 	return tasks
+}
+
+Map taskGenSerlioSourceCheckout() {
+	return cepl.generateTasks('srl', this.&taskSourceCheckout, CHECKOUT_CONFIG)
 }
 
 Map taskGenSerlio() {
@@ -97,6 +95,12 @@ Map taskGenSerlioInstallers() {
 }
 
 // -- TASK BUILDERS
+
+def taskSourceCheckout(cfg) {
+	cepl.cleanCurrentDir()
+	papl.checkout(REPO, env.BRANCH_NAME, REPO_CREDS)
+	stash(name: SOURCE_STASH)
+}
 
 def taskBuildCMake(cfg, target){
 	final List deps = [ cfg.maya ]
