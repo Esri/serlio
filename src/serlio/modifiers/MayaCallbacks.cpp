@@ -438,9 +438,10 @@ prt::Status MayaCallbacks::assetError(size_t /*isIndex*/, prt::CGAErrorLevel lev
 	return prt::STATUS_OK;
 }
 
-prt::Status MayaCallbacks::cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel /*level*/,
+prt::Status MayaCallbacks::cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel level,
                                     int32_t /*methodId*/, int32_t /*pc*/, const wchar_t* message) {
 	LOG_ERR << "CGA ERROR: " << message;
+	detectAndAppendCGACErrors(level, message, cgacErrors);
 	return prt::STATUS_OK;
 }
 
