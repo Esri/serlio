@@ -42,6 +42,10 @@ struct CGACError {
 	    : errorLevel(errorLevel), shouldBeLogged(shouldBeLogged), errorString(errorString) {}
 
 	bool operator<(const CGACError& other) const {
+		// make sure errors are in front
+		if (errorLevel != other.errorLevel)
+			return errorLevel < other.errorLevel;
+		// sort alphabetically if both have the same error level
 		return errorString < other.errorString;
 	}
 };
