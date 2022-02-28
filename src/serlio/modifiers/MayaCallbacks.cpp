@@ -414,12 +414,15 @@ std::filesystem::path getAssetDir() {
 }
 
 void detectAndAppendCGACErrors(prt::CGAErrorLevel level, const wchar_t* message, CGACErrors& cgacErrors) {
-	if (message != nullptr && (std::wcsstr(message, L"CGAC version") || std::wcsstr(message, L"Non-recognized builtin method"))) {
-		const bool shouldBeLogged =
-		        (std::wcsstr(message, L"newer than current") || (level == prt::CGAErrorLevel::CGAERROR));
-
+	if (message != nullptr) {
+		bool shouldBeLogged = (level == prt::CGAErrorLevel::CGAERROR);
 		std::wstring stringMessage = message;
-		prtu::replaceCGACWithCEVersion(stringMessage);
+
+		if (std::wcsstr(message, L"CGAC version")) {
+			shouldBeLogged = shouldBeLogged || (std::wcsstr(message, L"newer than current"));
+			prtu::replaceCGACWithCEVersion(stringMessage);
+		}
+
 		const auto [it, wasInserted] = cgacErrors.try_emplace({level, shouldBeLogged, stringMessage}, 1);
 		if (!wasInserted)
 			it->second++;
