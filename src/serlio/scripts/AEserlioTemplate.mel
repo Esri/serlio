@@ -139,7 +139,7 @@ global proc prtShowProblemView(string $node){
 	showWindow $window;
 }
 
-global proc updateCGACProblems(string $node){
+global proc updateCGACProblemIcon(string $node){
 	string $cgacProblems = getProblemString($node);
 	int $isVisible = ($cgacProblems != "");
 	int $hasProblems = (size($cgacProblems) > 0);
@@ -152,7 +152,7 @@ global proc updateCGACProblems(string $node){
 	if ($displayErrorIcon)
 		$icon = "error.png";
 
-	symbolButton -e -visible $isVisible -ann $cgacProblems -i $icon $control;
+	symbolButton -e -visible $isVisible -i $icon $control;
 }
 
 global proc prtFileBrowse(string $attr, string $varname, string $filters){
@@ -172,10 +172,10 @@ global proc prtFileBrowse(string $attr, string $varname, string $filters){
 
 	string $node = prtGetNodeName($attr);
 
-	symbolButton -i "caution.png" -visible false -c ("prtShowProblemView(\"" + $node + "\")") ($node + "_CGAC_Problems");
-	updateCGACProblems($node);
+	symbolButton -ann "show problems" -i "caution.png" -visible false -c ("prtShowProblemView(\"" + $node + "\")") ($node + "_CGAC_Problems");
+	updateCGACProblemIcon($node);
 
-	string $changeCommand = "updateCGACProblems " + $node;
+	string $changeCommand = "updateCGACProblemIcon " + $node;
 	scriptJob -rp -p $control -ac ($node + ".CGAC_Problems") $changeCommand;
 
 	symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");	
