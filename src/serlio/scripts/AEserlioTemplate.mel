@@ -94,13 +94,54 @@ global proc prtShowFileDialog(string $attr, string $filters) {
 	}  
 }  
 
-global proc updateCGACProblems(string $node){
+proc string getProblemString(string $node){
 	string $attr = $node + ".CGAC_Problems";
 
 	if (!prtAttributeExists($attr))
-		return;
+		return "";
+	string $problemString = `getAttr($attr)`;
+	return $problemString;
+}
 
-	string $cgacProblems = `getAttr ($attr)`;
+global proc prtShowProblemView(string $node){
+	$cgacProblems = getProblemString($node);
+
+	string $errors[] = stringToStringArray($cgacProblems, "\n");
+	string $window = `window -title "Serlio: Problems"
+		-resizeToFitChildren true
+		-iconName "Serlio"
+		-widthHeight 500 210`;
+		string $scrollLayout = `scrollLayout
+			-horizontalScrollBarThickness 16
+			-verticalScrollBarThickness   16
+			-childResizable true`;
+		rowColumnLayout 
+			-numberOfColumns 3
+			-adjustableColumn 3
+			-columnSpacing 1 5
+			-columnSpacing 2 5
+			-columnSpacing 3 5;
+		int $index;
+		for ($error in $errors) {
+			int $displayErrorIcon = size(`match "Error:" $error`) > 0;
+			string $icon = "caution.png";
+			if ($displayErrorIcon)
+				$icon = "error.png";
+				
+			string $errorCount = `match "[0-9]+" $error`;
+			string $stringAfterColon = `match ":.*" $error`;
+			string $errorString = `match "[^: ].*" $stringAfterColon`;
+			
+			string $serlioImage = `iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $icon`;
+			text -label ("count: " + $errorCount);
+			textField -bgc 0.15 0.15 0.15 -font "fixedWidthFont" -text $errorString -editable false -ip 1;
+		}
+	showWindow $window;
+}
+
+global proc updateCGACProblems(string $node){
+	string $cgacProblems = getProblemString($node);
+	int $isVisible = ($cgacProblems != "");
 	int $hasProblems = (size($cgacProblems) > 0);
 	string $control = prtControlName($node) + "_CGAC_Problems";
 
@@ -111,7 +152,7 @@ global proc updateCGACProblems(string $node){
 	if ($displayErrorIcon)
 		$icon = "error.png";
 
-	iconTextStaticLabel -e -ann $cgacProblems -i $icon $control;
+	symbolButton -e -visible $isVisible -ann $cgacProblems -i $icon $control;
 }
 
 global proc prtFileBrowse(string $attr, string $varname, string $filters){
@@ -131,7 +172,7 @@ global proc prtFileBrowse(string $attr, string $varname, string $filters){
 
 	string $node = prtGetNodeName($attr);
 
-	iconTextStaticLabel -st "iconOnly" -i "caution.png" -l "error" -visible false ($node + "_CGAC_Problems");
+	symbolButton -i "caution.png" -visible false -c ("prtShowProblemView(\"" + $node + "\")") ($node + "_CGAC_Problems");
 	updateCGACProblems($node);
 
 	string $changeCommand = "updateCGACProblems " + $node;
