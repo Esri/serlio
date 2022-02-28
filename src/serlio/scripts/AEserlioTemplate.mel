@@ -94,19 +94,27 @@ global proc prtShowFileDialog(string $attr, string $filters) {
 	}  
 }  
 
-proc string getProblemString(string $node){
+proc string[] getProblems(string $node){
 	string $attr = $node + ".CGAC_Problems";
 
 	if (!prtAttributeExists($attr))
-		return "";
-	string $problemString = `getAttr($attr)`;
-	return $problemString;
+		return {};
+
+	string $cgacProblems[] = `getAttr($attr)`;
+	return $cgacProblems;
+}
+
+proc int problemsHaveErrors(string $cgacProblems[]){
+	for($i = 0; $i < size($cgacProblems); $i += 3){
+		if($cgacProblems[$i + 1] == "Error")
+			return true;
+	}
+	return false;
 }
 
 global proc prtShowProblemView(string $node){
-	$cgacProblems = getProblemString($node);
+	string $cgacProblems[] = getProblems($node);
 
-	string $errors[] = stringToStringArray($cgacProblems, "\n");
 	string $window = `window -title "Serlio: Problems"
 		-resizeToFitChildren true
 		-iconName "Serlio"
@@ -122,15 +130,15 @@ global proc prtShowProblemView(string $node){
 			-columnSpacing 2 5
 			-columnSpacing 3 5;
 		int $index;
-		for ($error in $errors) {
-			int $displayErrorIcon = size(`match "Error:" $error`) > 0;
+		for ($i = 0; $i < size($cgacProblems); $i += 3) {
+			string $errorCount = $cgacProblems[$i];
+			string $errorType = $cgacProblems[$i + 1];
+			string $errorString = $cgacProblems[$i + 2];
+
+			int $displayErrorIcon = ($errorType == "Error");
 			string $icon = "caution.png";
 			if ($displayErrorIcon)
 				$icon = "error.png";
-				
-			string $errorCount = `match "[0-9]+" $error`;
-			string $stringAfterColon = `match ":.*" $error`;
-			string $errorString = `match "[^: ].*" $stringAfterColon`;
 			
 			string $serlioImage = `iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $icon`;
 			text -label ("count: " + $errorCount);
@@ -140,19 +148,17 @@ global proc prtShowProblemView(string $node){
 }
 
 global proc updateCGACProblemIcon(string $node){
-	string $cgacProblems = getProblemString($node);
-	int $isVisible = ($cgacProblems != "");
+	string $cgacProblems[] = getProblems($node);
 	int $hasProblems = (size($cgacProblems) > 0);
+	
 	string $control = prtControlName($node) + "_CGAC_Problems";
 
-	prtSetVisibility($hasProblems, $control);
-
-	int $displayErrorIcon = size(`match "Error:" $cgacProblems`) > 0;
+	int $displayErrorIcon = problemsHaveErrors($cgacProblems);
 	string $icon = "caution.png";
 	if ($displayErrorIcon)
 		$icon = "error.png";
 
-	symbolButton -e -visible $isVisible -i $icon $control;
+	symbolButton -e -visible $hasProblems -i $icon $control;
 }
 
 global proc prtFileBrowse(string $attr, string $varname, string $filters){

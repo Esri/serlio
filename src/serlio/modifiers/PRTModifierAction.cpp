@@ -33,6 +33,7 @@
 #include "maya/MFnMesh.h"
 #include "maya/MFnNumericAttribute.h"
 #include "maya/MFnStringData.h"
+#include "maya/MFnStringArrayData.h"
 #include "maya/MFnTypedAttribute.h"
 #include "maya/MGlobal.h"
 
@@ -341,16 +342,31 @@ bool cgacLogProblems(CGACErrors errorList) {
 	return false;
 }
 
-MString cgacProblemsToString(CGACErrors errorList) {
-	MString errorString;
+MStringArray cgacProblemsToStringArray(CGACErrors errorList) {
+	MStringArray errorStringArrray;
 	for (const auto& [error, count] : errorList) {
-		if (errorString.length() > 0)
-			errorString += "\n";
-		errorString += count;
-		errorString += (error.errorLevel == prt::CGAErrorLevel::CGAERROR) ? " Error: " : " Warning: ";
-		errorString += error.errorString.c_str();
+		errorStringArrray.append(std::to_wstring(count).c_str());
+		const MString errorLevel = (error.errorLevel == prt::CGAErrorLevel::CGAERROR) ? "Error" : "Warning";
+		errorStringArrray.append(errorLevel);
+		errorStringArrray.append(error.errorString.c_str());
 	}
-	return errorString;
+	return errorStringArrray;
+}
+
+void updateCgacProblemData(const CGACErrors& cgacProblems, MDataHandle& cgacProblemData) {
+	MStringArray newCgacErrorStringArray = cgacProblemsToStringArray(cgacProblems);
+
+	MObject errorDataObject = cgacProblemData.data();
+	MFnStringArrayData stringArrayData(errorDataObject);
+	MStringArray oldCgacErrorStringArray = stringArrayData.array();
+
+	if (!mu::mStringArraysAreEqual(oldCgacErrorStringArray, newCgacErrorStringArray)) {
+		cgacLogProblems(cgacProblems);
+
+		MFnStringArrayData newStringArrayData;
+		MObject newErrorDataObject = newStringArrayData.create(newCgacErrorStringArray);
+		cgacProblemData.setMObject(newErrorDataObject);
+	}
 }
 
 template <typename T>
@@ -647,12 +663,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 		}
 	};
 
-	MString cgacErrorString = cgacProblemsToString(mCGACProblems);
-	if (cgacProblemData.asString() != cgacErrorString) {
-		cgacProblemData.setString(cgacErrorString);
-		cgacLogProblems(mCGACProblems);
-	}
-
+	updateCgacProblemData(mCGACProblems, cgacProblemData);
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
 	return MStatus::kSuccess;
