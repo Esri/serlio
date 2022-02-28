@@ -420,7 +420,9 @@ void detectAndAppendCGACErrors(prt::CGAErrorLevel level, const wchar_t* message,
 
 		std::wstring stringMessage = message;
 		prtu::replaceCGACWithCEVersion(stringMessage);
-		cgacErrors.emplace_back(level, shouldBeLogged, stringMessage);
+		const auto [it, wasInserted] = cgacErrors.try_emplace({level, shouldBeLogged, stringMessage}, 1);
+		if (!wasInserted)
+			it->second++;
 	}
 }
 } // namespace

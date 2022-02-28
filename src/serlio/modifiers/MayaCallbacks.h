@@ -40,8 +40,12 @@ struct CGACError {
 
 	CGACError(prt::CGAErrorLevel errorLevel, bool shouldBeLogged, const std::wstring& errorString)
 	    : errorLevel(errorLevel), shouldBeLogged(shouldBeLogged), errorString(errorString) {}
+
+	bool operator<(const CGACError& other) const {
+		return errorString < other.errorString;
+	}
 };
-using CGACErrors = std::vector<CGACError>;
+using CGACErrors = std::map<CGACError, uint32_t>;
 
 class MayaCallbacks : public IMayaCallbacks {
 public:

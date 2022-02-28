@@ -330,7 +330,7 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 }
 
 bool cgacProblemsHaveErrors(CGACErrors errorList) {
-	for (const auto& error : errorList) {
+	for (const auto& [error, count] : errorList) {
 		if (error.errorLevel == prt::CGAErrorLevel::CGAERROR)
 			return true;
 	}
@@ -338,7 +338,7 @@ bool cgacProblemsHaveErrors(CGACErrors errorList) {
 }
 
 bool cgacProblemsShouldBeLogged(CGACErrors errorList) {
-	for (const auto& error : errorList) {
+	for (const auto& [error, count] : errorList) {
 		if (error.shouldBeLogged)
 			return true;
 	}
@@ -347,11 +347,11 @@ bool cgacProblemsShouldBeLogged(CGACErrors errorList) {
 
 MString cgacProblemsToString(CGACErrors errorList) {
 	MString errorString;
-	for (const auto& error : errorList) {
+	for (const auto& [error, count] : errorList) {
 		if (errorString.length() > 0)
 			errorString += "\n";
-
-		errorString += (error.errorLevel == prt::CGAErrorLevel::CGAERROR) ? "Error: " : "Warning: ";
+		errorString += count;
+		errorString += (error.errorLevel == prt::CGAErrorLevel::CGAERROR) ? " Error: " : " Warning: ";
 		errorString += error.errorString.c_str();
 	}
 	return errorString;
