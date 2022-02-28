@@ -84,6 +84,7 @@ public:
 	void setUndoState(bool undoState);
 
 	void getWorkspaceDir();
+	void getStringFromURL(const std::wstring& url);
 
 	void python(const std::wstring& pythonCmd);
 	void addCmdLine(const std::wstring& line);

@@ -160,6 +160,14 @@ void MELScriptBuilder::getWorkspaceDir() {
 	commandStream << L"workspace -q -rd;\n";
 }
 
+void MELScriptBuilder::getStringFromURL(const std::wstring& url) {
+	python(L"import urllib.request");
+	python(L"url = \\\"" + url + L"\\\"");
+	python(L"response = urllib.request.urlopen(url)");
+	python(L"import urllib.request");
+	python(L"response.read()");
+}
+
 MStatus MELScriptBuilder::executeSync(std::wstring& output) {
 	MStatus status;
 	MString result =

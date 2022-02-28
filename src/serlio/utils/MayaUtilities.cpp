@@ -44,4 +44,19 @@ std::filesystem::path getWorkspaceRoot(MStatus& status) {
 		return {};
 	}
 }
+
+std::wstring getStringFromURL(const std::wstring& url, MStatus& status) {
+	MELScriptBuilder scriptBuilder;
+	scriptBuilder.getStringFromURL(url);
+
+	std::wstring output;
+	status = scriptBuilder.executeSync(output);
+
+	if (status == MS::kSuccess) {
+		return output;
+	}
+	else {
+		return {};
+	}
+}
 } // namespace mu
