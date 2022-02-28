@@ -44,4 +44,14 @@ std::filesystem::path getWorkspaceRoot(MStatus& status) {
 		return {};
 	}
 }
+bool mStringArraysAreEqual(const MStringArray& lhs, const MStringArray& rhs) {
+	if (lhs.length() != rhs.length())
+		return false;
+	uint32_t index;
+	for (uint32_t index = 0; index < lhs.length(); index++) {
+		if (lhs[index] != rhs[index])
+			return false;
+	}
+	return true;
+}
 } // namespace mu

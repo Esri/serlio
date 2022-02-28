@@ -48,4 +48,6 @@ private:
 };
 
 std::filesystem::path getWorkspaceRoot(MStatus& status);
+
+bool mStringArraysAreEqual(const MStringArray& lhs, const MStringArray& rhs);
 } // namespace mu
