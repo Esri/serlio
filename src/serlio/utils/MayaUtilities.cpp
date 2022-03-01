@@ -1,7 +1,46 @@
 #include "utils/MayaUtilities.h"
 #include "utils/MELScriptBuilder.h"
 
+#include "maya/MStringResource.h"
+#include "maya/MStringResourceId.h"
+
+#include <map>
 #include <memory>
+#include <string>
+
+namespace {
+constexpr const wchar_t KEY_URL_SEPARATOR = L'=';
+const std::wstring INDIRECTION_URL = L"https://raw.githubusercontent.com/Esri/serlio/indirection_urls/urls.txt";
+
+const std::map<std::string, std::string> fallbackKeyToUrlMap = {
+        {"SERLIO_HOME", "https://esri.github.io/cityengine/serlio"},
+        {"CGA_REFERENCE", "https://doc.arcgis.com/en/cityengine/latest/cga/cityengine-cga-introduction.htm"},
+        {"RPK_MANUAL", "https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm"}};
+
+std::map<std::string, std::string> getKeyToUrlMap() {
+	MStatus status;
+	const std::wstring& indirectionWString = mu::getStringFromURL(INDIRECTION_URL, status);
+	if (status != MStatus::kSuccess)
+		return {};
+
+	const std::string& indirectionString = prtu::toUTF8FromUTF16(indirectionWString);
+	std::map<std::string, std::string> keyToUrlMap;
+
+	std::istringstream wiss(indirectionString);
+	for (std::string line; std::getline(wiss, line);) {
+		size_t idx = line.find_first_of(KEY_URL_SEPARATOR);
+		if ((idx == std::string::npos) || ((idx + 1) >= line.length()))
+			continue;
+
+		const std::string key = line.substr(0, idx);
+		const std::string url = line.substr(idx + 1);
+
+		keyToUrlMap[key] = url;
+	}
+	return keyToUrlMap;
+}
+
+} // namespace
 
 namespace mu {
 
@@ -58,5 +97,23 @@ std::wstring getStringFromURL(const std::wstring& url, MStatus& status) {
 	else {
 		return {};
 	}
+}
+
+MStatus registerMStringResources() {
+	std::map<std::string, std::string> keyToUrlMap = getKeyToUrlMap();
+
+	for (const auto& [key, url] : fallbackKeyToUrlMap) {
+		auto it = keyToUrlMap.find(key);
+		if (it == keyToUrlMap.end()) {
+			const MStringResourceId SerlioHomeURL(SRL_PROJECT_NAME, key.c_str(), url.c_str());
+			MStringResource::registerString(SerlioHomeURL);
+		}
+		else {
+			const MStringResourceId SerlioHomeURL(SRL_PROJECT_NAME, key.c_str(), it->second.c_str());
+			MStringResource::registerString(SerlioHomeURL);
+		}
+	}
+
+	return MS::kSuccess;
 }
 } // namespace mu
