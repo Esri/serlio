@@ -25,6 +25,7 @@ function(set_common_target_definitions TGT)
 	set_target_properties(${TGT} PROPERTIES CXX_STANDARD 17)
 	target_compile_definitions(${TGT} PRIVATE
 		-DSRL_VERSION=\"${SRL_VERSION}\" # quoted to use it as string literal
+		-DSRL_PROJECT_NAME=\"${SRL_PROJECT_NAME}\"
 		-DPRT_VERSION_MAJOR=${PRT_VERSION_MAJOR}
 		-DPRT_VERSION_MINOR=${PRT_VERSION_MINOR})
 endfunction()
