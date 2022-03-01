@@ -163,7 +163,7 @@ void MELScriptBuilder::getWorkspaceDir() {
 void MELScriptBuilder::getStringFromURL(const std::wstring& url) {
 	python(L"from six.moves import urllib");
 	python(L"url = \\\"" + url + L"\\\"");
-	python(L"response = urllib.request.urlopen(url)");
+	python(L"response = urllib.request.urlopen(url, timeout=3)");
 	python(L"response.read()");
 }
 
