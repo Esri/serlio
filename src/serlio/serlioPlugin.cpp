@@ -89,6 +89,8 @@ MStatus initializePlugin(MObject obj) {
 
 	MCHECK(plugin.registerUI(MEL_PROC_CREATE_UI, MEL_PROC_DELETE_UI));
 
+	MCHECK(plugin.registerUIStrings(mu::registerMStringResources, ""));
+
 	return MStatus::kSuccess;
 }
 
