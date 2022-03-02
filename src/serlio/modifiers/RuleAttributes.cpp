@@ -35,7 +35,7 @@ namespace {
 
 constexpr bool DBG = false;
 
-constexpr const wchar_t* PRT_ATTR_FULL_NAME_PREFIX = L"PRT";
+constexpr const wchar_t* PRT_ATTR_FULL_NAME_PREFIX = L"PRT_";
 
 const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 std::wstring cleanForMaya(const std::wstring& name) {
