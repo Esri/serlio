@@ -64,6 +64,10 @@ stage('build') {
 	cepl.runParallel(getBuildTasks())
 }
 
+stage('installers') {
+	cepl.runParallel(getInstallersTasks())
+}
+
 papl.finalizeRun('serlio', env.BRANCH_NAME)
 
 // -- TASK GENERATORS
@@ -83,6 +87,11 @@ Map getTestTasks() {
 Map getBuildTasks() {
 	Map tasks = [:]
 	tasks << taskGenSerlio()
+	return tasks
+}
+
+Map getInstallersTasks() {
+	Map tasks = [:]
 	tasks << taskGenSerlioInstallers()
 	return tasks
 }
