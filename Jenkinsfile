@@ -56,8 +56,8 @@ stage('prepare'){
 	cepl.runParallel(taskGenSourceCheckout())
 }
 
-stage('serlio') {
-	cepl.runParallel(getTasks())
+stage('build') {
+	cepl.runParallel(getBuildTasks())
 }
 
 papl.finalizeRun('serlio', env.BRANCH_NAME)
@@ -70,7 +70,7 @@ Map taskGenSourceCheckout(){
 	return tasks
 }
 
-Map getTasks() {
+Map getBuildTasks() {
 	Map tasks = [:]
 	tasks << taskGenSerlio()
 	tasks << taskGenSerlioTests()
