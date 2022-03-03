@@ -56,6 +56,10 @@ stage('prepare'){
 	cepl.runParallel(getCheckoutTask())
 }
 
+stage('test') {
+	cepl.runParallel(getTestTasks())
+}
+
 stage('build') {
 	cepl.runParallel(getBuildTasks())
 }
@@ -70,10 +74,15 @@ Map getCheckoutTask(){
 	return tasks
 }
 
+Map getTestTasks() {
+	Map tasks = [:]
+	tasks << taskGenSerlioTests()
+	return tasks
+}
+
 Map getBuildTasks() {
 	Map tasks = [:]
 	tasks << taskGenSerlio()
-	tasks << taskGenSerlioTests()
 	tasks << taskGenSerlioInstallers()
 	return tasks
 }
