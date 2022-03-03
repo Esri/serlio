@@ -97,11 +97,11 @@ Map getInstallersTasks() {
 }
 
 Map taskGenSerlioSourceCheckout() {
-	return cepl.generateTasks('srl', this.&taskSourceCheckout, CHECKOUT_CONFIG)
+	return cepl.generateTasks('srl-src', this.&taskSourceCheckout, CHECKOUT_CONFIG)
 }
 
 Map taskGenSerlio() {
-	return cepl.generateTasks('srl', this.&taskBuildSerlio, CONFIGS)
+	return cepl.generateTasks('srl-bld', this.&taskBuildSerlio, CONFIGS)
 }
 
 Map taskGenSerlioTests() {
