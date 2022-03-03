@@ -53,7 +53,7 @@ properties([ disableConcurrentBuilds() ])
 // -- PIPELINE
 
 stage('prepare'){
-	cepl.runParallel(taskGenSourceCheckout())
+	cepl.runParallel(getCheckoutTask())
 }
 
 stage('build') {
@@ -64,7 +64,7 @@ papl.finalizeRun('serlio', env.BRANCH_NAME)
 
 // -- TASK GENERATORS
 
-Map taskGenSourceCheckout(){
+Map getCheckoutTask(){
 	Map tasks = [:]
 	tasks << taskGenSerlioSourceCheckout()
 	return tasks
