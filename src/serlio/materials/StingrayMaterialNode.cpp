@@ -182,19 +182,21 @@ MStatus StingrayMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 
 	MaterialUtils::forwardGeometry(aInMesh, aOutMesh, data);
 
+	MString meshName;
+	MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
+	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
+		return meshNameStatus;
+
 	adsk::Data::Stream* inMatStream = MaterialUtils::getMaterialStream(aInMesh, data);
-	if (inMatStream == nullptr)
+	if (inMatStream == nullptr) {
+		MaterialUtils::resetMaterial(meshName.asWChar());
 		return MStatus::kSuccess;
+	}
 
 	const adsk::Data::Structure* materialStructure =
 	        adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
 	if (materialStructure == nullptr)
 		return MStatus::kFailure;
-
-	MString meshName;
-	MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
-	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
-		return meshNameStatus;
 
 	MaterialUtils::MaterialCache matCache =
 	        MaterialUtils::getMaterialsByStructure(*materialStructure, MATERIAL_BASE_NAME);
