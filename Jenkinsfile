@@ -70,7 +70,7 @@ Map taskGenSourceCheckout(){
 	return tasks
 }
 
-Map getTasks(String branchName = null) {
+Map getTasks() {
 	Map tasks = [:]
 	tasks << taskGenSerlio()
 	tasks << taskGenSerlioTests()
