@@ -16,6 +16,7 @@
 #include "maya/adskDataAssociations.h"
 
 namespace {
+const MELVariable MEL_UNDO_STATE(L"materialUndoState");
 
 constexpr const wchar_t* RGBA8_FORMAT = L"RGBA8";
 constexpr const wchar_t* FORMAT_STRING = L"format";
@@ -207,4 +208,13 @@ bool textureHasAlphaChannel(std::wstring path) {
 	return false;
 }
 
+void resetMaterial(std::wstring meshName) {
+	MELScriptBuilder scriptBuilder;
+	scriptBuilder.declInt(MEL_UNDO_STATE);
+	scriptBuilder.getUndoState(MEL_UNDO_STATE);
+	scriptBuilder.setUndoState(false);
+	scriptBuilder.setsUseInitialShadingGroup(meshName);
+	scriptBuilder.setUndoState(MEL_UNDO_STATE);
+	scriptBuilder.execute();
+}
 } // namespace MaterialUtils
