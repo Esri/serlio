@@ -222,8 +222,8 @@ SRL_TEST_EXPORTS_API inline std::wstring getImport(const std::wstring& fqRuleNam
 
 SRL_TEST_EXPORTS_API void replaceCGACWithCEVersion(std::wstring& errorString);
 
-SRL_TEST_EXPORTS_API std::wstring getDuplicateCountSuffix(const std::wstring& mayaName,
-                                                          std::map<std::wstring, int>& mayaNameDuplicateCountMap);
+SRL_TEST_EXPORTS_API std::wstring getDuplicateCountSuffix(const std::wstring& name,
+                                                          std::map<std::wstring, int>& duplicateCountMap);
 } // namespace prtu
 
 inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {
