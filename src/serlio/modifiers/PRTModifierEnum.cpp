@@ -108,7 +108,7 @@ short PRTModifierEnum::getDefaultEnumValue(const prt::AttributeMap& defaultAttri
 		case prt::AAT_STR: {
 			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
 
-			if (defStringVal != 0)
+			if (defStringVal != nullptr)
 				return static_cast<short>(getOptionIndex(defStringVal));
 			break;
 		}
