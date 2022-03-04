@@ -56,13 +56,6 @@ std::wstring getNiceName(const std::wstring& fqAttrName) {
 	return cleanForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
 }
 
-std::wstring getDuplicateCountSuffix(const std::wstring& mayaName, std::map<std::wstring, int>& mayaNameDuplicateCountMap) {
-	auto [iterator, isFirstEntry] = mayaNameDuplicateCountMap.try_emplace(mayaName, 0);
-	if (!isFirstEntry)
-		iterator->second++;
-	return L"_" + std::to_wstring(iterator->second);
-}
-
 } // namespace
 
 std::map<std::wstring, int> getImportOrderMap(const prt::RuleFileInfo* ruleFileInfo) {
@@ -130,8 +123,8 @@ RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile, const prt::Rule
 		//make sure maya names are unique
 		const std::wstring mayaBriefName = getBriefName(p.fqName);
 		const std::wstring mayaFullName = getFullName(p.fqName);
-		p.mayaBriefName = mayaBriefName + getDuplicateCountSuffix(mayaBriefName, mayaNameDuplicateCountMap);
-		p.mayaFullName = mayaFullName + getDuplicateCountSuffix(mayaFullName, mayaNameDuplicateCountMap);
+		p.mayaBriefName = mayaBriefName + prtu::getDuplicateCountSuffix(mayaBriefName, mayaNameDuplicateCountMap);
+		p.mayaFullName = mayaFullName + prtu::getDuplicateCountSuffix(mayaFullName, mayaNameDuplicateCountMap);
 
 		// TODO: is this correct? import name != rule file name
 		std::wstring ruleName = p.fqName;
