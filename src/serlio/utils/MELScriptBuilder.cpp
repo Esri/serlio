@@ -194,8 +194,6 @@ MStatus MELScriptBuilder::executeSync(std::wstring& output) {
 	MStatus status;
 	MString result =
 	        MGlobal::executeCommandStringResult(commandStream.str().c_str(), MEL_ENABLE_DISPLAY, false, &status);
-	MString statusString = status.errorString();
-	bool hasError = status.error();
 	commandStream.clear();
 	output.assign(result.asWChar());
 	return status;
