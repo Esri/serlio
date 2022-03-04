@@ -222,7 +222,7 @@ SRL_TEST_EXPORTS_API inline std::wstring getImport(const std::wstring& fqRuleNam
 SRL_TEST_EXPORTS_API void replaceCGACWithCEVersion(std::wstring& errorString);
 } // namespace prtu
 
-inline void replaceAllNotOf(std::wstring& s, const std::wstring& allowedChars) {
+SRL_TEST_EXPORTS_API inline void replaceAllNotOf(std::wstring& s, const std::wstring& allowedChars) {
 	std::wstring::size_type pos = 0;
 	while (pos < s.size()) {
 		pos = s.find_first_not_of(allowedChars, pos);
@@ -232,7 +232,7 @@ inline void replaceAllNotOf(std::wstring& s, const std::wstring& allowedChars) {
 	}
 }
 
-inline void replaceAllOf(std::wstring& s, const std::wstring& bannedChars) {
+SRL_TEST_EXPORTS_API inline void replaceAllOf(std::wstring& s, const std::wstring& bannedChars) {
 	std::wstring::size_type pos = 0;
 	while (pos < s.size()) {
 		pos = s.find_first_of(bannedChars, pos);
