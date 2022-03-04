@@ -93,7 +93,7 @@ MString PRTModifierEnum::getOptionName(size_t optionIndex) const {
 		return MString(mCustomDefaultValue.c_str());
 	}
 	else {
-		if ((optionIndex > mEnumOptions.size()) || (optionIndex <= 0))
+		if (optionIndex > mEnumOptions.size())
 			return {};
 		return MString(mEnumOptions[optionIndex - 1].c_str());
 	}
