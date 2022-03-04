@@ -396,7 +396,10 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 				break;
 			}
 			case PrtAttributeType::ENUM: {
-				const PRTModifierEnum& currEnum = mEnums[ruleAttribute.mayaFullName];
+				auto it = mEnums.find(ruleAttribute.mayaFullName);
+				if (it == mEnums.end())
+					break;
+				const PRTModifierEnum& currEnum = it->second;
 
 				short enumVal;
 				MCHECK(plug.getValue(enumVal));
@@ -486,10 +489,12 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 				break;
 			}
 			case PrtAttributeType::ENUM: {
-				MFnEnumAttribute eAttr(fnAttribute.object());
+				auto it = mEnums.find(ruleAttribute.mayaFullName);
+				if (it == mEnums.end())
+					break;
+				const PRTModifierEnum& currEnum = it->second;
 
-				const short defEnumVal =
-				        mEnums[ruleAttribute.mayaFullName].getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
+				const short defEnumVal = currEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
 				short enumVal;
 				MCHECK(plug.getValue(enumVal));
 
@@ -578,16 +583,19 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 				break;
 			}
 			case PrtAttributeType::ENUM: {
-				PRTModifierEnum& modifierEnum = mEnums[ruleAttribute.mayaFullName];
+				auto it = mEnums.find(ruleAttribute.mayaFullName);
+				if (it == mEnums.end())
+					break;
+				PRTModifierEnum& currEnum = it->second;
 
 				short enumVal;
 				MCHECK(plug.getValue(enumVal));
 				const auto newEnumInfo =
-				        modifierEnum.updateOptions(node, mRuleAttributes, *defaultAttributeValues, enumVal);
+				        currEnum.updateOptions(node, mRuleAttributes, *defaultAttributeValues, enumVal);
 				const bool hasNewEnumOptions = newEnumInfo.first;
 				enumVal = newEnumInfo.second;
 
-				const short defEnumVal = modifierEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
+				const short defEnumVal = currEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
 
 				const bool isDefaultValue = (defEnumVal == enumVal);
 				if (hasNewEnumOptions || (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue))
