@@ -110,7 +110,7 @@ void MELScriptBuilder::setAttrEnumOptions(const MELVariable& node, const std::ws
 		if (!enumString.empty())
 			enumString.append(L":");
 		cleanEnumOptionName(enumOption);
-		enumString.append(enumOption + L"=" + std::to_wstring(idx));
+		enumString.append(enumOption + L"=" + std::to_wstring(idx + 1));
 	}
 	// Don't update to an empty enum
 	if (enumString.empty())
