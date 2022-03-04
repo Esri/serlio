@@ -80,7 +80,7 @@ bool PRTModifierEnum::isDynamic() const {
 	return mValuesAttr.length() > 0;
 }
 
-size_t PRTModifierEnum::getOptionIndex(std::wstring optionName) const {
+size_t PRTModifierEnum::getOptionIndex(const std::wstring& optionName) const {
 	const auto iter = std::find(mEnumOptions.begin(), mEnumOptions.end(), optionName);
 	// return first index, if element is not available
 	if (iter == mEnumOptions.end())

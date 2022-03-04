@@ -38,7 +38,7 @@ public:
 	                                     const prt::AttributeMap& defaultAttributeValues, short selectedEnumIdx = 0);
 
 	bool isDynamic() const;
-	size_t getOptionIndex(std::wstring optionName) const;
+	size_t getOptionIndex(const std::wstring& optionName) const;
 	MString getOptionName(size_t optionIndex) const;
 	short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const RuleAttribute& ruleAttr) const;
 
