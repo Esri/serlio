@@ -57,9 +57,9 @@ MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
 
 	MELScriptBuilder scriptBuilder;
 	const std::wstring nodeName = fNode.name().asWChar();
-	const std::wstring attrName = fNode.name().asWChar();
+	const std::wstring attrName = enumAttr.name().asWChar();
 	scriptBuilder.setVar(melSerlioNode, MELStringLiteral(nodeName));
-	scriptBuilder.setAttrEnumOptions(melSerlioNode, enumAttr.name().asWChar(), enumOptions, customDefaultOption);
+	scriptBuilder.setAttrEnumOptions(melSerlioNode, attrName, enumOptions, customDefaultOption);
 
 	return scriptBuilder.execute();
 }
