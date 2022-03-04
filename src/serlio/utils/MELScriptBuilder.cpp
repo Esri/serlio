@@ -37,7 +37,7 @@ std::wstring composeAttributeExpression(const MELVariable& node, const std::wstr
 }
 
 void cleanEnumOptionName(std::wstring& optionName) {
-	if (optionName == L"") {
+	if (optionName.empty()) {
 		optionName = L" ";
 	}
 	else {
