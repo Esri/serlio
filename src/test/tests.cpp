@@ -337,6 +337,62 @@ TEST_CASE("toFileURI") {
 #endif
 }
 
+TEST_CASE("replaceAllNotOf") {
+	const std::wstring allowedChars = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	SECTION("empty") {
+		std::wstring testString = L"";
+		const std::wstring expected = L"";
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace nothing") {
+		std::wstring testString = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		const std::wstring expected = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace some") {
+		std::wstring testString = L"Replace:all\r\nbut=alpha^numerical.characters;";
+		const std::wstring expected = L"Replace_all__but_alpha_numerical_characters_";
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace all") {
+		std::wstring testString = L"/:\r^?=-\\%`*\"+-";
+		const std::wstring expected = L"______________";
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+}
+
+TEST_CASE("replaceAllOf") {
+	const std::wstring bannedChars = L"=:\\;\r\n";
+	SECTION("empty") {
+		std::wstring testString = L"";
+		const std::wstring expected = L"";
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace nothing") {
+		std::wstring testString = L"The quick brown fox jumps over the lazy dog";
+		const std::wstring expected = L"The quick brown fox jumps over the lazy dog";
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace some") {
+		std::wstring testString = L"A=B+C;\r\nE:F";
+		const std::wstring expected = L"A_B+C___E_F";
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace all") {
+		std::wstring testString = L"=:\\;\r\n";
+		const std::wstring expected = L"______";
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+}
+
 // we use a custom main function to manage PRT lifetime
 int main(int argc, char* argv[]) {
 	const std::vector<std::wstring> addExtDirs = {

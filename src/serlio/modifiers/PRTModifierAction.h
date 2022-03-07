@@ -21,6 +21,7 @@
 
 #include "modifiers/MayaCallbacks.h"
 #include "modifiers/PRTMesh.h"
+#include "modifiers/PRTModifierEnum.h"
 #include "modifiers/RuleAttributes.h"
 #include "modifiers/polyModifier/polyModifierFty.h"
 
@@ -31,7 +32,6 @@
 #include "prt/API.h"
 
 #include "maya/MDoubleArray.h"
-#include "maya/MFnEnumAttribute.h"
 #include "maya/MIntArray.h"
 #include "maya/MObject.h"
 #include "maya/MPlugArray.h"
@@ -40,26 +40,11 @@
 
 #include <list>
 #include <map>
+#include <variant>
 
 class PRTModifierAction;
 
-using RuleAttributeMap = std::map<std::wstring, RuleAttribute>;
-
-class PRTModifierEnum {
-	friend class PRTModifierAction;
-
-public:
-	PRTModifierEnum() = default;
-
-	MStatus fill(const prt::Annotation* annot);
-
-public:
-	MFnEnumAttribute mAttr;
-
-private:
-	bool mRestricted = true;
-	MString mValuesAttr;
-}; // class PRTModifierEnum
+using PRTEnumDefaultValue = std::variant<bool, double, MString>;
 
 class PRTModifierAction : public polyModifierFty {
 	friend class PRTModifierEnum;
@@ -106,8 +91,7 @@ private:
 	// init in fillAttributesFromNode()
 	AttributeMapUPtr mGenerateAttrs;
 
-	std::list<PRTModifierEnum> mEnums;
-	void updateDynamicEnums();
+	std::map<std::wstring, PRTModifierEnum> mEnums;
 
 	MStatus createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& node,
 	                             const prt::RuleFileInfo* info);
@@ -123,7 +107,8 @@ private:
 	static MStatus addFileParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                const MString& defaultValue, const std::wstring& ext);
 	static MStatus addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-	                                const RuleAttribute& name, short defaultValue, PRTModifierEnum& e);
+	                                const RuleAttribute& name, const PRTEnumDefaultValue& defaultValue,
+	                                PRTModifierEnum& e);
 	static MStatus addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& name,
 	                                 const MString& defaultValue);
 };

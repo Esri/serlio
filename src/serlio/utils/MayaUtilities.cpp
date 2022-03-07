@@ -44,4 +44,23 @@ std::filesystem::path getWorkspaceRoot(MStatus& status) {
 		return {};
 	}
 }
+
+MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
+                       const std::vector<std::wstring>& enumOptions,
+                       const std::optional<std::wstring>& customDefaultOption) {
+	MStatus stat;
+	const MFnDependencyNode fNode(node, &stat);
+	if (stat != MStatus::kSuccess)
+		return stat;
+
+	const MELVariable melSerlioNode(L"serlioNode");
+
+	MELScriptBuilder scriptBuilder;
+	const std::wstring nodeName = fNode.name().asWChar();
+	const std::wstring attrName = enumAttr.name().asWChar();
+	scriptBuilder.setVar(melSerlioNode, MELStringLiteral(nodeName));
+	scriptBuilder.setAttrEnumOptions(melSerlioNode, attrName, enumOptions, customDefaultOption);
+
+	return scriptBuilder.execute();
+}
 } // namespace mu
