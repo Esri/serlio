@@ -8,7 +8,7 @@ add_executable(${TEST_TARGET}
 	../serlio/utils/AssetCache.cpp
 	../serlio/modifiers/RuleAttributes.cpp)
 
-set_target_properties(${TEST_TARGET} PROPERTIES CXX_STANDARD 14)
+set_target_properties(${TEST_TARGET} PROPERTIES CXX_STANDARD 17)
 
 set_common_target_definitions(${TEST_TARGET})
 
