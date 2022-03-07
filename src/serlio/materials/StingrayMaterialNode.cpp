@@ -144,109 +144,87 @@ void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& mat
 
 MTypeId StingrayMaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::STRINGRAY_MATERIAL_NODE);
 
-MObject StingrayMaterialNode::aInMesh;
-MObject StingrayMaterialNode::aOutMesh;
-const MString OUTPUT_GEOMETRY = MString("og");
-
+MObject StingrayMaterialNode::mInMesh;
+MObject StingrayMaterialNode::mOutMesh;
 MStatus StingrayMaterialNode::initialize() {
-	MStatus status;
-
-	MFnTypedAttribute tAttr;
-	aInMesh = tAttr.create("inMesh", "im", MFnData::kMesh, MObject::kNullObj, &status);
-	MCHECK(status);
-	addAttribute(aInMesh);
-
-	aOutMesh = tAttr.create("outMesh", "om", MFnData::kMesh, MObject::kNullObj, &status);
-	MCHECK(status);
-	tAttr.setWritable(false);
-	tAttr.setStorable(false);
-	addAttribute(aOutMesh);
-
-	attributeAffects(aInMesh, aOutMesh);
-
-	return MStatus::kSuccess;
+	return initializeAttributes(mInMesh, mOutMesh);
 }
 
-MStatus StingrayMaterialNode::compute(const MPlug& plug, MDataBlock& data) {
-	if (plug != aOutMesh)
-		return MStatus::kUnknownParameter;
+void StingrayMaterialNode::declareMaterialStrings(MELScriptBuilder& sb) {
+	sb.declString(MEL_VAR_SHADER_NODE);
+	sb.declString(MEL_VAR_MAP_FILE);
+	sb.declString(MEL_VAR_MAP_NODE);
+	sb.declInt(MEL_VAR_SHADING_NODE_INDEX);
+}
 
-	MStatus status = MStatus::kSuccess;
+void StingrayMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+                                                         const std::wstring& shaderBaseName,
+                                                         const std::wstring& shadingEngineName) {
+	// create shader
+	sb.setVar(MEL_VAR_SHADER_NODE, MELStringLiteral(shaderBaseName));
+	sb.setVar(MEL_VARIABLE_SHADING_ENGINE, MELStringLiteral(shadingEngineName));
+	sb.createShader(L"StingrayPBS", MEL_VAR_SHADER_NODE);
 
-	std::call_once(pluginDependencyCheckFlag, [&status]() {
-		const bool b = MayaPluginUtilities::pluginDependencyCheck(PLUGIN_DEPENDENCIES);
-		status = b ? MStatus::kSuccess : MStatus::kFailure;
-	});
-	if (status != MStatus::kSuccess)
-		return status;
+	// connect to shading group
+	sb.connectAttr(MEL_VAR_SHADER_NODE, L"outColor", MEL_VARIABLE_SHADING_ENGINE, L"surfaceShader");
 
-	MaterialUtils::forwardGeometry(aInMesh, aOutMesh, data);
+	// stingray specifics
+	const MELStringLiteral sfxFile(MaterialUtils::getStingrayShaderPath().generic_wstring());
+	sb.addCmdLine(L"shaderfx -sfxnode " + MEL_VAR_SHADER_NODE.mel() + L" -loadGraph  " + sfxFile.mel() + L";");
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"initgraph", true);
 
-	MString meshName;
-	MStatus meshNameStatus = MaterialUtils::getMeshName(meshName, plug);
-	if (meshNameStatus != MStatus::kSuccess || meshName.length() == 0)
-		return meshNameStatus;
+	const MELStringLiteral nodeIDName(L"Standard_Base");
+	sb.addCmdLine(MEL_VAR_SHADING_NODE_INDEX.mel() + L" = `shaderfx -sfxnode " + MEL_VAR_SHADER_NODE.mel() +
+	              L" -getNodeIDByName " + nodeIDName.mel() + L"`;");
 
-	adsk::Data::Stream* inMatStream = MaterialUtils::getMaterialStream(aInMesh, data);
-	if (inMatStream == nullptr) {
-		MaterialUtils::resetMaterial(meshName.asWChar());
-		return MStatus::kSuccess;
-	}
+	const std::wstring blendMode = (matInfo.opacityMap.empty() && (matInfo.opacity >= 1.0)) ? L"0" : L"2";
+	sb.addCmdLine(L"shaderfx -sfxnode " + MEL_VAR_SHADER_NODE.mel() + L" -edit_stringlist " +
+	              MEL_VAR_SHADING_NODE_INDEX.mel() + L" blendmode " + blendMode + L";");
 
-	const adsk::Data::Structure* materialStructure =
-	        adsk::Data::Structure::structureByName(PRT_MATERIAL_STRUCTURE.c_str());
-	if (materialStructure == nullptr)
-		return MStatus::kFailure;
+	// ignored: ambientColor, specularColor
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"diffuse_color", matInfo.diffuseColor);
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"emissive_color", matInfo.emissiveColor);
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"opacity", matInfo.opacity);
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"roughness", matInfo.roughness);
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"metallic", matInfo.metallic);
 
-	MaterialUtils::MaterialCache matCache =
-	        MaterialUtils::getMaterialsByStructure(*materialStructure, MATERIAL_BASE_NAME);
+	// ignored: specularmapTrafo, bumpmapTrafo, occlusionmapTrafo
+	// shaderfx does not support 5 values per input, that's why we split it up in tuv and swuv
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"colormap_trafo_tuv", matInfo.colormapTrafo.tuv());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"dirtmap_trafo_tuv", matInfo.dirtmapTrafo.tuv());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"emissivemap_trafo_tuv", matInfo.emissivemapTrafo.tuv());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"metallicmap_trafo_tuv", matInfo.metallicmapTrafo.tuv());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"normalmap_trafo_tuv", matInfo.normalmapTrafo.tuv());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"opacitymap_trafo_tuv", matInfo.opacitymapTrafo.tuv());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"roughnessmap_trafo_tuv", matInfo.roughnessmapTrafo.tuv());
 
-	MELScriptBuilder scriptBuilder;
-	scriptBuilder.declInt(MEL_UNDO_STATE);
-	scriptBuilder.getUndoState(MEL_UNDO_STATE);
-	scriptBuilder.setUndoState(false);
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"colormap_trafo_suvw", matInfo.colormapTrafo.suvw());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"dirtmap_trafo_suvw", matInfo.dirtmapTrafo.suvw());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"emissivemap_trafo_suvw", matInfo.emissivemapTrafo.suvw());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"metallicmap_trafo_suvw", matInfo.metallicmapTrafo.suvw());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"normalmap_trafo_suvw", matInfo.normalmapTrafo.suvw());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"opacitymap_trafo_suvw", matInfo.opacitymapTrafo.suvw());
+	sb.setAttr(MEL_VAR_SHADER_NODE, L"roughnessmap_trafo_suvw", matInfo.roughnessmapTrafo.suvw());
 
-	// declare MEL variables required by appendToMaterialScriptBuilder()
-	scriptBuilder.declString(MEL_VAR_SHADER_NODE);
-	scriptBuilder.declString(MEL_VAR_MAP_FILE);
-	scriptBuilder.declString(MEL_VAR_MAP_NODE);
-	scriptBuilder.declInt(MEL_VAR_SHADING_NODE_INDEX);
+	// ignored: bumpMap, specularMap, occlusionmap
+	// TODO: avoid wide/narrow conversion of map strings
+	setTexture(sb, L"color_map", prtu::toUTF16FromOSNarrow(matInfo.colormap));
+	setTexture(sb, L"dirt_map", prtu::toUTF16FromOSNarrow(matInfo.dirtmap));
+	setTexture(sb, L"emissive_map", prtu::toUTF16FromOSNarrow(matInfo.emissiveMap));
+	setTexture(sb, L"metallic_map", prtu::toUTF16FromOSNarrow(matInfo.metallicMap));
+	setTexture(sb, L"normal_map", prtu::toUTF16FromOSNarrow(matInfo.normalMap));
+	setTexture(sb, L"roughness_map", prtu::toUTF16FromOSNarrow(matInfo.roughnessMap));
+	setTexture(sb, L"opacity_map", prtu::toUTF16FromOSNarrow(matInfo.opacityMap), L"opacity_map_uses_alpha_channel");
+}
 
-	for (adsk::Data::Handle& materialHandle : *inMatStream) {
-		if (!materialHandle.hasData())
-			continue;
+std::wstring StingrayMaterialNode::getBaseName() {
+	return MATERIAL_BASE_NAME;
+}
 
-		if (!materialHandle.usesStructure(*materialStructure))
-			continue;
+MObject StingrayMaterialNode::getInMesh() {
+	return mInMesh;
+}
 
-		std::pair<int, int> faceRange;
-		if (!MaterialUtils::getFaceRange(materialHandle, faceRange))
-			continue;
-
-		auto createShadingEngine = [this, &materialStructure, &scriptBuilder,
-		                            &materialHandle](const MaterialInfo& matInfo) {
-			const std::wstring shadingEngineBaseName = MATERIAL_BASE_NAME + L"Sg";
-			const std::wstring shaderBaseName = MATERIAL_BASE_NAME + L"Sh";
-
-			MStatus status;
-			const std::wstring shadingEngineName = MaterialUtils::synchronouslyCreateShadingEngine(
-			        shadingEngineBaseName, MEL_VARIABLE_SHADING_ENGINE, status);
-			MCHECK(status);
-
-			MaterialUtils::assignMaterialMetadata(*materialStructure, materialHandle, shadingEngineName);
-			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
-			LOG_DBG << "new stingray shading engine: " << shadingEngineName;
-
-			return shadingEngineName;
-		};
-
-		MaterialInfo matInfo(materialHandle);
-		std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
-		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceRange.first, faceRange.second);
-		LOG_DBG << "assigned stingray shading engine (" << faceRange.first << ":" << faceRange.second
-		        << "): " << shadingEngineName;
-	}
-	scriptBuilder.setUndoState(MEL_UNDO_STATE);
-	LOG_DBG << "scheduling stringray material script";
-	return scriptBuilder.execute(); // note: script is executed asynchronously
+MObject StingrayMaterialNode::getOutMesh() {
+	return mOutMesh;
 }
