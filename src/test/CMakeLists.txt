@@ -32,6 +32,7 @@ target_include_directories(${TEST_TARGET} PRIVATE
 	$<TARGET_PROPERTY:${SERLIO_TARGET},INTERFACE_INCLUDE_DIRECTORIES>)
 
 srl_add_dependency_prt(${TEST_TARGET})
+srl_add_dependency_catch(${TEST_TARGET})
 
 # copy libraries next to test excutable so they can be found
 # TODO: do a proper install of the test executable alongside its dependencies
