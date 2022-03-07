@@ -276,4 +276,12 @@ void replaceCGACWithCEVersion(std::wstring& errorString) {
 	replaceCGACVersionBetween(errorString, L"(", L")");
 }
 
+std::wstring getDuplicateCountSuffix(const std::wstring& name,
+                                     std::map<std::wstring, int>& duplicateCountMap) {
+	auto [iterator, isFirstEntry] = duplicateCountMap.try_emplace(name, 0);
+	if (!isFirstEntry)
+		iterator->second++;
+	return L"_" + std::to_wstring(iterator->second);
+}
+
 } // namespace prtu

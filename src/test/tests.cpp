@@ -337,6 +337,40 @@ TEST_CASE("toFileURI") {
 #endif
 }
 
+TEST_CASE("getDuplicateCountSuffix") {
+	std::map<std::wstring, int> duplicateCountMap;
+
+	// Fully quantified attributename: Default$import1.myAttr
+	const std::wstring briefAttr1 = L"import1_myAttr";
+	const std::wstring fullAttr1 = L"Default_import1_myAttr";
+	const std::wstring briefAttr1Suffix = prtu::getDuplicateCountSuffix(briefAttr1, duplicateCountMap);
+	const std::wstring fullAttr1Suffix = prtu::getDuplicateCountSuffix(fullAttr1, duplicateCountMap);
+	const std::wstring expectedBriefAttr1Suffix = L"_0";
+	const std::wstring expectedfullAttr1Suffix = L"_0";
+	CHECK(briefAttr1Suffix == expectedBriefAttr1Suffix);
+	CHECK(fullAttr1Suffix == expectedfullAttr1Suffix);
+
+	// Fully quantified attributename: Default$import1_myAttr
+	const std::wstring briefAttr2 = L"import1_myAttr";
+	const std::wstring fullAttr2 = L"Default_import1_myAttr";
+	const std::wstring briefAttr2Suffix = prtu::getDuplicateCountSuffix(briefAttr2, duplicateCountMap);
+	const std::wstring fullAttr2Suffix = prtu::getDuplicateCountSuffix(fullAttr2, duplicateCountMap);
+	const std::wstring expectedBriefAttr2Suffix = L"_1";
+	const std::wstring expectedfullAttr2Suffix = L"_1";
+	CHECK(briefAttr2Suffix == expectedBriefAttr2Suffix);
+	CHECK(fullAttr2Suffix == expectedfullAttr2Suffix);
+
+	// Fully quantified attributename: Default_import1$myAttr
+	const std::wstring briefAttr3 = L"myAttr";
+	const std::wstring fullAttr3 = L"Default_import1_myAttr";
+	const std::wstring briefAttr3Suffix = prtu::getDuplicateCountSuffix(briefAttr3, duplicateCountMap);
+	const std::wstring fullAttr3Suffix = prtu::getDuplicateCountSuffix(fullAttr3, duplicateCountMap);
+	const std::wstring expectedBriefAttr3Suffix = L"_0";
+	const std::wstring expectedfullAttr3Suffix = L"_2";
+	CHECK(briefAttr3Suffix == expectedBriefAttr3Suffix);
+	CHECK(fullAttr3Suffix == expectedfullAttr3Suffix);
+}
+
 TEST_CASE("replaceAllNotOf") {
 	const std::wstring allowedChars = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	SECTION("empty") {
