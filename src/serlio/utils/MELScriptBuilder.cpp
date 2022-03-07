@@ -105,7 +105,7 @@ void MELScriptBuilder::setAttrEnumOptions(const MELVariable& node, const std::ws
 		cleanEnumOptionName(customDefaultOptionString);
 		enumString.append(customDefaultOptionString + L"=0");
 	}
-	for (int idx = 0; idx < enumOptions.size(); idx++) {
+	for (size_t idx = 0; idx < enumOptions.size(); idx++) {
 		std::wstring enumOption = enumOptions[idx];
 		if (!enumString.empty())
 			enumString.append(L":");
