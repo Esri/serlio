@@ -18,6 +18,7 @@ add_library(${SERLIO_TARGET} SHARED
 	modifiers/polyModifier/polyModifierNode.cpp
 	materials/ArnoldMaterialNode.cpp
 	materials/MaterialInfo.cpp
+	materials/MaterialNode.cpp
 	materials/MaterialUtils.cpp
 	materials/StingrayMaterialNode.cpp
 	materials/MaterialCommand.cpp
@@ -44,6 +45,7 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio.+")
 		modifiers/polyModifier/polyModifierNode.h
 		materials/ArnoldMaterialNode.h
 		materials/MaterialInfo.h
+		materials/MaterialNode.h
 		materials/MaterialUtils.h
 		materials/StingrayMaterialNode.h
 		materials/MaterialCommand.h
