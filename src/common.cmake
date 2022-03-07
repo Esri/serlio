@@ -132,6 +132,24 @@ function(srl_add_dependency_maya TGT)
 endfunction()
 
 
+### Catch Test Framework
+
+function(srl_add_dependency_catch TGT)
+	FetchContent_Declare(
+			catch
+			GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+			GIT_TAG v2.13.8)
+
+	FetchContent_GetProperties(catch)
+	if(NOT catch_POPULATED)
+		FetchContent_Populate(catch)
+		add_subdirectory(${catch_SOURCE_DIR} ${catch_BINARY_DIR})
+	endif()
+
+	target_include_directories(${TGT} PRIVATE ${Catch2_SOURCE_DIR}/single_include)
+endfunction()
+
+
 ### targets installation location
 
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
