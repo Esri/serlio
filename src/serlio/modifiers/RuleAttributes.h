@@ -73,6 +73,7 @@ struct RuleAttributeCmp {
 
 using RuleAttributeVec = std::vector<RuleAttribute>;
 using RuleAttributeSet = std::set<RuleAttribute, RuleAttributeCmp>;
+using RuleAttributeMap = std::map<std::wstring, RuleAttribute>;
 
 SRL_TEST_EXPORTS_API RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile,
                                                       const prt::RuleFileInfo* ruleFileInfo);

@@ -40,7 +40,7 @@ constexpr const wchar_t* PRT_ATTR_FULL_NAME_PREFIX = L"PRT_";
 const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
 std::wstring cleanForMaya(const std::wstring& name) {
 	auto r = name;
-	replace_all_not_of(r, MAYA_COMPATIBLE_CHARS);
+	replaceAllNotOf(r, MAYA_COMPATIBLE_CHARS);
 	return r;
 }
 
