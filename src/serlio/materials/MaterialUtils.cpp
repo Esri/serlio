@@ -198,7 +198,7 @@ std::filesystem::path getStingrayShaderPath() {
 	return sfxFile;
 }
 
-bool textureHasAlphaChannel(std::wstring path) {
+bool textureHasAlphaChannel(const std::wstring& path) {
 	const AttributeMapUPtr textureMetadata(prt::createTextureMetadata(prtu::toFileURI(path).c_str()));
 	if (textureMetadata == nullptr)
 		return false;
@@ -208,7 +208,7 @@ bool textureHasAlphaChannel(std::wstring path) {
 	return false;
 }
 
-void resetMaterial(std::wstring meshName) {
+void resetMaterial(const std::wstring& meshName) {
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.declInt(MEL_UNDO_STATE);
 	scriptBuilder.getUndoState(MEL_UNDO_STATE);
