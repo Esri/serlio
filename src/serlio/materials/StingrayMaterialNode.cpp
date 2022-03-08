@@ -23,8 +23,6 @@
 
 #include "utils/MELScriptBuilder.h"
 
-#include <mutex>
-
 namespace {
 
 constexpr bool DBG = false;

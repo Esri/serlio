@@ -23,8 +23,6 @@
 
 #include "utils/MELScriptBuilder.h"
 
-#include <mutex>
-
 namespace {
 
 const std::wstring MATERIAL_BASE_NAME = L"serlioArnoldMaterial";
