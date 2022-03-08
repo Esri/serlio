@@ -26,6 +26,7 @@
 namespace {
 
 const std::wstring MATERIAL_BASE_NAME = L"serlioArnoldMaterial";
+const std::vector<std::string> PLUGIN_DEPENDENCIES = {"mtoa"};
 
 const MELVariable MEL_VAR_SHADER_NODE(L"shaderNode");
 const MELVariable MEL_VAR_MAP_FILE(L"mapFile");
@@ -302,4 +303,8 @@ MObject ArnoldMaterialNode::getInMesh() {
 
 MObject ArnoldMaterialNode::getOutMesh() {
 	return mOutMesh;
+}
+
+std::vector<std::string> ArnoldMaterialNode::getPluginDependencies() {
+	return PLUGIN_DEPENDENCIES;
 }

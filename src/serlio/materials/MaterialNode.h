@@ -21,6 +21,8 @@
 
 #include "maya/MPxNode.h"
 
+#include <vector>
+
 class MaterialInfo;
 class MELScriptBuilder;
 
@@ -44,4 +46,5 @@ private:
 	virtual std::wstring getBaseName() = 0;
 	virtual MObject getInMesh() = 0;
 	virtual MObject getOutMesh() = 0;
+	virtual std::vector<std::string> getPluginDependencies() = 0;
 };

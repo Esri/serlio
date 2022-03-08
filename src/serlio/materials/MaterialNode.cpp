@@ -28,7 +28,6 @@
 
 namespace {
 std::once_flag pluginDependencyCheckFlag;
-const std::vector<std::string> PLUGIN_DEPENDENCIES = {"mtoa"};
 
 const MELVariable MEL_UNDO_STATE(L"serlioMaterialUndoState");
 }
@@ -65,9 +64,10 @@ MStatus MaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		return MStatus::kUnknownParameter;
 
 	MStatus status = MStatus::kSuccess;
+	const std::vector<std::string> pluginDependencies = getPluginDependencies();
 
-	std::call_once(pluginDependencyCheckFlag, [&status]() {
-		const bool b = MayaPluginUtilities::pluginDependencyCheck(PLUGIN_DEPENDENCIES);
+	std::call_once(pluginDependencyCheckFlag, [pluginDependencies, &status]() {
+		const bool b = MayaPluginUtilities::pluginDependencyCheck(pluginDependencies);
 		status = b ? MStatus::kSuccess : MStatus::kFailure;
 	});
 	if (status != MStatus::kSuccess)

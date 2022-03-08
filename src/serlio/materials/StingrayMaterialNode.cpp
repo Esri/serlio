@@ -28,8 +28,6 @@ namespace {
 constexpr bool DBG = false;
 
 const std::wstring MATERIAL_BASE_NAME = L"serlioStingrayMaterial";
-
-std::once_flag pluginDependencyCheckFlag;
 const std::vector<std::string> PLUGIN_DEPENDENCIES = {"shaderFXPlugin"};
 
 const MELVariable MEL_UNDO_STATE(L"serlioMaterialUndoState");
@@ -208,4 +206,8 @@ MObject StingrayMaterialNode::getInMesh() {
 
 MObject StingrayMaterialNode::getOutMesh() {
 	return mOutMesh;
+}
+
+std::vector<std::string> StingrayMaterialNode::getPluginDependencies() {
+	return PLUGIN_DEPENDENCIES;
 }

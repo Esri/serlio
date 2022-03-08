@@ -39,4 +39,5 @@ private:
 	std::wstring getBaseName();
 	MObject getInMesh();
 	MObject getOutMesh();
+	std::vector<std::string> getPluginDependencies();
 };
