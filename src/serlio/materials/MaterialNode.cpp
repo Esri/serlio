@@ -31,8 +31,6 @@
 
 #include <mutex>
 
-//const std::wstring MATERIAL_BASE_NAME = L"serlioArnoldMaterial";
-//MTypeId MaterialNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::ARNOLD_MATERIAL_NODE);
 namespace {
 std::once_flag pluginDependencyCheckFlag;
 const std::vector<std::string> PLUGIN_DEPENDENCIES = {"mtoa"};
