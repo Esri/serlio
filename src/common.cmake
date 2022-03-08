@@ -135,13 +135,13 @@ endfunction()
 ### Catch Test Framework
 
 function(srl_add_dependency_catch TGT)
-	FetchContent_Declare(
-			catch
-			GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-			GIT_TAG v2.13.8)
+	set(CATCH_URL "https://github.com/catchorg/Catch2.git")
+	set(CATCH_VER "v2.13.8")
+	FetchContent_Declare(catch GIT_REPOSITORY ${CATCH_URL} GIT_TAG ${CATCH_VER})
 
 	FetchContent_GetProperties(catch)
 	if(NOT catch_POPULATED)
+		message(STATUS "Fetching Catch ${CATCH_VER} from ${CATCH_URL}...")
 		FetchContent_Populate(catch)
 		add_subdirectory(${catch_SOURCE_DIR} ${catch_BINARY_DIR})
 	endif()
