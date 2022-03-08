@@ -293,18 +293,18 @@ void ArnoldMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, con
 	}
 }
 
-std::wstring ArnoldMaterialNode::getBaseName() {
+std::wstring ArnoldMaterialNode::getBaseName() const {
 	return MATERIAL_BASE_NAME;
 }
 
-MObject ArnoldMaterialNode::getInMesh() {
+MObject ArnoldMaterialNode::getInMesh() const {
 	return mInMesh;
 }
 
-MObject ArnoldMaterialNode::getOutMesh() {
+MObject ArnoldMaterialNode::getOutMesh() const {
 	return mOutMesh;
 }
 
-std::vector<std::string> ArnoldMaterialNode::getPluginDependencies() {
+std::vector<std::string> ArnoldMaterialNode::getPluginDependencies() const {
 	return PLUGIN_DEPENDENCIES;
 }

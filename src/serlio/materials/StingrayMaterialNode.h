@@ -36,8 +36,8 @@ private:
 	void declareMaterialStrings(MELScriptBuilder& sb);
 	void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
 	                                   const std::wstring& shaderBaseName, const std::wstring& shadingEngineName);
-	std::wstring getBaseName();
-	MObject getInMesh();
-	MObject getOutMesh();
-	std::vector<std::string> getPluginDependencies();
+	std::wstring getBaseName() const override;
+	MObject getInMesh() const override;
+	MObject getOutMesh() const override;
+	std::vector<std::string> getPluginDependencies() const override;
 };

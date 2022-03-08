@@ -196,18 +196,18 @@ void StingrayMaterialNode::appendToMaterialScriptBuilder(MELScriptBuilder& sb, c
 	setTexture(sb, L"opacity_map", prtu::toUTF16FromOSNarrow(matInfo.opacityMap), L"opacity_map_uses_alpha_channel");
 }
 
-std::wstring StingrayMaterialNode::getBaseName() {
+std::wstring StingrayMaterialNode::getBaseName() const {
 	return MATERIAL_BASE_NAME;
 }
 
-MObject StingrayMaterialNode::getInMesh() {
+MObject StingrayMaterialNode::getInMesh() const {
 	return mInMesh;
 }
 
-MObject StingrayMaterialNode::getOutMesh() {
+MObject StingrayMaterialNode::getOutMesh() const {
 	return mOutMesh;
 }
 
-std::vector<std::string> StingrayMaterialNode::getPluginDependencies() {
+std::vector<std::string> StingrayMaterialNode::getPluginDependencies() const {
 	return PLUGIN_DEPENDENCIES;
 }

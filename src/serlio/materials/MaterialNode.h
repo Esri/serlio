@@ -43,8 +43,8 @@ private:
 	virtual void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
 	                                           const std::wstring& shaderBaseName,
 	                                           const std::wstring& shadingEngineName) = 0;
-	virtual std::wstring getBaseName() = 0;
-	virtual MObject getInMesh() = 0;
-	virtual MObject getOutMesh() = 0;
-	virtual std::vector<std::string> getPluginDependencies() = 0;
+	virtual std::wstring getBaseName() const = 0;
+	virtual MObject getInMesh() const = 0;
+	virtual MObject getOutMesh() const = 0;
+	virtual std::vector<std::string> getPluginDependencies() const = 0;
 };
