@@ -25,7 +25,8 @@
 #include "utils/Utilities.h"
 
 #define CATCH_CONFIG_RUNNER
-#include "catch/catch.hpp"
+#define CATCH_CONFIG_FAST_COMPILE
+#include "catch2/catch.hpp"
 
 #include <sstream>
 
