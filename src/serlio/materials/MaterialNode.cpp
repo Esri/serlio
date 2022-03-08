@@ -129,7 +129,7 @@ MStatus MaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		};
 
 		MaterialInfo matInfo(inMatStreamHandle);
-		std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
+		const std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
 		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceRange.first, faceRange.second);
 		LOG_DBG << "assigned shading engine (" << faceRange.first << ":" << faceRange.second
 		        << "): " << shadingEngineName;
