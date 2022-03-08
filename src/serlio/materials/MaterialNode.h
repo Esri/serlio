@@ -22,7 +22,6 @@
 #include "maya/MPxNode.h"
 
 class MaterialInfo;
-class MaterialTrafo;
 class MELScriptBuilder;
 
 class MaterialNode : public MPxNode {

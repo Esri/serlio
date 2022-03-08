@@ -22,12 +22,6 @@
 #include "materials/MaterialUtils.h"
 
 #include "utils/MELScriptBuilder.h"
-#include "utils/MayaUtilities.h"
-
-#include "serlioPlugin.h"
-
-#include "maya/MFnTypedAttribute.h"
-#include "maya/adskDataStream.h"
 
 #include <mutex>
 

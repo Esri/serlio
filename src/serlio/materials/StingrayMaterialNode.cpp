@@ -21,26 +21,9 @@
 #include "materials/MaterialInfo.h"
 #include "materials/MaterialUtils.h"
 
-#include "modifiers/PRTModifierAction.h"
-
 #include "utils/MELScriptBuilder.h"
-#include "utils/MItDependencyNodesWrapper.h"
-#include "utils/MayaUtilities.h"
 
-#include "PRTContext.h"
-#include "serlioPlugin.h"
-
-#include "maya/MFnMesh.h"
-#include "maya/MFnTypedAttribute.h"
-#include "maya/MGlobal.h"
-#include "maya/MItDependencyNodes.h"
-#include "maya/MObject.h"
-#include "maya/adskDataAssociations.h"
-#include "maya/adskDataStream.h"
-
-#include <array>
 #include <mutex>
-#include <set>
 
 namespace {
 

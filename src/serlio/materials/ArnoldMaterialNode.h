@@ -22,7 +22,6 @@
 #include "MaterialNode.h"
 
 class MaterialInfo;
-class MaterialTrafo;
 class MELScriptBuilder;
 
 class ArnoldMaterialNode : public MaterialNode {

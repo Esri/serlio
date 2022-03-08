@@ -17,17 +17,12 @@
  * limitations under the License.
  */
 
-#include "materials/ArnoldMaterialNode.h"
-#include "materials/MaterialInfo.h"
+#include "materials/MaterialNode.h"
 #include "materials/MaterialUtils.h"
 
 #include "utils/MELScriptBuilder.h"
-#include "utils/MayaUtilities.h"
-
-#include "serlioPlugin.h"
 
 #include "maya/MFnTypedAttribute.h"
-#include "maya/adskDataStream.h"
 
 #include <mutex>
 

@@ -21,15 +21,7 @@
 
 #include "MaterialNode.h"
 
-#include "maya/MString.h"
-#include "maya/adskDataHandle.h"
-
-#include <array>
-
-class MaterialColor;
-class PRTContext;
 class MaterialInfo;
-class MaterialTrafo;
 class MELScriptBuilder;
 
 class StingrayMaterialNode : public MaterialNode {
