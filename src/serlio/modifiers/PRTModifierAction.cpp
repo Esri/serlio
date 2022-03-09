@@ -590,15 +590,12 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 
 				short enumVal;
 				MCHECK(plug.getValue(enumVal));
-				const auto newEnumInfo =
-				        currEnum.updateOptions(node, mRuleAttributes, *defaultAttributeValues, enumVal);
-				const bool hasNewEnumOptions = newEnumInfo.first;
-				enumVal = newEnumInfo.second;
+				enumVal = currEnum.updateOptions(node, mRuleAttributes, *defaultAttributeValues, enumVal);
 
 				const short defEnumVal = currEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
 
 				const bool isDefaultValue = (defEnumVal == enumVal);
-				if (hasNewEnumOptions || (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue))
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
 					plug.setShort(defEnumVal);
 				break;
 			}
