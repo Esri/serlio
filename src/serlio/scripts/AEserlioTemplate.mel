@@ -184,12 +184,7 @@ global proc prtForceDefault(string $attr){
 	setAttr ($attr + "_force_default") true;
 }
 
-global proc redrawEnum(string $attr, string $oldEnumOptions){
-	//only redraw the enum if options changed
-	string $newEnumOptions = `addAttr -q -en $attr`;
-	if($newEnumOptions == $oldEnumOptions)
-		return;
-
+global proc redrawEnum(string $attr){
 	setUITemplate -pst attributeEditorTemplate;
 	string $control = prtControlName($attr);
 	
@@ -208,8 +203,6 @@ global proc redrawEnum(string $attr, string $oldEnumOptions){
 
 	string $changeCommand = "prtUpdateEditHighlights " + $attr;
 	scriptJob -p $control -ac  ($attr + "_user_set") $changeCommand;
-	$changeEnumSelectionCommand = "redrawEnum " + $attr + " \"" + $newEnumOptions + "\"";
-	scriptJob -p $control -ac $attr $changeEnumSelectionCommand;
 	prtUpdateEditHighlights($attr);
 }
 
@@ -234,9 +227,6 @@ global proc prtAttributeControl(string $attr, string $varname){
 	} else if (prtIsEnumAttr($attr)){
 		attrEnumOptionMenuGrp -label $label -attribute $attr $control;
 		string $enumOptions = `addAttr -q -en $attr`;
-
-		$changeEnumSelectionCommand = "redrawEnum " + $attr + " \"" + $enumOptions + "\"";
-		scriptJob -p $control -ac $attr $changeEnumSelectionCommand;
 	} else {
 		attrControlGrp -label $label -attribute $attr $control;
 	}
@@ -272,10 +262,6 @@ global proc prtAttributeControlReplace(string $attr, string $varname){
 		} else if (prtIsEnumAttr($attr)){
 			attrEnumOptionMenuGrp -edit -attribute $attr $control;
 			connectControl $control $attr;
-
-			string $enumOptions = `addAttr -q -en $attr`;
-			$changeEnumSelectionCommand = "redrawEnum " + $attr + " \"" + $enumOptions + "\"";
-			scriptJob -p $control -ac $attr $changeEnumSelectionCommand;
 		} else {
 			attrControlGrp -edit -attribute $attr $control;
 			connectControl $control $attr;

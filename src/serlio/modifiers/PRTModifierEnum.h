@@ -34,8 +34,8 @@ public:
 	PRTModifierEnum() = default;
 
 	MStatus fill(const prt::Annotation* annot);
-	std::pair<bool, short> updateOptions(const MObject& node, const RuleAttributeMap& ruleAttributes,
-	                                     const prt::AttributeMap& defaultAttributeValues, short selectedEnumIdx = 0);
+	short updateOptions(const MObject& node, const RuleAttributeMap& ruleAttributes,
+	                    const prt::AttributeMap& defaultAttributeValues, short selectedEnumIdx = 0);
 
 	bool isDynamic() const;
 	size_t getOptionIndex(const std::wstring& optionName) const;

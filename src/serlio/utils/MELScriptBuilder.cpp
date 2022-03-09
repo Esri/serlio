@@ -118,6 +118,8 @@ void MELScriptBuilder::setAttrEnumOptions(const MELVariable& node, const std::ws
 
 	commandStream << "addAttr -e -en " << MELStringLiteral(enumString).mel() << " "
 	              << composeAttributeExpression(node, attribute) << ";\n";
+	commandStream << "if (`exists redrawEnum`)\n";
+	commandStream << "\tredrawEnum(" << composeAttributeExpression(node, attribute) << ");\n";
 }
 
 void MELScriptBuilder::connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,
