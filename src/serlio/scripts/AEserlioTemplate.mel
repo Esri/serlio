@@ -56,6 +56,10 @@ proc int prtAttributeExists(string $attr){
 	return`attributeExists $attributeName $node`;
 }
 
+proc int prtControlExists(string $control){
+	return `control -exists $control`;
+}
+
 proc prtSetVisibility(int $visible, string $control){
 	control -edit -visible $visible $control;
 }
@@ -185,9 +189,12 @@ global proc prtForceDefault(string $attr){
 }
 
 global proc redrawEnum(string $attr){
-	setUITemplate -pst attributeEditorTemplate;
 	string $control = prtControlName($attr);
+	if (!prtControlExists($control))
+		return;
 	
+	setUITemplate -pst attributeEditorTemplate;
+
 	//remove all items in the current column layout
 	deleteUI ($control + "_user_set");
 	deleteUI ($control + "_force_default_reset");
