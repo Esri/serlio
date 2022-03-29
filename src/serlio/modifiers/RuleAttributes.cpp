@@ -20,6 +20,7 @@
 #include "modifiers/RuleAttributes.h"
 
 #include "utils/LogHandler.h"
+#include "utils/MayaUtilities.h"
 #include "utils/Utilities.h"
 
 #include "prt/Annotation.h"
@@ -37,27 +38,20 @@ constexpr bool DBG = false;
 
 constexpr const wchar_t* PRT_ATTR_FULL_NAME_PREFIX = L"PRT_";
 
-const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-std::wstring cleanForMaya(const std::wstring& name) {
-	auto r = name;
-	replaceAllNotOf(r, MAYA_COMPATIBLE_CHARS);
-	return r;
-}
-
 std::wstring getFullName(const std::wstring& fqAttrName, std::map<std::wstring, int>& mayaNameDuplicateCountMap) {
-	const std::wstring fullName = PRT_ATTR_FULL_NAME_PREFIX + cleanForMaya(fqAttrName);
+	const std::wstring fullName = PRT_ATTR_FULL_NAME_PREFIX + mu::cleanForMaya(fqAttrName);
 	// make sure maya names are unique
 	return fullName + prtu::getDuplicateCountSuffix(fullName, mayaNameDuplicateCountMap);
 }
 
 std::wstring getBriefName(const std::wstring& fqAttrName, std::map<std::wstring, int>& mayaNameDuplicateCountMap) {
-	const std::wstring briefName = cleanForMaya(prtu::removeStyle(fqAttrName));
+	const std::wstring briefName = mu::cleanForMaya(prtu::removeStyle(fqAttrName));
 	// make sure maya names are unique
 	return briefName + prtu::getDuplicateCountSuffix(briefName, mayaNameDuplicateCountMap);
 }
 
 std::wstring getNiceName(const std::wstring& fqAttrName) {
-	return cleanForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
+	return mu::cleanForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
 }
 
 } // namespace

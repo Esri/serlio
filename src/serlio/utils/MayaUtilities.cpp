@@ -3,6 +3,10 @@
 
 #include <memory>
 
+namespace {
+const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+}
+
 namespace mu {
 
 int32_t computeSeed(const MFloatPoint& p) {
@@ -62,5 +66,11 @@ MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
 	scriptBuilder.setAttrEnumOptions(melSerlioNode, attrName, enumOptions, customDefaultOption);
 
 	return scriptBuilder.execute();
+}
+
+std::wstring cleanForMaya(const std::wstring& name) {
+	auto r = name;
+	replaceAllNotOf(r, MAYA_COMPATIBLE_CHARS);
+	return r;
 }
 } // namespace mu
