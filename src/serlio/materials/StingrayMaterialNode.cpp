@@ -21,6 +21,7 @@
 #include "materials/MaterialInfo.h"
 #include "materials/MaterialUtils.h"
 
+#include "utils/MayaUtilities.h"
 #include "utils/MELScriptBuilder.h"
 
 namespace {
@@ -40,7 +41,8 @@ void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wst
                 const std::wstring& alphaTarget = {}) {
 	if (!tex.empty()) {
 		std::filesystem::path texPath(tex);
-		sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(texPath.stem().wstring()));
+		const std::wstring nodeName = mu::cleanNameForMaya(texPath.stem().wstring());
+		sb.setVar(MEL_VAR_MAP_NODE, MELStringLiteral(nodeName));
 
 		sb.setVar(MEL_VAR_MAP_FILE, MELStringLiteral(tex));
 
