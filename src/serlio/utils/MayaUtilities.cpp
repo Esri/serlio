@@ -68,7 +68,7 @@ MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
 	return scriptBuilder.execute();
 }
 
-std::wstring cleanForMaya(const std::wstring& name) {
+std::wstring cleanNameForMaya(const std::wstring& name) {
 	auto r = name;
 	replaceAllNotOf(r, MAYA_COMPATIBLE_CHARS);
 	return r;

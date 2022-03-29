@@ -56,5 +56,5 @@ MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
                        const std::vector<std::wstring>& enumOptions,
                        const std::optional<std::wstring>& customDefaultOption);
 
-std::wstring cleanForMaya(const std::wstring& name);
+std::wstring cleanNameForMaya(const std::wstring& name);
 } // namespace mu

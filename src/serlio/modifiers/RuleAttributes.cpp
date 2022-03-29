@@ -39,19 +39,19 @@ constexpr bool DBG = false;
 constexpr const wchar_t* PRT_ATTR_FULL_NAME_PREFIX = L"PRT_";
 
 std::wstring getFullName(const std::wstring& fqAttrName, std::map<std::wstring, int>& mayaNameDuplicateCountMap) {
-	const std::wstring fullName = PRT_ATTR_FULL_NAME_PREFIX + mu::cleanForMaya(fqAttrName);
+	const std::wstring fullName = PRT_ATTR_FULL_NAME_PREFIX + mu::cleanNameForMaya(fqAttrName);
 	// make sure maya names are unique
 	return fullName + prtu::getDuplicateCountSuffix(fullName, mayaNameDuplicateCountMap);
 }
 
 std::wstring getBriefName(const std::wstring& fqAttrName, std::map<std::wstring, int>& mayaNameDuplicateCountMap) {
-	const std::wstring briefName = mu::cleanForMaya(prtu::removeStyle(fqAttrName));
+	const std::wstring briefName = mu::cleanNameForMaya(prtu::removeStyle(fqAttrName));
 	// make sure maya names are unique
 	return briefName + prtu::getDuplicateCountSuffix(briefName, mayaNameDuplicateCountMap);
 }
 
 std::wstring getNiceName(const std::wstring& fqAttrName) {
-	return mu::cleanForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
+	return mu::cleanNameForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
 }
 
 } // namespace
