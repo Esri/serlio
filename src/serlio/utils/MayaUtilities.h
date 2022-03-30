@@ -55,6 +55,4 @@ std::filesystem::path getWorkspaceRoot(MStatus& status);
 MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
                        const std::vector<std::wstring>& enumOptions,
                        const std::optional<std::wstring>& customDefaultOption);
-
-std::wstring cleanNameForMaya(const std::wstring& name);
 } // namespace mu

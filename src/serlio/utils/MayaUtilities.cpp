@@ -3,12 +3,6 @@
 
 #include <memory>
 
-namespace {
-const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-const std::wstring DIGIT_CHARS = L"0123456789";
-const std::wstring MAYA_SEPARATOR = L"_";
-}
-
 namespace mu {
 
 int32_t computeSeed(const MFloatPoint& p) {
@@ -68,15 +62,5 @@ MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
 	scriptBuilder.setAttrEnumOptions(melSerlioNode, attrName, enumOptions, customDefaultOption);
 
 	return scriptBuilder.execute();
-}
-
-std::wstring cleanNameForMaya(const std::wstring& name) {
-	std::wstring r = name;
-	replaceAllNotOf(r, MAYA_COMPATIBLE_CHARS);
-
-	if (r.size() > 0 && (DIGIT_CHARS.find(r.front()) != std::wstring::npos))
-		r.insert(0, MAYA_SEPARATOR);
-
-	return r;
 }
 } // namespace mu

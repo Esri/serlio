@@ -45,6 +45,10 @@ struct IUnknown;
 #include <map>
 
 namespace {
+const std::wstring MAYA_SEPARATOR = L"_";
+const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+const std::wstring DIGIT_CHARS = L"0123456789";
+
 const std::wstring TOO_NEW_CE_VERSION = L"newer than 2021.1";
 const std::wstring CGAC_VERSION_STRING = L"CGAC version ";
 const std::wstring CE_VERSION_STRING = L"CityEngine version ";
@@ -281,7 +285,16 @@ std::wstring getDuplicateCountSuffix(const std::wstring& name,
 	auto [iterator, isFirstEntry] = duplicateCountMap.try_emplace(name, 0);
 	if (!isFirstEntry)
 		iterator->second++;
-	return L"_" + std::to_wstring(iterator->second);
+	return MAYA_SEPARATOR + std::to_wstring(iterator->second);
 }
 
+std::wstring cleanNameForMaya(const std::wstring& name) {
+	std::wstring r = name;
+	replaceAllNotOf(r, MAYA_COMPATIBLE_CHARS);
+
+	if (r.size() > 0 && (DIGIT_CHARS.find(r.front()) != std::wstring::npos))
+		r.insert(0, MAYA_SEPARATOR);
+
+	return r;
+}
 } // namespace prtu
