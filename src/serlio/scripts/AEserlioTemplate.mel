@@ -128,7 +128,8 @@ global proc prtShowProblemView(string $node){
 			-adjustableColumn 3
 			-columnSpacing 1 5
 			-columnSpacing 2 5
-			-columnSpacing 3 5;
+			-columnSpacing 3 5
+			-rowSpacing 1 5;
 		int $index;
 		for ($i = 0; $i < size($cgacProblems); $i += 3) {
 			string $errorCount = $cgacProblems[$i];
