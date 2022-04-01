@@ -10,7 +10,7 @@
 
 namespace {
 constexpr const wchar_t KEY_URL_SEPARATOR = L'=';
-const std::wstring INDIRECTION_URL = L"https://raw.githubusercontent.com/Esri/serlio/indirection_urls/urls.txt";
+const std::wstring INDIRECTION_URL = L"https://raw.githubusercontent.com/Esri/serlio/data/urls.txt";
 
 const std::map<std::string, std::string> fallbackKeyToUrlMap = {
         {"SERLIO_HOME", "https://esri.github.io/cityengine/serlio"},
