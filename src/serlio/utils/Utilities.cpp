@@ -292,7 +292,7 @@ std::wstring cleanNameForMaya(const std::wstring& name) {
 	std::wstring r = name;
 	replaceAllNotOf(r, MAYA_COMPATIBLE_CHARS);
 
-	if (r.size() > 0 && (DIGIT_CHARS.find(r.front()) != std::wstring::npos))
+	if (!r.empty() && (DIGIT_CHARS.find(r.front()) != std::wstring::npos))
 		r.insert(0, MAYA_SEPARATOR);
 
 	return r;
