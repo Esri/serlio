@@ -428,7 +428,7 @@ TEST_CASE("replaceAllOf") {
 	}
 }
 
-TEST_CASE("cleanForMaya") {
+TEST_CASE("cleanNameForMaya") {
 	SECTION("empty") {
 		std::wstring testString = L"";
 		const std::wstring expected = L"";
