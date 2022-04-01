@@ -49,5 +49,7 @@ private:
 
 std::filesystem::path getWorkspaceRoot(MStatus& status);
 
-bool mStringArraysAreEqual(const MStringArray& lhs, const MStringArray& rhs);
 } // namespace mu
+
+bool operator==(const MStringArray& lhs, const MStringArray& rhs);
+bool operator!=(const MStringArray& lhs, const MStringArray& rhs);

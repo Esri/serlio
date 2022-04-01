@@ -44,7 +44,9 @@ std::filesystem::path getWorkspaceRoot(MStatus& status) {
 		return {};
 	}
 }
-bool mStringArraysAreEqual(const MStringArray& lhs, const MStringArray& rhs) {
+} // namespace mu
+
+bool operator==(const MStringArray& lhs, const MStringArray& rhs) {
 	if (lhs.length() != rhs.length())
 		return false;
 	uint32_t index;
@@ -54,4 +56,7 @@ bool mStringArraysAreEqual(const MStringArray& lhs, const MStringArray& rhs) {
 	}
 	return true;
 }
-} // namespace mu
+
+bool operator!=(const MStringArray& lhs, const MStringArray& rhs) {
+	return !(lhs == rhs);
+}

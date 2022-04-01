@@ -360,7 +360,7 @@ void updateCgacProblemData(const CGACErrors& cgacProblems, MDataHandle& cgacProb
 	MFnStringArrayData stringArrayData(errorDataObject);
 	MStringArray oldCgacErrorStringArray = stringArrayData.array();
 
-	if (!mu::mStringArraysAreEqual(oldCgacErrorStringArray, newCgacErrorStringArray)) {
+	if (oldCgacErrorStringArray != newCgacErrorStringArray) {
 		cgacLogProblems(cgacProblems);
 
 		MFnStringArrayData newStringArrayData;
