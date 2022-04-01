@@ -142,7 +142,7 @@ global proc prtShowProblemView(string $node){
 			
 			string $serlioImage = `iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $icon`;
 			text -label ("count: " + $errorCount);
-			textField -bgc 0.15 0.15 0.15 -font "fixedWidthFont" -text $errorString -editable false -ip 1;
+			scrollField -height 60 -wordWrap true -text $errorString -editable false;
 		}
 	showWindow $window;
 }
