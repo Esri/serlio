@@ -85,7 +85,6 @@ public:
 
 	void getWorkspaceDir();
 
-	void python(const std::wstring& pythonCmd);
 	void addCmdLine(const std::wstring& line);
 
 	MStatus executeSync(std::wstring& output);
