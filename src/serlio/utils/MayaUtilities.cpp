@@ -10,7 +10,7 @@
 
 namespace {
 constexpr const wchar_t KEY_URL_SEPARATOR = L'=';
-const std::wstring INDIRECTION_URL = L"https://raw.githubusercontent.com/Esri/serlio/data/urls.txt";
+const MString INDIRECTION_URL = L"https://raw.githubusercontent.com/Esri/serlio/data/urls.txt";
 
 const std::map<std::string, std::string> fallbackKeyToUrlMap = {
         {"SERLIO_HOME", "https://esri.github.io/cityengine/serlio"},
@@ -19,11 +19,11 @@ const std::map<std::string, std::string> fallbackKeyToUrlMap = {
 
 std::map<std::string, std::string> getKeyToUrlMap() {
 	MStatus status;
-	const std::wstring& indirectionWString = mu::getStringFromURL(INDIRECTION_URL, status);
+	const MString indirectionMString = mu::getStringFromURL(INDIRECTION_URL, status);
 	if (status != MStatus::kSuccess)
 		return {};
 
-	const std::string& indirectionString = prtu::toUTF8FromUTF16(indirectionWString);
+	const std::string indirectionString = indirectionMString.asChar();
 	std::map<std::string, std::string> keyToUrlMap;
 
 	std::istringstream wiss(indirectionString);
@@ -84,11 +84,11 @@ std::filesystem::path getWorkspaceRoot(MStatus& status) {
 	}
 }
 
-std::wstring getStringFromURL(const std::wstring& url, MStatus& status) {
+MString getStringFromURL(const MString& url, MStatus& status) {
 	MString pyCmd1;
 	pyCmd1 += "def getStringFromURL():\n";
 	pyCmd1 += " from six.moves import urllib\n";
-	pyCmd1 += " url = \"" + MString(url.c_str()) + "\"\n";
+	pyCmd1 += " url = \"" + url + "\"\n";
 	pyCmd1 += " response = urllib.request.urlopen(url, timeout=3)\n";
 	pyCmd1 += " return response.read()";
 
@@ -97,7 +97,7 @@ std::wstring getStringFromURL(const std::wstring& url, MStatus& status) {
 	MString outputString = MGlobal::executePythonCommandStringResult(pyCmd2, false, false, &status);
 
 	if (status == MS::kSuccess) {
-		return outputString.asWChar();
+		return outputString;
 	}
 	else {
 		return {};
