@@ -85,14 +85,19 @@ std::filesystem::path getWorkspaceRoot(MStatus& status) {
 }
 
 std::wstring getStringFromURL(const std::wstring& url, MStatus& status) {
-	MELScriptBuilder scriptBuilder;
-	scriptBuilder.getStringFromURL(url);
+	MString pyCmd1;
+	pyCmd1 += "def getStringFromURL():\n";
+	pyCmd1 += " from six.moves import urllib\n";
+	pyCmd1 += " url = \"" + MString(url.c_str()) + "\"\n";
+	pyCmd1 += " response = urllib.request.urlopen(url, timeout=3)\n";
+	pyCmd1 += " return response.read()";
 
-	std::wstring output;
-	status = scriptBuilder.executeSync(output);
+	status = MGlobal::executePythonCommand(pyCmd1, false, false);
+	MString pyCmd2 = "getStringFromURL()";
+	MString outputString = MGlobal::executePythonCommandStringResult(pyCmd2, false, false, &status);
 
 	if (status == MS::kSuccess) {
-		return output;
+		return outputString.asWChar();
 	}
 	else {
 		return {};
