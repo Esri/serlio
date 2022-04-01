@@ -49,7 +49,6 @@ std::filesystem::path getWorkspaceRoot(MStatus& status) {
 bool operator==(const MStringArray& lhs, const MStringArray& rhs) {
 	if (lhs.length() != rhs.length())
 		return false;
-	uint32_t index;
 	for (uint32_t index = 0; index < lhs.length(); index++) {
 		if (lhs[index] != rhs[index])
 			return false;
