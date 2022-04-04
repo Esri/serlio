@@ -37,27 +37,20 @@ constexpr bool DBG = false;
 
 constexpr const wchar_t* PRT_ATTR_FULL_NAME_PREFIX = L"PRT_";
 
-const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-std::wstring cleanForMaya(const std::wstring& name) {
-	auto r = name;
-	replaceAllNotOf(r, MAYA_COMPATIBLE_CHARS);
-	return r;
-}
-
 std::wstring getFullName(const std::wstring& fqAttrName, std::map<std::wstring, int>& mayaNameDuplicateCountMap) {
-	const std::wstring fullName = PRT_ATTR_FULL_NAME_PREFIX + cleanForMaya(fqAttrName);
+	const std::wstring fullName = PRT_ATTR_FULL_NAME_PREFIX + prtu::cleanNameForMaya(fqAttrName);
 	// make sure maya names are unique
 	return fullName + prtu::getDuplicateCountSuffix(fullName, mayaNameDuplicateCountMap);
 }
 
 std::wstring getBriefName(const std::wstring& fqAttrName, std::map<std::wstring, int>& mayaNameDuplicateCountMap) {
-	const std::wstring briefName = cleanForMaya(prtu::removeStyle(fqAttrName));
+	const std::wstring briefName = prtu::cleanNameForMaya(prtu::removeStyle(fqAttrName));
 	// make sure maya names are unique
 	return briefName + prtu::getDuplicateCountSuffix(briefName, mayaNameDuplicateCountMap);
 }
 
 std::wstring getNiceName(const std::wstring& fqAttrName) {
-	return cleanForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
+	return prtu::cleanNameForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
 }
 
 } // namespace

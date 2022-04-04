@@ -375,8 +375,8 @@ TEST_CASE("getDuplicateCountSuffix") {
 TEST_CASE("replaceAllNotOf") {
 	const std::wstring allowedChars = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	SECTION("empty") {
-		std::wstring testString = L"";
-		const std::wstring expected = L"";
+		std::wstring testString;
+		const std::wstring expected;
 		replaceAllNotOf(testString, allowedChars);
 		CHECK(testString == expected);
 	}
@@ -403,8 +403,8 @@ TEST_CASE("replaceAllNotOf") {
 TEST_CASE("replaceAllOf") {
 	const std::wstring bannedChars = L"=:\\;\r\n";
 	SECTION("empty") {
-		std::wstring testString = L"";
-		const std::wstring expected = L"";
+		std::wstring testString;
+		const std::wstring expected;
 		replaceAllOf(testString, bannedChars);
 		CHECK(testString == expected);
 	}
@@ -425,6 +425,39 @@ TEST_CASE("replaceAllOf") {
 		const std::wstring expected = L"______";
 		replaceAllOf(testString, bannedChars);
 		CHECK(testString == expected);
+	}
+}
+
+TEST_CASE("cleanNameForMaya") {
+	SECTION("empty") {
+		std::wstring testString;
+		const std::wstring expected;
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("replace nothing") {
+		std::wstring testString = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		const std::wstring expected = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("replace some") {
+		std::wstring testString = L"Replace:all\r\nbut=alpha^numerical.characters;";
+		const std::wstring expected = L"Replace_all__but_alpha_numerical_characters_";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("replace all") {
+		std::wstring testString = L"/:\r^?=-\\%`*\"+-";
+		const std::wstring expected = L"______________";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("add prefix") {
+		std::wstring testString = L"42";
+		const std::wstring expected = L"_42";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
 	}
 }
 
