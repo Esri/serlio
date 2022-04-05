@@ -149,7 +149,7 @@ global proc prtCreateCGACProblemWindow(string $attr){
 	string $node = prtGetNodeName($attr);
 	string $uuids[] = `ls -uuid $node`;
 
-	string $window = `window -title "Serlio: Problem Window"
+	string $window = `window
 		-resizeToFitChildren true
 		-iconName "Serlio"
 		-widthHeight 500 210`;
