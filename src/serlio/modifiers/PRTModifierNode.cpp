@@ -128,7 +128,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			// Now, perform the PRT
 			status = fPRTModifierAction.doIt();
 
-			fPRTModifierAction.updateUI(thisMObject(), cgacProblemData);
+			fPRTModifierAction.updateUI(thisMObject(), cgacProblems);
 
 			currentRulePkgData.setString(rulePkgData.asString());
 

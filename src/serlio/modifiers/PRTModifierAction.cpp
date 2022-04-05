@@ -301,10 +301,13 @@ MStringArray cgacProblemsToStringArray(CGACErrors errorList) {
 	return errorStringArrray;
 }
 
-void updateCgacProblemData(const CGACErrors& cgacProblems, MDataHandle& cgacProblemData) {
+void updateCgacProblemData(const MObject& node, const CGACErrors& cgacProblems,
+                           MObject& cgacProblemObject) {
 	MStringArray newCgacErrorStringArray = cgacProblemsToStringArray(cgacProblems);
+	MPlug cgacProblemPlug(node, cgacProblemObject);
 
-	MObject errorDataObject = cgacProblemData.data();
+	MObject errorDataObject;
+	MCHECK(cgacProblemPlug.getValue(errorDataObject));
 	MFnStringArrayData stringArrayData(errorDataObject);
 	MStringArray oldCgacErrorStringArray = stringArrayData.array();
 
@@ -313,7 +316,7 @@ void updateCgacProblemData(const CGACErrors& cgacProblems, MDataHandle& cgacProb
 
 		MFnStringArrayData newStringArrayData;
 		MObject newErrorDataObject = newStringArrayData.create(newCgacErrorStringArray);
-		cgacProblemData.setMObject(newErrorDataObject);
+		cgacProblemPlug.setMObject(newErrorDataObject);
 	}
 }
 
@@ -527,7 +530,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	return MStatus::kSuccess;
 }
 
-MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProblemData) {
+MStatus PRTModifierAction::updateUI(const MObject& node, MObject& cgacProblemObject) {
 	const auto updateUIFromAttributes = [this, node](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                                 const RuleAttribute& ruleAttribute,
 	                                                 const PrtAttributeType attrType) {
@@ -625,7 +628,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 		}
 	};
 
-	updateCgacProblemData(mCGACProblems, cgacProblemData);
+	updateCgacProblemData(node, mCGACProblems, cgacProblemObject);
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
 	return MStatus::kSuccess;
