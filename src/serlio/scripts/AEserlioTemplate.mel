@@ -196,17 +196,9 @@ global proc prtCreateCGACProblemWindow(string $attr){
 
 	string $changeCommand = "updateCGACProblems \"" + $uuids[0] + "\" \"" + $window + "\" \"" + $rulePathLayout + "\" \"" + $problemLayout +"\"";
 	string $deleteWindow = "deleteUI \"" + $window +"\"";
-	scriptJob
-		-parent $window
-		-nodeNameChanged $node $changeCommand;
-
-	scriptJob 
-		-parent $window
-		-attributeChange ($node + ".Rule_Package") $changeCommand;
-	
-	scriptJob
-		-parent $window
-		-nodeDeleted $node $deleteWindow;
+	scriptJob -parent $window -nodeNameChanged $node $changeCommand;
+	scriptJob -parent $window -attributeChange ($node + ".Rule_Package") $changeCommand;
+	scriptJob -parent $window -nodeDeleted $node $deleteWindow;
 }
 
 global proc updateCGACProblemIcon(string $attr){
