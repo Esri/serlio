@@ -49,7 +49,7 @@ short PRTModifierEnum::updateOptions(const MObject& node, const RuleAttributeMap
 	if ((newEnumOptions == mEnumOptions) && !hasNewCustomDefaultValue)
 		return selectedEnumIdx;
 
-	const std::wstring oldSelectedOption = mAttr.fieldName(selectedEnumIdx).asWChar();
+	const std::wstring oldSelectedOption = getOptionName(selectedEnumIdx).asWChar();
 
 	mEnumOptions = newEnumOptions;
 
