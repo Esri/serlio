@@ -112,7 +112,7 @@ proc int problemsHaveErrors(string $cgacProblems[]){
 	return false;
 }
 
-global proc updateCGACProblems(string $uuid, string $window, string $rowColLayout){
+global proc updateCGACProblems(string $uuid, string $window, string $problemLayout){
 	string $nodes[] = `ls $uuid`;
 	string $node = $nodes[0];
 	
@@ -125,7 +125,7 @@ global proc updateCGACProblems(string $uuid, string $window, string $rowColLayou
 	string $title = "Problems - Node: " + $node + " Rule: " + $fileName;
 	window -e -title $title $window;
 
-	string $previousErrorItems[] = `rowColumnLayout -q -childArray $rowColLayout`;
+	string $previousErrorItems[] = `rowColumnLayout -q -childArray $problemLayout`;
 	for ($errorItem in $previousErrorItems)
 		deleteUI $errorItem;
 
@@ -139,9 +139,9 @@ global proc updateCGACProblems(string $uuid, string $window, string $rowColLayou
 		if ($displayErrorIcon)
 			$icon = "error.png";
 		
-		iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $icon -parent $rowColLayout;
-		text -label ("count: " + $errorCount) -parent $rowColLayout;
-		scrollField -height 60 -wordWrap true -text $errorString -editable false -parent $rowColLayout;
+		iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $icon -parent $problemLayout;
+		text -label ("count: " + $errorCount) -parent $problemLayout;
+		scrollField -height 60 -wordWrap true -text $errorString -editable false -parent $problemLayout;
 	}
 }
 
@@ -160,20 +160,20 @@ global proc prtCreateCGACProblemWindow(string $attr){
 		-childResizable true
 		-parent $window`;
 
-	string $rowColLayout = `rowColumnLayout 
 			-numberOfColumns 3
 			-adjustableColumn 3
 			-columnSpacing 1 5
 			-columnSpacing 2 5
 			-columnSpacing 3 5
+	string $problemLayout = `rowColumnLayout 
 		-rowSpacing 1 5
 		-parent $scrollLayout`;
 
 			
-	updateCGACProblems($uuids[0], $window, $rowColLayout);
+	updateCGACProblems($uuids[0], $window, $problemLayout);
 	showWindow $window;
 
-	string $changeCommand = "updateCGACProblems \"" + $uuids[0] + "\" \"" + $window + "\" \"" + $rowColLayout +"\"";
+	string $changeCommand = "updateCGACProblems \"" + $uuids[0] + "\" \"" + $window + "\" \"" + $problemLayout +"\"";
 	string $deleteWindow = "deleteUI \"" + $window +"\"";
 	scriptJob
 		-parent $window
