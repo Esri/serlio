@@ -112,18 +112,18 @@ proc int problemsHaveErrors(string $cgacProblems[]){
 	return false;
 }
 
-global proc updateCGACProblems(string $uuid, string $window, string $problemLayout){
+global proc updateCGACProblems(string $uuid, string $window, string $rulePathLayout, string $problemLayout){
 	string $nodes[] = `ls $uuid`;
 	string $node = $nodes[0];
 	
 	string $attr = $node + ".Rule_Package";
 
 	string $rulePath = `getAttr $attr`;
-	string $fileName = basename($rulePath, "");
 	string $cgacProblems[] = getProblems($node);
 
-	string $title = "Problems - Node: " + $node + " Rule: " + $fileName;
+	string $title = "Problems - Node: " + $node;
 	window -e -title $title $window;
+	scrollField -e -text $rulePath $rulePathLayout;
 
 	string $previousErrorItems[] = `rowColumnLayout -q -childArray $problemLayout`;
 	for ($errorItem in $previousErrorItems)
@@ -160,6 +160,20 @@ global proc prtCreateCGACProblemWindow(string $attr){
 		-childResizable true
 		-parent $window`;
 
+	string $ruleFileLayout = `rowLayout
+		-numberOfColumns 2
+		-adjustableColumn 2
+		-parent $scrollLayout`;
+
+	text -label "Rule Package" -parent $ruleFileLayout;
+	$rulePathLayout = `scrollField
+		-height 40
+		-wordWrap true
+		-editable false
+		-parent $ruleFileLayout`;
+
+	separator -height 10 -parent $scrollLayout;
+
 	string $problemLayout = `rowColumnLayout 
 		-numberOfColumns 3
 		-adjustableColumn 3
@@ -169,10 +183,10 @@ global proc prtCreateCGACProblemWindow(string $attr){
 		-rowSpacing 1 5
 		-parent $scrollLayout`;
 
-	updateCGACProblems($uuids[0], $window, $problemLayout);
+	updateCGACProblems($uuids[0], $window, $rulePathLayout, $problemLayout);
 	showWindow $window;
 
-	string $changeCommand = "updateCGACProblems \"" + $uuids[0] + "\" \"" + $window + "\" \"" + $problemLayout +"\"";
+	string $changeCommand = "updateCGACProblems \"" + $uuids[0] + "\" \"" + $window + "\" \"" + $rulePathLayout + "\" \"" + $problemLayout +"\"";
 	string $deleteWindow = "deleteUI \"" + $window +"\"";
 	scriptJob
 		-parent $window
