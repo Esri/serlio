@@ -238,7 +238,7 @@ global proc prtFileBrowse(string $attr, string $varname, string $filters){
 	symbolButton -ann "show problems" -i "caution.png" -visible false -c ("prtCreateCGACProblemWindow(\"" + $attr + "\")") ($control + "_CGAC_Problems");
 	updateCGACProblemIcon($attr);
 
-	string $changeCommand = "updateCGACProblemIcon " + $node;
+	string $changeCommand = "updateCGACProblemIcon " + $attr;
 	scriptJob -rp -p $control -ac ($node + ".CGAC_Problems") $changeCommand;
 
 	symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");	
