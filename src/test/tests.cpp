@@ -25,7 +25,8 @@
 #include "utils/Utilities.h"
 
 #define CATCH_CONFIG_RUNNER
-#include "catch/catch.hpp"
+#define CATCH_CONFIG_FAST_COMPILE
+#include "catch2/catch.hpp"
 
 #include <sstream>
 
@@ -335,6 +336,129 @@ TEST_CASE("toFileURI") {
 		CHECK(prtu::toFileURI(path) == L"file:/tmp/foo.bar");
 	}
 #endif
+}
+
+TEST_CASE("getDuplicateCountSuffix") {
+	std::map<std::wstring, int> duplicateCountMap;
+
+	// Fully quantified attributename: Default$import1.myAttr
+	const std::wstring briefAttr1 = L"import1_myAttr";
+	const std::wstring fullAttr1 = L"Default_import1_myAttr";
+	const std::wstring briefAttr1Suffix = prtu::getDuplicateCountSuffix(briefAttr1, duplicateCountMap);
+	const std::wstring fullAttr1Suffix = prtu::getDuplicateCountSuffix(fullAttr1, duplicateCountMap);
+	const std::wstring expectedBriefAttr1Suffix = L"_0";
+	const std::wstring expectedfullAttr1Suffix = L"_0";
+	CHECK(briefAttr1Suffix == expectedBriefAttr1Suffix);
+	CHECK(fullAttr1Suffix == expectedfullAttr1Suffix);
+
+	// Fully quantified attributename: Default$import1_myAttr
+	const std::wstring briefAttr2 = L"import1_myAttr";
+	const std::wstring fullAttr2 = L"Default_import1_myAttr";
+	const std::wstring briefAttr2Suffix = prtu::getDuplicateCountSuffix(briefAttr2, duplicateCountMap);
+	const std::wstring fullAttr2Suffix = prtu::getDuplicateCountSuffix(fullAttr2, duplicateCountMap);
+	const std::wstring expectedBriefAttr2Suffix = L"_1";
+	const std::wstring expectedfullAttr2Suffix = L"_1";
+	CHECK(briefAttr2Suffix == expectedBriefAttr2Suffix);
+	CHECK(fullAttr2Suffix == expectedfullAttr2Suffix);
+
+	// Fully quantified attributename: Default_import1$myAttr
+	const std::wstring briefAttr3 = L"myAttr";
+	const std::wstring fullAttr3 = L"Default_import1_myAttr";
+	const std::wstring briefAttr3Suffix = prtu::getDuplicateCountSuffix(briefAttr3, duplicateCountMap);
+	const std::wstring fullAttr3Suffix = prtu::getDuplicateCountSuffix(fullAttr3, duplicateCountMap);
+	const std::wstring expectedBriefAttr3Suffix = L"_0";
+	const std::wstring expectedfullAttr3Suffix = L"_2";
+	CHECK(briefAttr3Suffix == expectedBriefAttr3Suffix);
+	CHECK(fullAttr3Suffix == expectedfullAttr3Suffix);
+}
+
+TEST_CASE("replaceAllNotOf") {
+	const std::wstring allowedChars = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	SECTION("empty") {
+		std::wstring testString;
+		const std::wstring expected;
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace nothing") {
+		std::wstring testString = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		const std::wstring expected = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace some") {
+		std::wstring testString = L"Replace:all\r\nbut=alpha^numerical.characters;";
+		const std::wstring expected = L"Replace_all__but_alpha_numerical_characters_";
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace all") {
+		std::wstring testString = L"/:\r^?=-\\%`*\"+-";
+		const std::wstring expected = L"______________";
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+}
+
+TEST_CASE("replaceAllOf") {
+	const std::wstring bannedChars = L"=:\\;\r\n";
+	SECTION("empty") {
+		std::wstring testString;
+		const std::wstring expected;
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace nothing") {
+		std::wstring testString = L"The quick brown fox jumps over the lazy dog";
+		const std::wstring expected = L"The quick brown fox jumps over the lazy dog";
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace some") {
+		std::wstring testString = L"A=B+C;\r\nE:F";
+		const std::wstring expected = L"A_B+C___E_F";
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace all") {
+		std::wstring testString = L"=:\\;\r\n";
+		const std::wstring expected = L"______";
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+}
+
+TEST_CASE("cleanNameForMaya") {
+	SECTION("empty") {
+		std::wstring testString;
+		const std::wstring expected;
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("replace nothing") {
+		std::wstring testString = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		const std::wstring expected = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("replace some") {
+		std::wstring testString = L"Replace:all\r\nbut=alpha^numerical.characters;";
+		const std::wstring expected = L"Replace_all__but_alpha_numerical_characters_";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("replace all") {
+		std::wstring testString = L"/:\r^?=-\\%`*\"+-";
+		const std::wstring expected = L"______________";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("add prefix") {
+		std::wstring testString = L"42";
+		const std::wstring expected = L"_42";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
 }
 
 // we use a custom main function to manage PRT lifetime

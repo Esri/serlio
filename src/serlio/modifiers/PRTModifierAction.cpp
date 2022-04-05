@@ -38,7 +38,6 @@
 #include "maya/MGlobal.h"
 
 #include <cassert>
-#include <variant>
 
 namespace {
 
@@ -54,8 +53,6 @@ constexpr const wchar_t* FILE_CGA_PRINT = L"CGAPrint.txt";
 constexpr const wchar_t* NULL_KEY = L"#NULL#";
 constexpr const wchar_t* MIN_KEY = L"min";
 constexpr const wchar_t* MAX_KEY = L"max";
-constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
-constexpr const wchar_t* VALUES_ATTR_KEY = L"valuesAttr";
 
 constexpr const wchar_t* ATTRIBUTE_USER_SET_SUFFIX = L"_user_set";
 constexpr const wchar_t* ATTRIBUTE_FORCE_DEFAULT_SUFFIX = L"_force_default";
@@ -243,55 +240,6 @@ MStatus addHiddenBoolParameter(MFnDependencyNode& node, MFnAttribute& tAttr, con
 	return stat;
 }
 
-short getDefaultEnumValue(const prt::AttributeMap& defaultAttributeValues, const MFnEnumAttribute& eAttr,
-                          const RuleAttribute& ruleAttr) {
-	const std::wstring fqAttrName = ruleAttr.fqName;
-	const prt::AnnotationArgumentType ruleAttrType = ruleAttr.mType;
-
-	short minVal;
-	short maxVal;
-	MCHECK(eAttr.getMin(minVal));
-	MCHECK(eAttr.getMax(maxVal));
-
-	switch (ruleAttrType) {
-		case prt::AAT_STR: {
-			const wchar_t* defStringVal = defaultAttributeValues.getString(fqAttrName.c_str());
-
-			for (short currIdx = minVal; currIdx <= maxVal; currIdx++) {
-				const wchar_t* currString = eAttr.fieldName(currIdx).asWChar();
-				if (std::wcscmp(currString, defStringVal) == 0)
-					return currIdx;
-			}
-			break;
-		}
-		case prt::AAT_FLOAT: {
-			const auto defDoubleVal = defaultAttributeValues.getFloat(fqAttrName.c_str());
-
-			for (short currIdx = minVal; currIdx <= maxVal; currIdx++) {
-				const double currDouble = eAttr.fieldName(currIdx).asDouble();
-				if (currDouble == defDoubleVal)
-					return currIdx;
-			}
-			break;
-		}
-		case prt::AAT_BOOL: {
-			const auto defBoolVal = defaultAttributeValues.getBool(fqAttrName.c_str());
-
-			for (short currIdx = minVal; currIdx <= maxVal; currIdx++) {
-				const bool currBool = (eAttr.fieldName(currIdx).asInt() != 0);
-				if (currBool == defBoolVal)
-					return currIdx;
-			}
-			break;
-		}
-		default:
-			LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
-	}
-	return 0;
-}
-
-using PRTEnumDefaultValue = std::variant<bool, double, MString>;
-
 short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue& defaultValue) {
 	short idx = 0;
 	for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
@@ -460,7 +408,10 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 				break;
 			}
 			case PrtAttributeType::ENUM: {
-				MFnEnumAttribute eAttr(fnAttribute.object());
+				auto it = mEnums.find(ruleAttribute.mayaFullName);
+				if (it == mEnums.end())
+					break;
+				const PRTModifierEnum& currEnum = it->second;
 
 				short enumVal;
 				MCHECK(plug.getValue(enumVal));
@@ -468,13 +419,13 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 				if (getIsUserSet(fnNode, fnAttribute)) {
 					switch (ruleAttrType) {
 						case prt::AAT_STR:
-							aBuilder->setString(fqAttrName.c_str(), eAttr.fieldName(enumVal).asWChar());
+							aBuilder->setString(fqAttrName.c_str(), currEnum.getOptionName(enumVal).asWChar());
 							break;
 						case prt::AAT_FLOAT:
-							aBuilder->setFloat(fqAttrName.c_str(), eAttr.fieldName(enumVal).asDouble());
+							aBuilder->setFloat(fqAttrName.c_str(), currEnum.getOptionName(enumVal).asDouble());
 							break;
 						case prt::AAT_BOOL:
-							aBuilder->setBool(fqAttrName.c_str(), eAttr.fieldName(enumVal).asInt() != 0);
+							aBuilder->setBool(fqAttrName.c_str(), currEnum.getOptionName(enumVal).asInt() != 0);
 							break;
 						default:
 							LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
@@ -512,7 +463,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 
 		switch (attrType) {
 			case PrtAttributeType::BOOL: {
-				const auto defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
+				const bool defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
 				bool boolVal;
 				MCHECK(plug.getValue(boolVal));
 
@@ -520,7 +471,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 				break;
 			}
 			case PrtAttributeType::FLOAT: {
-				const auto defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
+				const double defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
 				double doubleVal;
 				MCHECK(plug.getValue(doubleVal));
 
@@ -550,9 +501,12 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 				break;
 			}
 			case PrtAttributeType::ENUM: {
-				MFnEnumAttribute eAttr(fnAttribute.object());
+				auto it = mEnums.find(ruleAttribute.mayaFullName);
+				if (it == mEnums.end())
+					break;
+				const PRTModifierEnum& currEnum = it->second;
 
-				const short defEnumVal = getDefaultEnumValue(*defaultAttributeValues, eAttr, ruleAttribute);
+				const short defEnumVal = currEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
 				short enumVal;
 				MCHECK(plug.getValue(enumVal));
 
@@ -574,8 +528,9 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 }
 
 MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProblemData) {
-	const auto updateUIFromAttributes = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
-	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
+	const auto updateUIFromAttributes = [this, node](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
+	                                                 const RuleAttribute& ruleAttribute,
+	                                                 const PrtAttributeType attrType) {
 		const AttributeMapUPtr defaultAttributeValues =
 		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().mPRTCache,
 		                                  *inPrtMesh, mRandomSeed, *mGenerateAttrs);
@@ -584,27 +539,25 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 
 		switch (attrType) {
 			case PrtAttributeType::BOOL: {
-				const auto defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
+				const bool defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
 				bool boolVal;
 				MCHECK(plug.getValue(boolVal));
 
 				const bool isDefaultValue = (defBoolVal == boolVal);
 
-				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
 					plug.setBool(defBoolVal);
-				}
 				break;
 			}
 			case PrtAttributeType::FLOAT: {
-				const auto defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
+				const double defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
 				double doubleVal;
 				MCHECK(plug.getValue(doubleVal));
 
 				const bool isDefaultValue = (defDoubleVal == doubleVal);
 
-				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
 					plug.setDouble(defDoubleVal);
-				}
 				break;
 			}
 			case PrtAttributeType::COLOR: {
@@ -625,9 +578,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 
 				const bool isDefaultValue = (std::wcscmp(colStr.c_str(), defColStr) == 0);
 
-				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
 					plug.setMObject(defaultColorObj);
-				}
 				break;
 			}
 			case PrtAttributeType::STRING: {
@@ -638,23 +590,25 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 
 				const bool isDefaultValue = (std::wcscmp(stringVal.asWChar(), defStringVal) == 0);
 
-				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
 					plug.setString(defStringVal);
-				}
 				break;
 			}
 			case PrtAttributeType::ENUM: {
-				MFnEnumAttribute eAttr(fnAttribute.object());
+				auto it = mEnums.find(ruleAttribute.mayaFullName);
+				if (it == mEnums.end())
+					break;
+				PRTModifierEnum& currEnum = it->second;
 
-				const short defEnumVal = getDefaultEnumValue(*defaultAttributeValues, eAttr, ruleAttribute);
 				short enumVal;
 				MCHECK(plug.getValue(enumVal));
+				enumVal = currEnum.updateOptions(node, mRuleAttributes, *defaultAttributeValues, enumVal);
+
+				const short defEnumVal = currEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
 
 				const bool isDefaultValue = (defEnumVal == enumVal);
-
-				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue) {
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
 					plug.setShort(defEnumVal);
-				}
 				break;
 			}
 
@@ -667,95 +621,6 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
 	return MStatus::kSuccess;
-}
-
-void PRTModifierAction::updateDynamicEnums() {
-	for (auto& e : mEnums) {
-		if (e.mValuesAttr.length() == 0)
-			continue;
-
-		const MString fullAttrName = e.mAttr.name();
-		const auto ruleAttrIt = mRuleAttributes.find(fullAttrName.asWChar());
-		assert(ruleAttrIt != ruleAttributes.end()); // Rule not found
-		const RuleAttribute ruleAttr = (ruleAttrIt != mRuleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
-
-		const std::wstring attrStyle = prtu::getStyle(ruleAttr.fqName).c_str();
-		std::wstring attrImport = prtu::getImport(ruleAttr.fqName).c_str();
-		if (!attrImport.empty())
-			attrImport += prtu::IMPORT_DELIMITER;
-
-		std::wstring valuesAttr = attrStyle + prtu::STYLE_DELIMITER + attrImport;
-		valuesAttr.append(e.mValuesAttr.asWChar());
-
-		const prt::Attributable::PrimitiveType type = mGenerateAttrs->getType(valuesAttr.c_str());
-
-		switch (type) {
-			case prt::Attributable::PT_STRING_ARRAY: {
-				size_t arr_length = 0;
-				const wchar_t* const* stringArray = mGenerateAttrs->getStringArray(valuesAttr.c_str(), &arr_length);
-
-				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
-					if (stringArray[enumIndex] == nullptr)
-						continue;
-					std::wstring_view currStringView = stringArray[enumIndex];
-
-					// remove newlines from strings, because they break the maya UI
-					const size_t cutoffIndex = currStringView.find_first_of(L"\r\n");
-					currStringView = currStringView.substr(0, cutoffIndex);
-
-					const MString mCurrString(currStringView.data(), static_cast<int>(currStringView.length()));
-					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
-				}
-				break;
-			}
-			case prt::Attributable::PT_FLOAT_ARRAY: {
-				size_t arr_length = 0;
-				const double* doubleArray = mGenerateAttrs->getFloatArray(valuesAttr.c_str(), &arr_length);
-
-				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
-					const double currDouble = doubleArray[enumIndex];
-
-					const MString mCurrString(std::to_wstring(currDouble).c_str());
-					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
-				}
-				break;
-			}
-			case prt::Attributable::PT_BOOL_ARRAY: {
-				size_t arr_length = 0;
-				const bool* boolArray = mGenerateAttrs->getBoolArray(valuesAttr.c_str(), &arr_length);
-
-				for (short enumIndex = 0; enumIndex < arr_length; enumIndex++) {
-					const bool currBool = boolArray[enumIndex];
-
-					const MString mCurrString(std::to_wstring(currBool).c_str());
-					MCHECK(e.mAttr.addField(mCurrString, enumIndex));
-				}
-				break;
-			}
-			case prt::Attributable::PT_STRING: {
-				const MString mCurrString = mGenerateAttrs->getString(valuesAttr.c_str());
-
-				MCHECK(e.mAttr.addField(mCurrString, 0));
-				break;
-			}
-			case prt::Attributable::PT_FLOAT: {
-				const bool currFloat = mGenerateAttrs->getFloat(valuesAttr.c_str());
-
-				const MString mCurrString(std::to_wstring(currFloat).c_str());
-				MCHECK(e.mAttr.addField(mCurrString, 0));
-				break;
-			}
-			case prt::Attributable::PT_BOOL: {
-				const bool currBool = mGenerateAttrs->getBool(valuesAttr.c_str());
-
-				const MString mCurrString(std::to_wstring(currBool).c_str());
-				MCHECK(e.mAttr.addField(mCurrString, 0));
-				break;
-			}
-			default:
-				break;
-		}
-	}
 }
 
 // Sets the mesh object for the action  to operate on
@@ -821,7 +686,9 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 		}
 
 		createNodeAttributes(ruleAttributes, node, info.get());
-		updateDynamicEnums();
+		for (auto& enumPair : mEnums) {
+			enumPair.second.updateOptions(node, mRuleAttributes, *mGenerateAttrs);
+		}
 	}
 
 	return MS::kSuccess;
@@ -935,9 +802,9 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 			case prt::Attributable::PT_BOOL: {
 				const bool value = mGenerateAttrs->getBool(fqName.c_str());
 				if (attrTrait.first == AttributeTrait::ENUM) {
-					mEnums.emplace_front();
-					const short enumIndex = getDefaultEnumIdx(attrTrait.second.mAnnot, value);
-					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, enumIndex, mEnums.front()));
+					auto currEnumItr = mEnums.try_emplace(p.mayaFullName);
+					PRTModifierEnum& currEnum = currEnumItr.first->second;
+					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, currEnum));
 				}
 				else {
 					MCHECK(addBoolParameter(node, attr, p, value));
@@ -949,9 +816,9 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 
 				switch (attrTrait.first) {
 					case AttributeTrait::ENUM: {
-						mEnums.emplace_front();
-						const short enumIndex = getDefaultEnumIdx(attrTrait.second.mAnnot, value);
-						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, enumIndex, mEnums.front()));
+						auto currEnumItr = mEnums.try_emplace(p.mayaFullName);
+						PRTModifierEnum& currEnum = currEnumItr.first->second;
+						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, currEnum));
 						break;
 					}
 					case AttributeTrait::RANGE: {
@@ -1000,9 +867,9 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 
 				switch (attrTrait.first) {
 					case AttributeTrait::ENUM: {
-						mEnums.emplace_front();
-						const short enumIndex = getDefaultEnumIdx(attrTrait.second.mAnnot, mvalue);
-						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, enumIndex, mEnums.front()));
+						auto currEnumItr = mEnums.try_emplace(p.mayaFullName);
+						PRTModifierEnum& currEnum = currEnumItr.first->second;
+						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, mvalue, currEnum));
 						break;
 					}
 					case AttributeTrait::FILE:
@@ -1075,48 +942,6 @@ void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 	}
 }
 
-MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
-	mRestricted = true;
-	MStatus stat;
-
-	uint32_t enumIndex = 0;
-	for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
-
-		const wchar_t* key = annot->getArgument(arg)->getKey();
-		if (std::wcscmp(key, NULL_KEY) != 0) {
-			if (std::wcscmp(key, RESTRICTED_KEY) == 0) {
-				mRestricted = annot->getArgument(arg)->getBool();
-			}
-			if (std::wcscmp(key, VALUES_ATTR_KEY) == 0) {
-				mValuesAttr = annot->getArgument(arg)->getStr();
-			}
-			continue;
-		}
-
-		switch (annot->getArgument(arg)->getType()) {
-			case prt::AAT_BOOL: {
-				const bool val = annot->getArgument(arg)->getBool();
-				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), enumIndex++));
-				break;
-			}
-			case prt::AAT_FLOAT: {
-				const double val = annot->getArgument(arg)->getFloat();
-				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), enumIndex++));
-				break;
-			}
-			case prt::AAT_STR: {
-				const wchar_t* val = annot->getArgument(arg)->getStr();
-				MCHECK(mAttr.addField(MString(val), enumIndex++));
-				break;
-			}
-			default:
-				break;
-		}
-	}
-
-	return MS::kSuccess;
-}
-
 MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, MFnAttribute& tAttr) {
 	if (!(node.hasAttribute(tAttr.shortName()))) {
 		MStatus stat;
@@ -1169,13 +994,11 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& a
 	nAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	MCHECK(stat);
 
-	if (!prtu::isnan(min)) {
+	if (!prtu::isnan(min))
 		MCHECK(nAttr.setMin(min));
-	}
 
-	if (!prtu::isnan(max)) {
+	if (!prtu::isnan(max))
 		MCHECK(nAttr.setMax(max));
-	}
 
 	stat = addParameter(node, attr, nAttr);
 
@@ -1186,11 +1009,14 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& a
 }
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-                                            const RuleAttribute& ruleAttr, short defaultValue, PRTModifierEnum& e) {
+                                            const RuleAttribute& ruleAttr, const PRTEnumDefaultValue& defaultValue,
+                                            PRTModifierEnum& e) {
 	MStatus stat;
 
-	short plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultValue);
-	attr = e.mAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), defaultValue, &stat);
+	const short defaultEnumIndex = getDefaultEnumIdx(annot, defaultValue);
+
+	short plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultEnumIndex);
+	attr = e.mAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), defaultEnumIndex, &stat);
 	e.mAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	MCHECK(stat);
 

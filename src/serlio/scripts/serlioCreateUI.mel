@@ -170,7 +170,7 @@ global proc createAboutDialog(){
 	                    "Redistribution or web service offerings are not allowed unless expressly permitted.\n" +
 	                    "Serlio is under the same license as the included CityEngine SDK.";
 
-	string $window = `window -title "Serlio: About"
+	string $window = `window -title "About Serlio"
 		-resizeToFitChildren true
 		-iconName "Serlio"
 		-widthHeight 500 210`;

@@ -19,24 +19,25 @@
 
 #pragma once
 
-#include "maya/MPxNode.h"
-#include "maya/MString.h"
-#include "maya/adskDataHandle.h"
+#include "MaterialNode.h"
 
-#include <array>
-
-class MaterialColor;
-class PRTContext;
 class MaterialInfo;
-class MaterialTrafo;
 class MELScriptBuilder;
 
-class StingrayMaterialNode : public MPxNode {
+class StingrayMaterialNode : public MaterialNode {
 public:
 	static MStatus initialize();
-	MStatus compute(const MPlug& plug, MDataBlock& data) override;
-
 	static MTypeId id;
-	static MObject aInMesh;
-	static MObject aOutMesh;
+
+	static MObject mInMesh;
+	static MObject mOutMesh;
+
+private:
+	void declareMaterialStrings(MELScriptBuilder& sb);
+	void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+	                                   const std::wstring& shaderBaseName, const std::wstring& shadingEngineName);
+	std::wstring getBaseName() const override;
+	MObject getInMesh() const override;
+	MObject getOutMesh() const override;
+	std::vector<std::string> getPluginDependencies() const override;
 };
