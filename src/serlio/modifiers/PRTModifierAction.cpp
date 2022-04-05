@@ -301,10 +301,8 @@ MStringArray cgacProblemsToStringArray(CGACErrors errorList) {
 	return errorStringArrray;
 }
 
-void updateCgacProblemData(const MObject& node, const CGACErrors& cgacProblems,
-                           MObject& cgacProblemObject) {
+void updateCgacProblemData(MPlug& cgacProblemPlug, const CGACErrors& cgacProblems) {
 	MStringArray newCgacErrorStringArray = cgacProblemsToStringArray(cgacProblems);
-	MPlug cgacProblemPlug(node, cgacProblemObject);
 
 	MObject errorDataObject;
 	MCHECK(cgacProblemPlug.getValue(errorDataObject));
@@ -628,7 +626,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MObject& cgacProblemObj
 		}
 	};
 
-	updateCgacProblemData(node, mCGACProblems, cgacProblemObject);
+	MPlug cgacProblemPlug(node, cgacProblemObject);
+	updateCgacProblemData(cgacProblemPlug, mCGACProblems);
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
 	return MStatus::kSuccess;
