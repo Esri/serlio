@@ -1,0 +1,7 @@
+{
+	"1.2": {
+		"SERLIO_HOME": "https://esri.github.io/cityengine/serlio",
+		"CGA_REFERENCE": "https://doc.arcgis.com/en/cityengine/2021.1/cga/cityengine-cga-introduction.htm",
+		"RPK_MANUAL": "https://doc.arcgis.com/en/cityengine/2021.1/help/help-rule-package.htm"
+	}
+}
