@@ -148,11 +148,12 @@ global proc prtShowProblemView(string $node){
 	showWindow $window;
 }
 
-global proc updateCGACProblemIcon(string $node){
+global proc updateCGACProblemIcon(string $attr){
+	string $node = prtGetNodeName($attr);
 	string $cgacProblems[] = getProblems($node);
 	int $hasProblems = (size($cgacProblems) > 0);
 	
-	string $control = prtControlName($node) + "_CGAC_Problems";
+	string $control = prtControlName($attr) + "_CGAC_Problems";
 
 	int $displayErrorIcon = problemsHaveErrors($cgacProblems);
 	string $icon = "caution.png";
@@ -180,7 +181,7 @@ global proc prtFileBrowse(string $attr, string $varname, string $filters){
 	string $node = prtGetNodeName($attr);
 
 	symbolButton -ann "show problems" -i "caution.png" -visible false -c ("prtShowProblemView(\"" + $node + "\")") ($node + "_CGAC_Problems");
-	updateCGACProblemIcon($node);
+	updateCGACProblemIcon($attr);
 
 	string $changeCommand = "updateCGACProblemIcon " + $node;
 	scriptJob -rp -p $control -ac ($node + ".CGAC_Problems") $changeCommand;
@@ -198,6 +199,7 @@ global proc prtFileBrowseReplace(string $attr, string $varname, string $filters)
 		connectControl $control $attr;
 		symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");
 		symbolButton -edit -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");
+		updateCGACProblemIcon($attr);
 	}
 }
 
