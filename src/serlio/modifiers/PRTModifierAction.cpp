@@ -32,8 +32,8 @@
 #include "maya/MFnCompoundAttribute.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnNumericAttribute.h"
-#include "maya/MFnStringData.h"
 #include "maya/MFnStringArrayData.h"
+#include "maya/MFnStringData.h"
 #include "maya/MFnTypedAttribute.h"
 #include "maya/MGlobal.h"
 
@@ -604,7 +604,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 				MCHECK(plug.getValue(enumVal));
 
 				short newEnumVal = enumVal;
-				if(currEnum.isDynamic())
+				if (currEnum.isDynamic())
 					newEnumVal = currEnum.updateOptions(node, mRuleAttributes, *defaultAttributeValues, enumVal);
 
 				const short defEnumVal = currEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
