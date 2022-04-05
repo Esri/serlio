@@ -216,7 +216,7 @@ MStatus PRTModifierNode::initialize()
 	MCHECK(addAttribute(currentRulePkg));
 
 	cgacProblems =
-	        fAttr.create(CGAC_PROBLEMS, "cgacErrors", MFnData::kStringArray, stringArrayData.create(&stat2), &stat);
+	        fAttr.create(CGAC_PROBLEMS, "cgacProblems", MFnData::kStringArray, stringArrayData.create(&stat2), &stat);
 	MCHECK(stat2);
 	MCHECK(stat);
 	MCHECK(fAttr.setHidden(true));
