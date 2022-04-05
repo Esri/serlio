@@ -418,8 +418,8 @@ void detectAndAppendCGACErrors(prt::CGAErrorLevel level, const wchar_t* message,
 		bool shouldBeLogged = (level == prt::CGAErrorLevel::CGAERROR);
 		std::wstring stringMessage = message;
 
-		if (std::wcsstr(message, L"CGAC version")) {
-			shouldBeLogged = shouldBeLogged || (std::wcsstr(message, L"newer than current"));
+		if (std::wcsstr(message, L"CGAC version") != nullptr) {
+			shouldBeLogged = shouldBeLogged || (std::wcsstr(message, L"newer than current") != nullptr);
 			prtu::replaceCGACWithCEVersion(stringMessage);
 		}
 
