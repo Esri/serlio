@@ -54,7 +54,7 @@ std::map<std::string, std::string> getKeyToUrlMap() {
 		return {};
 
 	std::map<std::string, std::string> keyToUrlMap;
-	for (int i = 0; i + 1 < result.length(); i += 2) {
+	for (uint32_t i = 0; i + 1 < result.length(); i += 2) {
 		const std::string key = result[i].asChar();
 		const std::string value = result[i + 1].asChar();
 		keyToUrlMap[key] = value;
