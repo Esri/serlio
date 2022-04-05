@@ -155,21 +155,20 @@ global proc prtCreateCGACProblemWindow(string $attr){
 		-widthHeight 500 210`;
 	
 	string $scrollLayout = `scrollLayout
-			-horizontalScrollBarThickness 16
-			-verticalScrollBarThickness   16
+		-horizontalScrollBarThickness 16
+		-verticalScrollBarThickness   16
 		-childResizable true
 		-parent $window`;
 
-			-numberOfColumns 3
-			-adjustableColumn 3
-			-columnSpacing 1 5
-			-columnSpacing 2 5
-			-columnSpacing 3 5
 	string $problemLayout = `rowColumnLayout 
+		-numberOfColumns 3
+		-adjustableColumn 3
+		-columnSpacing 1 5
+		-columnSpacing 2 5
+		-columnSpacing 3 5
 		-rowSpacing 1 5
 		-parent $scrollLayout`;
 
-			
 	updateCGACProblems($uuids[0], $window, $problemLayout);
 	showWindow $window;
 
