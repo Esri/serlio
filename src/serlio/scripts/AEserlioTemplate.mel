@@ -207,6 +207,8 @@ global proc updateCGACProblemIcon(string $attr){
 	int $hasProblems = (size($cgacProblems) > 0);
 	
 	string $control = prtControlName($attr) + "_CGAC_Problems";
+	if (!prtControlExists($control))
+		return;
 
 	int $displayErrorIcon = problemsHaveErrors($cgacProblems);
 	string $icon = "caution.png";
