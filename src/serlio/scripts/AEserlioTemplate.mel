@@ -112,40 +112,75 @@ proc int problemsHaveErrors(string $cgacProblems[]){
 	return false;
 }
 
-global proc prtShowProblemView(string $node){
+global proc updateCGACProblems(string $uuid, string $window, string $rowColLayout){
+	string $nodes[] = `ls $uuid`;
+	string $node = $nodes[0];
+	
+	string $attr = $node + ".Rule_Package";
+
+	string $rulePath = `getAttr $attr`;
+	string $fileName = basename($rulePath, "");
 	string $cgacProblems[] = getProblems($node);
 
-	string $window = `window -title "Serlio: Problems"
+	string $title = "Problems - Node: " + $node + " Rule: " + $fileName;
+	window -e -title $title $window;
+
+	string $previousErrorItems[] = `rowColumnLayout -q -childArray $rowColLayout`;
+	for ($errorItem in $previousErrorItems)
+		deleteUI $errorItem;
+
+	for ($i = 0; $i < size($cgacProblems); $i += 3) {
+		string $errorCount = $cgacProblems[$i];
+		string $errorType = $cgacProblems[$i + 1];
+		string $errorString = $cgacProblems[$i + 2];
+
+		int $displayErrorIcon = ($errorType == "Error");
+		string $icon = "caution.png";
+		if ($displayErrorIcon)
+			$icon = "error.png";
+		
+		iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $icon -parent $rowColLayout;
+		text -label ("count: " + $errorCount) -parent $rowColLayout;
+		scrollField -height 60 -wordWrap true -text $errorString -editable false -parent $rowColLayout;
+	}
+}
+
+global proc prtCreateCGACProblemWindow(string $attr){
+	string $node = prtGetNodeName($attr);
+	string $uuids[] = `ls -uuid $node`;
+
+	string $window = `window -title "Serlio: Problem Window"
 		-resizeToFitChildren true
 		-iconName "Serlio"
 		-widthHeight 500 210`;
-		string $scrollLayout = `scrollLayout
+	
+	string $scrollLayout = `scrollLayout
 			-horizontalScrollBarThickness 16
 			-verticalScrollBarThickness   16
-			-childResizable true`;
-		rowColumnLayout 
+		-childResizable true
+		-parent $window`;
+
+	string $rowColLayout = `rowColumnLayout 
 			-numberOfColumns 3
 			-adjustableColumn 3
 			-columnSpacing 1 5
 			-columnSpacing 2 5
 			-columnSpacing 3 5
-			-rowSpacing 1 5;
-		int $index;
-		for ($i = 0; $i < size($cgacProblems); $i += 3) {
-			string $errorCount = $cgacProblems[$i];
-			string $errorType = $cgacProblems[$i + 1];
-			string $errorString = $cgacProblems[$i + 2];
+		-rowSpacing 1 5
+		-parent $scrollLayout`;
 
-			int $displayErrorIcon = ($errorType == "Error");
-			string $icon = "caution.png";
-			if ($displayErrorIcon)
-				$icon = "error.png";
 			
-			string $serlioImage = `iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $icon`;
-			text -label ("count: " + $errorCount);
-			scrollField -height 60 -wordWrap true -text $errorString -editable false;
-		}
+	updateCGACProblems($uuids[0], $window, $rowColLayout);
 	showWindow $window;
+
+	string $changeCommand = "updateCGACProblems \"" + $uuids[0] + "\" \"" + $window + "\" \"" + $rowColLayout +"\"";
+	scriptJob
+		-parent $window
+		-nodeNameChanged $node $changeCommand;
+
+	scriptJob 
+		-parent $window
+		-attributeChange ($node + ".Rule_Package") $changeCommand;
 }
 
 global proc updateCGACProblemIcon(string $attr){
@@ -180,7 +215,7 @@ global proc prtFileBrowse(string $attr, string $varname, string $filters){
 
 	string $node = prtGetNodeName($attr);
 
-	symbolButton -ann "show problems" -i "caution.png" -visible false -c ("prtShowProblemView(\"" + $node + "\")") ($node + "_CGAC_Problems");
+	symbolButton -ann "show problems" -i "caution.png" -visible false -c ("prtCreateCGACProblemWindow(\"" + $attr + "\")") ($control + "_CGAC_Problems");
 	updateCGACProblemIcon($attr);
 
 	string $changeCommand = "updateCGACProblemIcon " + $node;
@@ -199,6 +234,7 @@ global proc prtFileBrowseReplace(string $attr, string $varname, string $filters)
 		connectControl $control $attr;
 		symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");
 		symbolButton -edit -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");
+		symbolButton -edit -c ("prtCreateCGACProblemWindow(\"" + $attr + "\")") ($control + "_CGAC_Problems");
 		updateCGACProblemIcon($attr);
 	}
 }
