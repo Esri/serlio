@@ -10,33 +10,52 @@
 
 namespace {
 constexpr const wchar_t KEY_URL_SEPARATOR = L'=';
-const MString INDIRECTION_URL = L"https://raw.githubusercontent.com/Esri/serlio/data/urls.txt";
+const MString INDIRECTION_URL = L"https://raw.githubusercontent.com/Esri/serlio/data/urls.json";
+const MString SERLIO_HOME_KEY = "SERLIO_HOME";
+const MString CGA_REFERENCE_KEY = "CGA_REFERENCE";
+const MString RPK_MANUAL_KEY = "RPK_MANUAL";
 
 const std::map<std::string, std::string> fallbackKeyToUrlMap = {
-        {"SERLIO_HOME", "https://esri.github.io/cityengine/serlio"},
-        {"CGA_REFERENCE", "https://doc.arcgis.com/en/cityengine/latest/cga/cityengine-cga-introduction.htm"},
-        {"RPK_MANUAL", "https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm"}};
+        {SERLIO_HOME_KEY.asChar(), "https://esri.github.io/cityengine/serlio"},
+        {CGA_REFERENCE_KEY.asChar(), "https://doc.arcgis.com/en/cityengine/latest/cga/cityengine-cga-introduction.htm"},
+        {RPK_MANUAL_KEY.asChar(), "https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm"}};
 
 std::map<std::string, std::string> getKeyToUrlMap() {
-	MStatus status;
-	const MString indirectionMString = mu::getStringFromURL(INDIRECTION_URL, status);
+	MString pyCmd1;
+	pyCmd1 += "def getIndirectionStrings():\n";
+	pyCmd1 += " from six.moves import urllib\n";
+	pyCmd1 += " import json\n";
+	// Download indirection links
+	pyCmd1 += " url = \"" + INDIRECTION_URL + "\"\n";
+	pyCmd1 += " response = urllib.request.urlopen(url, timeout=3)\n";
+	pyCmd1 += " jsonString = response.read()\n";
+	// Parse json into array
+	pyCmd1 += " jsonObject = json.loads(jsonString)\n";
+	pyCmd1 += " serlioHomeKey = \"" + SERLIO_HOME_KEY + "\"\n";
+	pyCmd1 += " cgaReferenceKey = \"" + CGA_REFERENCE_KEY + "\"\n";
+	pyCmd1 += " rpkManualKey = \"" + RPK_MANUAL_KEY + "\"\n";	
+	pyCmd1 += " serlioHome = jsonObject[\"1.2\"][serlioHomeKey]\n";
+	pyCmd1 += " cgaReference = jsonObject[\"1.2\"][cgaReferenceKey]\n";
+	pyCmd1 += " rpkManual = jsonObject[\"1.2\"][rpkManualKey]\n";
+	pyCmd1 += " return [serlioHomeKey, serlioHome, cgaReferenceKey, cgaReference, rpkManualKey, rpkManual]";
+	
+	MStatus status = MGlobal::executePythonCommand(pyCmd1);
 	if (status != MStatus::kSuccess)
 		return {};
 
-	const std::string indirectionString = indirectionMString.asChar();
+	MString pyCmd2 = "getIndirectionStrings()";
+	MStringArray result;
+	status = MGlobal::executePythonCommand(pyCmd2, result);
+	if (status != MStatus::kSuccess)
+		return {};
+
 	std::map<std::string, std::string> keyToUrlMap;
-
-	std::istringstream wiss(indirectionString);
-	for (std::string line; std::getline(wiss, line);) {
-		size_t idx = line.find_first_of(KEY_URL_SEPARATOR);
-		if ((idx == std::string::npos) || ((idx + 1) >= line.length()))
-			continue;
-
-		const std::string key = line.substr(0, idx);
-		const std::string url = line.substr(idx + 1);
-
-		keyToUrlMap[key] = url;
+	for (int i = 0; i + 1 < result.length(); i += 2) {
+		const std::string key = result[i].asChar();
+		const std::string value = result[i + 1].asChar();
+		keyToUrlMap[key] = value;
 	}
+	
 	return keyToUrlMap;
 }
 
@@ -78,26 +97,6 @@ std::filesystem::path getWorkspaceRoot(MStatus& status) {
 
 	if (status == MS::kSuccess) {
 		return std::filesystem::path(output).make_preferred();
-	}
-	else {
-		return {};
-	}
-}
-
-MString getStringFromURL(const MString& url, MStatus& status) {
-	MString pyCmd1;
-	pyCmd1 += "def getStringFromURL():\n";
-	pyCmd1 += " from six.moves import urllib\n";
-	pyCmd1 += " url = \"" + url + "\"\n";
-	pyCmd1 += " response = urllib.request.urlopen(url, timeout=3)\n";
-	pyCmd1 += " return response.read()";
-
-	status = MGlobal::executePythonCommand(pyCmd1, false, false);
-	MString pyCmd2 = "getStringFromURL()";
-	MString outputString = MGlobal::executePythonCommandStringResult(pyCmd2, false, false, &status);
-
-	if (status == MS::kSuccess) {
-		return outputString;
 	}
 	else {
 		return {};

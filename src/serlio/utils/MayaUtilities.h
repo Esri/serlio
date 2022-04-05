@@ -49,7 +49,5 @@ private:
 
 std::filesystem::path getWorkspaceRoot(MStatus& status);
 
-MString getStringFromURL(const MString& url, MStatus& status);
-
 MStatus registerMStringResources();
 } // namespace mu
