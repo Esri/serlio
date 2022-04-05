@@ -33,10 +33,11 @@ std::map<std::string, std::string> getKeyToUrlMap() {
 	pyCmd1 += " jsonObject = json.loads(jsonString)\n";
 	pyCmd1 += " serlioHomeKey = \"" + SERLIO_HOME_KEY + "\"\n";
 	pyCmd1 += " cgaReferenceKey = \"" + CGA_REFERENCE_KEY + "\"\n";
-	pyCmd1 += " rpkManualKey = \"" + RPK_MANUAL_KEY + "\"\n";	
-	pyCmd1 += " serlioHome = jsonObject[\"1.2\"][serlioHomeKey]\n";
-	pyCmd1 += " cgaReference = jsonObject[\"1.2\"][cgaReferenceKey]\n";
-	pyCmd1 += " rpkManual = jsonObject[\"1.2\"][rpkManualKey]\n";
+	pyCmd1 += " rpkManualKey = \"" + RPK_MANUAL_KEY + "\"\n";
+	pyCmd1 += " serlioVersionKey = \"" SRL_VERSION_MAJOR "." SRL_VERSION_MINOR "\"\n";
+	pyCmd1 += " serlioHome = jsonObject[serlioVersionKey][serlioHomeKey]\n";
+	pyCmd1 += " cgaReference = jsonObject[serlioVersionKey][cgaReferenceKey]\n";
+	pyCmd1 += " rpkManual = jsonObject[serlioVersionKey][rpkManualKey]\n";
 	pyCmd1 += " return [serlioHomeKey, serlioHome, cgaReferenceKey, cgaReference, rpkManualKey, rpkManual]";
 	
 	MStatus status = MGlobal::executePythonCommand(pyCmd1);
