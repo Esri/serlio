@@ -27,19 +27,22 @@ std::map<std::string, std::string> getKeyToUrlMap() {
 	pyCmd1 += " import json\n";
 	// Download indirection links
 	pyCmd1 += " url = \"" + INDIRECTION_URL + "\"\n";
-	pyCmd1 += " response = urllib.request.urlopen(url, timeout=3)\n";
-	pyCmd1 += " jsonString = response.read()\n";
+	pyCmd1 += " try:\n";
+	pyCmd1 += "  response = urllib.request.urlopen(url, timeout=3)\n";
+	pyCmd1 += "  jsonString = response.read()\n";
 	// Parse json into array
-	pyCmd1 += " jsonObject = json.loads(jsonString)\n";
-	pyCmd1 += " serlioHomeKey = \"" + SERLIO_HOME_KEY + "\"\n";
-	pyCmd1 += " cgaReferenceKey = \"" + CGA_REFERENCE_KEY + "\"\n";
-	pyCmd1 += " rpkManualKey = \"" + RPK_MANUAL_KEY + "\"\n";
-	pyCmd1 += " serlioVersionKey = \"" SRL_VERSION_MAJOR "." SRL_VERSION_MINOR "\"\n";
-	pyCmd1 += " serlioHome = jsonObject[serlioVersionKey][serlioHomeKey]\n";
-	pyCmd1 += " cgaReference = jsonObject[serlioVersionKey][cgaReferenceKey]\n";
-	pyCmd1 += " rpkManual = jsonObject[serlioVersionKey][rpkManualKey]\n";
-	pyCmd1 += " return [serlioHomeKey, serlioHome, cgaReferenceKey, cgaReference, rpkManualKey, rpkManual]";
-	
+	pyCmd1 += "  jsonObject = json.loads(jsonString)\n";
+	pyCmd1 += "  serlioHomeKey = \"" + SERLIO_HOME_KEY + "\"\n";
+	pyCmd1 += "  cgaReferenceKey = \"" + CGA_REFERENCE_KEY + "\"\n";
+	pyCmd1 += "  rpkManualKey = \"" + RPK_MANUAL_KEY + "\"\n";
+	pyCmd1 += "  serlioVersionKey = \"" SRL_VERSION_MAJOR "." SRL_VERSION_MINOR "\"\n";
+	pyCmd1 += "  serlioHome = jsonObject[serlioVersionKey][serlioHomeKey]\n";
+	pyCmd1 += "  cgaReference = jsonObject[serlioVersionKey][cgaReferenceKey]\n";
+	pyCmd1 += "  rpkManual = jsonObject[serlioVersionKey][rpkManualKey]\n";
+	pyCmd1 += "  return [serlioHomeKey, serlioHome, cgaReferenceKey, cgaReference, rpkManualKey, rpkManual]\n";
+	pyCmd1 += " except:\n";
+	pyCmd1 += "  return []";
+
 	MStatus status = MGlobal::executePythonCommand(pyCmd1);
 	if (status != MStatus::kSuccess)
 		return {};
@@ -47,7 +50,7 @@ std::map<std::string, std::string> getKeyToUrlMap() {
 	MString pyCmd2 = "getIndirectionStrings()";
 	MStringArray result;
 	status = MGlobal::executePythonCommand(pyCmd2, result);
-	if (status != MStatus::kSuccess)
+	if ((status != MStatus::kSuccess) || result.length() < 6)
 		return {};
 
 	std::map<std::string, std::string> keyToUrlMap;
