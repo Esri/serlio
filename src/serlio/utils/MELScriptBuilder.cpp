@@ -27,12 +27,22 @@
 namespace {
 
 constexpr bool MEL_ENABLE_DISPLAY = false;
+const std::wstring ENUM_BANNED_CHARS = L"=:\\;\r\n";
 
 std::wstring composeAttributeExpression(const MELVariable& node, const std::wstring& attribute) {
 	assert(!attribute.empty() && attribute[0] != L'.'); // to catch refactoring bugs
 	std::wostringstream out;
 	out << "(" << node.mel() << " + " << std::quoted(L'.' + attribute) << ")";
 	return out.str();
+}
+
+void cleanEnumOptionName(std::wstring& optionName) {
+	if (optionName.empty()) {
+		optionName = L" ";
+	}
+	else {
+		replaceAllOf(optionName, ENUM_BANNED_CHARS);
+	}
 }
 
 } // namespace
@@ -83,6 +93,33 @@ void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attr
 
 void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attribute, const MaterialColor& color) {
 	setAttr(node, attribute, color.r(), color.g(), color.b());
+}
+
+void MELScriptBuilder::setAttrEnumOptions(const MELVariable& node, const std::wstring& attribute,
+                                          const std::vector<std::wstring>& enumOptions,
+                                          const std::optional<std::wstring>& customDefaultOption) {
+	std::wstring enumString;
+
+	if (customDefaultOption.has_value()) {
+		std::wstring customDefaultOptionString = customDefaultOption.value();
+		cleanEnumOptionName(customDefaultOptionString);
+		enumString.append(customDefaultOptionString + L"=0");
+	}
+	for (size_t idx = 0; idx < enumOptions.size(); idx++) {
+		std::wstring enumOption = enumOptions[idx];
+		if (!enumString.empty())
+			enumString.append(L":");
+		cleanEnumOptionName(enumOption);
+		enumString.append(enumOption + L"=" + std::to_wstring(idx + 1));
+	}
+	// Don't update to an empty enum
+	if (enumString.empty())
+		enumString.append(L" ");
+
+	commandStream << "addAttr -e -en " << MELStringLiteral(enumString).mel() << " "
+	              << composeAttributeExpression(node, attribute) << ";\n";
+	commandStream << "if (`exists redrawEnum`)\n";
+	commandStream << "\tredrawEnum(" << composeAttributeExpression(node, attribute) << ");\n";
 }
 
 void MELScriptBuilder::connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,

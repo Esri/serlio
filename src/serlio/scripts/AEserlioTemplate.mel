@@ -46,10 +46,18 @@ proc int prtIsColorAttr(string $attr){
 	return `addAttr -q -uac ($attr)`;
 }
 
+proc int prtIsEnumAttr(string $attr){
+	return (`addAttr -q -at ($attr)` == "enum");
+}
+
 proc int prtAttributeExists(string $attr){
 	string $node = plugNode($attr);
 	string $attributeName = plugAttr($attr);
 	return`attributeExists $attributeName $node`;
+}
+
+proc int prtControlExists(string $control){
+	return `control -exists $control`;
 }
 
 proc prtSetVisibility(int $visible, string $control){
@@ -94,24 +102,121 @@ global proc prtShowFileDialog(string $attr, string $filters) {
 	}  
 }  
 
-global proc updateCGACProblems(string $node){
+proc string[] getProblems(string $node){
 	string $attr = $node + ".CGAC_Problems";
 
 	if (!prtAttributeExists($attr))
+		return {};
+
+	string $cgacProblems[] = `getAttr($attr)`;
+	return $cgacProblems;
+}
+
+proc int problemsHaveErrors(string $cgacProblems[]){
+	for($i = 0; $i < size($cgacProblems); $i += 3){
+		if($cgacProblems[$i + 1] == "Error")
+			return true;
+	}
+	return false;
+}
+
+global proc updateCGACProblems(string $uuid, string $window, string $rulePathLayout, string $problemLayout){
+	string $nodes[] = `ls $uuid`;
+	string $node = $nodes[0];
+	
+	string $attr = $node + ".Rule_Package";
+
+	string $rulePath = `getAttr $attr`;
+	string $cgacProblems[] = getProblems($node);
+
+	string $title = "Problems - Node: " + $node;
+	window -e -title $title $window;
+	scrollField -e -text $rulePath $rulePathLayout;
+
+	string $previousErrorItems[] = `rowColumnLayout -q -childArray $problemLayout`;
+	for ($errorItem in $previousErrorItems)
+		deleteUI $errorItem;
+
+	for ($i = 0; $i < size($cgacProblems); $i += 3) {
+		string $errorCount = $cgacProblems[$i];
+		string $errorType = $cgacProblems[$i + 1];
+		string $errorString = $cgacProblems[$i + 2];
+
+		int $displayErrorIcon = ($errorType == "Error");
+		string $icon = "caution.png";
+		if ($displayErrorIcon)
+			$icon = "error.png";
+		
+		iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $icon -parent $problemLayout;
+		text -label ("count: " + $errorCount) -parent $problemLayout;
+		scrollField -height 60 -wordWrap true -text $errorString -editable false -parent $problemLayout;
+	}
+}
+
+global proc prtCreateCGACProblemWindow(string $attr){
+	string $node = prtGetNodeName($attr);
+	string $uuids[] = `ls -uuid $node`;
+
+	string $window = `window
+		-resizeToFitChildren true
+		-iconName "Serlio"
+		-widthHeight 500 210`;
+	
+	string $scrollLayout = `scrollLayout
+		-horizontalScrollBarThickness 16
+		-verticalScrollBarThickness   16
+		-childResizable true
+		-parent $window`;
+
+	string $ruleFileLayout = `rowLayout
+		-numberOfColumns 2
+		-adjustableColumn 2
+		-parent $scrollLayout`;
+
+	text -label "Rule Package" -parent $ruleFileLayout;
+	$rulePathLayout = `scrollField
+		-height 40
+		-wordWrap true
+		-editable false
+		-parent $ruleFileLayout`;
+
+	separator -height 10 -parent $scrollLayout;
+
+	string $problemLayout = `rowColumnLayout 
+		-numberOfColumns 3
+		-adjustableColumn 3
+		-columnSpacing 1 5
+		-columnSpacing 2 5
+		-columnSpacing 3 5
+		-rowSpacing 1 5
+		-parent $scrollLayout`;
+
+	updateCGACProblems($uuids[0], $window, $rulePathLayout, $problemLayout);
+	showWindow $window;
+
+	string $changeCommand = "updateCGACProblems \"" + $uuids[0] + "\" \"" + $window + "\" \"" + $rulePathLayout + "\" \"" + $problemLayout +"\"";
+	string $deleteWindow = "deleteUI \"" + $window +"\"";
+	scriptJob -parent $window -nodeNameChanged $node $changeCommand;
+	scriptJob -parent $window -attributeChange ($node + ".Rule_Package") $changeCommand;
+	scriptJob -parent $window -attributeChange ($node + ".CGAC_Problems") $changeCommand;
+	scriptJob -parent $window -nodeDeleted $node $deleteWindow;
+}
+
+global proc updateCGACProblemIcon(string $attr){
+	string $node = prtGetNodeName($attr);
+	string $cgacProblems[] = getProblems($node);
+	int $hasProblems = (size($cgacProblems) > 0);
+	
+	string $control = prtControlName($attr) + "_CGAC_Problems";
+	if (!prtControlExists($control))
 		return;
 
-	string $cgacProblems = `getAttr ($attr)`;
-	int $hasProblems = (size($cgacProblems) > 0);
-	string $control = prtControlName($node) + "_CGAC_Problems";
-
-	prtSetVisibility($hasProblems, $control);
-
-	int $displayErrorIcon = size(`match "Error:" $cgacProblems`) > 0;
+	int $displayErrorIcon = problemsHaveErrors($cgacProblems);
 	string $icon = "caution.png";
 	if ($displayErrorIcon)
 		$icon = "error.png";
 
-	iconTextStaticLabel -e -ann $cgacProblems -i $icon $control;
+	symbolButton -e -visible $hasProblems -i $icon $control;
 }
 
 global proc prtFileBrowse(string $attr, string $varname, string $filters){
@@ -131,10 +236,10 @@ global proc prtFileBrowse(string $attr, string $varname, string $filters){
 
 	string $node = prtGetNodeName($attr);
 
-	iconTextStaticLabel -st "iconOnly" -i "caution.png" -l "error" -visible false ($node + "_CGAC_Problems");
-	updateCGACProblems($node);
+	symbolButton -ann "show problems" -i "caution.png" -visible false -c ("prtCreateCGACProblemWindow(\"" + $attr + "\")") ($control + "_CGAC_Problems");
+	updateCGACProblemIcon($attr);
 
-	string $changeCommand = "updateCGACProblems " + $node;
+	string $changeCommand = "updateCGACProblemIcon " + $attr;
 	scriptJob -rp -p $control -ac ($node + ".CGAC_Problems") $changeCommand;
 
 	symbolButton -image "navButtonBrowse.xpm" -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");	
@@ -150,6 +255,8 @@ global proc prtFileBrowseReplace(string $attr, string $varname, string $filters)
 		connectControl $control $attr;
 		symbolButton -edit -c ("prtShowFileDialog(\"" + $attr + "\",\"" + $filters + "\" )") ($control + "_browse");
 		symbolButton -edit -c ("prtReloadRPK(\"" + $attr + "\")") ($control + "_reload");
+		symbolButton -edit -c ("prtCreateCGACProblemWindow(\"" + $attr + "\")") ($control + "_CGAC_Problems");
+		updateCGACProblemIcon($attr);
 	}
 }
 
@@ -180,6 +287,31 @@ global proc prtForceDefault(string $attr){
 	setAttr ($attr + "_force_default") true;
 }
 
+global proc redrawEnum(string $attr){
+	string $control = prtControlName($attr);
+	if (!prtControlExists($control))
+		return;
+	
+	setUITemplate -pst attributeEditorTemplate;
+
+	//remove all items in the current column layout
+	deleteUI ($control + "_user_set");
+	deleteUI ($control + "_force_default_reset");
+	deleteUI $control;
+
+	//add all items back to the current column layout
+	iconTextStaticLabel -p ($control + "_column_layout") -st "iconOnly" -visible false -i "pencilCursor.png" -w 25 -h 25 -enable false ($control + "_user_set");
+
+	$label = `niceName $attr`;
+	attrEnumOptionMenuGrp -p ($control + "_column_layout") -label $label -attribute $attr $control;
+	symbolButton -p ($control + "_column_layout") -image "undo_s.png" -visible false -annotation "reset rule attribute to default value" -c ("prtForceDefault (\"" + $attr +"\")") ($control + "_force_default_reset");
+	connectControl $control $attr;
+
+	string $changeCommand = "prtUpdateEditHighlights " + $attr;
+	scriptJob -p $control -ac  ($attr + "_user_set") $changeCommand;
+	prtUpdateEditHighlights($attr);
+}
+
 global proc prtAttributeControl(string $attr, string $varname){
 	setUITemplate -pst attributeEditorTemplate;
 	string $control = prtControlName($attr);
@@ -194,10 +326,13 @@ global proc prtAttributeControl(string $attr, string $varname){
 
 	$label = `niceName $attr`;
 
-	iconTextStaticLabel -st "iconOnly" -visible false -hlc 0.2715 0.2715 0.2715 -i "pencilCursor.png" -w 25 -h 25 -enable false ($control + "_user_set");
+	iconTextStaticLabel -st "iconOnly" -visible false -i "pencilCursor.png" -w 25 -h 25 -enable false ($control + "_user_set");
 
 	if (prtIsColorAttr($attr)){
 		colorSliderGrp-label $label $control;
+	} else if (prtIsEnumAttr($attr)){
+		attrEnumOptionMenuGrp -label $label -attribute $attr $control;
+		string $enumOptions = `addAttr -q -en $attr`;
 	} else {
 		attrControlGrp -label $label -attribute $attr $control;
 	}
@@ -213,7 +348,7 @@ global proc prtAttributeControl(string $attr, string $varname){
 		connectControl $control $attr;
 	}
 	string $changeCommand = "prtUpdateEditHighlights " + $attr;
-	scriptJob -rp -p $control -ac  ($attr + "_user_set") $changeCommand;
+	scriptJob -p $control -ac ($attr + "_user_set") $changeCommand;
 
 	setParent ..;
 	setUITemplate -ppt; 
@@ -230,13 +365,16 @@ global proc prtAttributeControlReplace(string $attr, string $varname){
 			connectControl -index 2 $control $attr;
 		} else if (prtIsColorAttr($attr)){
 			connectControl $control $attr;
+		} else if (prtIsEnumAttr($attr)){
+			attrEnumOptionMenuGrp -edit -attribute $attr $control;
+			connectControl $control $attr;
 		} else {
 			attrControlGrp -edit -attribute $attr $control;
 			connectControl $control $attr;
 		}
 		symbolButton -edit -c ("prtForceDefault (\"" +  $attr +"\")") ($control + "_force_default_reset");
 		string $changeCommand = "prtUpdateEditHighlights " + $attr;
-		scriptJob -rp -p $control -ac ($attr + "_user_set") $changeCommand;
+		scriptJob -p $control -ac ($attr + "_user_set") $changeCommand;
 	}
 	prtUpdateEditHighlights($attr);
 }

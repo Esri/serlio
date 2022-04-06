@@ -1,8 +1,47 @@
 # Serlio ChangeLog
 
-## v1.2.0 (2021-02-XX)
-* Updated Procedural Runtime (PRT) to 2.3 (corresponds to CityEngine 2020).
-* Added support for Maya 2020.
+## v1.2.0 (2022-07-XX)
+
+### Added:
+* Support for Maya 2020 and 2022. (#73)
+* Command to remove serlio nodes and materials from mesh.
+* Support and UI for resetting user-set attributes. (#50)
+* Support for dynamic enums.
+* Support for RGB-based opacity maps. (#15, #33, #18)
+* UX to warn user in case of:
+  * RPK/CGB and PRT version mismatch
+  * CGA generation errors
+  * Asset errors
+* Help tab with links to: 
+  * Serlio Website
+  * CGA Reference
+  * RPK Manual
+* About dialog with version number and license info.
+
+### Changed:
+* Updated Procedural Runtime (PRT) to 2.6 (corresponds to CityEngine 2021.1) and exclude non-relevant extensions.
+* Avoid unpacking of rule package (performance improvement). (#74)
+* Improved rule attribute ordering (matching CityEngine).
+* Stopped supporting generation of rules without Maya construction history.
+* Automatically switch viewport to textured mode after generating materials.
+* Replace rule package instead of stacking serlio nodes, when calling "Add rule package..". (#13)
+* Improved UI feedback on node for invalid rule package paths
+* Improved generation performance.
+* Fixed scaling of geometry.
+* Fixed random seed handling. (#51)
+* Fixed rule package reloading, when start rule changes. (#17)
+* Fixed undo/redo for material creation and rule switching.
+* Fixed crash in case PRT generates an empty mesh.
+* Reset material to default, when PRT generates an empty mesh.
+* Fixed enum attributes. (#23)
+* Fixed file picker. (#55)
+* Fixed error message in MEL console.
+* Fixed faintly visible transparent stingray materials.
+* Fixed Maya attribute naming issues.
+
+### Development:
+* Updated compilers (now using C++ 17)
+* Updated test framework and build system
 
 ## v1.1.0 (2020-06-02)
 * BREAKING CHANGE: Switched to official Autodesk IDs for Serlio custom nodes. (#26)

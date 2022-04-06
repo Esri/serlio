@@ -12,12 +12,14 @@ add_library(${SERLIO_TARGET} SHARED
 	modifiers/PRTMesh.cpp
 	modifiers/PRTModifierAction.cpp
 	modifiers/PRTModifierCommand.cpp
+	modifiers/PRTModifierEnum.cpp
 	modifiers/PRTModifierNode.cpp
 	modifiers/polyModifier/polyModifierCmd.cpp
 	modifiers/polyModifier/polyModifierFty.cpp
 	modifiers/polyModifier/polyModifierNode.cpp
 	materials/ArnoldMaterialNode.cpp
 	materials/MaterialInfo.cpp
+	materials/MaterialNode.cpp
 	materials/MaterialUtils.cpp
 	materials/StingrayMaterialNode.cpp
 	materials/MaterialCommand.cpp
@@ -38,12 +40,14 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio.+")
 		modifiers/PRTMesh.h
 		modifiers/PRTModifierAction.h
 		modifiers/PRTModifierCommand.h
+		modifiers/PRTModifierEnum.h
 		modifiers/PRTModifierNode.h
 		modifiers/polyModifier/polyModifierCmd.h
 		modifiers/polyModifier/polyModifierFty.h
 		modifiers/polyModifier/polyModifierNode.h
 		materials/ArnoldMaterialNode.h
 		materials/MaterialInfo.h
+		materials/MaterialNode.h
 		materials/MaterialUtils.h
 		materials/StingrayMaterialNode.h
 		materials/MaterialCommand.h

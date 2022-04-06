@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -220,12 +221,26 @@ SRL_TEST_EXPORTS_API inline std::wstring getImport(const std::wstring& fqRuleNam
 }
 
 SRL_TEST_EXPORTS_API void replaceCGACWithCEVersion(std::wstring& errorString);
+
+SRL_TEST_EXPORTS_API std::wstring getDuplicateCountSuffix(const std::wstring& name,
+                                                          std::map<std::wstring, int>& duplicateCountMap);
+SRL_TEST_EXPORTS_API std::wstring cleanNameForMaya(const std::wstring& name);
 } // namespace prtu
 
-inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {
+SRL_TEST_EXPORTS_API inline void replaceAllNotOf(std::wstring& s, const std::wstring& allowedChars) {
 	std::wstring::size_type pos = 0;
 	while (pos < s.size()) {
 		pos = s.find_first_not_of(allowedChars, pos);
+		if (pos == std::wstring::npos)
+			break;
+		s[pos++] = L'_';
+	}
+}
+
+SRL_TEST_EXPORTS_API inline void replaceAllOf(std::wstring& s, const std::wstring& bannedChars) {
+	std::wstring::size_type pos = 0;
+	while (pos < s.size()) {
+		pos = s.find_first_of(bannedChars, pos);
 		if (pos == std::wstring::npos)
 			break;
 		s[pos++] = L'_';
