@@ -17,8 +17,8 @@ const MString RPK_MANUAL_KEY = "RPK_MANUAL";
 
 const std::map<std::string, std::string> fallbackKeyToUrlMap = {
         {SERLIO_HOME_KEY.asChar(), "https://esri.github.io/cityengine/serlio"},
-        {CGA_REFERENCE_KEY.asChar(), "https://doc.arcgis.com/en/cityengine/2021.1/cga/cityengine-cga-introduction.htm"},
-        {RPK_MANUAL_KEY.asChar(), "https://doc.arcgis.com/en/cityengine/2021.1/help/help-rule-package.htm"}};
+        {CGA_REFERENCE_KEY.asChar(), "https://doc.arcgis.com/en/cityengine/latest/cga/cityengine-cga-introduction.htm"},
+        {RPK_MANUAL_KEY.asChar(), "https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm"}};
 
 std::map<std::string, std::string> getKeyToUrlMap() {
 	MString pyCmd1;
