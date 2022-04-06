@@ -128,10 +128,6 @@ void MELScriptBuilder::connectAttr(const MELVariable& srcNode, const std::wstrin
 	              << composeAttributeExpression(dstNode, dstAttr) << ";\n";
 }
 
-void MELScriptBuilder::python(const std::wstring& pythonCmd) {
-	commandStream << "python(\"" << pythonCmd << "\");\n";
-}
-
 void MELScriptBuilder::declInt(const MELVariable& varName) {
 	commandStream << "int " << varName.mel() << ";\n";
 }

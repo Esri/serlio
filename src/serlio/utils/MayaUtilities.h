@@ -52,6 +52,8 @@ private:
 
 std::filesystem::path getWorkspaceRoot(MStatus& status);
 
+MStatus registerMStringResources();
+
 MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
                        const std::vector<std::wstring>& enumOptions,
                        const std::optional<std::wstring>& customDefaultOption);

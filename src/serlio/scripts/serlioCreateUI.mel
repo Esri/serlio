@@ -151,9 +151,9 @@ global proc createMaterialNode(string $materialType) {
 }
 
 global proc createHelpMenuItems(){
-	string $serlioWebsite = "https://esri.github.io/cityengine/serlio";
-	string $cgaReference = "https://doc.arcgis.com/en/cityengine/latest/cga/cityengine-cga-introduction.htm";
-	string $rulePackageManual = "https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm";
+	string $serlioWebsite = getPluginResource("serlio", "SERLIO_HOME");
+	string $cgaReference = getPluginResource("serlio", "CGA_REFERENCE");
+	string $rulePackageManual = getPluginResource("serlio", "RPK_MANUAL");
 
 	menuItem -label "Serlio Website" -c ("showHelp -absolute \"" + $serlioWebsite + "\"");
 	menuItem -label "CityEngine CGA Reference" -c ("showHelp -absolute \"" + $cgaReference + "\"");
