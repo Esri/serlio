@@ -64,3 +64,17 @@ MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
 	return scriptBuilder.execute();
 }
 } // namespace mu
+
+bool operator==(const MStringArray& lhs, const MStringArray& rhs) {
+	if (lhs.length() != rhs.length())
+		return false;
+	for (uint32_t index = 0; index < lhs.length(); index++) {
+		if (lhs[index] != rhs[index])
+			return false;
+	}
+	return true;
+}
+
+bool operator!=(const MStringArray& lhs, const MStringArray& rhs) {
+	return !(lhs == rhs);
+}

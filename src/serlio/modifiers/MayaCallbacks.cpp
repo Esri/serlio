@@ -414,13 +414,18 @@ std::filesystem::path getAssetDir() {
 }
 
 void detectAndAppendCGACErrors(prt::CGAErrorLevel level, const wchar_t* message, CGACErrors& cgacErrors) {
-	if (message != nullptr && (std::wcsstr(message, L"CGAC version") || std::wcsstr(message, L"Non-recognized builtin method"))) {
-		const bool shouldBeLogged =
-		        (std::wcsstr(message, L"newer than current") || (level == prt::CGAErrorLevel::CGAERROR));
-
+	if (message != nullptr) {
+		bool shouldBeLogged = (level == prt::CGAErrorLevel::CGAERROR);
 		std::wstring stringMessage = message;
-		prtu::replaceCGACWithCEVersion(stringMessage);
-		cgacErrors.emplace_back(level, shouldBeLogged, stringMessage);
+
+		if (std::wcsstr(message, L"CGAC version") != nullptr) {
+			shouldBeLogged = shouldBeLogged || (std::wcsstr(message, L"newer than current") != nullptr);
+			prtu::replaceCGACWithCEVersion(stringMessage);
+		}
+
+		const auto [it, wasInserted] = cgacErrors.try_emplace({level, shouldBeLogged, stringMessage}, 1);
+		if (!wasInserted)
+			it->second++;
 	}
 }
 } // namespace
@@ -438,9 +443,10 @@ prt::Status MayaCallbacks::assetError(size_t /*isIndex*/, prt::CGAErrorLevel lev
 	return prt::STATUS_OK;
 }
 
-prt::Status MayaCallbacks::cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel /*level*/,
+prt::Status MayaCallbacks::cgaError(size_t /*isIndex*/, int32_t /*shapeID*/, prt::CGAErrorLevel level,
                                     int32_t /*methodId*/, int32_t /*pc*/, const wchar_t* message) {
 	LOG_ERR << "CGA ERROR: " << message;
+	detectAndAppendCGACErrors(level, message, cgacErrors);
 	return prt::STATUS_OK;
 }
 

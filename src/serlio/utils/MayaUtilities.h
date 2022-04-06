@@ -56,3 +56,6 @@ MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
                        const std::vector<std::wstring>& enumOptions,
                        const std::optional<std::wstring>& customDefaultOption);
 } // namespace mu
+
+bool operator==(const MStringArray& lhs, const MStringArray& rhs);
+bool operator!=(const MStringArray& lhs, const MStringArray& rhs);

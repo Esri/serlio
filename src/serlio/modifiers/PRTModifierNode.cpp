@@ -27,6 +27,7 @@
 #include "maya/MFnMeshData.h"
 #include "maya/MFnNumericAttribute.h"
 #include "maya/MFnStringData.h"
+#include "maya/MFnStringArrayData.h"
 #include "maya/MFnTypedAttribute.h"
 
 #define MCheckStatus(status, message)                                                                                  \
@@ -127,7 +128,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			// Now, perform the PRT
 			status = fPRTModifierAction.doIt();
 
-			fPRTModifierAction.updateUI(thisMObject(), cgacProblemData);
+			fPRTModifierAction.updateUI(thisMObject(), cgacProblems);
 
 			currentRulePkgData.setString(rulePkgData.asString());
 
@@ -181,6 +182,7 @@ MStatus PRTModifierNode::initialize()
 	MStatus stat2;
 	MStatus stat;
 	MFnStringData stringData;
+	MFnStringArrayData stringArrayData;
 	MFnTypedAttribute fAttr;
 
 	rulePkg = fAttr.create(NAME_RULE_PKG, "rulePkg", MFnData::kString, stringData.create(&stat2), &stat);
@@ -213,8 +215,8 @@ MStatus PRTModifierNode::initialize()
 	MCHECK(fAttr.setConnectable(false));
 	MCHECK(addAttribute(currentRulePkg));
 
-	cgacProblems = fAttr.create(CGAC_PROBLEMS, "cgacErrors", MFnData::kString,
-	                              stringData.create(&stat2), &stat);
+	cgacProblems =
+	        fAttr.create(CGAC_PROBLEMS, "cgacProblems", MFnData::kStringArray, stringArrayData.create(&stat2), &stat);
 	MCHECK(stat2);
 	MCHECK(stat);
 	MCHECK(fAttr.setHidden(true));

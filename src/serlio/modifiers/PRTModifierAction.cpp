@@ -32,6 +32,7 @@
 #include "maya/MFnCompoundAttribute.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnNumericAttribute.h"
+#include "maya/MFnStringArrayData.h"
 #include "maya/MFnStringData.h"
 #include "maya/MFnTypedAttribute.h"
 #include "maya/MGlobal.h"
@@ -277,32 +278,44 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 	return 0;
 }
 
-bool cgacProblemsHaveErrors(CGACErrors errorList) {
-	for (const auto& error : errorList) {
-		if (error.errorLevel == prt::CGAErrorLevel::CGAERROR)
-			return true;
+bool cgacLogProblems(CGACErrors errorList) {
+	for (const auto& [error, count] : errorList) {
+		if (error.shouldBeLogged) {
+			if (error.errorLevel == prt::CGAErrorLevel::CGAERROR)
+				MGlobal::displayError(error.errorString.c_str());
+			else
+				MGlobal::displayWarning(error.errorString.c_str());
+		}
 	}
 	return false;
 }
 
-bool cgacProblemsShouldBeLogged(CGACErrors errorList) {
-	for (const auto& error : errorList) {
-		if (error.shouldBeLogged)
-			return true;
+MStringArray cgacProblemsToStringArray(CGACErrors errorList) {
+	MStringArray errorStringArrray;
+	for (const auto& [error, count] : errorList) {
+		errorStringArrray.append(std::to_wstring(count).c_str());
+		const MString errorLevel = (error.errorLevel == prt::CGAErrorLevel::CGAERROR) ? "Error" : "Warning";
+		errorStringArrray.append(errorLevel);
+		errorStringArrray.append(error.errorString.c_str());
 	}
-	return false;
+	return errorStringArrray;
 }
 
-MString cgacProblemsToString(CGACErrors errorList) {
-	MString errorString;
-	for (const auto& error : errorList) {
-		if (errorString.length() > 0)
-			errorString += "\n";
+void updateCgacProblemData(MPlug& cgacProblemPlug, const CGACErrors& cgacProblems) {
+	MStringArray newCgacErrorStringArray = cgacProblemsToStringArray(cgacProblems);
 
-		errorString += (error.errorLevel == prt::CGAErrorLevel::CGAERROR) ? "Error: " : "Warning: ";
-		errorString += error.errorString.c_str();
+	MObject errorDataObject;
+	MCHECK(cgacProblemPlug.getValue(errorDataObject));
+	MFnStringArrayData stringArrayData(errorDataObject);
+	MStringArray oldCgacErrorStringArray = stringArrayData.array();
+
+	if (oldCgacErrorStringArray != newCgacErrorStringArray) {
+		cgacLogProblems(cgacProblems);
+
+		MFnStringArrayData newStringArrayData;
+		MObject newErrorDataObject = newStringArrayData.create(newCgacErrorStringArray);
+		cgacProblemPlug.setMObject(newErrorDataObject);
 	}
-	return errorString;
 }
 
 template <typename T>
@@ -515,7 +528,7 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 	return MStatus::kSuccess;
 }
 
-MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProblemData) {
+MStatus PRTModifierAction::updateUI(const MObject& node, MObject& cgacProblemObject) {
 	const auto updateUIFromAttributes = [this, node](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
 	                                                 const RuleAttribute& ruleAttribute,
 	                                                 const PrtAttributeType attrType) {
@@ -592,7 +605,7 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 				MCHECK(plug.getValue(enumVal));
 
 				short newEnumVal = enumVal;
-				if(currEnum.isDynamic())
+				if (currEnum.isDynamic())
 					newEnumVal = currEnum.updateOptions(node, mRuleAttributes, *defaultAttributeValues, enumVal);
 
 				const short defEnumVal = currEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
@@ -613,19 +626,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MDataHandle& cgacProble
 		}
 	};
 
-	MString cgacErrorString = cgacProblemsToString(mCGACProblems);
-	if (cgacProblemData.asString() != cgacErrorString) {
-		cgacProblemData.setString(cgacErrorString);
-		if (cgacProblemsShouldBeLogged(mCGACProblems)) {
-			if (cgacProblemsHaveErrors(mCGACProblems)) {
-				MGlobal::displayError(cgacErrorString);
-			}
-			else {
-				MGlobal::displayWarning(cgacErrorString);
-			}
-		}
-	}
-
+	MPlug cgacProblemPlug(node, cgacProblemObject);
+	updateCgacProblemData(cgacProblemPlug, mCGACProblems);
 	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
 
 	return MStatus::kSuccess;
