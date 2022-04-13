@@ -148,8 +148,8 @@ global proc updateCGACProblems(string $uuid, string $window, string $rulePathLay
 			$icon = "error.png";
 		
 		iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $icon -parent $problemLayout;
-		text -label ("count: " + $errorCount) -parent $problemLayout;
 		scrollField -height 60 -wordWrap true -text $errorString -editable false -parent $problemLayout;
+		text -label ("count: " + $errorCount) -parent $problemLayout;
 	}
 }
 
@@ -184,7 +184,7 @@ global proc prtCreateCGACProblemWindow(string $attr){
 
 	string $problemLayout = `rowColumnLayout 
 		-numberOfColumns 3
-		-adjustableColumn 3
+		-adjustableColumn 2
 		-columnSpacing 1 5
 		-columnSpacing 2 5
 		-columnSpacing 3 5
