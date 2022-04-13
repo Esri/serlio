@@ -295,7 +295,7 @@ bool cgacLogProblems(CGACErrors errorList) {
 
 CGACErrors createCGACErrorFromString(const MString& stringMessage) {
 	CGACErrors cgacErrors;
-	const auto [it, wasInserted] = cgacErrors.try_emplace({prt::CGAErrorLevel::CGAERROR, true, stringMessage.asWChar()}, 1);
+	cgacErrors.try_emplace({prt::CGAErrorLevel::CGAERROR, true, stringMessage.asWChar()}, 1);
 	return cgacErrors;
 }
 
