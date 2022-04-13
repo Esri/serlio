@@ -173,7 +173,7 @@ global proc prtCreateCGACProblemWindow(string $attr){
 		-adjustableColumn 2
 		-parent $scrollLayout`;
 
-	text -label "Rule Package" -parent $ruleFileLayout;
+	text -label "Rule Package:" -parent $ruleFileLayout;
 	$rulePathLayout = `scrollField
 		-height 40
 		-wordWrap true
