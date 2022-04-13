@@ -672,7 +672,8 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	mRuleAttributes.clear();
 	PRTContext::get().mPRTCache.get()->flushAll();
 
-	if (!std::filesystem::exists(mRulePkg.asWChar())) {
+	std::filesystem::path rulePkgPath(mRulePkg.asWChar());
+	if (!std::filesystem::exists(rulePkgPath)) {
 		CGACErrors cgacProblems =
 		        createCGACErrorFromString(MString("could not find rule package ") + mRulePkg.asWChar());
 		updateCgacProblemData(cgacProblemPlug, cgacProblems);
