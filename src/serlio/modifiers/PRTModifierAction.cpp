@@ -494,6 +494,8 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 			}
 			case PrtAttributeType::STRING: {
 				const auto defStringVal = defaultAttributeValues->getString(fqAttrName.c_str());
+				if (defStringVal == nullptr)
+					break;
 
 				MString stringVal;
 				MCHECK(plug.getValue(stringVal));
@@ -585,6 +587,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MObject& cgacProblemObj
 			}
 			case PrtAttributeType::STRING: {
 				const auto defStringVal = defaultAttributeValues->getString(fqAttrName.c_str());
+				if (defStringVal == nullptr)
+					return;
 
 				MString stringVal;
 				MCHECK(plug.getValue(stringVal));
