@@ -101,6 +101,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			MCheckStatus(status, "ERROR getting cgacErrors");
 
 			const bool ruleFileWasChanged = (rulePkgData.asString() != currentRulePkgData.asString());
+			currentRulePkgData.setString(rulePkgData.asString());
 
 			// Copy the inMesh to the outMesh, so you can
 			// perform operations directly on outMesh
@@ -134,8 +135,6 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			status = fPRTModifierAction.doIt();
 
 			fPRTModifierAction.updateUI(thisMObject(), cgacProblems);
-
-			currentRulePkgData.setString(rulePkgData.asString());
 
 			// Mark the output mesh as clean
 			outputData.setClean();
