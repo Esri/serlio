@@ -118,8 +118,8 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			MDataHandle randomSeed = data.inputValue(mRandomSeed, &status);
 			fPRTModifierAction.setRandomSeed(randomSeed.asInt());
 
-			if (ruleFileWasChanged) {
-				status = fPRTModifierAction.updateRuleFiles(thisMObject(), rulePkgData.asString());
+			if (ruleFileWasChanged){
+				status = fPRTModifierAction.updateRuleFiles(thisMObject(), rulePkgData.asString(), cgacProblems);
 
 				if (status != MStatus::kSuccess) {
 					return status;
