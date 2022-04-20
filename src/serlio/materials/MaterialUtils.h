@@ -23,8 +23,6 @@ MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStruc
 
 bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange);
 
-void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, const adsk::Data::Handle& streamHandle,
-                            const std::wstring& shadingEngineName);
 void addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingEngineUuid);
 
 std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName,

@@ -237,22 +237,6 @@ bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange) {
 	return true;
 }
 
-void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, const adsk::Data::Handle& streamHandle,
-                            const std::wstring& shadingEngineName) {
-	MObject shadingEngineObj = findNamedObject(shadingEngineName, MFn::kShadingEngine);
-	MFnDependencyNode shadingEngine(shadingEngineObj);
-
-	adsk::Data::Associations newMetadata;
-	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIAL_CHANNEL);
-	adsk::Data::Stream newStream(materialStructure, PRT_MATERIAL_STREAM);
-	newChannel.setDataStream(newStream);
-	newMetadata.setChannel(newChannel);
-	adsk::Data::Handle handle(streamHandle);
-	handle.makeUnique();
-	newStream.setElement(0, handle);
-	shadingEngine.setMetadata(newMetadata);
-}
-
 std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName,
                                               const MELVariable& shadingEngineVariable, MStatus& status) {
 	MELScriptBuilder scriptBuilder;
