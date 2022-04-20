@@ -162,39 +162,30 @@ MStatus getMeshName(MString& meshName, const MPlug& plug) {
 	return MStatus::kSuccess;
 }
 
-MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStructure, const std::wstring& baseName) {
-	MaterialCache existingMaterialInfos;
+MaterialCache getMaterialCache() {
+	const adsk::Data::Associations* metadata = MFileIO::metadata();
+	adsk::Data::Associations materialAssociations(metadata);
+	adsk::Data::Channel* matChannel = materialAssociations.findChannel(PRT_MATERIALINFO_MAP_CHANNEL);
 
-	MStatus status;
-	MItDependencyNodes shaderIt(MFn::kShadingEngine, &status);
-	MCHECK(status);
-	for (const auto& nodeObj : MItDependencyNodesWrapper(shaderIt)) {
-		MFnDependencyNode node(nodeObj);
+	MaterialUtils::MaterialCache existingMaterialInfos;
 
-		const adsk::Data::Associations* materialMetadata = node.metadata(&status);
-		MCHECK(status);
+	if (matChannel == nullptr)
+		return existingMaterialInfos;
 
-		if (materialMetadata == nullptr)
+	adsk::Data::Stream* matStream = matChannel->findDataStream(PRT_MATERIALINFO_MAP_STREAM);
+	if (matStream == nullptr)
+		return existingMaterialInfos;
+
+	for (adsk::Data::Stream::iterator iterator = matStream->begin(); iterator != matStream->end(); ++iterator) {
+		iterator->setPositionByMemberName(PRT_MATERIALINFO_MAP_KEY.c_str());
+		size_t* hashPtr = iterator->asUInt64();
+		if (hashPtr == nullptr)
 			continue;
 
-		adsk::Data::Associations materialAssociations(materialMetadata);
-		adsk::Data::Channel* matChannel = materialAssociations.findChannel(PRT_MATERIAL_CHANNEL);
+		iterator->setPositionByMemberName(PRT_MATERIALINFO_MAP_VALUE.c_str());
+		MString uuid = iterator->str(0).c_str();
 
-		if (matChannel == nullptr)
-			continue;
-
-		adsk::Data::Stream* matStream = matChannel->findDataStream(PRT_MATERIAL_STREAM);
-		if ((matStream == nullptr) || (matStream->elementCount() != 1))
-			continue;
-
-		adsk::Data::Handle matSHandle = matStream->element(0);
-		if (!matSHandle.usesStructure(materialStructure))
-			continue;
-
-		if (std::wcsncmp(node.name().asWChar(), baseName.c_str(), baseName.length()) != 0)
-			continue;
-
-		existingMaterialInfos.emplace(matSHandle, node.name().asWChar());
+		existingMaterialInfos.emplace(*hashPtr, uuid);
 	}
 
 	return existingMaterialInfos;

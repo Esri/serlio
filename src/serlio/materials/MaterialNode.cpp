@@ -23,6 +23,7 @@
 #include "utils/MELScriptBuilder.h"
 
 #include "maya/MFnTypedAttribute.h"
+#include "maya/MUuid.h"
 
 #include <mutex>
 
@@ -91,7 +92,7 @@ MStatus MaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (materialStructure == nullptr)
 		return MStatus::kFailure;
 
-	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(*materialStructure, baseName);
+	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialCache();
 
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.declInt(MEL_UNDO_STATE);
@@ -126,11 +127,22 @@ MStatus MaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
 			LOG_DBG << "new shading engine: " << shadingEngineName;
 
-			return shadingEngineName;
+			return shadingEngineNameUuid;
 		};
 
 		MaterialInfo matInfo(inMatStreamHandle);
-		const std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
+		const MString shadingEngineUuid = getCachedValue(matCache, matInfo.getHash(), createShadingEngine, matInfo);
+
+		MObject shadingEngineNodeObj = mu::getNodeObjFromUuid(shadingEngineUuid, status);
+
+		if (status != MS::kSuccess) {
+			const MString newUuid = createShadingEngine(matInfo);
+			shadingEngineNodeObj = mu::getNodeObjFromUuid(newUuid, status);
+		}
+
+		MFnDependencyNode shadingEngineNode(shadingEngineNodeObj);
+		const std::wstring shadingEngineName = shadingEngineNode.name().asWChar();
+
 		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceRange.first, faceRange.second);
 		LOG_DBG << "assigned shading engine (" << faceRange.first << ":" << faceRange.second
 		        << "): " << shadingEngineName;

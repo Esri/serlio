@@ -18,8 +18,9 @@ adsk::Data::Stream* getMaterialStream(const MObject& aInMesh, MDataBlock& data);
 
 MStatus getMeshName(MString& meshName, const MPlug& plug);
 
-using MaterialCache = std::map<MaterialInfo, std::wstring>;
-MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStructure, const std::wstring& baseName);
+using MaterialCache = std::map<size_t, MString>;
+
+MaterialCache getMaterialCache();
 
 bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange);
 
