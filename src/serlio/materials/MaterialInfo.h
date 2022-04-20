@@ -41,6 +41,8 @@ public:
 	double g() const noexcept;
 	double b() const noexcept;
 
+	size_t getHash() const;
+
 	bool operator==(const MaterialColor& other) const noexcept;
 	bool operator<(const MaterialColor& rhs) const noexcept;
 	bool operator>(const MaterialColor& rhs) const noexcept;
@@ -58,6 +60,8 @@ public:
 	double tu() const noexcept;
 	double tv() const noexcept;
 	double rw() const noexcept;
+
+	size_t getHash() const;
 
 	std::array<double, 2> tuv() const noexcept;
 	std::array<double, 3> suvw() const noexcept;
@@ -108,4 +112,6 @@ public:
 	bool equals(const MaterialInfo& o) const;
 
 	bool operator<(const MaterialInfo& rhs) const;
+
+	size_t getHash() const;
 };
