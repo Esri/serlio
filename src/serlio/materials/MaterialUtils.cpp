@@ -9,8 +9,8 @@
 
 #include "maya/MDataBlock.h"
 #include "maya/MDataHandle.h"
-#include "maya/MFnMesh.h"
 #include "maya/MFileIO.h"
+#include "maya/MFnMesh.h"
 #include "maya/MPlugArray.h"
 #include "maya/MUuid.h"
 #include "maya/adskDataAssociations.h"
@@ -36,7 +36,8 @@ adsk::Data::Structure* createNewMaterialInfoMapStructure() {
 	return fStructure;
 }
 
-adsk::Data::Handle getMaterialInfoMapHandle(const adsk::Data::Structure* fStructure, size_t materialInfoHash, MUuid shadingEngineUuid) {
+adsk::Data::Handle getMaterialInfoMapHandle(const adsk::Data::Structure* fStructure, size_t materialInfoHash,
+                                            MUuid shadingEngineUuid) {
 	adsk::Data::Handle handle(*fStructure);
 
 	handle.setPositionByMemberName(PRT_MATERIALINFO_MAP_KEY.c_str());
@@ -45,7 +46,7 @@ adsk::Data::Handle getMaterialInfoMapHandle(const adsk::Data::Structure* fStruct
 	handle.setPositionByMemberName(PRT_MATERIALINFO_MAP_VALUE.c_str());
 	std::string errors;
 	handle.fromStr(shadingEngineUuid.asString().asChar(), 0, errors);
-	
+
 	return handle;
 }
 
@@ -192,7 +193,7 @@ void addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingE
 
 	adsk::Data::Handle handle = getMaterialInfoMapHandle(fStructure, materialInfoHash, shadingEngineUuid);
 	adsk::Data::IndexCount index = getMaterialInfoMapIndex(newStream, materialInfoHash);
-	
+
 	newStream.setElement(index, handle);
 	newChannel.setDataStream(newStream);
 	newMetadata.setChannel(newChannel);

@@ -31,7 +31,7 @@ namespace {
 std::once_flag pluginDependencyCheckFlag;
 
 const MELVariable MEL_UNDO_STATE(L"serlioMaterialUndoState");
-}
+} // namespace
 
 MStatus MaterialNode::initializeAttributes(MObject& inMesh, MObject& outMesh) {
 	MStatus status;

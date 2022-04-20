@@ -19,9 +19,9 @@
 
 #include "materials/MaterialInfo.h"
 
-#include <cmath>
 #include "MaterialInfo.h"
 #include "utils/Utilities.h"
+#include <cmath>
 
 namespace {
 
@@ -293,6 +293,6 @@ size_t MaterialInfo::getHash() const {
 	prtu::hash_combine(seed, opacitymapTrafo.getHash());
 	prtu::hash_combine(seed, roughnessmapTrafo.getHash());
 	prtu::hash_combine(seed, specularmapTrafo.getHash());
-	
+
 	return seed;
 }

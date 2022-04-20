@@ -63,7 +63,7 @@ std::map<std::string, std::string> getKeyToUrlMap() {
 		const std::string value = result[i + 1].asChar();
 		keyToUrlMap[key] = value;
 	}
-	
+
 	return keyToUrlMap;
 }
 
@@ -142,8 +142,7 @@ MStatus registerMStringResources() {
 	return MS::kSuccess;
 }
 
-MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
-                       const std::vector<std::wstring>& enumOptions,
+MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr, const std::vector<std::wstring>& enumOptions,
                        const std::optional<std::wstring>& customDefaultOption) {
 	MStatus stat;
 	const MFnDependencyNode fNode(node, &stat);

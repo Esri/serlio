@@ -38,11 +38,11 @@ struct IUnknown;
 
 #include <cstring>
 #include <cwchar>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
-#include <map>
 
 namespace {
 const std::wstring MAYA_SEPARATOR = L"_";
@@ -99,7 +99,7 @@ void replaceCGACVersionBetween(std::wstring& errorString, const std::wstring pre
 	}
 	errorString.replace(versionStartPos, versionLength, CEVersion);
 }
-}
+} // namespace
 
 namespace prtu {
 
@@ -280,8 +280,7 @@ void replaceCGACWithCEVersion(std::wstring& errorString) {
 	replaceCGACVersionBetween(errorString, L"(", L")");
 }
 
-std::wstring getDuplicateCountSuffix(const std::wstring& name,
-                                     std::map<std::wstring, int>& duplicateCountMap) {
+std::wstring getDuplicateCountSuffix(const std::wstring& name, std::map<std::wstring, int>& duplicateCountMap) {
 	auto [iterator, isFirstEntry] = duplicateCountMap.try_emplace(name, 0);
 	if (!isFirstEntry)
 		iterator->second++;
