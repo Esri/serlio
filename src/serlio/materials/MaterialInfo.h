@@ -31,6 +31,13 @@ const std::string PRT_MATERIAL_CHANNEL = "prtMaterialChannel";
 const std::string PRT_MATERIAL_STREAM = "prtMaterialStream";
 const std::string PRT_MATERIAL_FACE_INDEX_START = "faceIndexStart";
 const std::string PRT_MATERIAL_FACE_INDEX_END = "faceIndexEnd";
+
+const std::string PRT_MATERIALINFO_MAP_STRUCTURE = "prtMaterialInfoMapStructure";
+const std::string PRT_MATERIALINFO_MAP_CHANNEL = "prtMaterialInfoMapChannel";
+const std::string PRT_MATERIALINFO_MAP_STREAM = "prtMaterialInfoMapStream";
+const std::string PRT_MATERIALINFO_MAP_KEY = "key";
+const std::string PRT_MATERIALINFO_MAP_VALUE = "value";
+
 const MELVariable MEL_VARIABLE_SHADING_ENGINE(L"shadingGroup");
 
 class MaterialColor {

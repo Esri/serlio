@@ -35,6 +35,21 @@ MObject findNamedObject(const std::wstring& name, MFn::Type fnType) {
 	return MObject::kNullObj;
 }
 
+adsk::Data::Structure* createNewMaterialInfoMapStructure() {
+	adsk::Data::Structure* fStructure;
+
+	// Register our structure since it is not registered yet.
+	fStructure = adsk::Data::Structure::create();
+	fStructure->setName(PRT_MATERIALINFO_MAP_STRUCTURE.c_str());
+
+	fStructure->addMember(adsk::Data::Member::eDataType::kUInt64, 1, PRT_MATERIALINFO_MAP_KEY.c_str());
+	fStructure->addMember(adsk::Data::Member::eDataType::kString, 1, PRT_MATERIALINFO_MAP_VALUE.c_str());
+
+	adsk::Data::Structure::registerStructure(*fStructure);
+
+	return fStructure;
+}
+
 } // namespace
 
 namespace MaterialUtils {
