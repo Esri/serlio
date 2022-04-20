@@ -1,6 +1,8 @@
 #include "utils/MayaUtilities.h"
 #include "utils/MELScriptBuilder.h"
+#include "utils/MItDependencyNodesWrapper.h"
 
+#include "maya/MItDependencyNodes.h"
 #include "maya/MStringResource.h"
 #include "maya/MStringResourceId.h"
 
@@ -63,6 +65,19 @@ std::map<std::string, std::string> getKeyToUrlMap() {
 	return keyToUrlMap;
 }
 
+MObject findNamedObject(const MString& name, MFn::Type fnType) {
+	MStatus status;
+	MItDependencyNodes nodeIt(fnType, &status);
+	MCHECK(status);
+
+	for (const auto& nodeObj : MItDependencyNodesWrapper(nodeIt)) {
+		MFnDependencyNode node(nodeObj);
+		if (node.name() == name)
+			return nodeObj;
+	}
+
+	return MObject::kNullObj;
+}
 } // namespace
 
 namespace mu {
