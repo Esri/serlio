@@ -3,8 +3,10 @@
 #include "utils/MItDependencyNodesWrapper.h"
 
 #include "maya/MItDependencyNodes.h"
+#include "maya/MSelectionList.h"
 #include "maya/MStringResource.h"
 #include "maya/MStringResourceId.h"
+#include "maya/MUuid.h"
 
 #include <map>
 #include <memory>
@@ -158,6 +160,25 @@ MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
 
 	return scriptBuilder.execute();
 }
+
+const MUuid getNodeUuid(const MString& nodeName) {
+	MObject shadingEngineObj = findNamedObject(nodeName, MFn::kShadingEngine);
+	MFnDependencyNode shadingEngine(shadingEngineObj);
+	return shadingEngine.uuid().asString();
+}
+
+MObject getNodeObjFromUuid(const MUuid& nodeUuid, MStatus& status) {
+	MSelectionList selList;
+	status = selList.add(MUuid(nodeUuid));
+	MObject shadingEngineNodeObj;
+
+	if (status != MS::kSuccess)
+		return shadingEngineNodeObj;
+
+	status = selList.getDependNode(0, shadingEngineNodeObj);
+	return shadingEngineNodeObj;
+}
+
 } // namespace mu
 
 bool operator==(const MStringArray& lhs, const MStringArray& rhs) {
