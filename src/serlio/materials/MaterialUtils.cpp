@@ -2,7 +2,6 @@
 
 #include "utils/MArrayWrapper.h"
 #include "utils/MELScriptBuilder.h"
-#include "utils/MItDependencyNodesWrapper.h"
 #include "utils/MayaUtilities.h"
 #include "utils/Utilities.h"
 
@@ -11,7 +10,6 @@
 #include "maya/MDataBlock.h"
 #include "maya/MDataHandle.h"
 #include "maya/MFnMesh.h"
-#include "maya/MItDependencyNodes.h"
 #include "maya/MFileIO.h"
 #include "maya/MPlugArray.h"
 #include "maya/MUuid.h"
@@ -22,20 +20,6 @@ const MELVariable MEL_UNDO_STATE(L"materialUndoState");
 
 constexpr const wchar_t* RGBA8_FORMAT = L"RGBA8";
 constexpr const wchar_t* FORMAT_STRING = L"format";
-
-MObject findNamedObject(const std::wstring& name, MFn::Type fnType) {
-	MStatus status;
-	MItDependencyNodes nodeIt(fnType, &status);
-	MCHECK(status);
-
-	for (const auto& nodeObj : MItDependencyNodesWrapper(nodeIt)) {
-		MFnDependencyNode node(nodeObj);
-		if (std::wcscmp(node.name().asWChar(), name.c_str()) == 0)
-			return nodeObj;
-	}
-
-	return MObject::kNullObj;
-}
 
 adsk::Data::Structure* createNewMaterialInfoMapStructure() {
 	adsk::Data::Structure* fStructure;
