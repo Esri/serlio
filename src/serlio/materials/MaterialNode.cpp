@@ -121,7 +121,8 @@ MStatus MaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			        shadingEngineBaseName, MEL_VARIABLE_SHADING_ENGINE, status);
 			MCHECK(status);
 
-			MaterialUtils::assignMaterialMetadata(*materialStructure, inMatStreamHandle, shadingEngineName);
+			MString shadingEngineNameUuid = mu::getNodeUuid(MString(shadingEngineName.c_str()));
+			MaterialUtils::addMaterialInfoMapMetadata(matInfo.getHash(), shadingEngineNameUuid);
 			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
 			LOG_DBG << "new shading engine: " << shadingEngineName;
 

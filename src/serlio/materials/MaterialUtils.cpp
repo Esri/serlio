@@ -12,7 +12,9 @@
 #include "maya/MDataHandle.h"
 #include "maya/MFnMesh.h"
 #include "maya/MItDependencyNodes.h"
+#include "maya/MFileIO.h"
 #include "maya/MPlugArray.h"
+#include "maya/MUuid.h"
 #include "maya/adskDataAssociations.h"
 
 namespace {
@@ -50,6 +52,41 @@ adsk::Data::Structure* createNewMaterialInfoMapStructure() {
 	return fStructure;
 }
 
+adsk::Data::Handle getMaterialInfoMapHandle(const adsk::Data::Structure* fStructure, size_t materialInfoHash, MUuid shadingEngineUuid) {
+	adsk::Data::Handle handle(*fStructure);
+
+	handle.setPositionByMemberName(PRT_MATERIALINFO_MAP_KEY.c_str());
+	*handle.asUInt64() = materialInfoHash;
+
+	handle.setPositionByMemberName(PRT_MATERIALINFO_MAP_VALUE.c_str());
+	std::string errors;
+	handle.fromStr(shadingEngineUuid.asString().asChar(), 0, errors);
+	
+	return handle;
+}
+
+adsk::Data::IndexCount getMaterialInfoMapIndex(const adsk::Data::Stream& stream, const size_t materialInfoHash) {
+	// Check if there is an obsolete matching duplicate.
+	for (adsk::Data::Stream::iterator iterator = stream.cbegin(); iterator != stream.cend(); ++iterator) {
+		iterator->setPositionByMemberName(PRT_MATERIALINFO_MAP_KEY.c_str());
+		size_t* hashPtr = iterator->asUInt64();
+
+		if ((hashPtr != nullptr) && (*hashPtr == materialInfoHash))
+			return iterator.index();
+	}
+
+	adsk::Data::IndexCount elementCount = stream.elementCount();
+
+	// Check if there is an unused index in the defined range.
+	for (adsk::Data::IndexCount i = 0; i < elementCount; ++i) {
+		if (!stream.hasElement(i)) {
+			return i;
+			break;
+		}
+	}
+
+	return elementCount;
+}
 } // namespace
 
 namespace MaterialUtils {
@@ -161,6 +198,31 @@ MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStruc
 	}
 
 	return existingMaterialInfos;
+}
+
+void addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingEngineUuid) {
+	const adsk::Data::Associations* metadata = MFileIO::metadata();
+	adsk::Data::Associations newMetadata(metadata);
+
+	adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(PRT_MATERIALINFO_MAP_STRUCTURE.c_str());
+
+	if (fStructure == nullptr)
+		fStructure = createNewMaterialInfoMapStructure();
+
+	adsk::Data::Stream newStream(*fStructure, PRT_MATERIALINFO_MAP_STREAM);
+	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIALINFO_MAP_CHANNEL);
+	adsk::Data::Stream* newStreamPtr = newChannel.findDataStream(PRT_MATERIALINFO_MAP_STREAM);
+	if (newStreamPtr != nullptr)
+		newStream = *newStreamPtr;
+
+	adsk::Data::Handle handle = getMaterialInfoMapHandle(fStructure, materialInfoHash, shadingEngineUuid);
+	adsk::Data::IndexCount index = getMaterialInfoMapIndex(newStream, materialInfoHash);
+	
+	newStream.setElement(index, handle);
+	newChannel.setDataStream(newStream);
+	newMetadata.setChannel(newChannel);
+
+	MFileIO::setMetadata(newMetadata);
 }
 
 bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange) {
