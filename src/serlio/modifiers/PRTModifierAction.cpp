@@ -281,13 +281,22 @@ short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue&
 bool cgacLogProblems(CGACErrors errorList) {
 	for (const auto& [error, count] : errorList) {
 		if (error.shouldBeLogged) {
-			if (error.errorLevel == prt::CGAErrorLevel::CGAERROR)
+			if (error.errorLevel == prt::CGAErrorLevel::CGAERROR) {
+				LOG_ERR << error.errorString.c_str();
 				MGlobal::displayError(error.errorString.c_str());
-			else
+			}
+			else {
 				MGlobal::displayWarning(error.errorString.c_str());
+			}
 		}
 	}
 	return false;
+}
+
+CGACErrors createCGACErrorFromString(const MString& stringMessage) {
+	CGACErrors cgacErrors;
+	cgacErrors.try_emplace({prt::CGAErrorLevel::CGAERROR, true, stringMessage.asWChar()}, 1);
+	return cgacErrors;
 }
 
 MStringArray cgacProblemsToStringArray(CGACErrors errorList) {
@@ -494,6 +503,8 @@ MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
 			}
 			case PrtAttributeType::STRING: {
 				const auto defStringVal = defaultAttributeValues->getString(fqAttrName.c_str());
+				if (defStringVal == nullptr)
+					break;
 
 				MString stringVal;
 				MCHECK(plug.getValue(stringVal));
@@ -585,6 +596,8 @@ MStatus PRTModifierAction::updateUI(const MObject& node, MObject& cgacProblemObj
 			}
 			case PrtAttributeType::STRING: {
 				const auto defStringVal = defaultAttributeValues->getString(fqAttrName.c_str());
+				if (defStringVal == nullptr)
+					return;
 
 				MString stringVal;
 				MCHECK(plug.getValue(stringVal));
@@ -648,7 +661,9 @@ ResolveMapSPtr PRTModifierAction::getResolveMap() {
 	return resolveMap;
 }
 
-MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& rulePkg) {
+MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& rulePkg, MObject& cgacProblemObject) {
+	MPlug cgacProblemPlug(node, cgacProblemObject);
+
 	mRulePkg = rulePkg;
 
 	mEnums.clear();
@@ -657,28 +672,44 @@ MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& r
 	mRuleAttributes.clear();
 	PRTContext::get().mPRTCache.get()->flushAll();
 
+	std::filesystem::path rulePkgPath(mRulePkg.asWChar());
+	if (!std::filesystem::exists(rulePkgPath)) {
+		CGACErrors cgacProblems =
+		        createCGACErrorFromString(MString("could not find rule package ") + mRulePkg.asWChar());
+		updateCgacProblemData(cgacProblemPlug, cgacProblems);
+		return MS::kFailure;
+	}
+
 	ResolveMapSPtr resolveMap = getResolveMap();
 	if (!resolveMap) {
-		LOG_ERR << "failed to get resolve map from rule package " << mRulePkg.asWChar();
+		CGACErrors cgacProblems =
+		        createCGACErrorFromString(MString("failed to get resolve map from rule package ") + mRulePkg.asWChar());
+		updateCgacProblemData(cgacProblemPlug, cgacProblems);
 		return MS::kFailure;
 	}
 
 	mRuleFile = prtu::getRuleFileEntry(resolveMap);
 	if (mRuleFile.empty()) {
-		LOG_ERR << "could not find rule file in rule package " << mRulePkg.asWChar();
+		CGACErrors cgacProblems =
+		        createCGACErrorFromString(MString("could not find rule file in rule package ") + mRulePkg.asWChar());
+		updateCgacProblemData(cgacProblemPlug, cgacProblems);
 		return MS::kFailure;
 	}
 
 	prt::Status infoStatus = prt::STATUS_UNSPECIFIED_ERROR;
 	const wchar_t* ruleFileURI = resolveMap->getString(mRuleFile.c_str());
 	if (ruleFileURI == nullptr) {
-		LOG_ERR << "could not find rule file URI in resolve map of rule package " << mRulePkg.asWChar();
+		CGACErrors cgacProblems = createCGACErrorFromString(
+		        MString("could not find rule file URI in resolve map of rule package ") + mRulePkg.asWChar());
+		updateCgacProblemData(cgacProblemPlug, cgacProblems);
 		return MS::kFailure;
 	}
 
 	RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI, PRTContext::get().mPRTCache.get(), &infoStatus));
 	if (!info || infoStatus != prt::STATUS_OK) {
-		LOG_ERR << "could not get rule file info from rule file " << mRuleFile;
+		CGACErrors cgacProblems =
+		        createCGACErrorFromString(MString("could not get rule file info from rule file ") + mRulePkg.asWChar());
+		updateCgacProblemData(cgacProblemPlug, cgacProblems);
 		return MS::kFailure;
 	}
 

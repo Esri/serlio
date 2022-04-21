@@ -98,6 +98,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			MCheckStatus(status, "ERROR getting currentRulePkg");
 
 			const bool ruleFileWasChanged = (rulePkgData.asString() != currentRulePkgData.asString());
+			currentRulePkgData.setString(rulePkgData.asString());
 
 			// Copy the inMesh to the outMesh, so you can
 			// perform operations directly on outMesh
@@ -115,8 +116,13 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			MDataHandle randomSeed = data.inputValue(mRandomSeed, &status);
 			fPRTModifierAction.setRandomSeed(randomSeed.asInt());
 
-			if (ruleFileWasChanged)
-				fPRTModifierAction.updateRuleFiles(thisMObject(), rulePkgData.asString());
+			if (ruleFileWasChanged){
+				status = fPRTModifierAction.updateRuleFiles(thisMObject(), rulePkgData.asString(), cgacProblems);
+
+				if (status != MStatus::kSuccess) {
+					return status;
+				}
+			}
 
 			status = fPRTModifierAction.fillAttributesFromNode(thisMObject());
 			if (status != MStatus::kSuccess)
@@ -126,8 +132,6 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			status = fPRTModifierAction.doIt();
 
 			fPRTModifierAction.updateUI(thisMObject(), cgacProblems);
-
-			currentRulePkgData.setString(rulePkgData.asString());
 
 			// Mark the output mesh as clean
 			outputData.setClean();

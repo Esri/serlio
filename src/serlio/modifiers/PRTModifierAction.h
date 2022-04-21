@@ -52,7 +52,7 @@ class PRTModifierAction : public polyModifierFty {
 public:
 	explicit PRTModifierAction();
 
-	MStatus updateRuleFiles(const MObject& node, const MString& rulePkg);
+	MStatus updateRuleFiles(const MObject& node, const MString& rulePkg, MObject& cgacProblemObject);
 	MStatus fillAttributesFromNode(const MObject& node);
 	MStatus updateUserSetAttributes(const MObject& node);
 	MStatus updateUI(const MObject& node, MObject& cgacProblemObject);
