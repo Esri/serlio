@@ -22,10 +22,8 @@ constexpr const wchar_t* RGBA8_FORMAT = L"RGBA8";
 constexpr const wchar_t* FORMAT_STRING = L"format";
 
 adsk::Data::Structure* createNewMaterialInfoMapStructure() {
-	adsk::Data::Structure* fStructure;
-
 	// Register our structure since it is not registered yet.
-	fStructure = adsk::Data::Structure::create();
+	adsk::Data::Structure* fStructure = adsk::Data::Structure::create();
 	fStructure->setName(PRT_MATERIALINFO_MAP_STRUCTURE.c_str());
 
 	fStructure->addMember(adsk::Data::Member::eDataType::kUInt64, 1, PRT_MATERIALINFO_MAP_KEY.c_str());
