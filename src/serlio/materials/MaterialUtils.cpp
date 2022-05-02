@@ -66,7 +66,6 @@ adsk::Data::IndexCount getMaterialInfoMapIndex(const adsk::Data::Stream& stream,
 	for (adsk::Data::IndexCount i = 0; i < elementCount; ++i) {
 		if (!stream.hasElement(i)) {
 			return i;
-			break;
 		}
 	}
 
