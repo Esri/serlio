@@ -160,7 +160,7 @@ MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr, const st
 	return scriptBuilder.execute();
 }
 
-const MUuid getNodeUuid(const MString& nodeName) {
+MUuid getNodeUuid(const MString& nodeName) {
 	MObject shadingEngineObj = findNamedObject(nodeName, MFn::kShadingEngine);
 	MFnDependencyNode shadingEngine(shadingEngineObj);
 	return shadingEngine.uuid();
