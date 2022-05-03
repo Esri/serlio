@@ -188,7 +188,7 @@ def taskBuildSerlioInstaller(cfg) {
 		}
 	}
 	antArgs += "-D\"serlio.version.build\"=${env.BUILD_NUMBER} "
-	antArgs += "-D\"out.dir\"=..\\build\\out "
+	antArgs += "-D\"out.folder\"=out "
 	antArgs += "-f deploy"
 
 	// Toolchain definition for building MSI installers.
