@@ -9,12 +9,12 @@
 
 	<property name="serlio.name" value="Serlio" />
 	<property name="serlio.description" value="Esri CityEngine Plugin for Autodesk Maya" />
+	<property name="serlio.platform" value="win64" />
+
 	<property name="serlio.vendor" value="Esri R&amp;amp;D Center Zurich" />
 	<property name="serlio.version.major" value="1" />
 	<property name="serlio.version.minor" value="2" />
 	<property name="serlio.version.patch" value="0" />
-	<property name="serlio.platform" value="win64" />
-
 	<property name="serlio.version.mmp" value="${serlio.version.major}.${serlio.version.minor}.${serlio.version.patch}" />
 
 	<condition property="serlio.version.mmpPre" value="${serlio.version.major}.${serlio.version.minor}.${serlio.version.patch}-${serlio.version.preRelease}" else="${serlio.version.major}.${serlio.version.minor}.${serlio.version.patch}">
