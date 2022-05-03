@@ -35,16 +35,27 @@ adsk::Data::Structure* createNewMaterialInfoMapStructure() {
 }
 
 adsk::Data::Handle getMaterialInfoMapHandle(const adsk::Data::Structure* fStructure, size_t materialInfoHash,
-                                            MUuid shadingEngineUuid) {
+                                            MUuid shadingEngineUuid, MStatus& status) {
 	adsk::Data::Handle handle(*fStructure);
 
 	handle.setPositionByMemberName(PRT_MATERIALINFO_MAP_KEY.c_str());
-	*handle.asUInt64() = materialInfoHash;
+	uint64_t* materialInfoHashPtr = handle.asUInt64();
+	if (materialInfoHashPtr == nullptr) {
+		LOG_ERR << "Failed to parse handle value as UInt64";
+		status = MS::kFailure;
+		return handle;
+	}
+	*materialInfoHashPtr = materialInfoHash;
 
 	handle.setPositionByMemberName(PRT_MATERIALINFO_MAP_VALUE.c_str());
 	std::string errors;
-	handle.fromStr(shadingEngineUuid.asString().asChar(), 0, errors);
+	if (0 != handle.fromStr(shadingEngineUuid.asString().asChar(), 0, errors)) {
+		LOG_ERR << "Failed to parse handle value from string: " << errors;
+		status = MS::kFailure;
+		return handle;
+	}
 
+	status = MS::kSuccess;
 	return handle;
 }
 
@@ -173,7 +184,7 @@ MaterialCache getMaterialCache() {
 	return existingMaterialInfos;
 }
 
-void addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingEngineUuid) {
+MStatus addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingEngineUuid) {
 	const adsk::Data::Associations* metadata = MFileIO::metadata();
 	adsk::Data::Associations newMetadata(metadata);
 
@@ -188,7 +199,8 @@ void addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingE
 	if (newStreamPtr != nullptr)
 		newStream = *newStreamPtr;
 
-	adsk::Data::Handle handle = getMaterialInfoMapHandle(fStructure, materialInfoHash, shadingEngineUuid);
+	MStatus status;
+	adsk::Data::Handle handle = getMaterialInfoMapHandle(fStructure, materialInfoHash, shadingEngineUuid, status);
 	adsk::Data::IndexCount index = getMaterialInfoMapIndex(newStream, materialInfoHash);
 
 	newStream.setElement(index, handle);
@@ -196,6 +208,8 @@ void addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingE
 	newMetadata.setChannel(newChannel);
 
 	MFileIO::setMetadata(newMetadata);
+
+	return status;
 }
 
 bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange) {

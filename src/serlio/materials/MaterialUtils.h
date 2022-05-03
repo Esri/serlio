@@ -24,7 +24,7 @@ MaterialCache getMaterialCache();
 
 bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange);
 
-void addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingEngineUuid);
+MStatus addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingEngineUuid);
 
 std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName,
                                               const MELVariable& shadingEngineVariable, MStatus& status);
