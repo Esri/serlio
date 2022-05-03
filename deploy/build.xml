@@ -39,7 +39,6 @@
 		<condition>
 			<not>
 				<or>
-					<isset property="maya2018.dir" />
 					<isset property="maya2019.dir" />
 					<isset property="maya2020.dir" />
 					<isset property="maya2022.dir" />
@@ -86,13 +85,6 @@
 		</copy>
 	</target>
 
-	<target name="copy2018" depends="prepare" if="maya2018.dir">
-		<mkdir dir="${install.dir}\2018" />
-		<copy todir="${install.dir}\2018" >
-			<fileset dir="${maya2018.dir}" />
-		</copy>
-	</target>
-
 	<target name="copy2019" depends="prepare" if="maya2019.dir">
 		<mkdir dir="${install.dir}\2019" />
 		<copy todir="${install.dir}\2019" >
@@ -114,7 +106,7 @@
 		</copy>
 	</target>
 
-	<target name="harvest" depends="copy2018,copy2019,copy2020,copy2022">
+	<target name="harvest" depends="copy2019,copy2020,copy2022">
 		<exec executable="heat">
 			<arg line="dir ${install.dir}" />
 			<arg line="-dr SerlioInstallComponentDir" />

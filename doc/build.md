@@ -74,6 +74,6 @@
 1. Open a terminal (e.g. bash)
 1. Change into the example directory: `cd <your path to>/esri-cityengine-sdk/examples/serlio`
 1. Create a build directory and change into it: `mkdir build && cd build`
-1. Run cmake (adjust the maya path if necessary): `cmake -Dmaya_DIR=/usr/autodesk/maya2018 ../src`
+1. Run cmake (adjust the maya path if necessary): `cmake -Dmaya_DIR=/usr/autodesk/maya2022 ../src`
 1. Compile: `make install`
 1. The build result will appear in the `install` directory in parallel to the `build` directory. We will use this as the plugin directory below.
