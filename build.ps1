@@ -1,5 +1,5 @@
 param(
-# Target. One of 'All', 'Archive', 'Installer' plus the optional suffix 'FromScratch'.
+# Target. One of 'All', 'Archive' plus the optional suffix 'FromScratch'.
 [String]$TARGET = 'AllFromScratch',
 # Release With Debug Info yes/no. (Ignored by installer builds.)
 [Bool]$DEBUGINFO = $false,
@@ -21,7 +21,6 @@ Set-StrictMode -Version Latest
 $BUILD_FOLDER = "$PSScriptRoot\build"
 $TOOLS_FOLDER = "$BUILD_FOLDER\tools"
 $ARCHIVE_BUILD_FOLDER = "$BUILD_FOLDER\build_zip"
-$INSTALLER_BUILD_FOLDER = "$BUILD_FOLDER\build_msi"
 $ARTIFACTS_FOLDER = "$BUILD_FOLDER\out"
 
 # Folders for the build tools
@@ -46,14 +45,13 @@ function NukeTools {
 
 function NukeBuilds {
     NukeFolder($ARCHIVE_BUILD_FOLDER)
-    NukeFolder($INSTALLER_BUILD_FOLDER)
     NukeFolder($ARTIFACTS_FOLDER)
     Write-Host ">>> Folder structure for builds destroyed." -ForegroundColor Green
 }
 
 function MakeDirs {
     # Create the desired folder structure.
-    $folders = $BUILD_FOLDER, $TOOLS_FOLDER, $NINJA_FOLDER, $CMAKE_FOLDER, $WIX_FOLDER, $ARCHIVE_BUILD_FOLDER, $INSTALLER_BUILD_FOLDER, $ARTIFACTS_FOLDER
+    $folders = $BUILD_FOLDER, $TOOLS_FOLDER, $NINJA_FOLDER, $CMAKE_FOLDER, $WIX_FOLDER, $ARCHIVE_BUILD_FOLDER, $ARTIFACTS_FOLDER
     foreach ($f in $folders) {
         if (!(Test-Path $f)) {
             New-Item -ItemType Directory -Path $f | Out-Null
@@ -166,30 +164,6 @@ function BuildArchive {
     Set-Location -Path $cwd
 }
 
-function BuildInstaller {
-    Write-Host ">>> Building MSI installer...!" -ForegroundColor Green
-    $cwd = Get-Location
-    Set-Location -Path $INSTALLER_BUILD_FOLDER
-    # Call cmake
-    Write-Host ">>>>> Calling 'cmake' now." -ForegroundColor Green
-    $mdir = If ([System.String]::IsNullOrWhiteSpace($MAYA_DIR)) { "" } else { "-Dmaya_DIR='$MAYA_DIR'" }
-    $cesdkdir = If ([System.String]::IsNullOrWhiteSpace($CESDK_DIR)) { "" } else { "-Dprt_DIR='$CESDK_DIR'" }
-    cmake -G Ninja -DWIN_INSTALLER=True $mdir $cesdkdir -DSRL_VERSION_BUILD="$BUILD_NO" -DCMAKE_BUILD_TYPE=Release ../../src
-    # ...and ninja
-    Write-Host ">>>>> Calling 'ninja' now." -ForegroundColor Green
-    ninja package
-    # Move the built installer to the out folder
-    $installer = FindFile '*.msi' $INSTALLER_BUILD_FOLDER
-    if($installer) {
-        Move-Item -Path "$INSTALLER_BUILD_FOLDER\*.msi" -Destination $ARTIFACTS_FOLDER -Force
-        Write-Host ">>>>> Installer build done. MSI can be found in $ARTIFACTS_FOLDER\." -ForegroundColor Green
-    } else {
-        Write-Host ">>>>> Strange, no .msi found..." -ForegroundColor Red
-        throw 'Installer build failed.'
-    }
-    Set-Location -Path $cwd
-}
-
 ## Do it!
 function DoIt {
     if ($TARGET.EndsWith('FromScratch')) {
@@ -207,9 +181,6 @@ function DoIt {
     FetchTools
     SetupEnv
 
-    if($TARGET.StartsWith('All') -or $TARGET.StartsWith('Installer')) {
-        BuildInstaller
-    }
     if($TARGET.StartsWith('All') -or $TARGET.StartsWith('Archive')) {
         BuildArchive
     }

@@ -40,11 +40,7 @@ set(SERLIO_TARGET serlio)
 set(TEST_TARGET serlio_test)
 
 ### configure packaging
-if (WIN_INSTALLER) # <-- To be set on the command line
-	include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_installer.cmake)
-else ()
-	include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_archives.cmake)
-endif ()
+include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_archives.cmake)
 
 add_subdirectory(codec)
 add_subdirectory(serlio)
