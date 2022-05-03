@@ -1,7 +1,7 @@
 <project name="serlio" default="link" xmlns:if="ant:if" xmlns:unless="ant:unless">
 	<property name="build.dir" value="${basedir}\..\build" />
 	<property name="deploy.dir" value="${build.dir}\build_msi" />
-	<property name="out.dir" value="${build.dir}\out" />
+	<property name="out.dir" value="${build.dir}\build_msi" />
 	<property name="install.dir" value="${deploy.dir}\install" />
 	<property name="resources.dir" value="${basedir}\resources" />
 

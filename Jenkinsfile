@@ -182,12 +182,13 @@ def taskBuildSerlioInstaller(cfg) {
 					def zipFile = cepl.findOneFile("*${mv}*.zip")
 					final String zipFileName = zipFile.name
 					unzip(zipFile: zipFileName)
-					antArgs += "-D\"${mv}.dir\"=../build/tmp/${zipFileName.take(zipFileName.lastIndexOf('.'))} "
+					antArgs += "-D\"${mv}.dir\"=..\\build\\tmp\\${zipFileName.take(zipFileName.lastIndexOf('.'))} "
 				}
 			}
 		}
 	}
 	antArgs += "-D\"serlio.version.build\"=${env.BUILD_NUMBER} "
+	antArgs += "-D\"out.dir\"=..\\build\\out\\ "
 	antArgs += "-f deploy"
 
 	// Toolchain definition for building MSI installers.
