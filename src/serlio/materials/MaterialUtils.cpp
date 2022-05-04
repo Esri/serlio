@@ -201,6 +201,9 @@ MStatus addMaterialInfoMapMetadata(size_t materialInfoHash, const MUuid& shading
 
 	MStatus status;
 	adsk::Data::Handle handle = getMaterialInfoMapHandle(fStructure, materialInfoHash, shadingEngineUuid, status);
+	if (status != MS::kSuccess)
+		return status;
+
 	adsk::Data::IndexCount index = getMaterialInfoMapIndex(newStream, materialInfoHash);
 
 	newStream.setElement(index, handle);
@@ -209,7 +212,7 @@ MStatus addMaterialInfoMapMetadata(size_t materialInfoHash, const MUuid& shading
 
 	MFileIO::setMetadata(newMetadata);
 
-	return status;
+	return MS::kSuccess;
 }
 
 bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange) {
