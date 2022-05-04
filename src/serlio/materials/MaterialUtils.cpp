@@ -27,7 +27,7 @@ adsk::Data::Structure* createNewMaterialInfoMapStructure() {
 	fStructure->setName(PRT_MATERIALINFO_MAP_STRUCTURE.c_str());
 
 	fStructure->addMember(adsk::Data::Member::eDataType::kUInt64, 1, PRT_MATERIALINFO_MAP_KEY.c_str());
-	fStructure->addMember(adsk::Data::Member::eDataType::kString, 1, PRT_MATERIALINFO_MAP_VALUE.c_str());
+	fStructure->addMember(adsk::Data::Member::eDataType::kUInt8, 16, PRT_MATERIALINFO_MAP_VALUE.c_str());
 
 	adsk::Data::Structure::registerStructure(*fStructure);
 
@@ -48,11 +48,16 @@ adsk::Data::Handle getMaterialInfoMapHandle(const adsk::Data::Structure* fStruct
 	*materialInfoHashPtr = materialInfoHash;
 
 	handle.setPositionByMemberName(PRT_MATERIALINFO_MAP_VALUE.c_str());
-	std::string errors;
-	if (0 != handle.fromStr(shadingEngineUuid.asString().asChar(), 0, errors)) {
-		LOG_ERR << "Failed to parse handle value from string: " << errors;
+	uint8_t* shadingEngineUuidPtr = handle.asUInt8();
+	if (shadingEngineUuidPtr == nullptr) {
+		LOG_ERR << "Failed to parse handle value as Uint8";
 		status = MS::kFailure;
 		return handle;
+	}
+	uint8_t uuidAsChar[16];
+	shadingEngineUuid.get(uuidAsChar);
+	for (unsigned int i = 0; i < 16; ++i) {
+		shadingEngineUuidPtr[i] = uuidAsChar[i];
 	}
 
 	status = MS::kSuccess;
@@ -176,7 +181,10 @@ MaterialCache getMaterialCache() {
 			continue;
 
 		iterator->setPositionByMemberName(PRT_MATERIALINFO_MAP_VALUE.c_str());
-		MString uuid = iterator->str(0).c_str();
+		uint8_t* uuidPtr = iterator->asUInt8();
+		if (uuidPtr == nullptr)
+			continue;
+		MUuid uuid(uuidPtr);
 
 		existingMaterialInfos.emplace(*hashPtr, uuid);
 	}
