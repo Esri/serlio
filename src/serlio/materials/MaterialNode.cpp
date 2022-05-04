@@ -122,7 +122,7 @@ MStatus MaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			        shadingEngineBaseName, MEL_VARIABLE_SHADING_ENGINE, status);
 			MCHECK(status);
 
-			MString shadingEngineNameUuid = mu::getNodeUuid(MString(shadingEngineName.c_str()));
+			MUuid shadingEngineNameUuid = mu::getNodeUuid(MString(shadingEngineName.c_str()));
 			MCHECK(MaterialUtils::addMaterialInfoMapMetadata(matInfo.getHash(), shadingEngineNameUuid));
 			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
 			LOG_DBG << "new shading engine: " << shadingEngineName;
@@ -131,12 +131,12 @@ MStatus MaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 		};
 
 		MaterialInfo matInfo(inMatStreamHandle);
-		const MString shadingEngineUuid = getCachedValue(matCache, matInfo.getHash(), createShadingEngine, matInfo);
+		const MUuid shadingEngineUuid = getCachedValue(matCache, matInfo.getHash(), createShadingEngine, matInfo);
 
 		MObject shadingEngineNodeObj = mu::getNodeObjFromUuid(shadingEngineUuid, status);
 
 		if (status != MS::kSuccess) {
-			const MString newUuid = createShadingEngine(matInfo);
+			const MUuid newUuid(createShadingEngine(matInfo));
 			shadingEngineNodeObj = mu::getNodeObjFromUuid(newUuid, status);
 		}
 

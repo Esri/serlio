@@ -184,7 +184,7 @@ MaterialCache getMaterialCache() {
 	return existingMaterialInfos;
 }
 
-MStatus addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingEngineUuid) {
+MStatus addMaterialInfoMapMetadata(size_t materialInfoHash, const MUuid& shadingEngineUuid) {
 	const adsk::Data::Associations* metadata = MFileIO::metadata();
 	adsk::Data::Associations newMetadata(metadata);
 

@@ -18,13 +18,13 @@ adsk::Data::Stream* getMaterialStream(const MObject& aInMesh, MDataBlock& data);
 
 MStatus getMeshName(MString& meshName, const MPlug& plug);
 
-using MaterialCache = std::map<size_t, MString>;
+using MaterialCache = std::map<size_t, MUuid>;
 
 MaterialCache getMaterialCache();
 
 bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange);
 
-MStatus addMaterialInfoMapMetadata(size_t materialInfoHash, const MString& shadingEngineUuid);
+MStatus addMaterialInfoMapMetadata(size_t materialInfoHash, const MUuid& shadingEngineUuid);
 
 std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName,
                                               const MELVariable& shadingEngineVariable, MStatus& status);
