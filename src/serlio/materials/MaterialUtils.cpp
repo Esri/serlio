@@ -35,7 +35,7 @@ adsk::Data::Structure* createNewMaterialInfoMapStructure() {
 }
 
 adsk::Data::Handle getMaterialInfoMapHandle(const adsk::Data::Structure* fStructure, size_t materialInfoHash,
-                                            MUuid shadingEngineUuid, MStatus& status) {
+                                            const MUuid& shadingEngineUuid, MStatus& status) {
 	adsk::Data::Handle handle(*fStructure);
 
 	handle.setPositionByMemberName(PRT_MATERIALINFO_MAP_KEY.c_str());
