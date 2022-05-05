@@ -23,6 +23,7 @@
 #include "utils/MELScriptBuilder.h"
 
 #include "maya/MFnTypedAttribute.h"
+#include "maya/MUuid.h"
 
 #include <mutex>
 
@@ -30,7 +31,7 @@ namespace {
 std::once_flag pluginDependencyCheckFlag;
 
 const MELVariable MEL_UNDO_STATE(L"serlioMaterialUndoState");
-}
+} // namespace
 
 MStatus MaterialNode::initializeAttributes(MObject& inMesh, MObject& outMesh) {
 	MStatus status;
@@ -91,7 +92,7 @@ MStatus MaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 	if (materialStructure == nullptr)
 		return MStatus::kFailure;
 
-	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialsByStructure(*materialStructure, baseName);
+	MaterialUtils::MaterialCache matCache = MaterialUtils::getMaterialCache();
 
 	MELScriptBuilder scriptBuilder;
 	scriptBuilder.declInt(MEL_UNDO_STATE);
@@ -121,15 +122,27 @@ MStatus MaterialNode::compute(const MPlug& plug, MDataBlock& data) {
 			        shadingEngineBaseName, MEL_VARIABLE_SHADING_ENGINE, status);
 			MCHECK(status);
 
-			MaterialUtils::assignMaterialMetadata(*materialStructure, inMatStreamHandle, shadingEngineName);
+			MUuid shadingEngineNameUuid = mu::getNodeUuid(MString(shadingEngineName.c_str()));
+			MCHECK(MaterialUtils::addMaterialInfoMapMetadata(matInfo.getHash(), shadingEngineNameUuid));
 			appendToMaterialScriptBuilder(scriptBuilder, matInfo, shaderBaseName, shadingEngineName);
 			LOG_DBG << "new shading engine: " << shadingEngineName;
 
-			return shadingEngineName;
+			return shadingEngineNameUuid;
 		};
 
 		MaterialInfo matInfo(inMatStreamHandle);
-		const std::wstring shadingEngineName = getCachedValue(matCache, matInfo, createShadingEngine, matInfo);
+		const MUuid shadingEngineUuid = getCachedValue(matCache, matInfo.getHash(), createShadingEngine, matInfo);
+
+		MObject shadingEngineNodeObj = mu::getNodeObjFromUuid(shadingEngineUuid, status);
+
+		if (status != MS::kSuccess) {
+			const MUuid newUuid(createShadingEngine(matInfo));
+			shadingEngineNodeObj = mu::getNodeObjFromUuid(newUuid, status);
+		}
+
+		MFnDependencyNode shadingEngineNode(shadingEngineNodeObj);
+		const std::wstring shadingEngineName = shadingEngineNode.name().asWChar();
+
 		scriptBuilder.setsAddFaceRange(shadingEngineName, meshName.asWChar(), faceRange.first, faceRange.second);
 		LOG_DBG << "assigned shading engine (" << faceRange.first << ":" << faceRange.second
 		        << "): " << shadingEngineName;

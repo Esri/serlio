@@ -54,9 +54,12 @@ std::filesystem::path getWorkspaceRoot(MStatus& status);
 
 MStatus registerMStringResources();
 
-MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
-                       const std::vector<std::wstring>& enumOptions,
+MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr, const std::vector<std::wstring>& enumOptions,
                        const std::optional<std::wstring>& customDefaultOption);
+
+MUuid getNodeUuid(const MString& nodeName);
+
+MObject getNodeObjFromUuid(const MUuid& nodeUuid, MStatus& status);
 } // namespace mu
 
 bool operator==(const MStringArray& lhs, const MStringArray& rhs);

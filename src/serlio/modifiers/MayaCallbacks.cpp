@@ -176,12 +176,10 @@ constexpr unsigned int MATERIAL_MAX_FLOAT_ARRAY_LENGTH = 5;
 constexpr unsigned int MATERIAL_MAX_STRING_ARRAY_LENGTH = 2;
 
 adsk::Data::Structure* createNewMayaStructure(const prt::AttributeMap** materials) {
-	adsk::Data::Structure* fStructure;
-
 	const prt::AttributeMap* mat = materials[0];
 
 	// Register our structure since it is not registered yet.
-	fStructure = adsk::Data::Structure::create();
+	adsk::Data::Structure* fStructure = adsk::Data::Structure::create();
 	fStructure->setName(PRT_MATERIAL_STRUCTURE.c_str());
 
 	fStructure->addMember(adsk::Data::Member::kInt32, 1, PRT_MATERIAL_FACE_INDEX_START.c_str());

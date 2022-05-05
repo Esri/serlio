@@ -1,8 +1,12 @@
 #include "utils/MayaUtilities.h"
 #include "utils/MELScriptBuilder.h"
+#include "utils/MItDependencyNodesWrapper.h"
 
+#include "maya/MItDependencyNodes.h"
+#include "maya/MSelectionList.h"
 #include "maya/MStringResource.h"
 #include "maya/MStringResourceId.h"
+#include "maya/MUuid.h"
 
 #include <map>
 #include <memory>
@@ -59,10 +63,23 @@ std::map<std::string, std::string> getKeyToUrlMap() {
 		const std::string value = result[i + 1].asChar();
 		keyToUrlMap[key] = value;
 	}
-	
+
 	return keyToUrlMap;
 }
 
+MObject findNamedObject(const MString& name, MFn::Type fnType) {
+	MStatus status;
+	MItDependencyNodes nodeIt(fnType, &status);
+	MCHECK(status);
+
+	for (const auto& nodeObj : MItDependencyNodesWrapper(nodeIt)) {
+		MFnDependencyNode node(nodeObj);
+		if (node.name() == name)
+			return nodeObj;
+	}
+
+	return MObject::kNullObj;
+}
 } // namespace
 
 namespace mu {
@@ -125,8 +142,7 @@ MStatus registerMStringResources() {
 	return MS::kSuccess;
 }
 
-MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
-                       const std::vector<std::wstring>& enumOptions,
+MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr, const std::vector<std::wstring>& enumOptions,
                        const std::optional<std::wstring>& customDefaultOption) {
 	MStatus stat;
 	const MFnDependencyNode fNode(node, &stat);
@@ -143,6 +159,25 @@ MStatus setEnumOptions(const MObject& node, MFnEnumAttribute& enumAttr,
 
 	return scriptBuilder.execute();
 }
+
+MUuid getNodeUuid(const MString& nodeName) {
+	MObject shadingEngineObj = findNamedObject(nodeName, MFn::kShadingEngine);
+	MFnDependencyNode shadingEngine(shadingEngineObj);
+	return shadingEngine.uuid();
+}
+
+MObject getNodeObjFromUuid(const MUuid& nodeUuid, MStatus& status) {
+	MSelectionList selList;
+	status = selList.add(MUuid(nodeUuid));
+	MObject shadingEngineNodeObj;
+
+	if (status != MS::kSuccess)
+		return shadingEngineNodeObj;
+
+	status = selList.getDependNode(0, shadingEngineNodeObj);
+	return shadingEngineNodeObj;
+}
+
 } // namespace mu
 
 bool operator==(const MStringArray& lhs, const MStringArray& rhs) {
