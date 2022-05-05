@@ -20,6 +20,7 @@ const MELVariable MEL_UNDO_STATE(L"materialUndoState");
 
 constexpr const wchar_t* RGBA8_FORMAT = L"RGBA8";
 constexpr const wchar_t* FORMAT_STRING = L"format";
+constexpr const size_t UUID_UINT8_LENGTH = 16;
 
 adsk::Data::Structure* createNewMaterialInfoMapStructure() {
 	// Register our structure since it is not registered yet.
@@ -27,7 +28,7 @@ adsk::Data::Structure* createNewMaterialInfoMapStructure() {
 	fStructure->setName(PRT_MATERIALINFO_MAP_STRUCTURE.c_str());
 
 	fStructure->addMember(adsk::Data::Member::eDataType::kUInt64, 1, PRT_MATERIALINFO_MAP_KEY.c_str());
-	fStructure->addMember(adsk::Data::Member::eDataType::kUInt8, 16, PRT_MATERIALINFO_MAP_VALUE.c_str());
+	fStructure->addMember(adsk::Data::Member::eDataType::kUInt8, UUID_UINT8_LENGTH, PRT_MATERIALINFO_MAP_VALUE.c_str());
 
 	adsk::Data::Structure::registerStructure(*fStructure);
 
@@ -54,9 +55,9 @@ adsk::Data::Handle getMaterialInfoMapHandle(const adsk::Data::Structure* fStruct
 		status = MS::kFailure;
 		return handle;
 	}
-	uint8_t uuidAsChar[16];
+	uint8_t uuidAsChar[UUID_UINT8_LENGTH];
 	shadingEngineUuid.get(uuidAsChar);
-	for (unsigned int i = 0; i < 16; ++i) {
+	for (unsigned int i = 0; i < UUID_UINT8_LENGTH; ++i) {
 		shadingEngineUuidPtr[i] = uuidAsChar[i];
 	}
 
