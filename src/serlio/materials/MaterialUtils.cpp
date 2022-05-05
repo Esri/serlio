@@ -185,9 +185,8 @@ MaterialCache getMaterialCache() {
 		uint8_t* uuidPtr = iterator->asUInt8();
 		if (uuidPtr == nullptr)
 			continue;
-		MUuid uuid(uuidPtr);
 
-		existingMaterialInfos.emplace(*hashPtr, uuid);
+		existingMaterialInfos.emplace(*hashPtr, uuidPtr);
 	}
 
 	return existingMaterialInfos;
