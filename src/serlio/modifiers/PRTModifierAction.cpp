@@ -85,7 +85,7 @@ RangeType GetRangeType(const prt::Annotation* an) {
 		else if (std::wcscmp(key, MAX_KEY) == 0) {
 			hasMax = true;
 		}
-		if (std::wcscmp(key, NULL_KEY) == 1)
+		if (std::wcscmp(key, NULL_KEY) != 0)
 			hasKey = true;
 	}
 	
