@@ -1,16 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Cmake template to generate the final PackageContents.xml file.
-    The variables @MY_VAR@ will be replaced by the cmake values set(MY_VAR "value")
-    see "cpack_setup.cmake".
-
-    PackageContents.xml describes the location of our plugin files (.mel/.py/.mll etc.)
-    and update Maya environment variables.
-
-    When PackageContents.xml is present in "C:\ProgramData\Autodesk\ApplicationPlugins\plugin_name"
-    Maya automatically read this file and loads the necessary scripts and file.
- -->
-
  <!-- Note: UpgradeCode will be required to sell the plugin on autodesk store. -->
 <ApplicationPackage SchemaVersion="1.0"
     ProductType="Application"
