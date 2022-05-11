@@ -1,6 +1,6 @@
-#include "utils/MayaUtilities.h"
 #include "utils/MELScriptBuilder.h"
 #include "utils/MItDependencyNodesWrapper.h"
+#include "utils/MayaUtilities.h"
 
 #include "maya/MItDependencyNodes.h"
 #include "maya/MSelectionList.h"

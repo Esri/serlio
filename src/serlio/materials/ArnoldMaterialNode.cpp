@@ -76,13 +76,11 @@ void createMapShader(MELScriptBuilder& sb, const std::string& tex, const Materia
 	if (alpha) {
 		sb.connectAttr(MEL_VAR_MAP_NODE, L"outAlpha", MEL_VAR_UV_TRAFO_NODE, L"passthroughR");
 		sb.forceValidTextureAlphaChannel(MEL_VAR_MAP_NODE);
-		sb.setAttr(MEL_VAR_MAP_NODE, L"alphaIsLuminance",
-		           !MaterialUtils::textureHasAlphaChannel(texPath.wstring()));
+		sb.setAttr(MEL_VAR_MAP_NODE, L"alphaIsLuminance", !MaterialUtils::textureHasAlphaChannel(texPath.wstring()));
 	}
 	else
 		sb.connectAttr(MEL_VAR_MAP_NODE, L"outColor", MEL_VAR_UV_TRAFO_NODE, L"passthrough");
 }
-
 
 } // namespace
 

@@ -17,15 +17,15 @@
  * limitations under the License.
  */
 
-#include "serlioPlugin.h"
 #include "PRTContext.h"
+#include "serlioPlugin.h"
 
 #include "modifiers/PRTModifierCommand.h"
 #include "modifiers/PRTModifierNode.h"
 
 #include "materials/ArnoldMaterialNode.h"
-#include "materials/StingrayMaterialNode.h"
 #include "materials/MaterialCommand.h"
+#include "materials/StingrayMaterialNode.h"
 
 #include "utils/MayaUtilities.h"
 

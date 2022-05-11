@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#include "utils/ResolveMapCache.h"
 #include "utils/LogHandler.h"
+#include "utils/ResolveMapCache.h"
 #include "utils/Utilities.h"
 
 #include <mutex>
@@ -71,8 +71,7 @@ ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
 		prt::Status status = prt::STATUS_UNSPECIFIED_ERROR;
 		if (DBG)
 			LOG_DBG << "createResolveMap from " << rpk;
-		rmce.mResolveMap.reset(prt::createResolveMap(rpkURI.c_str(), nullptr, &status),
-		                       PRTDestroyer());
+		rmce.mResolveMap.reset(prt::createResolveMap(rpkURI.c_str(), nullptr, &status), PRTDestroyer());
 		if (status != prt::STATUS_OK)
 			return LOOKUP_FAILURE;
 

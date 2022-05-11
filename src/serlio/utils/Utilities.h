@@ -97,7 +97,7 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 	return pv;
 }
 
-//hash_combine function from boost library: https://www.boost.org/doc/libs/1_73_0/boost/container_hash/hash.hpp
+// hash_combine function from boost library: https://www.boost.org/doc/libs/1_73_0/boost/container_hash/hash.hpp
 template <class SizeT>
 inline void hash_combine(SizeT& seed, SizeT value) {
 	seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -249,7 +249,7 @@ SRL_TEST_EXPORTS_API inline void replaceAllOf(std::wstring& s, const std::wstrin
 
 template <typename C>
 void replaceAllSubstrings(std::basic_string<C>& str, const std::basic_string<C>& oldStr,
-                                 const std::basic_string<C>& newStr) {
+                          const std::basic_string<C>& newStr) {
 	typename std::basic_string<C>::size_type pos = 0;
 	while ((pos = str.find(oldStr, pos)) != std::basic_string<C>::npos) {
 		str.replace(pos, oldStr.length(), newStr);

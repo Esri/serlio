@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 
-#include "materials/StingrayMaterialNode.h"
 #include "materials/MaterialInfo.h"
 #include "materials/MaterialUtils.h"
+#include "materials/StingrayMaterialNode.h"
 
 #include "utils/MELScriptBuilder.h"
 
@@ -51,8 +51,7 @@ void setTexture(MELScriptBuilder& sb, const std::wstring& target, const std::wst
 		sb.connectAttr(MEL_VAR_MAP_NODE, L"outColor", MEL_VAR_SHADER_NODE, L"TEX_" + target);
 
 		if (!alphaTarget.empty())
-			sb.setAttr(MEL_VAR_SHADER_NODE, alphaTarget,
-			           MaterialUtils::textureHasAlphaChannel(texPath.wstring()));
+			sb.setAttr(MEL_VAR_SHADER_NODE, alphaTarget, MaterialUtils::textureHasAlphaChannel(texPath.wstring()));
 
 		sb.setAttr(MEL_VAR_SHADER_NODE, L"use_" + target, 1);
 	}

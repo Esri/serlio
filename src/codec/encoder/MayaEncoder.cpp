@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#include "encoder/MayaEncoder.h"
 #include "encoder/IMayaCallbacks.h"
+#include "encoder/MayaEncoder.h"
 #include "encoder/TextureEncoder.h"
 
 #include "prtx/Attributable.h"

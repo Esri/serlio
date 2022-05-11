@@ -42,8 +42,7 @@ PRTContext& PRTContext::get() {
 	return prtCtx;
 }
 
-PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs)
-    : mPluginRootPath(prtu::getPluginRoot()) {
+PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRootPath(prtu::getPluginRoot()) {
 	if (ENABLE_LOG_CONSOLE) {
 		mLogHandler = std::make_unique<logging::LogHandler>();
 		prt::addLogHandler(mLogHandler.get());
