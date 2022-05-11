@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Name="@PROJECT_NAME@" Manufacturer="@PACKAGE_VENDOR_ESCAPED@" Version="@SRL_VERSION_MMP@"
+		Id="*" UpgradeCode="9B170749-ECDF-4F66-9E2F-C90457272019" Language="1033" Codepage='1252'>
+
+		<Package Platform='x64' Id='*' Keywords='Installer' Description="@PROJECT_NAME@"
+			Manufacturer='@PACKAGE_VENDOR_ESCAPED@' InstallerVersion='200'
+			Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+
+		<Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt="CD-ROM #1" />
+		<Property Id='DiskPrompt' Value="@PROJECT_NAME@ Installation [1]" />
+
+		<MajorUpgrade Schedule="afterInstallInitialize" AllowSameVersionUpgrades="no"
+			DowngradeErrorMessage="A later version of [ProductName] is already installed.&#xA;
+				Please uninstall [ProductName] first if you want to downgrade to version [ProductVersion].&#xA;
+				Setup will now exit."/>
+
+		<Property Id="WIXUI_INSTALLDIR" Value="INSTALL_ROOT"/>
+		<Property Id="ARPPRODUCTICON">ProductIcon.ico</Property>
+		<Icon Id="ProductIcon.ico" SourceFile="@RESOURCE_FOLDER@\serlio.ico"/>
+		<WixVariable Id="WixUIBannerBmp" Value="@RESOURCE_FOLDER@\banner.png"/>
+		<WixVariable Id="WixUIDialogBmp" Value="@RESOURCE_FOLDER@\dialog.png"/>
+
+		<Directory Id='TARGETDIR' Name='SourceDir'>
+			<Directory Id='CommonAppDataFolder' Name='ProgramData'>
+				<Directory Id='AutoDeskDataFolder' Name='Autodesk'>
+					<Directory Id='ApplicationPluginsFolder' Name='ApplicationPlugins'>
+						<Directory Id='INSTALLDIR' Name='@PROJECT_NAME@-@SRL_VERSION_MMP@'>
+							<Component Id='PackageContentXML' Guid='0CBE6642-91BA-4456-8694-F441F5483F16'>
+								<File Id='PackageContentXMLFile' Name='PackageContents.xml' DiskId='1' Source='@PACKAGE_CONTENTS@' KeyPath='yes'/>
+							</Component>
+							<Directory Id='SerlioInstallComponentDir' Name='Contents' />
+						</Directory>
+					</Directory>
+				</Directory>
+			</Directory>
+		</Directory>
+
+		<Feature Id='Complete' Level='1'>
+			<ComponentRef Id='PackageContentXML' />
+			<ComponentGroupRef Id='SerlioInstallComponent' />
+		</Feature>
+		
+
+		<UIRef Id="WixUI_Minimal" />
+	</Product>
+</Wix>

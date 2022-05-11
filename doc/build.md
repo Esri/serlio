@@ -56,24 +56,19 @@
 5. The build result will appear in the `install` directory in parallel to the `build` directory. We will use this as the plugin directory below.
 
 #### Building MSI Installers
-1. WiX Toolset 3 (3.11.1 or better) is required for building MSI installers.
-2. Open a Visual Studio 2017 x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
-2. Create a build directory with `mkdir build_installers` and change into it with `cd build_installers`.
-3. Run `cmake` to generate the Makefiles. Make sure to set `WIN_INSTALLER` to `True`:
+1. WiX Toolset 3 (3.11.1 or later) and Apache Ant (1.10.x or later) is required for building MSI installers.
+2. Start by building serlio with release configurations as described above
+3. Open a Command Shell in the `serlio\deploy` directory
+4. Run `ant` in the current directioy. Make sure to set at least one valid install path:
    ```
-   cmake -G "NMake Makefiles" -DWIN_INSTALLER=True -DCMAKE_BUILD_TYPE=Release ../src
+   ant -D"maya2022.dir"=../install
    ```
-   Use options `-Dprt_DIR=<ce sdk root>\cmake` and `-Dmaya_DIR=<maya installation root>` to override the default locations of CityEngine SDK and Maya.
-4. Run make to build the package target, i.e.
-   ```
-   make package
-   ```
-5. The installer will appear in `build_installers`.
+5. The installer will appear in `serlio\build\build_msi`.
 
 ### Linux
 1. Open a terminal (e.g. bash)
 1. Change into the example directory: `cd <your path to>/esri-cityengine-sdk/examples/serlio`
 1. Create a build directory and change into it: `mkdir build && cd build`
-1. Run cmake (adjust the maya path if necessary): `cmake -Dmaya_DIR=/usr/autodesk/maya2018 ../src`
+1. Run cmake (adjust the maya path if necessary): `cmake -Dmaya_DIR=/usr/autodesk/maya2022 ../src`
 1. Compile: `make install`
 1. The build result will appear in the `install` directory in parallel to the `build` directory. We will use this as the plugin directory below.

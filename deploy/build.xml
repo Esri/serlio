@@ -1,0 +1,146 @@
+<project name="serlio" default="link" xmlns:if="ant:if" xmlns:unless="ant:unless">
+	<property name="build.dir" value="${basedir}\..\build" />
+	<property name="deploy.dir" value="${build.dir}\build_msi" />
+	<property name="out.folder" value="build_msi" />
+	<property name="out.dir" value="${build.dir}\${out.folder}" />
+	<property name="install.dir" value="${deploy.dir}\install" />
+	<property name="resources.dir" value="${basedir}\resources" />
+
+	<property name="eula.file" value="${resources.dir}\license.rtf" />
+
+	<property name="serlio.name" value="Serlio" />
+	<property name="serlio.mllName" value="serlio" />
+	<property name="serlio.description" value="Esri CityEngine Plugin for Autodesk Maya" />
+	<property name="serlio.onlineDocumentation" value="https://github.com/esri/serlio" />
+	<property name="serlio.platform" value="win64" />
+
+	<property name="serlio.vendor" value="Esri R&amp;amp;D Center Zurich" />
+	<property name="serlio.version.major" value="1" />
+	<property name="serlio.version.minor" value="2" />
+	<property name="serlio.version.patch" value="0" />
+	<property name="serlio.version.mmp" value="${serlio.version.major}.${serlio.version.minor}.${serlio.version.patch}" />
+
+	<condition property="serlio.version.mmpPre" value="${serlio.version.major}.${serlio.version.minor}.${serlio.version.patch}-${serlio.version.preRelease}" else="${serlio.version.major}.${serlio.version.minor}.${serlio.version.patch}">
+		<isset property="maya2018.preRelease" />
+	</condition>
+
+	<condition property="serlio.version.base" value="${serlio.version.mmpPre}+b${serlio.version.build}" else="${serlio.version.mmpPre}">
+		<isset property="serlio.version.build" />
+	</condition>
+
+	<condition property="serlio.version.all" value="${serlio.version.base}.prt${prt.version.major}-${prt.version.minor}-${prt.version.micro}" else="${serlio.version.base}">
+		<and>
+			<isset property="prt.version.major" />
+			<isset property="prt.version.minor" />
+			<isset property="prt.version.micro" />
+		</and>
+	</condition>
+
+	<property name="serlio.filename" value="${serlio.name}-${serlio.version.all}-${serlio.platform}-installer" />
+
+	<fail message="Please specify at least one of the install folders with -D&quot;maya20XX.dir&quot;=PATH_TO_DIR">
+		<condition>
+			<not>
+				<or>
+					<isset property="maya2019.dir" />
+					<isset property="maya2020.dir" />
+					<isset property="maya2022.dir" />
+				</or>
+			</not>
+		</condition>
+	</fail>
+
+	<target name="prepare">
+		<delete dir="${deploy.dir}" />
+		<mkdir dir="${install.dir}" />
+
+		<!-- fill deployment properties file -->
+		<copy file="${basedir}\deployment.properties.in" toFile="${deploy.dir}\deployment.properties">
+			<filterset>
+				<filter token="CPACK_PACKAGE_NAME" value="${serlio.name}" />
+				<filter token="SRL_VERSION_BASE" value="${serlio.version.base}" />
+				<filter token="SRL_VERSION" value="${serlio.version.all}" />
+				<filter token="CPACK_PACKAGE_FILE_NAME" value="${serlio.filename}" />
+				<filter token="SRL_PKG_OS" value="${serlio.platform}" />
+			</filterset>
+		</copy>
+
+		<!-- fill package contents file -->
+		<copy file="${basedir}\PackageContents.xml.in" toFile="${deploy.dir}\PackageContents.xml">
+			<filterset>
+				<filter token="PROJECT_NAME" value="${serlio.name}" />
+				<filter token="MLL_NAME" value="${serlio.mllName}" />
+				<filter token="DESCRIPTION_SUMMARY" value="${serlio.description}" />
+				<filter token="SRL_VERSION_BASE" value="${serlio.version.base}" />
+				<filter token="PACKAGE_VENDOR_ESCAPED" value="${serlio.vendor}" />
+				<filter token="SRL_INST_OS" value="${serlio.platform}" />
+				<filter token="ONLINE_DOCUMENTATION" value="${serlio.onlineDocumentation}" />
+			</filterset>
+		</copy>
+
+		<!-- fill serlio.wxs file -->
+		<copy file="${basedir}\serlio.wxs.in" toFile="${deploy.dir}\serlio.wxs">
+			<filterset>
+				<filter token="PROJECT_NAME" value="${serlio.name}" />
+				<filter token="SRL_VERSION_MMP" value="${serlio.version.mmp}" />
+				<filter token="PACKAGE_VENDOR_ESCAPED" value="${serlio.vendor}" />
+				<filter token="PACKAGE_CONTENTS" value="${deploy.dir}\PackageContents.xml" />
+				<filter token="RESOURCE_FOLDER" value="${resources.dir}" />
+			</filterset>
+		</copy>
+	</target>
+
+	<target name="copy2019" depends="prepare" if="maya2019.dir">
+		<mkdir dir="${install.dir}\2019" />
+		<copy todir="${install.dir}\2019" >
+			<fileset dir="${maya2019.dir}" />
+		</copy>
+	</target>
+
+	<target name="copy2020" depends="prepare" if="maya2020.dir">
+		<mkdir dir="${install.dir}\2020" />
+		<copy todir="${install.dir}\2020" >
+			<fileset dir="${maya2020.dir}" />
+		</copy>
+	</target>
+
+	<target name="copy2022" depends="prepare" if="maya2022.dir">
+		<mkdir dir="${install.dir}\2022" />
+		<copy todir="${install.dir}\2022" >
+			<fileset dir="${maya2022.dir}" />
+		</copy>
+	</target>
+
+	<target name="harvest" depends="copy2019,copy2020,copy2022">
+		<exec executable="heat">
+			<arg line="dir ${install.dir}" />
+			<arg line="-dr SerlioInstallComponentDir" />
+			<arg line="-ag -cg SerlioInstallComponent -sfrag -template fragment" />
+			<arg line="-var wix.InstallDir" />
+			<!-- ignore root dir -->
+			<arg line="-srd "/>
+			<!-- suppress registry harvesting -->
+			<arg line="-sreg" />
+			<arg line="-o ${deploy.dir}\install_dir.wxs" />
+		</exec>
+	</target>
+
+	<target name="compile" depends="harvest">
+		<exec executable="candle" dir="${deploy.dir}">
+			<arg line="-arch x64 ${deploy.dir}\serlio.wxs ${deploy.dir}\install_dir.wxs" />
+		</exec>
+	</target>
+
+	<target name="link" depends="compile">
+		<exec executable="light" dir="${deploy.dir}">
+			<arg line="-dWixUILicenseRtf=${eula.file}" />
+			<arg line="-dInstallDir=${install.dir}" />
+			<arg line="-dPackageContents=${deploy.dir}\PackageContents.xml" />
+			<arg line="-ext WixUIExtension -cultures:en-us" />
+			<arg line="-pdbout ${deploy.dir}\${serlio.filename}.wixpdb " />
+			<arg line="-o ${out.dir}\${serlio.filename}.msi" />
+			<arg line="serlio.wixobj install_dir.wixobj" />
+		</exec>
+		<echo message="Installer located at ${out.dir}\${serlio.filename}.msi" />
+	</target>
+</project>

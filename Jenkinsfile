@@ -35,11 +35,9 @@ properties([ disableConcurrentBuilds() ])
 @Field final List CHECKOUT_CONFIG = [ [ ba: psl.BA_CHECKOUT ] ]
 // TODO: abusing grp field to distinguish maya versions per task
 @Field final List CONFIGS = [
-	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2018', maya: PrtAppPipelineLibrary.Dependencies.MAYA2018 ],
 	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2019', maya: PrtAppPipelineLibrary.Dependencies.MAYA2019 ],
 	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2020', maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
 	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2022', maya: PrtAppPipelineLibrary.Dependencies.MAYA2022 ],
-	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2018', maya: PrtAppPipelineLibrary.Dependencies.MAYA2018 ],
 	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2019', maya: PrtAppPipelineLibrary.Dependencies.MAYA2019 ],
 	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2020', maya: PrtAppPipelineLibrary.Dependencies.MAYA2020 ],
 	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, grp: 'maya2022', maya: PrtAppPipelineLibrary.Dependencies.MAYA2022 ],
@@ -49,6 +47,9 @@ properties([ disableConcurrentBuilds() ])
 	[ os: cepl.CFG_OS_RHEL7, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_GCC93,  cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, maya: PrtAppPipelineLibrary.Dependencies.MAYA2022 ],
 	[ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64, maya: PrtAppPipelineLibrary.Dependencies.MAYA2022 ],
 ]
+
+@Field final List INSTALLER_CONFIG = [ [ os: cepl.CFG_OS_WIN10, bc: cepl.CFG_BC_REL, tc: cepl.CFG_TC_VC1427, cc: cepl.CFG_CC_OPT, arch: cepl.CFG_ARCH_X86_64 ] ]
+@Field final List INSTALLER_MAYA_VERS = [ 'maya2019', 'maya2020', 'maya2022' ]
 
 // -- PIPELINE
 
@@ -109,7 +110,7 @@ Map taskGenSerlioTests() {
 }
 
 Map taskGenSerlioInstallers() {
-	return cepl.generateTasks('srl-msi', this.&taskBuildSerlioInstaller, CONFIGS.findAll { it.os == cepl.CFG_OS_WIN10})
+	return cepl.generateTasks('srl-msi', this.&taskBuildSerlioInstaller, INSTALLER_CONFIG)
 }
 
 // -- TASK BUILDERS
@@ -140,6 +141,16 @@ def taskBuildSerlio(cfg) {
 	taskBuildCMake(cfg, BUILD_TARGET)
 	def buildProps = papl.jpe.readProperties(file: 'build/deployment.properties')
 	final String artifactPattern = "${buildProps.package_file}.*"
+
+	if(cfg.os == cepl.CFG_OS_WIN10){
+		dir(path: 'build'){
+			stashFile = cepl.findOneFile(artifactPattern)
+			stash(includes: artifactPattern, name: cfg.grp)
+			stashPath = "${stashFile.path}"
+			echo("file path to stash: '${stashPath}'")
+		}
+	}
+
 	final def artifactVersion = { p -> buildProps.package_version_base }
 
 	// TODO: abusing grp again to label artifact
@@ -159,13 +170,30 @@ def taskBuildSerlioInstaller(cfg) {
 	final String appName = 'serlio-installer'
 	cepl.cleanCurrentDir()
 	unstash(name: SOURCE_STASH)
-	final List deps = [ cfg.maya ]
-	deps.each { d -> papl.fetchDependency(d, cfg) }
+
+	String antArgs = ""
+
+	// fetch outputs from builds
+	dir(path: 'build'){
+		dir(path: 'tmp'){
+			INSTALLER_MAYA_VERS.each { mv ->
+				unstash(name: mv)
+				def zipFile = cepl.findOneFile("*${mv}*.zip")
+				final String zipFileName = zipFile.name
+				unzip(zipFile: zipFileName)
+				antArgs += "-D\"${mv}.dir\"=..\\..\\build\\tmp\\${zipFileName.take(zipFileName.lastIndexOf('.'))} "
+			}
+		}
+	}
+	antArgs += "-D\"serlio.version.build\"=${env.BUILD_NUMBER} "
+	antArgs += "-D\"build.dir\"=..\\..\\build "
+	antArgs += "-D\"out.folder\"=out "
+	antArgs += "-f serlio.git\\deploy"
 
 	// Toolchain definition for building MSI installers.
 	final JenkinsTools compiler = cepl.getToolchainTool(cfg)
 	final def toolchain = [
-		new ToolInfo(JenkinsTools.CMAKE313, cfg),
+		new ToolInfo(JenkinsTools.ANT, cfg),
 		new ToolInfo(JenkinsTools.NINJA, cfg),
 		new ToolInfo(JenkinsTools.WIX, cfg),
 		new ToolInfo(compiler, cfg)
@@ -173,25 +201,16 @@ def taskBuildSerlioInstaller(cfg) {
 
 	// Setup environment according to above toolchain definition.
 	withTool(toolchain) {
-		dir('serlio.git') {
-			String cmd = JenkinsTools.generateSetupPreamble(this, cfg, toolchain.collect { it.tool })
-			cmd += "\n"
-			cmd += "powershell .\\build.ps1"
-			cmd += " -MAYA_DIR ${cfg.maya.p.call(cfg)}" // <-- !!!
-			cmd += " -BUILD_NO ${env.BUILD_NUMBER}"
-			cmd += " -TARGET InstallerFromScratch"
+		psl.runAnt(antArgs)
 
-			psl.runCmd(cmd)
+		def buildProps = papl.jpe.readProperties(file: 'build/build_msi/deployment.properties')
+		final String artifactPattern = "out/${buildProps.package_file}.*"
+		final def artifactVersion = { p -> buildProps.package_version_base }
 
-			def buildProps = papl.jpe.readProperties(file: 'build/build_msi/deployment.properties')
-			final String artifactPattern = "out/${buildProps.package_file}.*"
-			final def artifactVersion = { p -> buildProps.package_version_base }
-
-			// TODO: abusing grp again to label artifact
-			def classifierExtractor = { p ->
-				return cepl.getArchiveClassifier(cfg) + '-' + cfg.grp
-			}
-			papl.publish(appName, env.BRANCH_NAME, artifactPattern, artifactVersion, cfg, classifierExtractor)
+		// TODO: abusing grp again to label artifact
+		def classifierExtractor = { p ->
+			return cepl.getArchiveClassifier(cfg)
 		}
+		papl.publish(appName, env.BRANCH_NAME, artifactPattern, artifactVersion, cfg, classifierExtractor)
 	}
 }
