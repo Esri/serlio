@@ -174,22 +174,20 @@ def taskBuildSerlioInstaller(cfg) {
 	String antArgs = ""
 
 	// fetch outputs from builds
-	dir(path: 'serlio.git'){
-		dir(path: 'build'){
-			dir(path: 'tmp'){
-				INSTALLER_MAYA_VERS.each { mv ->
-					unstash(name: mv)
-					def zipFile = cepl.findOneFile("*${mv}*.zip")
-					final String zipFileName = zipFile.name
-					unzip(zipFile: zipFileName)
-					antArgs += "-D\"${mv}.dir\"=..\\build\\tmp\\${zipFileName.take(zipFileName.lastIndexOf('.'))} "
-				}
+	dir(path: 'build'){
+		dir(path: 'tmp'){
+			INSTALLER_MAYA_VERS.each { mv ->
+				unstash(name: mv)
+				def zipFile = cepl.findOneFile("*${mv}*.zip")
+				final String zipFileName = zipFile.name
+				unzip(zipFile: zipFileName)
+				antArgs += "-D\"${mv}.dir\"=..\\..\\build\\tmp\\${zipFileName.take(zipFileName.lastIndexOf('.'))} "
 			}
 		}
 	}
 	antArgs += "-D\"serlio.version.build\"=${env.BUILD_NUMBER} "
 	antArgs += "-D\"out.folder\"=out "
-	antArgs += "-f deploy"
+	antArgs += "-f serlio.git\\deploy"
 
 	// Toolchain definition for building MSI installers.
 	final JenkinsTools compiler = cepl.getToolchainTool(cfg)
@@ -202,18 +200,16 @@ def taskBuildSerlioInstaller(cfg) {
 
 	// Setup environment according to above toolchain definition.
 	withTool(toolchain) {
-		dir('serlio.git') {
-			psl.runAnt(antArgs)
+		psl.runAnt(antArgs)
 
-			def buildProps = papl.jpe.readProperties(file: 'build/build_msi/deployment.properties')
-			final String artifactPattern = "out/${buildProps.package_file}.*"
-			final def artifactVersion = { p -> buildProps.package_version_base }
+		def buildProps = papl.jpe.readProperties(file: 'build/build_msi/deployment.properties')
+		final String artifactPattern = "out/${buildProps.package_file}.*"
+		final def artifactVersion = { p -> buildProps.package_version_base }
 
-			// TODO: abusing grp again to label artifact
-			def classifierExtractor = { p ->
-				return cepl.getArchiveClassifier(cfg)
-			}
-			papl.publish(appName, env.BRANCH_NAME, artifactPattern, artifactVersion, cfg, classifierExtractor)
+		// TODO: abusing grp again to label artifact
+		def classifierExtractor = { p ->
+			return cepl.getArchiveClassifier(cfg)
 		}
+		papl.publish(appName, env.BRANCH_NAME, artifactPattern, artifactVersion, cfg, classifierExtractor)
 	}
 }
