@@ -11,6 +11,7 @@
 	<property name="serlio.name" value="Serlio" />
 	<property name="serlio.mllName" value="serlio" />
 	<property name="serlio.description" value="Esri CityEngine Plugin for Autodesk Maya" />
+	<property name="serlio.onlineDocumentation" value="https://github.com/esri/serlio" />
 	<property name="serlio.platform" value="win64" />
 
 	<property name="serlio.vendor" value="Esri R&amp;amp;D Center Zurich" />
@@ -73,6 +74,7 @@
 				<filter token="SRL_VERSION_BASE" value="${serlio.version.base}" />
 				<filter token="PACKAGE_VENDOR_ESCAPED" value="${serlio.vendor}" />
 				<filter token="SRL_INST_OS" value="${serlio.platform}" />
+				<filter token="ONLINE_DOCUMENTATION" value="${serlio.onlineDocumentation}" />
 			</filterset>
 		</copy>
 

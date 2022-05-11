@@ -22,7 +22,7 @@
     Author="@PACKAGE_VENDOR_ESCAPED@"
     AppNameSpace="com.esri.prt"
     HelpFile="./doc/usage.md"
-    OnlineDocumentation="https://github.com/ArcGIS/serlio"
+    OnlineDocumentation="@ONLINE_DOCUMENTATION@"
 
     ProductCode="*"
     UpgradeCode="{9B170749-ECDF-4F66-9E2F-C9045727A6D4}" >
