@@ -9,6 +9,7 @@
 	<property name="eula.file" value="${resources.dir}\license.rtf" />
 
 	<property name="serlio.name" value="Serlio" />
+	<property name="serlio.mllName" value="serlio" />
 	<property name="serlio.description" value="Esri CityEngine Plugin for Autodesk Maya" />
 	<property name="serlio.platform" value="win64" />
 
@@ -67,6 +68,7 @@
 		<copy file="${basedir}\PackageContents.xml.in" toFile="${deploy.dir}\PackageContents.xml">
 			<filterset>
 				<filter token="PROJECT_NAME" value="${serlio.name}" />
+				<filter token="MLL_NAME" value="${serlio.mllName}" />
 				<filter token="DESCRIPTION_SUMMARY" value="${serlio.description}" />
 				<filter token="SRL_VERSION_BASE" value="${serlio.version.base}" />
 				<filter token="PACKAGE_VENDOR_ESCAPED" value="${serlio.vendor}" />

@@ -17,7 +17,7 @@
 
     AutodeskProduct="Maya"
     Name="@PROJECT_NAME@"
-    Description="@CPACK_PACKAGE_DESCRIPTION_SUMMARY@"
+    Description="@DESCRIPTION_SUMMARY@"
     AppVersion="@SRL_VERSION_BASE@"
     Author="@PACKAGE_VENDOR_ESCAPED@"
     AppNameSpace="com.esri.prt"
@@ -39,7 +39,7 @@
         <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2019/plug-ins/" />
         <MayaEnv expr="MAYA_SCRIPT_PATH+:=2019/scripts/" />
         <MayaEnv expr="XBMLANGPATH+:=2019/icons/" />
-        <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
+        <ComponentEntry ModuleName="@MLL_NAME@.mll" AutoLoad="True" />
     </Components>
 
     <Components>
@@ -48,7 +48,7 @@
         <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2020/plug-ins/" />
         <MayaEnv expr="MAYA_SCRIPT_PATH+:=2020/scripts/" />
         <MayaEnv expr="XBMLANGPATH+:=2020/icons/" />
-        <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
+        <ComponentEntry ModuleName="@MLL_NAME@.mll" AutoLoad="True" />
     </Components>
 
     <Components>
@@ -57,6 +57,6 @@
         <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2022/plug-ins/" />
         <MayaEnv expr="MAYA_SCRIPT_PATH+:=2022/scripts/" />
         <MayaEnv expr="XBMLANGPATH+:=2022/icons/" />
-        <ComponentEntry ModuleName="@CPACK_PACKAGE_NAME@.mll" AutoLoad="True" />
+        <ComponentEntry ModuleName="@MLL_NAME@.mll" AutoLoad="True" />
     </Components>
 </ApplicationPackage>
