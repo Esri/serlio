@@ -25,7 +25,7 @@
 			<Directory Id='CommonAppDataFolder' Name='ProgramData'>
 				<Directory Id='AutoDeskDataFolder' Name='Autodesk'>
 					<Directory Id='ApplicationPluginsFolder' Name='ApplicationPlugins'>
-						<Directory Id='INSTALLDIR' Name='serlio'>
+						<Directory Id='INSTALLDIR' Name='@PROJECT_NAME@-@SRL_VERSION_MMP@'>
 							<Component Id='PackageContentXML' Guid='0CBE6642-91BA-4456-8694-F441F5483F16'>
 								<File Id='PackageContentXMLFile' Name='PackageContents.xml' DiskId='1' Source='@PACKAGE_CONTENTS@' KeyPath='yes'/>
 							</Component>
