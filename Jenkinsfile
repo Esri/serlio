@@ -186,7 +186,7 @@ def taskBuildSerlioInstaller(cfg) {
 		}
 	}
 	antArgs += "-D\"serlio.version.build\"=${env.BUILD_NUMBER} "
-	antArgs += "-D\"build.folder\"=..\\..\\build "
+	antArgs += "-D\"build.dir\"=..\\..\\build "
 	antArgs += "-D\"out.folder\"=out "
 	antArgs += "-f serlio.git\\deploy"
 
