@@ -12,7 +12,6 @@ param(
 # Default download locations for required tools. May be overwritten if desired.
 [String]$BUILD_NINJA_URL = 'https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip',
 [String]$CMAKE_URL = 'https://github.com/Kitware/CMake/releases/download/v3.15.0/cmake-3.15.0-win64-x64.zip',
-[String]$WIX_TOOLSET_URL = 'https://github.com/wixtoolset/wix3/releases/download/wix3111rtm/wix311-binaries.zip'
 )
 
 Set-StrictMode -Version Latest
@@ -26,12 +25,10 @@ $ARTIFACTS_FOLDER = "$BUILD_FOLDER\out"
 # Folders for the build tools
 $NINJA_FOLDER = "$TOOLS_FOLDER\ninja"
 $CMAKE_FOLDER = "$TOOLS_FOLDER\cmake"
-$WIX_FOLDER = "$TOOLS_FOLDER\wix"
 
 # Relevant executables
 $NINJA_EXE = 'ninja.exe'
 $CMAKE_EXE = 'cmake.exe'
-$WIX_EXE = 'candle.exe'
 
 function NukeAll {
     NukeFolder($BUILD_FOLDER)
@@ -51,7 +48,7 @@ function NukeBuilds {
 
 function MakeDirs {
     # Create the desired folder structure.
-    $folders = $BUILD_FOLDER, $TOOLS_FOLDER, $NINJA_FOLDER, $CMAKE_FOLDER, $WIX_FOLDER, $ARCHIVE_BUILD_FOLDER, $ARTIFACTS_FOLDER
+    $folders = $BUILD_FOLDER, $TOOLS_FOLDER, $NINJA_FOLDER, $CMAKE_FOLDER, $ARCHIVE_BUILD_FOLDER, $ARTIFACTS_FOLDER
     foreach ($f in $folders) {
         if (!(Test-Path $f)) {
             New-Item -ItemType Directory -Path $f | Out-Null
@@ -63,7 +60,6 @@ function MakeDirs {
 function FetchTools {
     $ninja = Triple $BUILD_NINJA_URL $NINJA_FOLDER $NINJA_EXE
     $cmake = Triple $CMAKE_URL $CMAKE_FOLDER $CMAKE_EXE
-    $wix = Triple $WIX_TOOLSET_URL $WIX_FOLDER $WIX_EXE
     $tool_list = @()
 
     Write-Host ">>> Fetching tools..." -ForegroundColor Green
@@ -79,13 +75,6 @@ function FetchTools {
         $tool_list += ,$cmake
     }
 
-    if ($WIX_ON_PATH) {
-        Write-Host ">>>>> WIX already on PATH. Skipping!" -ForegroundColor Green
-    } else {
-        $tool_list += ,$wix
-    }
-
-    
     foreach ($t in $tool_list) {
         $u = $t.Item1
         $archive = $u.Split('/') | Select-Object -Last 1
@@ -126,14 +115,6 @@ function SetupEnv {
         $cmakePath = FindFile 'cmake.exe' $CMAKE_FOLDER
         Write-Host ">>>>> Found cmake.exe in $cmakePath. Good!" -ForegroundColor Green
         $path += "$cmakePath;"
-    }
-
-    if ($WIX_ON_PATH) {
-        Write-Host ">>>>> WIX already on PATH. Skipping." -ForegroundColor Green
-    } else {
-        $wixPath = FindFile 'candle.exe' $WIX_FOLDER
-        Write-Host ">>>>> Found candle.exe in $wixPath. Good!" -ForegroundColor Green
-        $path += "$wixPath;"
     }
 
     $env:Path = "$path$env:Path"
@@ -259,7 +240,6 @@ $ErrorActionPreference = "Stop"
 $NINJA_ON_PATH = ExeOnPath $NINJA_EXE
 # VS Command Prompt also puts cmake on PATH, but it's an older version than required.
 $CMAKE_ON_PATH = ExeOnPath $CMAKE_EXE '3.13'
-$WIX_ON_PATH = ExeOnPath $WIX_EXE
 # Do the build.
 DoIt
 
