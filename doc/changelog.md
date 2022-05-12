@@ -1,6 +1,6 @@
 # Serlio ChangeLog
 
-## v1.2.0 (2022-07-XX)
+## v2.0.0 (2022-05-XX)
 
 ### Added:
 * Support for Maya 2020 and 2022. (#73)
@@ -8,10 +8,11 @@
 * Support and UI for resetting user-set attributes. (#50)
 * Support for dynamic enums.
 * Support for RGB-based opacity maps. (#15, #33, #18)
-* UX to warn user in case of:
+* UX to display warnings and errors in rule files:
   * RPK/CGB and PRT version mismatch
-  * CGA generation errors
   * Asset errors
+  * CGA errors
+  * Generate errors
 * Help tab with links to: 
   * Serlio Website
   * CGA Reference
@@ -27,11 +28,13 @@
 * Replace rule package instead of stacking serlio nodes, when calling "Add rule package..". (#13)
 * Improved UI feedback on node for invalid rule package paths
 * Improved generation performance.
+* Fixed metadata storage on scene save/load
 * Fixed scaling of geometry.
 * Fixed random seed handling. (#51)
 * Fixed rule package reloading, when start rule changes. (#17)
 * Fixed undo/redo for material creation and rule switching.
 * Fixed crash in case PRT generates an empty mesh.
+* Fixed crash when modifying rule package path.
 * Reset material to default, when PRT generates an empty mesh.
 * Fixed enum attributes. (#23)
 * Fixed file picker. (#55)
@@ -41,7 +44,12 @@
 
 ### Development:
 * Updated compilers (now using C++ 17)
-* Updated test framework and build system
+* Updated test framework and build system 
+* Bundled installers for all maya versions (2019-2022) into one
+
+### Examples:
+* Added Street Segment example
+* Updated Favela example
 
 ## v1.1.0 (2020-06-02)
 * BREAKING CHANGE: Switched to official Autodesk IDs for Serlio custom nodes. (#26)
