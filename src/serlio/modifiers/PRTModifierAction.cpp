@@ -856,12 +856,14 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 						return {AttributeTrait::ENUM, {{}, an}};
 					else if (std::wcscmp(anName, ANNOT_RANGE) == 0) {
 						const RangeType annotationRangeType = GetRangeType(an);
-						if (annotationRangeType == RangeType::ENUM)
-							return {AttributeTrait::ENUM, {{}, an}};
-						else if (annotationRangeType == RangeType::RANGE)
-							return {AttributeTrait::RANGE, {{}, an}};
-						else
-							return {AttributeTrait::PLAIN, {}};
+						switch (annotationRangeType) {
+							case RangeType::ENUM:
+								return {AttributeTrait::ENUM, {{}, an}};
+							case RangeType::RANGE:
+								return {AttributeTrait::RANGE, {{}, an}};
+							case RangeType::INVALID:
+								return {AttributeTrait::PLAIN, {}};
+						}
 					}
 					else if (std::wcscmp(anName, ANNOT_COLOR) == 0)
 						return {AttributeTrait::COLOR, {}};
