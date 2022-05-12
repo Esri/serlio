@@ -6,18 +6,18 @@
 ### All Platforms
 * License for CityEngine (2019.0 or later), e.g. to author Rule Packages.
 * CMake 3.13 or later (http://www.cmake.org)
-* Autodesk Maya 2018 or later or the corresponding development kit
+* Autodesk Maya 2019 or later or the corresponding development kit
 
 ### Windows
 * Windows 7, 8.1 or 10 (64bit)
-* Required C++ compiler: Visual Studio 2017 with Toolset MSVC 14.11 or later
+* Required C++ compiler: Visual Studio 2019 with Toolset MSVC 14.27 or later
 * WiX Toolset 3.11.1: Optional, required for building .msi installers
 * Required flags for extension libraries release mode: `/bigobj /GR /EHsc /MD`
 
 ### Linux
 * RedHat Enterprise Linux 7.x or compatible
-* Required C++ compiler: GCC 6.3 or later (RedHat Enterprise Linux DevToolSet 6.1)
-* Required flags for extension libraries: `-std=c++14 -D_GLIBCXX_USE_CXX11_ABI=0 -march=nocona -fvisibility=hidden -fvisibility-inlines-hidden -Wl,--exclude-libs,ALL`
+* Required C++ compiler: GCC 9.3 or later (RedHat Enterprise Linux DevToolSet 9.1)
+* Required flags for extension libraries: `-std=c++17 -D_GLIBCXX_USE_CXX11_ABI=0 -march=nocona -fvisibility=hidden -fvisibility-inlines-hidden -Wl,--exclude-libs,ALL`
 
 
 ## Build Instructions 
@@ -33,7 +33,7 @@
 2. Create a build directory with `mkdir build` and change into it with `cd build`.
 3. Run `cmake` to generate a Visual Studio solution:
    ```
-   cmake -G "Visual Studio 15 2017 Win64" ../src
+   cmake -G "Visual Studio 16 2019" ../src
    ```
    Use options `-Dprt_DIR=<ce sdk root>\cmake` and `-Dmaya_DIR=<maya installation root>` to override the default locations of CityEngine SDK and Maya.
 1. Open the generated `serlio_parent.sln` in Visual Studio.
@@ -42,7 +42,7 @@
 1. Proceed with the Installation Instructions below.
 
 #### Building on the Command Line
-1. Open a Visual Studio 2017 x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
+1. Open a Visual Studio 2019 x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
 2. Create a build directory with `mkdir build` and change into it with `cd build`.
 3. Run `cmake` to generate the Makefiles:
    ```
@@ -51,7 +51,7 @@
    Use options `-Dprt_DIR=<ce sdk root>\cmake` and `-Dmaya_DIR=<maya installation root>` to override the default locations of CityEngine SDK and Maya.
 4. Run make to build the desired target, e.g.
    ```
-   make install
+   nmake install
    ```
 5. The build result will appear in the `install` directory in parallel to the `build` directory. We will use this as the plugin directory below.
 
