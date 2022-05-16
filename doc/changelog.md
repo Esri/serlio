@@ -1,6 +1,6 @@
 # Serlio ChangeLog
 
-## v1.2.0 (2022-07-XX)
+## v2.0.0 (2022-05-XX)
 
 ### Added:
 * Support for Maya 2020 and 2022. (#73)
