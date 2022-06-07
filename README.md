@@ -147,7 +147,7 @@ See [below](#linux-2) in the developer documentation
    ```
 1. Start Maya (Note: you may want to start maya from a shell to see the serlio log output).
 1. Open the plugin manager: Windows -> Settings/Preferences -> Plug-in Manager
-1. Enable `libserlio.so`
+1. Enable `serlio.so`
 1. The plugin should load and a new menu item `Serlio` should appear in Maya.
 
 ## Release Notes
