@@ -8,6 +8,7 @@
 * Support and UI for resetting user-set attributes. (#50)
 * Support for dynamic enums.
 * Support for RGB-based opacity maps. (#15, #33, #18)
+* Support for legacy usage of the _@Range_ annotation
 * UX to display warnings and errors in rule files:
   * RPK/CGB and PRT version mismatch
   * Asset errors
@@ -18,6 +19,7 @@
   * CGA Reference
   * RPK Manual
 * About dialog with version number and license info.
+* Node Behavior and UUID tab to attributes
 
 ### Changed:
 * Updated Procedural Runtime (PRT) to 2.6 (corresponds to CityEngine 2021.1) and exclude non-relevant extensions.
@@ -41,6 +43,7 @@
 * Fixed error message in MEL console.
 * Fixed faintly visible transparent stingray materials.
 * Fixed Maya attribute naming issues.
+* Fixed bug that could create duplicate tweak nodes.
 
 ### Development:
 * Updated compilers (now using C++ 17)
