@@ -15,14 +15,12 @@
 	<property name="serlio.platform" value="win64" />
 
 	<property name="serlio.vendor" value="Esri R&amp;amp;D Center Zurich" />
-	<property name="serlio.version.major" value="1" />
-	<property name="serlio.version.minor" value="2" />
+	<property name="serlio.version.major" value="2" />
+	<property name="serlio.version.minor" value="0" />
 	<property name="serlio.version.patch" value="0" />
 	<property name="serlio.version.mmp" value="${serlio.version.major}.${serlio.version.minor}.${serlio.version.patch}" />
-
-	<condition property="serlio.version.mmpPre" value="${serlio.version.major}.${serlio.version.minor}.${serlio.version.patch}-${serlio.version.preRelease}" else="${serlio.version.major}.${serlio.version.minor}.${serlio.version.patch}">
-		<isset property="maya2018.preRelease" />
-	</condition>
+	<property name="serlio.version.preRelease" value="-rc.1" />
+	<property name="serlio.version.mmpPre" value="${serlio.version.mmp}${serlio.version.preRelease}" />
 
 	<condition property="serlio.version.base" value="${serlio.version.mmpPre}+b${serlio.version.build}" else="${serlio.version.mmpPre}">
 		<isset property="serlio.version.build" />

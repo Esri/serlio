@@ -693,7 +693,7 @@ MStatus polyModifierCmd::processTweaks( modifyPolyData& data )
 			{
 				for( i = 0; i < numTweaks; i++ )
 				{
-					tweak = meshTweakPlug.elementByLogicalIndex( fTweakIndexArray[i] );
+					tweak = upstreamTweakPlug.elementByLogicalIndex( fTweakIndexArray[i] );
 					tweak.setValue( nullVector );
 				}
 			}

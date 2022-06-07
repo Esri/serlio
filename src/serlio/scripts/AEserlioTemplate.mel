@@ -447,8 +447,8 @@ global proc AEserlioTemplate(string $node) {
 		editorTemplate -endLayout;
 		
 	editorTemplate -endLayout;
- 
- 	editorTemplate -aec;
 
-    editorTemplate -endScrollLayout;
+	AEdependNodeTemplate $node;
+	editorTemplate -aec;
+	editorTemplate -endScrollLayout;
 }

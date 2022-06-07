@@ -20,6 +20,9 @@ External documentation:
 * [CityEngine Manual](https://doc.arcgis.com/en/cityengine/latest/help/cityengine-help-intro.htm)
 * [CityEngine SDK API Reference](https://esri.github.io/cityengine-sdk/html/index.html)
 
+## Known Limitations
+
+* Serlio 2.0: In Maya 2019 on Windows, Serlio does not support reading USD assets from RPKs.
 
 ## Licensing Information
 

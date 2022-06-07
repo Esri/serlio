@@ -60,6 +60,50 @@ constexpr const wchar_t* ATTRIBUTE_FORCE_DEFAULT_SUFFIX = L"_force_default";
 const AttributeMapUPtr
         EMPTY_ATTRIBUTES(AttributeMapBuilderUPtr(prt::AttributeMapBuilder::create())->createAttributeMap());
 
+enum class RangeType { RANGE, ENUM, INVALID };
+RangeType GetRangeType(const prt::Annotation* an) {
+	const size_t numArgs = an->getNumArguments();
+
+	if (numArgs == 0)
+		return RangeType::INVALID;
+
+	prt::AnnotationArgumentType commonType = an->getArgument(0)->getType();
+
+	bool hasMin = false;
+	bool hasMax = false;
+	bool hasKey = false;
+
+	for (int argIdx = 0; argIdx < numArgs; argIdx++) {
+		const prt::AnnotationArgument* arg = an->getArgument(argIdx);
+		if (arg->getType() != commonType)
+			return RangeType::INVALID;
+
+		const wchar_t* key = arg->getKey();
+		if (std::wcscmp(key, MIN_KEY) == 0) {
+			hasMin = true;
+		}
+		else if (std::wcscmp(key, MAX_KEY) == 0) {
+			hasMax = true;
+		}
+		if (std::wcscmp(key, NULL_KEY) != 0)
+			hasKey = true;
+	}
+	
+	//old Range
+	if ((numArgs == 2) && (commonType == prt::AnnotationArgumentType::AAT_FLOAT))
+		return RangeType::RANGE;
+
+	//new Range
+	if ((numArgs >= 2) && (hasMin && hasMax))
+		return RangeType::RANGE;
+
+	//legacy Enum
+	if (!hasKey)
+		return RangeType::ENUM;
+
+	return RangeType::INVALID;
+}
+
 AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule,
                                            const prt::ResolveMap& resolveMap, prt::CacheObject& cache,
                                            const PRTMesh& prtMesh, const int32_t seed,
@@ -810,8 +854,17 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 					const wchar_t* anName = an->getName();
 					if (std::wcscmp(anName, ANNOT_ENUM) == 0)
 						return {AttributeTrait::ENUM, {{}, an}};
-					else if (std::wcscmp(anName, ANNOT_RANGE) == 0)
-						return {AttributeTrait::RANGE, {{}, an}};
+					else if (std::wcscmp(anName, ANNOT_RANGE) == 0) {
+						const RangeType annotationRangeType = GetRangeType(an);
+						switch (annotationRangeType) {
+							case RangeType::ENUM:
+								return {AttributeTrait::ENUM, {{}, an}};
+							case RangeType::RANGE:
+								return {AttributeTrait::RANGE, {{}, an}};
+							case RangeType::INVALID:
+								return {AttributeTrait::PLAIN, {}};
+						}
+					}
 					else if (std::wcscmp(anName, ANNOT_COLOR) == 0)
 						return {AttributeTrait::COLOR, {}};
 					else if (std::wcscmp(anName, ANNOT_DIR) == 0) {
@@ -866,7 +919,8 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 						auto tryParseRangeAnnotation = [](const prt::Annotation* an) -> std::pair<double, double> {
 							auto minMax = std::make_pair(std::numeric_limits<double>::quiet_NaN(),
 							                             std::numeric_limits<double>::quiet_NaN());
-							for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
+							const size_t numArgs = an->getNumArguments();
+							for (int argIdx = 0; argIdx < numArgs; argIdx++) {
 								const prt::AnnotationArgument* arg = an->getArgument(argIdx);
 								const wchar_t* key = arg->getKey();
 								if (std::wcscmp(key, MIN_KEY) == 0) {
@@ -876,6 +930,13 @@ MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttr
 									minMax.second = arg->getFloat();
 								}
 							}
+
+							//parse old style range
+							if ((std::isnan(minMax.first) || std::isnan(minMax.second)) && (numArgs == 2)) {
+								minMax.first = an->getArgument(0)->getFloat();
+								minMax.second = an->getArgument(1)->getFloat();
+							}
+
 							return minMax;
 						};
 
