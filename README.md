@@ -7,6 +7,20 @@ Serlio requires so-called rule packages (RPK) as input, which are authored in Ci
 Serlio is well suited for managing the procedural generation of architectural 3D content in digital sets. However, Serlio is restricted to the procedural generation of single buildings / objects. Serlio does not include the city layouting and street network editing tools of CityEngine i.e. the rich CityEngine toolset to design a city from scratch (or based on geographic data) is still needed.
 
 
+## Quick Start
+1. Use CityEngine to [export a Rule Package](https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm) (RPK).
+1. In Maya, select a mesh and use the `Serlio` menu to assign the RPK. This will run the rules for each face in the mesh.
+1. Use the Hypergraph to navigate to the "serlio" node where you can edit the rule parameters.
+1. To create materials, apply one of the two commands in the serlio menu on the generated model. Please note the the two material systems are mutually exclusive at this point.
+
+1. Acquire the Serlio binaries, either: 
+    * ... download the [desired release](https://github.com/Esri/serlio/releases)
+    (on linux you still need to manually [install the local build](#linux-2))
+    * ... or [build](#build-instructions) them yourself, which will result in an `install` directory
+1. Start Maya (Note: you may want to start maya from a shell to see the serlio log output).
+1. Open the plugin manager: Windows -> Settings/Preferences -> Plug-in Manager
+1. Enable `serlio.so` / `serlio.mll`
+1. The plugin should load and a new menu item `Serlio` should appear in Maya.
 
 ## Table of Contents
 
