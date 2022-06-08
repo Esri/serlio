@@ -58,6 +58,31 @@ See [below](#windows-2) in the developer documentation.
 See [below](#linux-2) in the developer documentation
 
 ### Usage Instructions
+#### Add rule files
+1. Create and select a polygon mesh.
+1. Go to the `Serlio` menu and select "Attach CityEngine Rule Package". This will apply the selected rule to each face in the mesh.
+
+#### Remove rule files
+1. Select the generated model(s).
+1. Go to the `Serlio` menu and select "Remove CityEngine Rule Package".
+
+#### Creating materials
+Currently we only support one material type per mesh (see [known limitations](#known-limitations)).
+
+##### Viewport (Stingray) materials
+1. Select the generated model(s).
+1. Go to the `Serlio` menu and select "Create Materials".
+
+##### Arnold materials
+1. Select the generated model(s).
+1. Go to the `Serlio` menu and select "Create Arnold Materials".
+
+#### Working with Attributes in the inspector
+1. Select a generated model in the Viewport or the Outliner.
+1. Go to the `Serlio` tab in Attribute Editor.
+1. Change the rule, seed and rule attributes in the Attribute Editor.
+1. The model will update according to the new attribute values.
+1. Use the arrow on the right of an attribute to reset the attribute to its default value. The default value might depend on the seed and/or other attributes.
 
 ## Developer Manual
 
