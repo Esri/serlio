@@ -260,6 +260,14 @@ See [below](#linux-2) in the developer documentation
 ## Known Limitations
 
 * Serlio 2.0: In Maya 2019 on Windows, Serlio does not support reading USD assets from RPKs.
+* Modifying the input shape after a Serlio node is attached is not supported
+* Scaling transformations on the initial shape mesh will scale the entire generated model. Make sure that all scaling transformations on the initial shape mesh are frozen before applying a rule ("Modify" > "Freeze Transformations")
+* Maya uses centimeters as default working units, we recommend changing these to meters in
+  "Windows" > "Settings/Preferences" > "Preferences" > "Settings" > "Working Units" 
+   * We also recommend multiplying the value of the "Near Clip Plane" and "Far Clip Plane" attributes  in the `perspShape` of the perspective camera by a factor of 100
+* Duplicating a generated Serlio building multiple times with copy/paste can lead to wrong materials due to a naming bug in maya. However, there are two workarounds: 
+   1. Use smart duplicate instead: Go to "Edit" > "Duplicate Special" and tick "Assign unique name to children nodes"
+   1. Manually rename all pasted meshes to something unique and regenerate the rule
 
 ## Licensing Information
 
