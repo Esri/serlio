@@ -72,19 +72,18 @@ RangeType GetRangeType(const prt::Annotation* an) {
 	bool hasMin = false;
 	bool hasMax = false;
 	bool hasKey = false;
+	bool onlyOneTypeInUse = true;
 
 	for (int argIdx = 0; argIdx < numArgs; argIdx++) {
 		const prt::AnnotationArgument* arg = an->getArgument(argIdx);
 		if (arg->getType() != commonType)
-			return RangeType::INVALID;
+			onlyOneTypeInUse = false;
 
 		const wchar_t* key = arg->getKey();
-		if (std::wcscmp(key, MIN_KEY) == 0) {
+		if (std::wcscmp(key, MIN_KEY) == 0)
 			hasMin = true;
-		}
-		else if (std::wcscmp(key, MAX_KEY) == 0) {
+		else if (std::wcscmp(key, MAX_KEY) == 0)
 			hasMax = true;
-		}
 		if (std::wcscmp(key, NULL_KEY) != 0)
 			hasKey = true;
 	}
@@ -98,7 +97,7 @@ RangeType GetRangeType(const prt::Annotation* an) {
 		return RangeType::RANGE;
 
 	//legacy Enum
-	if (!hasKey)
+	if (!hasKey && onlyOneTypeInUse)
 		return RangeType::ENUM;
 
 	return RangeType::INVALID;
