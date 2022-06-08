@@ -17,7 +17,7 @@ Serlio is well suited for managing the procedural generation of architectural 3D
 1. Open the plugin manager: "Windows" > "Settings/Preferences" > "Plug-in Manager"
 1. Enable `serlio.so` / `serlio.mll`
 1. The plugin should load and a new menu item `Serlio` should appear in Maya.
-1. In Maya, select a mesh and use the `Serlio` menu to assign the RPK. This will run the rules for each face in the mesh.
+1. In Maya, select a mesh and use the `Serlio` menu to assign the RPK. This will apply the selected rule to each face in the mesh.
 1. Make sure the geometry is still selected and go to the `serlio` tab in the Attribute editor. Here you can edit the rule parameters.
 1. To create materials, apply one of the two commands in the `Serlio` menu on the generated model. Please note the the two material systems are mutually exclusive at this point.
 
