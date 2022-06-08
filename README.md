@@ -60,11 +60,14 @@ See [below](#linux-2) in the developer documentation
 ### Usage Instructions
 #### Add rule files
 1. Create and select a polygon mesh.
-1. Go to the `Serlio` menu and select "Attach CityEngine Rule Package". This will apply the selected rule to each face in the mesh.
+1. Go to the `Serlio` menu and select "Attach CityEngine Rule Package". 
+1. Select a `.rpk` rule file from the examples or [export your own rule file from CityEngine](https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm).
+1. The selected rule will be applied to each face in the mesh.
 
 #### Remove rule files
 1. Select the generated model(s).
 1. Go to the `Serlio` menu and select "Remove CityEngine Rule Package".
+1. Only the initial shape mesh with default materials remains.
 
 #### Creating materials
 Currently we only support one material type per mesh (see [known limitations](#known-limitations)).
@@ -72,10 +75,16 @@ Currently we only support one material type per mesh (see [known limitations](#k
 ##### Viewport (Stingray) materials
 1. Select the generated model(s).
 1. Go to the `Serlio` menu and select "Create Materials".
+1. The materials for all selected models will be generated and displayed in the viewport.
 
 ##### Arnold materials
 1. Select the generated model(s).
 1. Go to the `Serlio` menu and select "Create Arnold Materials".
+1. The arnold materials for all selected models will be generated.
+1. Add a light source from "Arnold" > "Lights".
+1. In order to see the rendered view either:
+   * Render the current frame once: "Arnold" > "Render" or
+   * Switch the renderer in the Viewport to "Arnold" and hit the start button.
 
 #### Working with Attributes in the inspector
 1. Select a generated model in the Viewport or the Outliner.
