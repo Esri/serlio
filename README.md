@@ -57,7 +57,7 @@ See [below](#windows-2) in the developer documentation.
 #### Linux: Install local build
 See [below](#linux-2) in the developer documentation
 
-### Usage Instructions
+### Using the Serlio plugin
 #### Add rule files
 1. Create and select a polygon mesh.
 1. Go to the `Serlio` menu and select "Attach CityEngine Rule Package". 
