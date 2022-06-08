@@ -42,17 +42,17 @@ External documentation:
 ### Installation
 
 #### Windows: Provided Binaries
-1. Download the MSI installer for your Maya version from the [desired release](https://github.com/Esri/serlio/releases)
-1. Run the MSI installer
-1. Start Maya
-1. You should now see the new menu item "Serlio".
+1. Download the MSI installer for your Maya version from the [desired release](https://github.com/Esri/serlio/releases).
+1. Run the MSI installer.
+1. Start Maya.
+1. You should now see the new menu item `Serlio`.
 
 #### Windows: Install local build
-See [below](#windows-2) in the developer documentation
+See [below](#windows-2) in the developer documentation.
 
 #### Linux: Provided Binaries
-1. Acquire the Serlio binaries by downloading the [desired release](https://github.com/Esri/serlio/releases)
-2. Proceed like [below](#linux-2) in the developer documentation
+1. Acquire the Serlio binaries by downloading the [desired release](https://github.com/Esri/serlio/releases).
+2. Proceed like [below](#linux-2) in the developer documentation.
 
 #### Linux: Install local build
 See [below](#linux-2) in the developer documentation
@@ -116,8 +116,8 @@ See [below](#linux-2) in the developer documentation
 
 ##### Building MSI Installers
 1. WiX Toolset 3 (3.11.1 or later) and Apache Ant (1.10.x or later) is required for building MSI installers.
-2. Start by building serlio with release configurations as described above
-3. Open a Command Shell in the `serlio\deploy` directory
+2. Start by building serlio with release configurations as described above.
+3. Open a Command Shell in the `serlio\deploy` directory.
 4. Run `ant` in the current directioy. Make sure to set at least one valid install path:
    ```
    ant -D"maya2022.dir"=../install
@@ -125,7 +125,7 @@ See [below](#linux-2) in the developer documentation
 5. The installer will appear in `serlio\build\build_msi`.
 
 #### Linux
-1. Open a terminal (e.g. bash)
+1. Open a terminal (e.g. bash).
 1. Change into the example directory: `cd <your path to>/esri-cityengine-sdk/examples/serlio`
 1. Create a build directory and change into it: `mkdir build && cd build`
 1. Run cmake (adjust the maya path if necessary): `cmake -Dmaya_DIR=/usr/autodesk/maya2022 ../src`
@@ -134,8 +134,8 @@ See [below](#linux-2) in the developer documentation
 
 ### Install local build
 #### Windows
-1. Locate the `install` directory where you [built](build.md) the plugin, let's call it `PLUGINDIR`
-1. Locate the Maya.env file in your home, usually its in `<home directory>\Documents\maya\2020`
+1. Locate the `install` directory where you [built](build.md) the plugin, let's call it `PLUGINDIR`.
+1. Locate the Maya.env file in your home, usually its in `<home directory>\Documents\maya\2020`.
 1. Edit Maya.env as follows:
    ```
    :: replace <PLUGINDIR> with the actual path
@@ -144,14 +144,14 @@ See [below](#linux-2) in the developer documentation
    MAYA_SCRIPT_PATH=<PLUGINDIR>\scripts
    XBMLANGPATH=<PLUGINDIR>\icons
    ```
-1. Start maya
-1. Open the plugin manager: Windows -> Settings/Preferences -> Plug-in Manager
-1. Enable `serlio.mll`
+1. Start maya.
+1. Open the plugin manager: "Windows" -> "Settings/Preferences" > "Plug-in Manager".
+1. Enable `serlio.mll`.
 1. The plugin should load and a new menu item `Serlio` should appear in Maya.
 
 #### Linux
-1. Let's call the directory with the Serlio binaries `PLUGINDIR` (downloaded binaries or locally built `install` folder)
-1. Locate the Maya.env file in your home, e.g.: `~/maya/2020/Maya.env`
+1. Let's call the directory with the Serlio binaries `PLUGINDIR` (downloaded binaries or locally built `install` folder).
+1. Locate the Maya.env file in your home, e.g.: `~/maya/2020/Maya.env`.
 1. Edit Maya.env as follows:
    ```
    PLUGINDIR=<PLUGINDIR> # replace <PLUGINDIR> with the actual path
@@ -160,8 +160,8 @@ See [below](#linux-2) in the developer documentation
    XBMLANGPATH=$PLUGINDIR/icons/%B
    ```
 1. Start Maya (Note: you may want to start maya from a shell to see the serlio log output).
-1. Open the plugin manager: Windows -> Settings/Preferences -> Plug-in Manager
-1. Enable `serlio.so`
+1. Open the plugin manager: "Windows" > "Settings/Preferences" > "Plug-in Manager".
+1. Enable `serlio.so`.
 1. The plugin should load and a new menu item `Serlio` should appear in Maya.
 
 ## Release Notes
@@ -260,14 +260,14 @@ See [below](#linux-2) in the developer documentation
 ## Known Limitations
 
 * Serlio 2.0: In Maya 2019 on Windows, Serlio does not support reading USD assets from RPKs.
-* Modifying the input shape after a Serlio node is attached is not supported
-* Scaling transformations on the initial shape mesh will scale the entire generated model. Make sure that all scaling transformations on the initial shape mesh are frozen before applying a rule ("Modify" > "Freeze Transformations")
+* Modifying the input shape after a Serlio node is attached is not supported.
+* Scaling transformations on the initial shape mesh will scale the entire generated model. Make sure that all scaling transformations on the initial shape mesh are frozen before applying a rule ("Modify" > "Freeze Transformations").
 * Maya uses centimeters as default working units, we recommend changing these to meters in
-  "Windows" > "Settings/Preferences" > "Preferences" > "Settings" > "Working Units" 
-   * We also recommend multiplying the value of the "Near Clip Plane" and "Far Clip Plane" attributes  in the `perspShape` of the perspective camera by a factor of 100
+  "Windows" > "Settings/Preferences" > "Preferences" > "Settings" > "Working Units".
+   * We also recommend multiplying the value of the "Near Clip Plane" and "Far Clip Plane" attributes  in the `perspShape` of the perspective camera by a factor of 100.
 * Duplicating a generated Serlio building multiple times with copy/paste can lead to wrong materials due to a naming bug in maya. However, there are two workarounds: 
-   1. Use smart duplicate instead: Go to "Edit" > "Duplicate Special" and tick "Assign unique name to children nodes"
-   1. Manually rename all pasted meshes to something unique and regenerate the rule
+   1. Use smart duplicate instead: Go to "Edit" > "Duplicate Special" and tick "Assign unique name to children nodes".
+   1. Manually rename all pasted meshes to something unique and regenerate the rule.
 
 ## Licensing Information
 
