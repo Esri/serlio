@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@
 
 #include <limits>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
 
 namespace prt {
 class RuleFileInfo;
@@ -48,7 +48,7 @@ constexpr int ORDER_FIRST = std::numeric_limits<int>::min();
 constexpr int ORDER_NONE = std::numeric_limits<int>::max();
 
 using AttributeGroup = std::vector<std::wstring>;
-using AttributeGroupOrder = std::map<std::pair<std::wstring,AttributeGroup>, int>;
+using AttributeGroupOrder = std::map<std::pair<std::wstring, AttributeGroup>, int>;
 
 struct RuleAttribute {
 	std::wstring fqName;        // fully qualified rule name (i.e. including style prefix)
@@ -76,7 +76,7 @@ using RuleAttributeSet = std::set<RuleAttribute, RuleAttributeCmp>;
 using RuleAttributeMap = std::map<std::wstring, RuleAttribute>;
 
 SRL_TEST_EXPORTS_API RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile,
-                                                      const prt::RuleFileInfo* ruleFileInfo);
+                                                        const prt::RuleFileInfo* ruleFileInfo);
 void setGlobalGroupOrder(RuleAttributeVec& ruleAttributes);
 std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap);
 std::ostream& operator<<(std::ostream& ostr, const RuleAttribute& ap);

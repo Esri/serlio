@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 
-#include "materials/StingrayMaterialNode.h"
 #include "materials/ArnoldMaterialNode.h"
 #include "materials/MaterialCommand.h"
+#include "materials/StingrayMaterialNode.h"
 #include "utils/MELScriptBuilder.h"
 
 #include "utils/MayaUtilities.h"
@@ -46,7 +46,7 @@ MStatus MaterialCommand::doIt(const MArgList& argList) {
 		displayError("Only one material type expected");
 		return MS::kFailure;
 	}
-	
+
 	MString materialType = argList.asString(0, &status);
 	MCHECK(status);
 
@@ -110,8 +110,8 @@ MStatus MaterialCommand::doIt(const MArgList& argList) {
 		if (MS::kSuccess != status) {
 			MGlobal::displayError("Status failed: no inMesh Attribute on node \"" + rootNode.name() + "\"");
 			return status;
-		} 
-		//has construction history
+		}
+		// has construction history
 		if (geometryInMesh.isConnected()) {
 			MPlugArray parentPlugArray;
 			MPlug serlioOutMesh;
@@ -124,7 +124,7 @@ MStatus MaterialCommand::doIt(const MArgList& argList) {
 			fDGModifier.disconnect(serlioOutMesh, geometryInMesh);
 			fDGModifier.connect(serlioOutMesh, materialInMesh);
 			fDGModifier.connect(materialOutMesh, geometryInMesh);
-		} 
+		}
 		// has no construction history
 		else {
 			MDataHandle meshHandle = geometryOutMesh.asMDataHandle();
@@ -167,7 +167,7 @@ MStatus MaterialCommand::undoIt() {
 	MStatus status;
 	MELScriptBuilder scriptBuilder;
 
-	//apply initial shading group to avoid other connected shading groups to disrupt undo process
+	// apply initial shading group to avoid other connected shading groups to disrupt undo process
 	scriptBuilder.setsUseInitialShadingGroup(fGeometryName.asWChar());
 	std::wstring output;
 	MCHECK(scriptBuilder.executeSync(output));

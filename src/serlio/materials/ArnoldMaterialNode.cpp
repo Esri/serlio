@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,13 +76,11 @@ void createMapShader(MELScriptBuilder& sb, const std::string& tex, const Materia
 	if (alpha) {
 		sb.connectAttr(MEL_VAR_MAP_NODE, L"outAlpha", MEL_VAR_UV_TRAFO_NODE, L"passthroughR");
 		sb.forceValidTextureAlphaChannel(MEL_VAR_MAP_NODE);
-		sb.setAttr(MEL_VAR_MAP_NODE, L"alphaIsLuminance",
-		           !MaterialUtils::textureHasAlphaChannel(texPath.wstring()));
+		sb.setAttr(MEL_VAR_MAP_NODE, L"alphaIsLuminance", !MaterialUtils::textureHasAlphaChannel(texPath.wstring()));
 	}
 	else
 		sb.connectAttr(MEL_VAR_MAP_NODE, L"outColor", MEL_VAR_UV_TRAFO_NODE, L"passthrough");
 }
-
 
 } // namespace
 

@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,7 @@ PRTContext& PRTContext::get() {
 	return prtCtx;
 }
 
-PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs)
-    : mPluginRootPath(prtu::getPluginRoot()) {
+PRTContext::PRTContext(const std::vector<std::wstring>& addExtDirs) : mPluginRootPath(prtu::getPluginRoot()) {
 	if (ENABLE_LOG_CONSOLE) {
 		mLogHandler = std::make_unique<logging::LogHandler>();
 		prt::addLogHandler(mLogHandler.get());

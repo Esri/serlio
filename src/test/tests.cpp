@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,8 +145,8 @@ const AttributeGroup AG_B = {L"b"};
 const AttributeGroup AG_BK = {L"b", L"k"};
 const AttributeGroup AG_BKP = {L"b", L"k", L"p"};
 
-RuleAttribute getAttr(std::wstring fqName, AttributeGroup ag, int o, int go, std::wstring rf,int ro, bool sr) {
-	return RuleAttribute{fqName, L"", L"", L"", prt::AAT_UNKNOWN, ag, o, go, go, rf,ro, sr};
+RuleAttribute getAttr(std::wstring fqName, AttributeGroup ag, int o, int go, std::wstring rf, int ro, bool sr) {
+	return RuleAttribute{fqName, L"", L"", L"", prt::AAT_UNKNOWN, ag, o, go, go, rf, ro, sr};
 }
 
 TEST_CASE("global group order") {
@@ -209,7 +209,8 @@ TEST_CASE("rule attribute sorting") {
 	}
 
 	SECTION("nested groups disjunct") {
-		const RuleAttribute A = getAttr(L"style$A", {L"foo1", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+		const RuleAttribute A =
+		        getAttr(L"style$A", {L"foo1", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
 		const RuleAttributeSet inp = {A, B};
@@ -237,18 +238,20 @@ TEST_CASE("rule attribute sorting") {
 		const RuleAttributeSet inp = {C, A, B};
 		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
 		const RuleAttributeVec exp = {B, C, A};
-		for (const auto& ref: inpAsVec){
+		for (const auto& ref : inpAsVec) {
 			std::wcout << ref;
 		}
 		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("all properties") {
-		const RuleAttribute A = getAttr(L"style$A", {L"First1", L"Second1", L"Third1"}, ORDER_NONE, 0, L"foo", ORDER_NONE, true);
+		const RuleAttribute A =
+		        getAttr(L"style$A", {L"First1", L"Second1", L"Third1"}, ORDER_NONE, 0, L"foo", ORDER_NONE, true);
 		const RuleAttribute B = getAttr(L"style$B", {L"First"}, ORDER_NONE, 3, L"foo", ORDER_NONE, true);
 		const RuleAttribute C = getAttr(L"style$C", {L"First", L"Second"}, 0, 2, L"foo", ORDER_NONE, true);
 		const RuleAttribute D = getAttr(L"style$D", {L"First", L"Second"}, 1, 2, L"foo", ORDER_NONE, true);
-		const RuleAttribute E = getAttr(L"style$E", {L"First", L"Second", L"Third"}, ORDER_NONE, 1, L"foo", ORDER_NONE, true);
+		const RuleAttribute E =
+		        getAttr(L"style$E", {L"First", L"Second", L"Third"}, ORDER_NONE, 1, L"foo", ORDER_NONE, true);
 
 		const RuleAttributeSet inp = {B, A, C, D, E};
 		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
@@ -296,28 +299,33 @@ TEST_CASE("replaceCGACWithCEVersion") {
 
 	SECTION("major number larger than current") {
 		std::wstring inp = L"Unsupported CGAC version 2.0 : major number larger than current (1.17)";
-		const std::wstring exp = L"Unsupported CityEngine version newer than 2021.1 : major number larger than current (2021.1)";
+		const std::wstring exp =
+		        L"Unsupported CityEngine version newer than 2021.1 : major number larger than current (2021.1)";
 		prtu::replaceCGACWithCEVersion(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("major number smaller than current") {
 		std::wstring inp = L"Potentially unsupported CGAC version 1.0 : major number smaller than current (2.0)";
-		const std::wstring exp = L"Potentially unsupported CityEngine version 2013.0 : major number smaller than current (newer than 2021.1)";
+		const std::wstring exp = L"Potentially unsupported CityEngine version 2013.0 : major number smaller than "
+		                         L"current (newer than 2021.1)";
 		prtu::replaceCGACWithCEVersion(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("minor number larger than current") {
 		std::wstring inp = L"Potentially unsupported CGAC version 1.17 : newer than current (1.5)";
-		const std::wstring exp = L"Potentially unsupported CityEngine version 2021.1 : newer than current (2015.0 - 2015.2)";
+		const std::wstring exp =
+		        L"Potentially unsupported CityEngine version 2021.1 : newer than current (2015.0 - 2015.2)";
 		prtu::replaceCGACWithCEVersion(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("problematic CityEngine version") {
-		std::wstring inp = L"Potentially problematic CGAC version 1.3 : recompiling with current CGA Compiler (1.17) is recommended.";
-		const std::wstring exp = L"Potentially problematic CityEngine version 2014.1 : recompiling with current CGA Compiler (2021.1) is recommended.";
+		std::wstring inp = L"Potentially problematic CGAC version 1.3 : recompiling with current CGA Compiler (1.17) "
+		                   L"is recommended.";
+		const std::wstring exp = L"Potentially problematic CityEngine version 2014.1 : recompiling with current CGA "
+		                         L"Compiler (2021.1) is recommended.";
 		prtu::replaceCGACWithCEVersion(inp);
 		CHECK(inp == exp);
 	}

@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#include "encoder/MayaEncoder.h"
 #include "encoder/IMayaCallbacks.h"
+#include "encoder/MayaEncoder.h"
 #include "encoder/TextureEncoder.h"
 
 #include "prtx/Attributable.h"

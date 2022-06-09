@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@
 #include "maya/MDataHandle.h"
 #include "maya/MFnMeshData.h"
 #include "maya/MFnNumericAttribute.h"
-#include "maya/MFnStringData.h"
 #include "maya/MFnStringArrayData.h"
+#include "maya/MFnStringData.h"
 #include "maya/MFnTypedAttribute.h"
 
 #define MCheckStatus(status, message)                                                                                  \
@@ -116,7 +116,7 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			MDataHandle randomSeed = data.inputValue(mRandomSeed, &status);
 			fPRTModifierAction.setRandomSeed(randomSeed.asInt());
 
-			if (ruleFileWasChanged){
+			if (ruleFileWasChanged) {
 				status = fPRTModifierAction.updateRuleFiles(thisMObject(), rulePkgData.asString(), cgacProblems);
 
 				if (status != MStatus::kSuccess) {
