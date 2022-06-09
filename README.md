@@ -118,7 +118,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 #### Windows
 
 ##### Building with Visual Studio
-1. Open a Visual Studio 2017 x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
+1. Open a Visual Studio x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
 2. Create a build directory with `mkdir build` and change into it with `cd build`.
 3. Run `cmake` to generate a Visual Studio solution:
    ```
@@ -131,7 +131,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 1. Proceed with the Installation Instructions below.
 
 ##### Building on the Command Line
-1. Open a Visual Studio 2019 x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
+1. Open a Visual Studio x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
 2. Create a build directory with `mkdir build` and change into it with `cd build`.
 3. Run `cmake` to generate the Makefiles:
    ```
