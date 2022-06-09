@@ -117,10 +117,6 @@ Currently we only support one material type per mesh (see [known limitations](#k
 
 #### Windows
 
-##### Quick build for the impatient
-1. Open a Visual Studio 2017 x64 Command Shell in the `serlio` root directory.
-2. Call `powershell .\build.ps1`.
-
 ##### Building with Visual Studio
 1. Open a Visual Studio 2017 x64 Command Shell in the `serlio` root directory, i.e. at `<your path to>\esri-cityengine-sdk\examples\serlio`.
 2. Create a build directory with `mkdir build` and change into it with `cd build`.
