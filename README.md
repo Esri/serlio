@@ -32,7 +32,7 @@ External documentation:
 * [CityEngine SDK API Reference](https://esri.github.io/cityengine-sdk/html/index.html)
 
 ## User Manual
-
+Please refer to the [release notes](#release-notes) for the supported CityEngine version.
 ### Installation
 
 #### Windows: Provided Installer
@@ -52,7 +52,7 @@ External documentation:
 1. Select a `.rpk` rule file:
    1. Use [this basic rule](/doc/data/extrude.rpk) which creates a simple extrusion based on a "height" parameter
    1. Use a rule from the [examples](https://esri.github.io/cityengine/serlio)
-   1. [Export your own rule file from CityEngine](https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm). Serlio currently expects rule packages authored with CityEngine 2021.1 or older.
+   1. [Export your own rule file from CityEngine](https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm).
 1. The selected rule will be applied to the mesh. It depends on the rule how multiple faces are handled.
 
 #### Remove rule files
@@ -188,6 +188,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 ## Release Notes
 
 ### v2.0.0 (2022-05-XX)
+Required CityEngine version: 2021.1 or older.
 #### Added:
 * Support for Maya 2020 and 2022. (#73)
 * Command to remove serlio nodes and materials from mesh.
