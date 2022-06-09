@@ -41,7 +41,7 @@ External documentation:
 
 ### Installation
 
-#### Windows: Provided Binaries
+#### Windows: Provided Installer
 1. Download the MSI installer for the latest [release](https://github.com/Esri/serlio/releases/latest).
 1. Run the MSI installer.
 1. Start Maya.
