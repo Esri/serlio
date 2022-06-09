@@ -126,7 +126,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
    ```
    Use options `-Dprt_DIR=<ce sdk root>\cmake` and `-Dmaya_DIR=<maya installation root>` to override the default locations of CityEngine SDK and Maya.
 1. Open the generated `serlio_parent.sln` in Visual Studio.
-2. Switch the solution configuration to "Release" or "RelWithDebInfo" ("Debug" is not supported with release CE SDK).
+2. Switch the solution configuration to "Release" or "RelWithDebInfo" ("Debug" is not supported).
 3. Call `build` on the `INSTALL` project.
 1. Proceed with the Installation Instructions below.
 
