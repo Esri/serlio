@@ -8,13 +8,10 @@ Serlio is well suited for managing the procedural generation of architectural 3D
 
 
 ## Quick Start
-1. Install Serlio by downloading the latest [installer](https://github.com/Esri/serlio/releases/latest). Please see [below](#linux-2) for installation on linux.
-1. Start Maya.
-1. The plugin should load and a new menu item `Serlio` should appear in Maya.
+1. Install Serlio by downloading the latest [installer](https://github.com/Esri/serlio/releases/latest). Please see [below](#linux-2) for installation on Linux.
+1. Start Maya, a new `Serlio` menu item will appear.
 1. In Maya, select a mesh and use the `Serlio` menu to assign a rule package (RPK), for example [this one](/doc/data/extrude.rpk) which creates a simple extrusion based on a "height" parameter. You can [author your own RPKs with CityEngine](https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm).
 1. Make sure the geometry is still selected and go to the `serlio` tab in the Attribute editor. Here you can edit the rule parameters.
-1. To create materials, apply one of the two commands in the `Serlio` menu on the generated model. Please note the the two material systems are mutually exclusive at this point.
-
 
 ## Table of Contents
 
