@@ -49,8 +49,8 @@ External documentation:
 #### Add rule files
 1. Create and select a polygon mesh.
 1. Go to the `Serlio` menu and select "Attach CityEngine Rule Package". 
-1. Select a `.rpk` rule file from the [examples](https://esri.github.io/cityengine/serlio) or [export your own rule file from CityEngine](https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm).
-1. The selected rule will be applied to each face in the mesh.
+1. Select a `.rpk` rule file from the [examples](https://esri.github.io/cityengine/serlio) or [export your own rule file from CityEngine](https://doc.arcgis.com/en/cityengine/latest/help/help-rule-package.htm). Serlio currently expects rule packages authored with CityEngine 2021.1 or older.
+1. The selected rule will be applied to the mesh. It depends on the rule how multiple faces are handled.
 
 #### Remove rule files
 1. Select the generated model(s).
