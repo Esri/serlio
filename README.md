@@ -47,15 +47,9 @@ External documentation:
 1. Start Maya.
 1. You should now see the new menu item `Serlio`.
 
-#### Windows: Install local build
-See [below](#windows-2) in the developer documentation.
-
 #### Linux: Provided Binaries
 1. Acquire the Serlio binaries by downloading the [desired release](https://github.com/Esri/serlio/releases).
 2. Proceed like [below](#linux-2) in the developer documentation.
-
-#### Linux: Install local build
-See [below](#linux-2) in the developer documentation
 
 ### Using the Serlio plugin
 #### Add rule files
