@@ -80,7 +80,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 ##### Arnold materials
 1. Select the generated model(s).
 1. Go to the `Serlio` menu and select "Create Arnold Materials".
-1. The arnold materials for all selected models will be generated.
+1. The Arnold materials for all selected models will be generated.
 1. Add a light source from "Arnold" > "Lights".
 1. In order to see the rendered view either:
    * Render the current frame once: "Arnold" > "Render" or
