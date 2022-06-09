@@ -42,13 +42,13 @@ External documentation:
 ### Installation
 
 #### Windows: Provided Binaries
-1. Download the MSI installer for your Maya version from the [desired release](https://github.com/Esri/serlio/releases).
+1. Download the MSI installer for the latest [release](https://github.com/Esri/serlio/releases/latest).
 1. Run the MSI installer.
 1. Start Maya.
 1. You should now see the new menu item `Serlio`.
 
 #### Linux: Provided Binaries
-1. Acquire the Serlio binaries by downloading the [desired release](https://github.com/Esri/serlio/releases).
+1. Acquire the Serlio binaries for the latest [release](https://github.com/Esri/serlio/releases/latest).
 2. Proceed like [below](#linux-2) in the developer documentation.
 
 ### Using the Serlio plugin
