@@ -1,10 +1,12 @@
 # ![](doc/img/serlio_32.png)  Serlio - CityEngine Plugin for Autodesk Maya
 
-Serlio is a plugin for [Autodesk Maya](https://www.autodesk.com/maya). It provides a modifier node which enables the execution of [CityEngine](https://www.esri.com/software/cityengine) ‘rules’ within a Maya scene. Therefore, a 3D environment artist does not have to leave their familiar Maya toolset anymore to make use of CityEngine’s procedural modeling power. Complicated export-import pipelines are no longer needed, which also means that the procedural building models do not need to be “baked” anymore. The buildings stay procedural during the entire modeling workflow. Consequently, the 3D environment artist can change the height, style and appearance of buildings easily with a parametric interface at any point during production.
+Serlio is a plugin for [Autodesk Maya](https://www.autodesk.com/maya). It provides a modifier node which enables the execution of [CityEngine](https://www.esri.com/software/cityengine) ‘rules’ within a Maya scene. Therefore, a 3D environment artist does not have to leave their familiar Maya toolset anymore to make use of CityEngine’s procedural modeling power. Complicated export-import pipelines are no longer needed, which also means that the procedural building models do not need to be “baked” in future. The buildings stay procedural during the entire modeling workflow. Consequently, the 3D environment artist can change many attributes, for example the height, style and appearance of buildings can be altered easily with a parametric interface at any point during production.
 
-Serlio requires so-called rule packages (RPK) as input, which are authored in CityEngine. An RPK includes assets and a CGA rule file which encodes an architectural style. Comprehensive RPK examples are available below and can be used “out-of-the-box” in Serlio.
+Serlio requires so-called rule packages (RPK) as input, which are authored in CityEngine. A RPK includes assets and a CGA rule file which encodes an architectural style. Comprehensive RPK examples are available below and can be used “out-of-the-box” in Serlio.
 
-Serlio is well suited for managing the procedural generation of architectural 3D content in digital sets. However, Serlio is restricted to the procedural generation of single buildings / objects. Serlio does not include the city layouting and street network editing tools of CityEngine i.e. the rich CityEngine toolset to design a city from scratch (or based on geographic data) is still needed.
+Serlio is well suited for managing the procedural generation of architectural 3D content in digital sets. However, Serlio is restricted to the procedural generation of singular objects - particularly buildings. Serlio does not include the city layouting and street network editing tools of CityEngine i.e. the rich CityEngine toolset to design a city from scratch (or based on geographic data) is still needed.
+
+
 
 
 ## Quick Start
@@ -40,7 +42,7 @@ Please refer to the [release notes](#release-notes) for the supported CityEngine
 
 #### Linux: Provided Binaries
 1. Acquire the Serlio binaries for the latest [release](https://github.com/Esri/serlio/releases/latest).
-2. Proceed like [below](#linux-2) in the developer documentation.
+2. Continue with the [steps linked below](#linux-2) in the developer documentation.
 
 ### Using the Serlio plugin
 #### Add rule files
@@ -94,12 +96,10 @@ Currently we only support one material type per mesh (see [known limitations](#k
 * Windows 7, 8.1 or 10 (64bit)
 * Required C++ compiler: Visual Studio 2019 with Toolset MSVC 14.27 or later
 * WiX Toolset 3.11.1: Optional, required for building .msi installers
-* Required flags for extension libraries release mode: `/bigobj /GR /EHsc /MD`
 
 #### Linux
 * RedHat Enterprise Linux 7.x or compatible
 * Required C++ compiler: GCC 9.3 or later (RedHat Enterprise Linux DevToolSet 9.1)
-* Required flags for extension libraries: `-std=c++17 -D_GLIBCXX_USE_CXX11_ABI=0 -march=nocona -fvisibility=hidden -fvisibility-inlines-hidden -Wl,--exclude-libs,ALL`
 
 ### Build Instructions 
 
@@ -134,7 +134,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 
 ##### Building MSI Installers
 1. WiX Toolset 3 (3.11.1 or later) and Apache Ant (1.10.x or later) is required for building MSI installers.
-2. Start by building serlio with release configurations as described above.
+2. Start by building Serlio with release configurations as described above.
 3. Open a Command Shell in the `serlio\deploy` directory.
 4. Run `ant` in the current directioy. Make sure to set at least one valid install path:
    ```
@@ -146,7 +146,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 1. Open a terminal (e.g. bash).
 1. Change into the example directory: `cd <your path to>/esri-cityengine-sdk/examples/serlio`
 1. Create a build directory and change into it: `mkdir build && cd build`
-1. Run cmake (adjust the maya path if necessary): `cmake -Dmaya_DIR=/usr/autodesk/maya2022 ../src`
+1. Run cmake (adjust the Maya path if necessary): `cmake -Dmaya_DIR=/usr/autodesk/maya2022 ../src`
 1. Compile: `make install`
 1. The build result will appear in the `install` directory in parallel to the `build` directory. We will use this as the plugin directory below.
 
@@ -162,7 +162,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
    MAYA_SCRIPT_PATH=<PLUGINDIR>\scripts
    XBMLANGPATH=<PLUGINDIR>\icons
    ```
-1. Start maya.
+1. Start Maya.
 1. Open the plugin manager: "Windows" -> "Settings/Preferences" > "Plug-in Manager".
 1. Enable `serlio.mll`.
 1. The plugin should load and a new menu item `Serlio` should appear in Maya.
@@ -177,7 +177,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
    MAYA_SCRIPT_PATH=$PLUGINDIR/scripts
    XBMLANGPATH=$PLUGINDIR/icons/%B
    ```
-1. Start Maya (Note: you may want to start maya from a shell to see the serlio log output).
+1. Start Maya (Note: you may want to start Maya from a shell to see the Serlio log output).
 1. Open the plugin manager: "Windows" > "Settings/Preferences" > "Plug-in Manager".
 1. Enable `serlio.so`.
 1. The plugin should load and a new menu item `Serlio` should appear in Maya.
@@ -188,7 +188,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 Required CityEngine version: 2021.1 or older.
 #### Added:
 * Support for Maya 2020 and 2022. (#73)
-* Command to remove serlio nodes and materials from mesh.
+* Command to remove Serlio nodes and materials from mesh.
 * Support and UI for resetting user-set attributes. (#50)
 * Support for dynamic enums.
 * Support for RGB-based opacity maps. (#15, #33, #18)
@@ -211,7 +211,7 @@ Required CityEngine version: 2021.1 or older.
 * Improved rule attribute ordering (matching CityEngine).
 * Stopped supporting generation of rules without Maya construction history.
 * Automatically switch viewport to textured mode after generating materials.
-* Replace rule package instead of stacking serlio nodes, when calling "Add rule package..". (#13)
+* Replace rule package instead of stacking Serlio nodes, when calling "Add rule package..". (#13)
 * Improved UI feedback on node for invalid rule package paths
 * Improved generation performance.
 * Fixed metadata storage on scene save/load
@@ -232,7 +232,7 @@ Required CityEngine version: 2021.1 or older.
 #### Development:
 * Updated compilers (now using C++ 17)
 * Updated test framework and build system 
-* Bundled installers for all maya versions (2019-2022) into one
+* Bundled installers for all Maya versions (2019-2022) into one
 
 #### Examples:
 * Added Street Segment example
@@ -255,8 +255,8 @@ Required CityEngine version: 2021.1 or older.
 
 ### v1.0.0 (2019-07-31)
 * Optimized the encoding of PRT geometry with many meshes (e.g. results in a speedup of about 5x for the "Parthenon" CityEngine example).
-* Do not change maya selection after user touches the attribute sliders.
-* Do not pass maya's automatically created color child attributes to PRT.
+* Do not change Maya selection after user touches the attribute sliders.
+* Do not pass Maya's automatically created color child attributes to PRT.
 
 ### v1.0.0-beta.1 (2019-07-26)
 * Added attribute sorting in the Maya node editor like in CityEngine.
@@ -274,7 +274,7 @@ Required CityEngine version: 2021.1 or older.
 * Improved performance and Material support. 
 
 ### v0.0.0 (2012-2018)
-* Experimental maya plugin released as source code example for CityEngine SDK.
+* Experimental Maya plugin released as source code example for CityEngine SDK.
 
 ## Known Limitations
 
@@ -284,7 +284,7 @@ Required CityEngine version: 2021.1 or older.
 * Maya uses centimeters as default working units, we recommend changing these to meters in
   "Windows" > "Settings/Preferences" > "Preferences" > "Settings" > "Working Units".
    * We also recommend multiplying the value of the "Near Clip Plane" and "Far Clip Plane" attributes  in the `perspShape` of the perspective camera by a factor of 100.
-* Duplicating a generated Serlio building multiple times with copy/paste can lead to wrong materials due to a naming bug in maya. However, there are two workarounds: 
+* Duplicating a generated Serlio building multiple times with copy/paste can lead to wrong materials due to a naming bug in Maya. However, there are two workarounds: 
    1. Use smart duplicate instead: Go to "Edit" > "Duplicate Special" and tick "Assign unique name to children nodes".
    1. Manually rename all pasted meshes to something unique and regenerate the rule.
 
