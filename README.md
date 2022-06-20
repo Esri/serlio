@@ -184,7 +184,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 
 ## Release Notes
 
-### v2.0.0 (2022-05-XX)
+### v2.0.0 (2022-06-20)
 Required CityEngine version: 2021.1 or older.
 #### Added:
 * Support for Maya 2020 and 2022. (#73)
