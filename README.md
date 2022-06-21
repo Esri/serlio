@@ -35,7 +35,7 @@ Please refer to the [release notes](#release-notes) for the supported CityEngine
 ### Installation
 
 #### Software Requirements
-- Windows 8.1, 10 and 11 (64bit)
+- Windows 10 and 11 (64bit)
 - CityEngine 2021.1 or older
 - Autodesk Maya 2019, 2020 or 2022
 
