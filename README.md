@@ -299,6 +299,6 @@ Serlio is free for personal, educational, and non-commercial use. Commercial use
 
 Serlio is under the same license as the included [CityEngine SDK](https://github.com/esri/cityengine-sdk#licensing). An exception is the Serlio source code (without CityEngine SDK, binaries, or object code), which is licensed under the Apache License, Version 2.0 (the “License”); you may not use this work except in compliance with the License. You may obtain a copy of the License at https://www.apache.org/licenses/LICENSE-2.0
 
-All content in the "Examples" directory/section is licensed under the APACHE 2.0 license as well.
+All content in the [Examples](https://esri.github.io/cityengine/serlio#examples) directory/section is licensed under the APACHE 2.0 license as well.
 
 For questions or enquiries regarding licensing, please contact the Esri CityEngine team (cityengine-info@esri.com).
