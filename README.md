@@ -34,6 +34,11 @@ External documentation:
 Please refer to the [release notes](#release-notes) for the supported CityEngine version.
 ### Installation
 
+#### Software Requirements
+- Windows 8.1, 10 and 11 (64bit)
+- CityEngine 2021.1 or older
+- Autodesk Maya 2019, 2020 or 2022
+
 #### Windows: Provided Installer
 1. Download the MSI installer for the latest [release](https://github.com/Esri/serlio/releases/latest).
 1. Run the MSI installer.
