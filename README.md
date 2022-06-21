@@ -95,7 +95,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 #### All Platforms
 * License for CityEngine (2019.0 or later), e.g. to author Rule Packages.
 * CMake 3.13 or later (http://www.cmake.org)
-* Autodesk Maya 2019 or later or the corresponding development kit
+* Autodesk Maya 2019, 2020 or 2022 or the corresponding development kit
 
 #### Windows
 * Windows 7, 8.1 or 10 (64bit)
