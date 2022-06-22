@@ -2,7 +2,7 @@
 
 Serlio is a plugin for [Autodesk Maya](https://www.autodesk.com/maya). It provides a modifier node which enables the execution of [CityEngine](https://www.esri.com/software/cityengine) ‘rules’ within a Maya scene. Therefore, a 3D environment artist does not have to leave their familiar Maya toolset anymore to make use of CityEngine’s procedural modeling power. Complicated export-import pipelines are no longer needed, which also means that the procedural building models do not need to be “baked” in future. The buildings stay procedural during the entire modeling workflow. Consequently, the 3D environment artist can change many attributes, for example the height, style and appearance of buildings can be altered easily with a parametric interface at any point during production.
 
-Serlio requires so-called rule packages (RPK) as input, which are authored in CityEngine. A RPK includes assets and a CGA rule file which encodes an architectural style. Comprehensive RPK examples are available below and can be used “out-of-the-box” in Serlio.
+Serlio requires so-called rule packages (RPK) as input, which are authored in CityEngine. An RPK includes assets and a CGA rule file which encodes an architectural style. Comprehensive RPK examples are available below and can be used “out-of-the-box” in Serlio.
 
 Serlio is well suited for managing the procedural generation of architectural 3D content in digital sets. However, Serlio is restricted to the procedural generation of singular objects - particularly buildings. Serlio does not include the city layouting and street network editing tools of CityEngine i.e. the rich CityEngine toolset to design a city from scratch (or based on geographic data) is still needed.
 
@@ -33,6 +33,11 @@ External documentation:
 ## User Manual
 Please refer to the [release notes](#release-notes) for the supported CityEngine version.
 ### Installation
+
+#### Software Requirements
+- Windows 10 and 11 (64bit)
+- CityEngine 2021.1 or older
+- Autodesk Maya 2019, 2020 or 2022
 
 #### Windows: Provided Installer
 1. Download the MSI installer for the latest [release](https://github.com/Esri/serlio/releases/latest).
@@ -90,7 +95,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 #### All Platforms
 * License for CityEngine (2019.0 or later), e.g. to author Rule Packages.
 * CMake 3.13 or later (http://www.cmake.org)
-* Autodesk Maya 2019 or later or the corresponding development kit
+* Autodesk Maya 2019, 2020 or 2022 or the corresponding development kit
 
 #### Windows
 * Windows 7, 8.1 or 10 (64bit)
@@ -184,7 +189,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 
 ## Release Notes
 
-### v2.0.0 (2022-05-XX)
+### v2.0.0 (2022-06-20)
 Required CityEngine version: 2021.1 or older.
 #### Added:
 * Support for Maya 2020 and 2022. (#73)
@@ -294,6 +299,6 @@ Serlio is free for personal, educational, and non-commercial use. Commercial use
 
 Serlio is under the same license as the included [CityEngine SDK](https://github.com/esri/cityengine-sdk#licensing). An exception is the Serlio source code (without CityEngine SDK, binaries, or object code), which is licensed under the Apache License, Version 2.0 (the “License”); you may not use this work except in compliance with the License. You may obtain a copy of the License at https://www.apache.org/licenses/LICENSE-2.0
 
-All content in the "Examples" directory/section is licensed under the APACHE 2.0 license as well.
+All content in the [Examples](https://esri.github.io/cityengine/serlio#examples) directory/section is licensed under the APACHE 2.0 license as well.
 
 For questions or enquiries regarding licensing, please contact the Esri CityEngine team (cityengine-info@esri.com).
