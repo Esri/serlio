@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include "maya/MDataHandle.h"
 #include "maya/MFnMeshData.h"
 #include "maya/MFnNumericAttribute.h"
+#include "maya/MFnStringArrayData.h"
 #include "maya/MFnStringData.h"
 #include "maya/MFnTypedAttribute.h"
 
@@ -38,11 +39,13 @@
 namespace {
 const MString NAME_RULE_PKG = "Rule_Package";
 const MString NAME_RANDOM_SEED = "Random_Seed";
+const MString CGAC_PROBLEMS = "CGAC_Problems";
 } // namespace
 
 // Unique Node TypeId
 MTypeId PRTModifierNode::id(SerlioNodeIDs::SERLIO_PREFIX, SerlioNodeIDs::PRT_GEOMETRY_NODE);
 MObject PRTModifierNode::rulePkg;
+MObject PRTModifierNode::cgacProblems;
 MObject PRTModifierNode::currentRulePkg;
 MObject PRTModifierNode::mRandomSeed;
 
@@ -94,6 +97,9 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			MDataHandle currentRulePkgData = data.inputValue(currentRulePkg, &status);
 			MCheckStatus(status, "ERROR getting currentRulePkg");
 
+			const bool ruleFileWasChanged = (rulePkgData.asString() != currentRulePkgData.asString());
+			currentRulePkgData.setString(rulePkgData.asString());
+
 			// Copy the inMesh to the outMesh, so you can
 			// perform operations directly on outMesh
 			//
@@ -104,21 +110,28 @@ MStatus PRTModifierNode::compute(const MPlug& plug, MDataBlock& data) {
 			// Set the mesh object and component List on the factory
 			fPRTModifierAction.setMesh(iMesh, oMesh);
 
-			if (rulePkgData.asString() != currentRulePkgData.asString()) {
-				fPRTModifierAction.updateRuleFiles(thisMObject(), rulePkgData.asString());
+			if (!ruleFileWasChanged)
+				fPRTModifierAction.updateUserSetAttributes(thisMObject());
+
+			MDataHandle randomSeed = data.inputValue(mRandomSeed, &status);
+			fPRTModifierAction.setRandomSeed(randomSeed.asInt());
+
+			if (ruleFileWasChanged) {
+				status = fPRTModifierAction.updateRuleFiles(thisMObject(), rulePkgData.asString(), cgacProblems);
+
+				if (status != MStatus::kSuccess) {
+					return status;
+				}
 			}
 
 			status = fPRTModifierAction.fillAttributesFromNode(thisMObject());
 			if (status != MStatus::kSuccess)
 				return status;
 
-			MDataHandle randomSeed = data.inputValue(mRandomSeed, &status);
-			fPRTModifierAction.setRandomSeed(randomSeed.asInt());
-
 			// Now, perform the PRT
 			status = fPRTModifierAction.doIt();
 
-			currentRulePkgData.setString(rulePkgData.asString());
+			fPRTModifierAction.updateUI(thisMObject(), cgacProblems);
 
 			// Mark the output mesh as clean
 			outputData.setClean();
@@ -170,6 +183,7 @@ MStatus PRTModifierNode::initialize()
 	MStatus stat2;
 	MStatus stat;
 	MFnStringData stringData;
+	MFnStringArrayData stringArrayData;
 	MFnTypedAttribute fAttr;
 
 	rulePkg = fAttr.create(NAME_RULE_PKG, "rulePkg", MFnData::kString, stringData.create(&stat2), &stat);
@@ -201,6 +215,14 @@ MStatus PRTModifierNode::initialize()
 	MCHECK(fAttr.setHidden(true));
 	MCHECK(fAttr.setConnectable(false));
 	MCHECK(addAttribute(currentRulePkg));
+
+	cgacProblems =
+	        fAttr.create(CGAC_PROBLEMS, "cgacProblems", MFnData::kStringArray, stringArrayData.create(&stat2), &stat);
+	MCHECK(stat2);
+	MCHECK(stat);
+	MCHECK(fAttr.setHidden(true));
+	MCHECK(fAttr.setConnectable(false));
+	MCHECK(addAttribute(cgacProblems));
 
 	// Set up a dependency between the input and the output.  This will cause
 	// the output to be marked dirty when the input changes.  The output will

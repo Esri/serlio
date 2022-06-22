@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,9 +42,9 @@ PRTMesh::PRTMesh(const MObject& mesh) {
 	const unsigned int vertexArrayLength = vertexArray.length();
 	mVertexCoordsVec.reserve(3 * vertexArrayLength);
 	for (unsigned int i = 0; i < vertexArrayLength; ++i) {
-		mVertexCoordsVec.push_back(vertexArray[i].x);
-		mVertexCoordsVec.push_back(vertexArray[i].y);
-		mVertexCoordsVec.push_back(vertexArray[i].z);
+		mVertexCoordsVec.push_back(vertexArray[i].x / mu::PRT_TO_SERLIO_SCALE);
+		mVertexCoordsVec.push_back(vertexArray[i].y / mu::PRT_TO_SERLIO_SCALE);
+		mVertexCoordsVec.push_back(vertexArray[i].z / mu::PRT_TO_SERLIO_SCALE);
 	}
 
 	// faces

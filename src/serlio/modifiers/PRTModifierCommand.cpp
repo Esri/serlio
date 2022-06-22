@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList) {
 		mRulePkg = argList.asString(0);
 	}
 	else {
-		cerr << "Expecting one parameter: the rpk name path" << endl;
 		displayError(" Expecting one parameter: the operation type.");
 		return MS::kFailure;
 	}
@@ -74,8 +73,7 @@ MStatus PRTModifierCommand::doIt(const MArgList& argList) {
 		}
 	}
 	if (foundMultiple) {
-		displayWarning("Found more than one object with selected components.");
-		displayWarning("Only operating on first found object.");
+		displayWarning("Found more than one object with selected components. Only operating on first found object.");
 	}
 
 	// Initialize the polyModifierCmd node type - mesh node already set
@@ -145,20 +143,6 @@ MStatus PRTModifierCommand::initModifierNode(MObject modifierNode) {
 	MObject attrSeed = depNodeFn.attribute("Random_Seed");
 	MPlug plugRnd(modifierNode, attrSeed);
 	plugRnd.setValue(mInitialSeed);
-
-	return status;
-}
-
-MStatus PRTModifierCommand::directModifier(MObject mesh) {
-	MStatus status;
-	PRTModifierAction fPRTModifierAction;
-
-	fPRTModifierAction.setMesh(mesh, mesh);
-	fPRTModifierAction.setRandomSeed(mInitialSeed);
-	fPRTModifierAction.updateRuleFiles(MObject::kNullObj, mRulePkg);
-
-	// Now, perform the PRT action
-	status = fPRTModifierAction.doIt();
 
 	return status;
 }

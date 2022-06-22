@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,16 +21,19 @@
 
 #include "serlioPlugin.h"
 
+#include "utils/AssetCache.h"
+#include "utils/LogHandler.h"
 #include "utils/ResolveMapCache.h"
 #include "utils/Utilities.h"
 
 #include <memory>
 #include <vector>
 
-struct PRTContext;
+class PRTContext;
 using PRTContextUPtr = std::unique_ptr<PRTContext>;
 
-struct SRL_TEST_EXPORTS_API PRTContext final {
+class SRL_TEST_EXPORTS_API PRTContext final {
+public:
 	static PRTContext& get();
 
 	explicit PRTContext(const std::vector<std::wstring>& addExtDirs = {});
@@ -40,14 +43,13 @@ struct SRL_TEST_EXPORTS_API PRTContext final {
 	PRTContext& operator=(PRTContext&&) = delete;
 	~PRTContext();
 
-	bool isAlive() const {
-		return static_cast<bool>(thePRT);
-	}
+	bool isAlive() const;
 
-	const std::wstring mPluginRootPath; // the path where serlio dso resides
-	ObjectUPtr thePRT;
-	CacheObjectUPtr theCache;
-	prt::ConsoleLogHandler* theLogHandler = nullptr;
-	prt::FileLogHandler* theFileLogHandler = nullptr;
+	const std::filesystem::path mPluginRootPath; // the path where serlio dso resides
+	AssetCache mAssetCache;
+	ObjectUPtr mPRTHandle;
+	CacheObjectUPtr mPRTCache;
+	logging::LogHandlerUPtr mLogHandler;
+	prt::FileLogHandler* mFileLogHandler = nullptr;
 	ResolveMapCacheUPtr mResolveMapCache;
 };

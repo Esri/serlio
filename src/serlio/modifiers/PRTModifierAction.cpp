@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
  */
 
 #include "modifiers/PRTModifierAction.h"
-#include "modifiers/MayaCallbacks.h"
 #include "modifiers/PRTModifierCommand.h"
 #include "modifiers/RuleAttributes.h"
 
@@ -28,19 +27,18 @@
 
 #include "prt/StringUtils.h"
 
+#include "maya/MDataHandle.h"
 #include "maya/MFloatPointArray.h"
 #include "maya/MFnCompoundAttribute.h"
 #include "maya/MFnMesh.h"
 #include "maya/MFnNumericAttribute.h"
+#include "maya/MFnStringArrayData.h"
 #include "maya/MFnStringData.h"
 #include "maya/MFnTypedAttribute.h"
+#include "maya/MGlobal.h"
 
 #include <cassert>
 
-#define CHECK_STATUS(st)                                                                                               \
-	if ((st) != MS::kSuccess) {                                                                                        \
-		break;                                                                                                         \
-	}
 namespace {
 
 constexpr bool DBG = false;
@@ -55,14 +53,60 @@ constexpr const wchar_t* FILE_CGA_PRINT = L"CGAPrint.txt";
 constexpr const wchar_t* NULL_KEY = L"#NULL#";
 constexpr const wchar_t* MIN_KEY = L"min";
 constexpr const wchar_t* MAX_KEY = L"max";
-constexpr const wchar_t* RESTRICTED_KEY = L"restricted";
+
+constexpr const wchar_t* ATTRIBUTE_USER_SET_SUFFIX = L"_user_set";
+constexpr const wchar_t* ATTRIBUTE_FORCE_DEFAULT_SUFFIX = L"_force_default";
 
 const AttributeMapUPtr
         EMPTY_ATTRIBUTES(AttributeMapBuilderUPtr(prt::AttributeMapBuilder::create())->createAttributeMap());
 
+enum class RangeType { RANGE, ENUM, INVALID };
+RangeType GetRangeType(const prt::Annotation* an) {
+	const size_t numArgs = an->getNumArguments();
+
+	if (numArgs == 0)
+		return RangeType::INVALID;
+
+	prt::AnnotationArgumentType commonType = an->getArgument(0)->getType();
+
+	bool hasMin = false;
+	bool hasMax = false;
+	bool hasKey = false;
+	bool onlyOneTypeInUse = true;
+
+	for (int argIdx = 0; argIdx < numArgs; argIdx++) {
+		const prt::AnnotationArgument* arg = an->getArgument(argIdx);
+		if (arg->getType() != commonType)
+			onlyOneTypeInUse = false;
+
+		const wchar_t* key = arg->getKey();
+		if (std::wcscmp(key, MIN_KEY) == 0)
+			hasMin = true;
+		else if (std::wcscmp(key, MAX_KEY) == 0)
+			hasMax = true;
+		if (std::wcscmp(key, NULL_KEY) != 0)
+			hasKey = true;
+	}
+	
+	//old Range
+	if ((numArgs == 2) && (commonType == prt::AnnotationArgumentType::AAT_FLOAT))
+		return RangeType::RANGE;
+
+	//new Range
+	if ((numArgs >= 2) && (hasMin && hasMax))
+		return RangeType::RANGE;
+
+	//legacy Enum
+	if (!hasKey && onlyOneTypeInUse)
+		return RangeType::ENUM;
+
+	return RangeType::INVALID;
+}
+
 AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const std::wstring& startRule,
                                            const prt::ResolveMap& resolveMap, prt::CacheObject& cache,
-                                           const PRTMesh& prtMesh) {
+                                           const PRTMesh& prtMesh, const int32_t seed,
+                                           const prt::AttributeMap& attributeMap) {
 	AttributeMapBuilderUPtr mayaCallbacksAttributeBuilder(prt::AttributeMapBuilder::create());
 	MayaCallbacks mayaCallbacks(MObject::kNullObj, MObject::kNullObj, mayaCallbacksAttributeBuilder);
 
@@ -71,9 +115,7 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 	isb->setGeometry(prtMesh.vertexCoords(), prtMesh.vcCount(), prtMesh.indices(), prtMesh.indicesCount(),
 	                 prtMesh.faceCounts(), prtMesh.faceCountsCount());
 
-	const int32_t seed = mu::computeSeed(prtMesh.vertexCoords(), prtMesh.vcCount());
-
-	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), seed, L"", EMPTY_ATTRIBUTES.get(), &resolveMap);
+	isb->setAttributes(ruleFile.c_str(), startRule.c_str(), seed, L"", &attributeMap, &resolveMap);
 
 	const InitialShapeUPtr shape(isb->createInitialShapeAndReset());
 	const InitialShapeNOPtrVector shapes = {shape.get()};
@@ -89,21 +131,58 @@ AttributeMapUPtr getDefaultAttributeValues(const std::wstring& ruleFile, const s
 	return AttributeMapUPtr(mayaCallbacksAttributeBuilder->createAttributeMap());
 }
 
-} // namespace
+bool getIsUserSet(const MFnDependencyNode& node, const MFnAttribute& attribute) {
+	MString userSetAttributeName = attribute.name() + ATTRIBUTE_USER_SET_SUFFIX;
 
-PRTModifierAction::PRTModifierAction() {
-	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
-
-	mMayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
-
-	optionsBuilder->setString(L"name", FILE_CGA_ERROR);
-	const AttributeMapUPtr errOptions(optionsBuilder->createAttributeMapAndReset());
-	mCGAErrorOptions = prtu::createValidatedOptions(ENC_ID_CGA_ERROR, errOptions.get());
-
-	optionsBuilder->setString(L"name", FILE_CGA_PRINT);
-	const AttributeMapUPtr printOptions(optionsBuilder->createAttributeMapAndReset());
-	mCGAPrintOptions = prtu::createValidatedOptions(ENC_ID_CGA_PRINT, printOptions.get());
+	MStatus attrStat;
+	MObject userSetAttributeObj = node.attribute(userSetAttributeName, &attrStat);
+	if (attrStat == MS::kSuccess) {
+		const MPlug plug(node.object(), userSetAttributeObj);
+		bool isUserSet = plug.asBool(&attrStat);
+		MCHECK(attrStat);
+		return isUserSet;
+	}
+	return false;
 }
+
+MStatus setIsUserSet(const MFnDependencyNode& node, const MFnAttribute& attribute, bool value) {
+	MString userSetAttributeName = attribute.name() + ATTRIBUTE_USER_SET_SUFFIX;
+
+	MStatus attrStat;
+	MObject userSetAttributeObj = node.attribute(userSetAttributeName, &attrStat);
+	if (attrStat == MS::kSuccess) {
+		MPlug plug(node.object(), userSetAttributeObj);
+
+		MCHECK(plug.setBool(value));
+	}
+	return attrStat;
+}
+
+bool getAndResetForceDefault(const MFnDependencyNode& node, const MFnAttribute& attribute) {
+	MString userSetAttributeName = attribute.name() + ATTRIBUTE_FORCE_DEFAULT_SUFFIX;
+
+	MStatus attrStat;
+	MObject userSetAttributeObj = node.attribute(userSetAttributeName, &attrStat);
+	if (attrStat == MS::kSuccess) {
+		MPlug plug(node.object(), userSetAttributeObj);
+		bool isUserSet = plug.asBool(&attrStat);
+		MCHECK(attrStat);
+		MCHECK(plug.setBool(false));
+		return isUserSet;
+	}
+	return false;
+}
+
+std::wstring removeSuffix(std::wstring const& fullString) {
+	for (const std::wstring suffix : {ATTRIBUTE_USER_SET_SUFFIX, ATTRIBUTE_FORCE_DEFAULT_SUFFIX}) {
+		if ((fullString.length() >= suffix.length()) &&
+		    (fullString.compare(fullString.length() - suffix.length(), suffix.length(), suffix) == 0))
+			return fullString.substr(0, fullString.length() - suffix.length());
+	}
+	return fullString;
+}
+
+enum class PrtAttributeType { BOOL, FLOAT, COLOR, STRING, ENUM };
 
 std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& node) {
 	std::list<MObject> rawAttrs;
@@ -117,8 +196,8 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 
 		const MFnAttribute attr(attrObj);
 
-		// CGA rule attributes are maya dynamic attributes
-		if (!attr.isDynamic())
+		// CGA rule attributes are maya dynamic attributes and not hidden
+		if (!attr.isDynamic() || attr.isHidden())
 			continue;
 
 		// maya annoyance: color attributes automatically get per-component plugs/child attrs
@@ -139,47 +218,23 @@ std::list<MObject> getNodeAttributesCorrespondingToCGA(const MFnDependencyNode& 
 	return rawAttrs;
 }
 
-const RuleAttribute RULE_NOT_FOUND{};
-
-MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
+template <typename T>
+MStatus iterateThroughAttributesAndApply(const MObject& node, const RuleAttributeMap& ruleAttributes, T attrFunction) {
 	MStatus stat;
 	const MFnDependencyNode fNode(node, &stat);
 	MCHECK(stat);
 
-	auto resolveMap = getResolveMap();
-	if (!resolveMap)
-		return MStatus::kInvalidParameter;
-
-	const wchar_t* ruleFileURI = resolveMap->getString(mRuleFile.c_str());
-	if (ruleFileURI == nullptr)
-		return MStatus::kInvalidParameter;
-
-	const RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI));
-
-	auto reverseLookupAttribute = [this](const std::wstring& mayaFullAttrName) {
-		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(),
-		                       [&mayaFullAttrName](const auto& ra) { return (ra.mayaFullName == mayaFullAttrName); });
-		if (it != mRuleAttributes.end())
-			return *it;
-		return RULE_NOT_FOUND;
-	};
-
 	const std::list<MObject> cgaAttributes = getNodeAttributesCorrespondingToCGA(fNode);
-
-	const AttributeMapUPtr defaultAttributeValues =
-	        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache, *inPrtMesh);
-	AttributeMapBuilderUPtr aBuilder(prt::AttributeMapBuilder::create());
 
 	for (const auto& attrObj : cgaAttributes) {
 		MFnAttribute fnAttr(attrObj);
-		const MPlug plug(node, attrObj);
 
 		const MString fullAttrName = fnAttr.name();
-		const RuleAttribute ruleAttr = reverseLookupAttribute(fullAttrName.asWChar());
-		assert(!ruleAttr.fqName.empty()); // poor mans check for RULE_NOT_FOUND
+		auto ruleAttrIt = ruleAttributes.find(fullAttrName.asWChar());
+		assert(ruleAttrIt != ruleAttributes.end()); // Rule not found
+		const RuleAttribute ruleAttr = (ruleAttrIt != ruleAttributes.end()) ? ruleAttrIt->second : RuleAttribute();
 
-		const std::wstring fqAttrName = ruleAttr.fqName;
-		const auto ruleAttrType = ruleAttr.mType;
+		[[maybe_unused]] const auto ruleAttrType = ruleAttr.mType;
 
 		if (attrObj.hasFn(MFn::kNumericAttribute)) {
 			MFnNumericAttribute nAttr(attrObj);
@@ -187,25 +242,380 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 			if (nAttr.unitType() == MFnNumericData::kBoolean) {
 				assert(ruleAttrType == prt::AAT_BOOL);
 
-				bool val;
-				MCHECK(plug.getValue(val));
-
-				const auto defVal = defaultAttributeValues->getBool(fqAttrName.c_str());
-				if (val != defVal)
-					aBuilder->setBool(fqAttrName.c_str(), val);
+				attrFunction(fNode, fnAttr, ruleAttr, PrtAttributeType::BOOL);
 			}
 			else if (nAttr.unitType() == MFnNumericData::kDouble) {
 				assert(ruleAttrType == prt::AAT_FLOAT);
 
-				double val;
-				MCHECK(plug.getValue(val));
-
-				const auto defVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
-				if (val != defVal)
-					aBuilder->setFloat(fqAttrName.c_str(), val);
+				attrFunction(fNode, fnAttr, ruleAttr, PrtAttributeType::FLOAT);
 			}
 			else if (nAttr.isUsedAsColor()) {
 				assert(ruleAttrType == prt::AAT_STR);
+
+				attrFunction(fNode, fnAttr, ruleAttr, PrtAttributeType::COLOR);
+			}
+		}
+		else if (attrObj.hasFn(MFn::kTypedAttribute)) {
+			assert(ruleAttrType == prt::AAT_STR);
+
+			attrFunction(fNode, fnAttr, ruleAttr, PrtAttributeType::STRING);
+		}
+		else if (attrObj.hasFn(MFn::kEnumAttribute)) {
+			attrFunction(fNode, fnAttr, ruleAttr, PrtAttributeType::ENUM);
+		}
+	}
+	return MStatus::kSuccess;
+}
+
+MStatus addHiddenBoolParameter(MFnDependencyNode& node, MFnAttribute& tAttr, const MString& suffix) {
+	MStatus stat;
+
+	MFnNumericAttribute nAttr;
+	MObject attr =
+	        nAttr.create(tAttr.name() + suffix, tAttr.shortName() + suffix, MFnNumericData::kBoolean, false, &stat);
+	MCHECK(stat);
+
+	if (!(node.hasAttribute(nAttr.shortName()))) {
+		MCHECK(nAttr.setHidden(true));
+		MCHECK(nAttr.setStorable(true));
+		stat = node.addAttribute(attr);
+	}
+	return stat;
+}
+
+short getDefaultEnumIdx(const prt::Annotation* annot, const PRTEnumDefaultValue& defaultValue) {
+	short idx = 0;
+	for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
+
+		const wchar_t* key = annot->getArgument(arg)->getKey();
+		if (std::wcscmp(key, NULL_KEY) != 0) {
+			continue;
+		}
+
+		switch (annot->getArgument(arg)->getType()) {
+			case prt::AAT_BOOL: {
+				const bool val = annot->getArgument(arg)->getBool();
+				if (val == std::get<bool>(defaultValue))
+					return idx;
+				idx++;
+				break;
+			}
+			case prt::AAT_FLOAT: {
+				const double val = annot->getArgument(arg)->getFloat();
+				if (val == std::get<double>(defaultValue))
+					return idx;
+				idx++;
+				break;
+			}
+			case prt::AAT_STR: {
+				const MString val = annot->getArgument(arg)->getStr();
+				if (val == std::get<MString>(defaultValue))
+					return idx;
+				idx++;
+				break;
+			}
+			default:
+				break;
+		}
+	}
+	return 0;
+}
+
+bool cgacLogProblems(CGACErrors errorList) {
+	for (const auto& [error, count] : errorList) {
+		if (error.shouldBeLogged) {
+			if (error.errorLevel == prt::CGAErrorLevel::CGAERROR) {
+				LOG_ERR << error.errorString.c_str();
+				MGlobal::displayError(error.errorString.c_str());
+			}
+			else {
+				MGlobal::displayWarning(error.errorString.c_str());
+			}
+		}
+	}
+	return false;
+}
+
+CGACErrors createCGACErrorFromString(const MString& stringMessage) {
+	CGACErrors cgacErrors;
+	cgacErrors.try_emplace({prt::CGAErrorLevel::CGAERROR, true, stringMessage.asWChar()}, 1);
+	return cgacErrors;
+}
+
+MStringArray cgacProblemsToStringArray(CGACErrors errorList) {
+	MStringArray errorStringArrray;
+	for (const auto& [error, count] : errorList) {
+		errorStringArrray.append(std::to_wstring(count).c_str());
+		const MString errorLevel = (error.errorLevel == prt::CGAErrorLevel::CGAERROR) ? "Error" : "Warning";
+		errorStringArrray.append(errorLevel);
+		errorStringArrray.append(error.errorString.c_str());
+	}
+	return errorStringArrray;
+}
+
+void updateCgacProblemData(MPlug& cgacProblemPlug, const CGACErrors& cgacProblems) {
+	MStringArray newCgacErrorStringArray = cgacProblemsToStringArray(cgacProblems);
+
+	MObject errorDataObject;
+	MCHECK(cgacProblemPlug.getValue(errorDataObject));
+	MFnStringArrayData stringArrayData(errorDataObject);
+	MStringArray oldCgacErrorStringArray = stringArrayData.array();
+
+	if (oldCgacErrorStringArray != newCgacErrorStringArray) {
+		cgacLogProblems(cgacProblems);
+
+		MFnStringArrayData newStringArrayData;
+		MObject newErrorDataObject = newStringArrayData.create(newCgacErrorStringArray);
+		cgacProblemPlug.setMObject(newErrorDataObject);
+	}
+}
+
+template <typename T>
+T getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName, const T& defaultValue) {
+	T plugValue = defaultValue;
+
+	if (DBG) {
+		LOG_DBG << "node attrs:";
+		mu::forAllAttributes(node, [&node](const MFnAttribute& a) {
+			MString val;
+			node.findPlug(a.object(), true).getValue(val);
+			LOG_DBG << a.name().asWChar() << " = " << val.asWChar();
+		});
+	}
+
+	if (node.hasAttribute(briefName)) {
+		const MPlug plug = node.findPlug(briefName, true);
+		if (plug.isDynamic()) {
+			T d;
+			if (plug.getValue(d) == MS::kSuccess)
+				plugValue = d;
+		}
+		node.removeAttribute(node.attribute(briefName));
+	}
+
+	return plugValue;
+}
+} // namespace
+
+PRTModifierAction::PRTModifierAction() {
+	AttributeMapBuilderUPtr optionsBuilder(prt::AttributeMapBuilder::create());
+
+	mMayaEncOpts = prtu::createValidatedOptions(ENC_ID_MAYA);
+
+	optionsBuilder->setString(L"name", FILE_CGA_ERROR);
+	const AttributeMapUPtr errOptions(optionsBuilder->createAttributeMapAndReset());
+	mCGAErrorOptions = prtu::createValidatedOptions(ENC_ID_CGA_ERROR, errOptions.get());
+
+	optionsBuilder->setString(L"name", FILE_CGA_PRINT);
+	const AttributeMapUPtr printOptions(optionsBuilder->createAttributeMapAndReset());
+	mCGAPrintOptions = prtu::createValidatedOptions(ENC_ID_CGA_PRINT, printOptions.get());
+}
+
+MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
+	AttributeMapBuilderSPtr aBuilder(prt::AttributeMapBuilder::create(), PRTDestroyer());
+
+	const auto fillAttributeFromNode = [this, aBuilder](const MFnDependencyNode& fnNode,
+	                                                    const MFnAttribute& fnAttribute,
+	                                                    const RuleAttribute& ruleAttribute,
+	                                                    const PrtAttributeType attrType) mutable {
+		MPlug plug(fnNode.object(), fnAttribute.object());
+		const std::wstring fqAttrName = ruleAttribute.fqName;
+		const prt::AnnotationArgumentType ruleAttrType = ruleAttribute.mType;
+
+		switch (attrType) {
+			case PrtAttributeType::BOOL: {
+				bool boolVal;
+				MCHECK(plug.getValue(boolVal));
+
+				if (getIsUserSet(fnNode, fnAttribute))
+					aBuilder->setBool(fqAttrName.c_str(), boolVal);
+				break;
+			}
+			case PrtAttributeType::FLOAT: {
+				double doubleVal;
+				MCHECK(plug.getValue(doubleVal));
+
+				if (getIsUserSet(fnNode, fnAttribute))
+					aBuilder->setFloat(fqAttrName.c_str(), doubleVal);
+				break;
+			}
+			case PrtAttributeType::COLOR: {
+				MObject rgb;
+				MCHECK(plug.getValue(rgb));
+				MFnNumericData fRGB(rgb);
+
+				prtu::Color col;
+				MCHECK(fRGB.getData3Float(col[0], col[1], col[2]));
+				const std::wstring colStr = prtu::getColorString(col);
+
+				if (getIsUserSet(fnNode, fnAttribute))
+					aBuilder->setString(fqAttrName.c_str(), colStr.c_str());
+				break;
+			}
+			case PrtAttributeType::STRING: {
+				MString stringVal;
+				MCHECK(plug.getValue(stringVal));
+
+				if (getIsUserSet(fnNode, fnAttribute))
+					aBuilder->setString(fqAttrName.c_str(), stringVal.asWChar());
+				break;
+			}
+			case PrtAttributeType::ENUM: {
+				auto it = mEnums.find(ruleAttribute.mayaFullName);
+				if (it == mEnums.end())
+					break;
+				const PRTModifierEnum& currEnum = it->second;
+
+				short enumVal;
+				MCHECK(plug.getValue(enumVal));
+
+				if (getIsUserSet(fnNode, fnAttribute)) {
+					switch (ruleAttrType) {
+						case prt::AAT_STR:
+							aBuilder->setString(fqAttrName.c_str(), currEnum.getOptionName(enumVal).asWChar());
+							break;
+						case prt::AAT_FLOAT:
+							aBuilder->setFloat(fqAttrName.c_str(), currEnum.getOptionName(enumVal).asDouble());
+							break;
+						case prt::AAT_BOOL:
+							aBuilder->setBool(fqAttrName.c_str(), currEnum.getOptionName(enumVal).asInt() != 0);
+							break;
+						default:
+							LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
+					}
+				}
+				break;
+			}
+
+			default:
+				break;
+		}
+	};
+
+	iterateThroughAttributesAndApply(node, mRuleAttributes, fillAttributeFromNode);
+	mGenerateAttrs.reset(aBuilder->createAttributeMap());
+
+	return MStatus::kSuccess;
+}
+
+MStatus PRTModifierAction::updateUserSetAttributes(const MObject& node) {
+	const auto updateUserSetAttribute = [this](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
+	                                           const RuleAttribute& ruleAttribute, const PrtAttributeType attrType) {
+		const AttributeMapUPtr defaultAttributeValues =
+		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().mPRTCache,
+		                                  *inPrtMesh, mRandomSeed, *mGenerateAttrs);
+
+		if (getAndResetForceDefault(fnNode, fnAttribute)) {
+			setIsUserSet(fnNode, fnAttribute, false);
+			return;
+		}
+
+		const MPlug plug(fnNode.object(), fnAttribute.object());
+		bool isDefaultValue = false;
+		const std::wstring fqAttrName = ruleAttribute.fqName;
+
+		switch (attrType) {
+			case PrtAttributeType::BOOL: {
+				const bool defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
+				bool boolVal;
+				MCHECK(plug.getValue(boolVal));
+
+				isDefaultValue = (defBoolVal == boolVal);
+				break;
+			}
+			case PrtAttributeType::FLOAT: {
+				const double defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
+				double doubleVal;
+				MCHECK(plug.getValue(doubleVal));
+
+				isDefaultValue = (defDoubleVal == doubleVal);
+				break;
+			}
+			case PrtAttributeType::COLOR: {
+				const prtu::Color defCol = prtu::parseColor(defaultAttributeValues->getString(fqAttrName.c_str()));
+
+				MObject rgb;
+				MCHECK(plug.getValue(rgb));
+				MFnNumericData fRGB(rgb);
+
+				prtu::Color col;
+				MCHECK(fRGB.getData3Float(col[0], col[1], col[2]));
+
+				isDefaultValue = (defCol == col);
+				break;
+			}
+			case PrtAttributeType::STRING: {
+				const auto defStringVal = defaultAttributeValues->getString(fqAttrName.c_str());
+				if (defStringVal == nullptr)
+					break;
+
+				MString stringVal;
+				MCHECK(plug.getValue(stringVal));
+
+				isDefaultValue = (std::wcscmp(stringVal.asWChar(), defStringVal) == 0);
+				break;
+			}
+			case PrtAttributeType::ENUM: {
+				auto it = mEnums.find(ruleAttribute.mayaFullName);
+				if (it == mEnums.end())
+					break;
+				const PRTModifierEnum& currEnum = it->second;
+
+				const short defEnumVal = currEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
+				short enumVal;
+				MCHECK(plug.getValue(enumVal));
+
+				isDefaultValue = (defEnumVal == enumVal);
+				break;
+			}
+
+			default:
+				break;
+		}
+
+		if (!isDefaultValue)
+			setIsUserSet(fnNode, fnAttribute, true);
+	};
+
+	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUserSetAttribute);
+
+	return MStatus::kSuccess;
+}
+
+MStatus PRTModifierAction::updateUI(const MObject& node, MObject& cgacProblemObject) {
+	const auto updateUIFromAttributes = [this, node](const MFnDependencyNode& fnNode, const MFnAttribute& fnAttribute,
+	                                                 const RuleAttribute& ruleAttribute,
+	                                                 const PrtAttributeType attrType) {
+		const AttributeMapUPtr defaultAttributeValues =
+		        getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().mPRTCache,
+		                                  *inPrtMesh, mRandomSeed, *mGenerateAttrs);
+		MPlug plug(fnNode.object(), fnAttribute.object());
+		const std::wstring fqAttrName = ruleAttribute.fqName;
+
+		switch (attrType) {
+			case PrtAttributeType::BOOL: {
+				const bool defBoolVal = defaultAttributeValues->getBool(fqAttrName.c_str());
+				bool boolVal;
+				MCHECK(plug.getValue(boolVal));
+
+				const bool isDefaultValue = (defBoolVal == boolVal);
+
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
+					plug.setBool(defBoolVal);
+				break;
+			}
+			case PrtAttributeType::FLOAT: {
+				const double defDoubleVal = defaultAttributeValues->getFloat(fqAttrName.c_str());
+				double doubleVal;
+				MCHECK(plug.getValue(doubleVal));
+
+				const bool isDefaultValue = (defDoubleVal == doubleVal);
+
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
+					plug.setDouble(defDoubleVal);
+				break;
+			}
+			case PrtAttributeType::COLOR: {
 				const wchar_t* defColStr = defaultAttributeValues->getString(fqAttrName.c_str());
 
 				MObject rgb;
@@ -216,46 +626,66 @@ MStatus PRTModifierAction::fillAttributesFromNode(const MObject& node) {
 				MCHECK(fRGB.getData3Float(col[0], col[1], col[2]));
 				const std::wstring colStr = prtu::getColorString(col);
 
-				if (std::wcscmp(colStr.c_str(), defColStr) != 0)
-					aBuilder->setString(fqAttrName.c_str(), colStr.c_str());
+				prtu::Color defaultColor = prtu::parseColor(defColStr);
+				MFnNumericData fdefaultColor;
+				MObject defaultColorObj = fdefaultColor.create(MFnNumericData::Type::k3Float);
+				fdefaultColor.setData3Float(defaultColor[0], defaultColor[1], defaultColor[2]);
+
+				const bool isDefaultValue = (std::wcscmp(colStr.c_str(), defColStr) == 0);
+
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
+					plug.setMObject(defaultColorObj);
+				break;
 			}
-		}
-		else if (attrObj.hasFn(MFn::kTypedAttribute)) {
-			assert(ruleAttrType == prt::AAT_STR);
+			case PrtAttributeType::STRING: {
+				const auto defStringVal = defaultAttributeValues->getString(fqAttrName.c_str());
+				if (defStringVal == nullptr)
+					return;
 
-			MString val;
-			MCHECK(plug.getValue(val));
+				MString stringVal;
+				MCHECK(plug.getValue(stringVal));
 
-			const auto defVal = defaultAttributeValues->getString(fqAttrName.c_str());
-			if (std::wcscmp(val.asWChar(), defVal) != 0)
-				aBuilder->setString(fqAttrName.c_str(), val.asWChar());
-		}
-		else if (attrObj.hasFn(MFn::kEnumAttribute)) {
-			MFnEnumAttribute eAttr(attrObj);
+				const bool isDefaultValue = (std::wcscmp(stringVal.asWChar(), defStringVal) == 0);
 
-			short di;
-			short i;
-			MCHECK(eAttr.getDefault(di));
-			MCHECK(plug.getValue(i));
-			if (i != di) {
-				switch (ruleAttrType) {
-					case prt::AAT_STR:
-						aBuilder->setString(fqAttrName.c_str(), eAttr.fieldName(i).asWChar());
-						break;
-					case prt::AAT_FLOAT:
-						aBuilder->setFloat(fqAttrName.c_str(), eAttr.fieldName(i).asDouble());
-						break;
-					case prt::AAT_BOOL:
-						aBuilder->setBool(fqAttrName.c_str(), eAttr.fieldName(i).asInt() != 0);
-						break;
-					default:
-						LOG_ERR << "Cannot handle attribute type " << ruleAttrType << " for attr " << fqAttrName;
-				}
+				if (!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue)
+					plug.setString(defStringVal);
+				break;
 			}
-		}
-	}
+			case PrtAttributeType::ENUM: {
+				auto it = mEnums.find(ruleAttribute.mayaFullName);
+				if (it == mEnums.end())
+					break;
+				PRTModifierEnum& currEnum = it->second;
 
-	mGenerateAttrs.reset(aBuilder->createAttributeMap());
+				short enumVal;
+				MCHECK(plug.getValue(enumVal));
+
+				short newEnumVal = enumVal;
+				if (currEnum.isDynamic())
+					newEnumVal = currEnum.updateOptions(node, mRuleAttributes, *defaultAttributeValues, enumVal);
+
+				const short defEnumVal = currEnum.getDefaultEnumValue(*defaultAttributeValues, ruleAttribute);
+
+				const bool isDefaultValue = (defEnumVal == enumVal);
+				const bool hasNewValue = (enumVal != newEnumVal);
+
+				if ((!getIsUserSet(fnNode, fnAttribute) && !isDefaultValue))
+					plug.setShort(defEnumVal);
+				else if (hasNewValue)
+					plug.setShort(newEnumVal);
+
+				break;
+			}
+
+			default:
+				break;
+		}
+	};
+
+	MPlug cgacProblemPlug(node, cgacProblemObject);
+	updateCgacProblemData(cgacProblemPlug, mCGACProblems);
+	iterateThroughAttributesAndApply(node, mRuleAttributes, updateUIFromAttributes);
+
 	return MStatus::kSuccess;
 }
 
@@ -274,52 +704,75 @@ ResolveMapSPtr PRTModifierAction::getResolveMap() {
 	return resolveMap;
 }
 
-MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& rulePkg) {
+MStatus PRTModifierAction::updateRuleFiles(const MObject& node, const MString& rulePkg, MObject& cgacProblemObject) {
+	MPlug cgacProblemPlug(node, cgacProblemObject);
+
 	mRulePkg = rulePkg;
 
 	mEnums.clear();
 	mRuleFile.clear();
 	mStartRule.clear();
 	mRuleAttributes.clear();
+	PRTContext::get().mPRTCache.get()->flushAll();
+
+	std::filesystem::path rulePkgPath(mRulePkg.asWChar());
+	if (!std::filesystem::exists(rulePkgPath)) {
+		CGACErrors cgacProblems =
+		        createCGACErrorFromString(MString("could not find rule package ") + mRulePkg.asWChar());
+		updateCgacProblemData(cgacProblemPlug, cgacProblems);
+		return MS::kFailure;
+	}
 
 	ResolveMapSPtr resolveMap = getResolveMap();
 	if (!resolveMap) {
-		LOG_ERR << "failed to get resolve map from rule package " << mRulePkg.asWChar();
+		CGACErrors cgacProblems =
+		        createCGACErrorFromString(MString("failed to get resolve map from rule package ") + mRulePkg.asWChar());
+		updateCgacProblemData(cgacProblemPlug, cgacProblems);
 		return MS::kFailure;
 	}
 
 	mRuleFile = prtu::getRuleFileEntry(resolveMap);
 	if (mRuleFile.empty()) {
-		LOG_ERR << "could not find rule file in rule package " << mRulePkg.asWChar();
+		CGACErrors cgacProblems =
+		        createCGACErrorFromString(MString("could not find rule file in rule package ") + mRulePkg.asWChar());
+		updateCgacProblemData(cgacProblemPlug, cgacProblems);
 		return MS::kFailure;
 	}
 
 	prt::Status infoStatus = prt::STATUS_UNSPECIFIED_ERROR;
 	const wchar_t* ruleFileURI = resolveMap->getString(mRuleFile.c_str());
 	if (ruleFileURI == nullptr) {
-		LOG_ERR << "could not find rule file URI in resolve map of rule package " << mRulePkg.asWChar();
+		CGACErrors cgacProblems = createCGACErrorFromString(
+		        MString("could not find rule file URI in resolve map of rule package ") + mRulePkg.asWChar());
+		updateCgacProblemData(cgacProblemPlug, cgacProblems);
 		return MS::kFailure;
 	}
 
-	RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI, PRTContext::get().theCache.get(), &infoStatus));
+	RuleFileInfoUPtr info(prt::createRuleFileInfo(ruleFileURI, PRTContext::get().mPRTCache.get(), &infoStatus));
 	if (!info || infoStatus != prt::STATUS_OK) {
-		LOG_ERR << "could not get rule file info from rule file " << mRuleFile;
+		CGACErrors cgacProblems =
+		        createCGACErrorFromString(MString("could not get rule file info from rule file ") + mRulePkg.asWChar());
+		updateCgacProblemData(cgacProblemPlug, cgacProblems);
 		return MS::kFailure;
 	}
 
 	mStartRule = prtu::detectStartRule(info);
+	mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().mPRTCache,
+	                                           *inPrtMesh, mRandomSeed, *EMPTY_ATTRIBUTES);
+	if (DBG)
+		LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
 
 	if (node != MObject::kNullObj) {
-		mGenerateAttrs = getDefaultAttributeValues(mRuleFile, mStartRule, *getResolveMap(), *PRTContext::get().theCache,
-		                                           *inPrtMesh);
-		if (DBG)
-			LOG_DBG << "default attrs: " << prtu::objectToXML(mGenerateAttrs);
-
 		// derive necessary data from PRT rule info to populate node with dynamic rule attributes
-		mRuleAttributes = getRuleAttributes(mRuleFile, info.get());
-		sortRuleAttributes(mRuleAttributes);
+		RuleAttributeSet ruleAttributes = getRuleAttributes(mRuleFile, info.get());
+		for (const RuleAttribute& ruleAttr : ruleAttributes) {
+			mRuleAttributes[ruleAttr.mayaFullName] = ruleAttr;
+		}
 
-		createNodeAttributes(node, info.get());
+		createNodeAttributes(ruleAttributes, node, info.get());
+		for (auto& enumPair : mEnums) {
+			enumPair.second.updateOptions(node, mRuleAttributes, *mGenerateAttrs);
+		}
 	}
 
 	return MS::kSuccess;
@@ -350,19 +803,28 @@ MStatus PRTModifierAction::doIt() {
 	InitialShapeNOPtrVector shapes = {shape.get()};
 	const prt::Status generateStatus =
 	        prt::generate(shapes.data(), shapes.size(), nullptr, encIDs.data(), encIDs.size(), encOpts.data(),
-	                      outputHandler.get(), PRTContext::get().theCache.get(), nullptr);
-	if (generateStatus != prt::STATUS_OK)
-		LOG_ERR << "prt generate failed: " << prt::getStatusDescription(generateStatus);
+	                      outputHandler.get(), PRTContext::get().mPRTCache.get(), nullptr);
+
+	mCGACProblems = outputHandler->getCGACErrors();
+
+	if (generateStatus != prt::STATUS_OK) {
+		std::string generateFailedMessage = "prt generate failed: ";
+		generateFailedMessage.append(prt::getStatusDescription(generateStatus));
+
+		LOG_ERR << generateFailedMessage;
+		MGlobal::displayError(generateFailedMessage.c_str());
+	}
 
 	return status;
 }
 
-MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const prt::RuleFileInfo* info) {
+MStatus PRTModifierAction::createNodeAttributes(const RuleAttributeSet& ruleAttributes, const MObject& nodeObj,
+                                                const prt::RuleFileInfo* info) {
 	MStatus stat;
 	MFnDependencyNode node(nodeObj, &stat);
 	MCHECK(stat);
 
-	for (const RuleAttribute& p : mRuleAttributes) {
+	for (const RuleAttribute& p : ruleAttributes) {
 		const std::wstring fqName = p.fqName;
 
 		// only use attributes of current style
@@ -391,8 +853,17 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 					const wchar_t* anName = an->getName();
 					if (std::wcscmp(anName, ANNOT_ENUM) == 0)
 						return {AttributeTrait::ENUM, {{}, an}};
-					else if (std::wcscmp(anName, ANNOT_RANGE) == 0)
-						return {AttributeTrait::RANGE, {{}, an}};
+					else if (std::wcscmp(anName, ANNOT_RANGE) == 0) {
+						const RangeType annotationRangeType = GetRangeType(an);
+						switch (annotationRangeType) {
+							case RangeType::ENUM:
+								return {AttributeTrait::ENUM, {{}, an}};
+							case RangeType::RANGE:
+								return {AttributeTrait::RANGE, {{}, an}};
+							case RangeType::INVALID:
+								return {AttributeTrait::PLAIN, {}};
+						}
+					}
 					else if (std::wcscmp(anName, ANNOT_COLOR) == 0)
 						return {AttributeTrait::COLOR, {}};
 					else if (std::wcscmp(anName, ANNOT_DIR) == 0) {
@@ -424,8 +895,9 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 			case prt::Attributable::PT_BOOL: {
 				const bool value = mGenerateAttrs->getBool(fqName.c_str());
 				if (attrTrait.first == AttributeTrait::ENUM) {
-					mEnums.emplace_front();
-					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums.front()));
+					auto currEnumItr = mEnums.try_emplace(p.mayaFullName);
+					PRTModifierEnum& currEnum = currEnumItr.first->second;
+					MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, currEnum));
 				}
 				else {
 					MCHECK(addBoolParameter(node, attr, p, value));
@@ -437,15 +909,17 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 
 				switch (attrTrait.first) {
 					case AttributeTrait::ENUM: {
-						mEnums.emplace_front();
-						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, mEnums.front()));
+						auto currEnumItr = mEnums.try_emplace(p.mayaFullName);
+						PRTModifierEnum& currEnum = currEnumItr.first->second;
+						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, value, currEnum));
 						break;
 					}
 					case AttributeTrait::RANGE: {
 						auto tryParseRangeAnnotation = [](const prt::Annotation* an) -> std::pair<double, double> {
 							auto minMax = std::make_pair(std::numeric_limits<double>::quiet_NaN(),
 							                             std::numeric_limits<double>::quiet_NaN());
-							for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
+							const size_t numArgs = an->getNumArguments();
+							for (int argIdx = 0; argIdx < numArgs; argIdx++) {
 								const prt::AnnotationArgument* arg = an->getArgument(argIdx);
 								const wchar_t* key = arg->getKey();
 								if (std::wcscmp(key, MIN_KEY) == 0) {
@@ -455,6 +929,13 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 									minMax.second = arg->getFloat();
 								}
 							}
+
+							//parse old style range
+							if ((std::isnan(minMax.first) || std::isnan(minMax.second)) && (numArgs == 2)) {
+								minMax.first = an->getArgument(0)->getFloat();
+								minMax.second = an->getArgument(1)->getFloat();
+							}
+
 							return minMax;
 						};
 
@@ -486,10 +967,12 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 				const MString mvalue(value.c_str());
 
 				switch (attrTrait.first) {
-					case AttributeTrait::ENUM:
-						mEnums.emplace_front();
-						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, mvalue, mEnums.front()));
+					case AttributeTrait::ENUM: {
+						auto currEnumItr = mEnums.try_emplace(p.mayaFullName);
+						PRTModifierEnum& currEnum = currEnumItr.first->second;
+						MCHECK(addEnumParameter(attrTrait.second.mAnnot, node, attr, p, mvalue, currEnum));
 						break;
+					}
 					case AttributeTrait::FILE:
 					case AttributeTrait::DIR:
 						MCHECK(addFileParameter(node, attr, p, mvalue, attrTrait.second.mString));
@@ -524,8 +1007,8 @@ MStatus PRTModifierAction::createNodeAttributes(const MObject& nodeObj, const pr
 
 void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 	auto isInUse = [this](const MString& attrName) {
-		auto it = std::find_if(mRuleAttributes.begin(), mRuleAttributes.end(),
-		                       [&attrName](const auto& ra) { return (ra.mayaFullName == attrName.asWChar()); });
+		const std::wstring attrNameWithoutSuffix = removeSuffix(attrName.asWChar());
+		auto it = mRuleAttributes.find(attrNameWithoutSuffix);
 		return (it != mRuleAttributes.end());
 	};
 
@@ -560,85 +1043,24 @@ void PRTModifierAction::removeUnusedAttribs(MFnDependencyNode& node) {
 	}
 }
 
-MStatus PRTModifierEnum::fill(const prt::Annotation* annot) {
-	mRestricted = true;
-	MStatus stat;
-
-	for (size_t arg = 0; arg < annot->getNumArguments(); arg++) {
-
-		const wchar_t* key = annot->getArgument(arg)->getKey();
-		if (std::wcscmp(key, NULL_KEY) != 0) {
-			if (std::wcscmp(key, RESTRICTED_KEY) == 0) {
-				mRestricted = annot->getArgument(arg)->getBool();
-			}
-			continue;
-		}
-
-		switch (annot->getArgument(arg)->getType()) {
-			case prt::AAT_BOOL: {
-				bool val = annot->getArgument(arg)->getBool();
-				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), mBVals.length()));
-				mBVals.append(val);
-				mFVals.append(std::numeric_limits<double>::quiet_NaN());
-				mSVals.append("");
-				break;
-			}
-			case prt::AAT_FLOAT: {
-				double val = annot->getArgument(arg)->getFloat();
-				MCHECK(mAttr.addField(MString(std::to_wstring(val).c_str()), mFVals.length()));
-				mBVals.append(false);
-				mFVals.append(val);
-				mSVals.append("");
-				break;
-			}
-			case prt::AAT_STR: {
-				const wchar_t* val = annot->getArgument(arg)->getStr();
-				MCHECK(mAttr.addField(MString(val), mSVals.length()));
-				mBVals.append(false);
-				mFVals.append(std::numeric_limits<double>::quiet_NaN());
-				mSVals.append(MString(val));
-				break;
-			}
-			default:
-				break;
-		}
-	}
-
-	return MS::kSuccess;
-}
-
-template <typename T>
-T PRTModifierAction::getPlugValueAndRemoveAttr(MFnDependencyNode& node, const MString& briefName,
-                                               const T& defaultValue) {
-	T plugValue = defaultValue;
-
-	if (DBG) {
-		LOG_DBG << "node attrs:";
-		mu::forAllAttributes(node, [&node](const MFnAttribute& a) {
-			MString val;
-			node.findPlug(a.object(), true).getValue(val);
-			LOG_DBG << a.name().asWChar() << " = " << val.asWChar();
-		});
-	}
-
-	if (node.hasAttribute(briefName)) {
-		const MPlug plug = node.findPlug(briefName, true);
-		if (plug.isDynamic()) {
-			T d;
-			if (plug.getValue(d) == MS::kSuccess)
-				plugValue = d;
-		}
-		node.removeAttribute(node.attribute(briefName));
-	}
-	return plugValue;
-}
-
 MStatus PRTModifierAction::addParameter(MFnDependencyNode& node, MObject& attr, MFnAttribute& tAttr) {
 	if (!(node.hasAttribute(tAttr.shortName()))) {
+		MStatus stat;
+
 		MCHECK(tAttr.setKeyable(true));
 		MCHECK(tAttr.setHidden(false));
 		MCHECK(tAttr.setStorable(true));
-		MCHECK(node.addAttribute(attr));
+		stat = node.addAttribute(attr);
+		if (stat != MS::kSuccess)
+			return stat;
+
+		// add hidden user_set attribute
+		stat = addHiddenBoolParameter(node, tAttr, ATTRIBUTE_USER_SET_SUFFIX);
+		if (stat != MS::kSuccess)
+			return stat;
+
+		// add hidden force_default attribute
+		return addHiddenBoolParameter(node, tAttr, ATTRIBUTE_FORCE_DEFAULT_SUFFIX);
 	}
 	return MS::kSuccess;
 }
@@ -652,15 +1074,14 @@ MStatus PRTModifierAction::addBoolParameter(MFnDependencyNode& node, MObject& at
 	attr = nAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), MFnNumericData::kBoolean,
 	                    defaultValue, &stat);
 	nAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
-	if (stat != MS::kSuccess)
-		throw stat;
+	MCHECK(stat);
 
-	MCHECK(addParameter(node, attr, nAttr));
+	stat = addParameter(node, attr, nAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	return MS::kSuccess;
+	return stat;
 }
 
 MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& ruleAttr,
@@ -672,82 +1093,42 @@ MStatus PRTModifierAction::addFloatParameter(MFnDependencyNode& node, MObject& a
 	attr = nAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), MFnNumericData::kDouble,
 	                    defaultValue, &stat);
 	nAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
-	if (stat != MS::kSuccess)
-		throw stat;
+	MCHECK(stat);
 
-	if (!prtu::isnan(min)) {
+	if (!prtu::isnan(min))
 		MCHECK(nAttr.setMin(min));
-	}
 
-	if (!prtu::isnan(max)) {
+	if (!prtu::isnan(max))
 		MCHECK(nAttr.setMax(max));
-	}
 
-	MCHECK(addParameter(node, attr, nAttr));
+	stat = addParameter(node, attr, nAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	return MS::kSuccess;
+	return stat;
 }
 
 MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-                                            const RuleAttribute& ruleAttr, bool defaultValue, PRTModifierEnum& e) {
-	short idx = 0;
-	for (int i = static_cast<int>(e.mBVals.length()); --i >= 0;) {
-		if ((e.mBVals[i] != 0) == defaultValue) {
-			idx = static_cast<short>(i);
-			break;
-		}
-	}
-
-	return addEnumParameter(annot, node, attr, ruleAttr, idx, e);
-}
-
-MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-                                            const RuleAttribute& ruleAttr, double defaultValue, PRTModifierEnum& e) {
-	short idx = 0;
-	for (int i = static_cast<int>(e.mFVals.length()); --i >= 0;) {
-		if (e.mFVals[i] == defaultValue) {
-			idx = static_cast<short>(i);
-			break;
-		}
-	}
-
-	return addEnumParameter(annot, node, attr, ruleAttr, idx, e);
-}
-
-MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-                                            const RuleAttribute& ruleAttr, const MString& defaultValue,
+                                            const RuleAttribute& ruleAttr, const PRTEnumDefaultValue& defaultValue,
                                             PRTModifierEnum& e) {
-	short idx = 0;
-	for (int i = static_cast<int>(e.mSVals.length()); --i >= 0;) {
-		if (e.mSVals[i] == defaultValue) {
-			idx = static_cast<short>(i);
-			break;
-		}
-	}
-
-	return addEnumParameter(annot, node, attr, ruleAttr, idx, e);
-}
-
-MStatus PRTModifierAction::addEnumParameter(const prt::Annotation* annot, MFnDependencyNode& node, MObject& attr,
-                                            const RuleAttribute& ruleAttr, short defaultValue, PRTModifierEnum& e) {
 	MStatus stat;
 
-	short plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultValue);
-	attr = e.mAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), defaultValue, &stat);
+	const short defaultEnumIndex = getDefaultEnumIdx(annot, defaultValue);
+
+	short plugValue = getPlugValueAndRemoveAttr(node, ruleAttr.mayaBriefName.c_str(), defaultEnumIndex);
+	attr = e.mAttr.create(ruleAttr.mayaFullName.c_str(), ruleAttr.mayaBriefName.c_str(), defaultEnumIndex, &stat);
 	e.mAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	MCHECK(stat);
 
 	MCHECK(e.fill(annot));
 
-	MCHECK(addParameter(node, attr, e.mAttr));
+	stat = addParameter(node, attr, e.mAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	return MS::kSuccess;
+	return stat;
 }
 
 MStatus PRTModifierAction::addFileParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& ruleAttr,
@@ -765,12 +1146,12 @@ MStatus PRTModifierAction::addFileParameter(MFnDependencyNode& node, MObject& at
 	MCHECK(sAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str()));
 	MCHECK(stat);
 	MCHECK(sAttr.setUsedAsFilename(true));
-	MCHECK(addParameter(node, attr, sAttr));
+	stat = addParameter(node, attr, sAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	return MS::kSuccess;
+	return stat;
 }
 
 MStatus PRTModifierAction::addColorParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& ruleAttr,
@@ -792,12 +1173,12 @@ MStatus PRTModifierAction::addColorParameter(MFnDependencyNode& node, MObject& a
 	nAttr.setDefault(color[0], color[1], color[2]);
 
 	MCHECK(stat);
-	MCHECK(addParameter(node, attr, nAttr));
+	stat = addParameter(node, attr, nAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
 
-	return MS::kSuccess;
+	return stat;
 }
 
 MStatus PRTModifierAction::addStrParameter(MFnDependencyNode& node, MObject& attr, const RuleAttribute& ruleAttr,
@@ -814,7 +1195,7 @@ MStatus PRTModifierAction::addStrParameter(MFnDependencyNode& node, MObject& att
 
 	sAttr.setNiceNameOverride(ruleAttr.mayaNiceName.c_str());
 	MCHECK(stat);
-	MCHECK(addParameter(node, attr, sAttr));
+	stat = addParameter(node, attr, sAttr);
 
 	MPlug plug(node.object(), attr);
 	MCHECK(plug.setValue(plugValue));
@@ -822,5 +1203,5 @@ MStatus PRTModifierAction::addStrParameter(MFnDependencyNode& node, MObject& att
 	if (DBG)
 		LOG_DBG << sAttr.name().asWChar() << " = " << plugValue.asWChar();
 
-	return MS::kSuccess;
+	return stat;
 }

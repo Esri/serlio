@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -168,9 +168,8 @@ template <typename T>
 struct isIterable<T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end(), bool())>>
     : public bool_constant<true> {};
 
-// add inline specifier to isIterableV once we switch to C++17
 template <typename T>
-constexpr bool isIterableV = isIterable<T>::value;
+inline constexpr bool isIterableV = isIterable<T>::value;
 
 } // namespace detail
 

@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,10 @@ public:
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const wchar_t* val) = delete;
 	void setAttr(const MELVariable& node, const std::wstring& attribute, const char* val) = delete;
 
+	void setAttrEnumOptions(const MELVariable& node, const std::wstring& attribute,
+	                        const std::vector<std::wstring>& enumOptions,
+	                        const std::optional<std::wstring>& customDefaultOption);
+
 	void connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,
 	                 const std::wstring& dstAttr);
 
@@ -73,11 +77,18 @@ public:
 
 	void setsCreate(const MELVariable& setName);
 	void setsAddFaceRange(const std::wstring& setName, const std::wstring& meshName, int faceStart, int faceEnd);
+	void setsUseInitialShadingGroup(const std::wstring& meshName);
 
 	void createShader(const std::wstring& shaderType, const MELVariable& nodeName);
 	void createTextureShadingNode(const MELVariable& nodeName);
+	void forceValidTextureAlphaChannel(const MELVariable& nodeName);
 
-	void python(const std::wstring& pythonCmd);
+	void getUndoState(const MELVariable& undoName);
+	void setUndoState(const MELVariable& undoName);
+	void setUndoState(bool undoState);
+
+	void getWorkspaceDir();
+
 	void addCmdLine(const std::wstring& line);
 
 	MStatus executeSync(std::wstring& output);

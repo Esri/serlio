@@ -10,8 +10,8 @@ include(common.cmake)
 
 ### version
 
-set(SRL_VERSION_MAJOR 1)
-set(SRL_VERSION_MINOR 1)
+set(SRL_VERSION_MAJOR 2)
+set(SRL_VERSION_MINOR 0)
 set(SRL_VERSION_PATCH 0)
 
 if (NOT SRL_VERSION_BUILD)
@@ -39,11 +39,7 @@ set(SERLIO_TARGET serlio)
 set(TEST_TARGET serlio_test)
 
 ### configure packaging
-if (WIN_INSTALLER) # <-- To be set on the command line
-	include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_installer.cmake)
-else ()
-	include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_archives.cmake)
-endif ()
+include(${CMAKE_CURRENT_SOURCE_DIR}/../deploy/cpack_archives.cmake)
 
 add_subdirectory(codec)
 add_subdirectory(serlio)

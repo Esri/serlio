@@ -16,9 +16,21 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	set(SRL_WINDOWS 1)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	set(SRL_LINUX 1)
-elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-	set(SRL_MACOS 1)
 endif ()
+
+
+### common target functions
+
+function(set_common_target_definitions TGT)
+	set_target_properties(${TGT} PROPERTIES CXX_STANDARD 17)
+	target_compile_definitions(${TGT} PRIVATE
+		-DSRL_VERSION=\"${SRL_VERSION}\" # quoted to use it as string literal
+		-DSRL_VERSION_MAJOR=\"${SRL_VERSION_MAJOR}\" # quoted to use it as string literal
+		-DSRL_VERSION_MINOR=\"${SRL_VERSION_MINOR}\" # quoted to use it as string literal
+		-DSRL_PROJECT_NAME=\"${SRL_PROJECT_NAME}\"
+		-DPRT_VERSION_MAJOR=${PRT_VERSION_MAJOR}
+		-DPRT_VERSION_MINOR=${PRT_VERSION_MINOR})
+endfunction()
 
 
 ### look for the PRT libraries
@@ -27,18 +39,15 @@ endif ()
 if (NOT prt_DIR)
 	if (SRL_WINDOWS)
 		set(PRT_OS "win10")
-		set(PRT_TC "vc141")
+		set(PRT_TC "vc1427")
 	elseif (SRL_LINUX)
 		set(PRT_OS "rhel7")
-		set(PRT_TC "gcc63")
-	elseif (SRL_MACOS)
-		set(PRT_OS "osx12")
-		set(PRT_TC "ac81")
+		set(PRT_TC "gcc93")
 	endif ()
 
-	set(PRT_VERSION "2.1.5705")
+	set(PRT_VERSION "2.6.8135")
 	set(PRT_CLS "${PRT_OS}-${PRT_TC}-x86_64-rel-opt")
-	set(PRT_URL "https://github.com/esri/esri-cityengine-sdk/releases/download/${PRT_VERSION}/esri_ce_sdk-${PRT_VERSION}-${PRT_CLS}.zip")
+	set(PRT_URL "https://github.com/esri/cityengine-sdk/releases/download/${PRT_VERSION}/esri_ce_sdk-${PRT_VERSION}-${PRT_CLS}.zip")
 
 	FetchContent_Declare(prt URL ${PRT_URL})
 	FetchContent_GetProperties(prt)
@@ -65,53 +74,78 @@ endfunction()
 
 if (NOT maya_DIR)
 	if (WIN32)
-		if (EXISTS "C:/Program Files/Autodesk/Maya2019")
-			set(maya_DIR "C:/Program Files/Autodesk/Maya2019")
-		else ()
-			set(maya_DIR "C:/Program Files/Autodesk/Maya2018")
-		endif ()
+		set(AUTODESK_INSTALL_LOCATION "C:/Program Files/Autodesk")
+		set(MAYA_BASE_NAME Maya)
 	else ()
-		if (EXISTS "/opt/autodesk/maya2019")
-			set(maya_DIR "/opt/autodesk/maya2019")
-		else ()
-			set(maya_DIR "/opt/autodesk/maya2018")
-		endif ()
+		set(AUTODESK_INSTALL_LOCATION "/usr/autodesk")
+		set(MAYA_BASE_NAME maya)
 	endif ()
-endif ()
-message(STATUS "Using maya_DIR = ${maya_DIR} (use '-Dmaya_DIR=xxx' to override)")
-
-find_path(maya_INCLUDE_PATH NAMES "maya/MApiVersion.h" PATHS "${maya_DIR}/include" NO_DEFAULT_PATH)
-
-set(MAYA_LIB_DIR "${maya_DIR}/lib")
-find_library(maya_LINK_LIB_FOUNDATION NAMES "Foundation" PATHS "${MAYA_LIB_DIR}")
-if (maya_LINK_LIB_FOUNDATION)
-	list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_FOUNDATION})
-endif ()
-find_library(maya_LINK_LIB_OPENMAYA NAMES "OpenMaya" PATHS "${MAYA_LIB_DIR}")
-if (maya_LINK_LIB_OPENMAYA)
-	list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_OPENMAYA})
-endif ()
-find_library(maya_LINK_LIB_OPENMAYAUI NAMES "OpenMayaUI" PATHS "${MAYA_LIB_DIR}")
-if (maya_LINK_LIB_OPENMAYAUI)
-	list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_OPENMAYAUI})
-endif ()
-find_library(maya_LINK_LIB_METADATA NAMES "MetaData" PATHS "${MAYA_LIB_DIR}")
-if (maya_LINK_LIB_METADATA)
-	list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_METADATA})
+	if (EXISTS "${AUTODESK_INSTALL_LOCATION}/${MAYA_BASE_NAME}2022")
+		set(maya_DIR "${AUTODESK_INSTALL_LOCATION}/${MAYA_BASE_NAME}2022")
+	elseif (EXISTS "${AUTODESK_INSTALL_LOCATION}/${MAYA_BASE_NAME}2020")
+		set(maya_DIR "${AUTODESK_INSTALL_LOCATION}/${MAYA_BASE_NAME}2020")
+	elseif (EXISTS "${AUTODESK_INSTALL_LOCATION}/${MAYA_BASE_NAME}2019")
+		set(maya_DIR "${AUTODESK_INSTALL_LOCATION}/${MAYA_BASE_NAME}2019")
+	endif ()
 endif ()
 
 # temporary heuristic to detect maya version number
-if (maya_DIR MATCHES "[Mm]aya2018")
-	set(maya_VERSION_MAJOR "2018")
-elseif (maya_DIR MATCHES "[Mm]aya2019")
+if (maya_DIR MATCHES "[Mm]aya2019")
 	set(maya_VERSION_MAJOR "2019")
+elseif (maya_DIR MATCHES "[Mm]aya2020")
+	set(maya_VERSION_MAJOR "2020")
+elseif (maya_DIR MATCHES "[Mm]aya2022")
+	set(maya_VERSION_MAJOR "2022")
 endif ()
 
 function(srl_add_dependency_maya TGT)
+	if (NOT maya_DIR)
+		message(FATAL_ERROR "Could not detect maya installation below ${AUTODESK_INSTALL_LOCATION}")
+	endif()
+	message(STATUS "Using maya_DIR = ${maya_DIR} (use '-Dmaya_DIR=xxx' to override)")
+
+	find_path(maya_INCLUDE_PATH NAMES "maya/MApiVersion.h" PATHS "${maya_DIR}/include" NO_DEFAULT_PATH)
+
+	set(MAYA_LIB_DIR "${maya_DIR}/lib")
+	find_library(maya_LINK_LIB_FOUNDATION NAMES "Foundation" PATHS "${MAYA_LIB_DIR}")
+	if (maya_LINK_LIB_FOUNDATION)
+		list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_FOUNDATION})
+	endif ()
+	find_library(maya_LINK_LIB_OPENMAYA NAMES "OpenMaya" PATHS "${MAYA_LIB_DIR}")
+	if (maya_LINK_LIB_OPENMAYA)
+		list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_OPENMAYA})
+	endif ()
+	find_library(maya_LINK_LIB_OPENMAYAUI NAMES "OpenMayaUI" PATHS "${MAYA_LIB_DIR}")
+	if (maya_LINK_LIB_OPENMAYAUI)
+		list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_OPENMAYAUI})
+	endif ()
+	find_library(maya_LINK_LIB_METADATA NAMES "MetaData" PATHS "${MAYA_LIB_DIR}")
+	if (maya_LINK_LIB_METADATA)
+		list(APPEND maya_LINK_LIBRARIES ${maya_LINK_LIB_METADATA})
+	endif ()
+
 	if (maya_INCLUDE_PATH)
 		target_include_directories(${TGT} PRIVATE ${maya_INCLUDE_PATH})
 	endif ()
 	target_link_libraries(${TGT} PRIVATE ${maya_LINK_LIBRARIES})
+endfunction()
+
+
+### Catch Test Framework
+
+function(srl_add_dependency_catch TGT)
+	set(CATCH_URL "https://github.com/catchorg/Catch2.git")
+	set(CATCH_VER "v2.13.8")
+	FetchContent_Declare(catch GIT_REPOSITORY ${CATCH_URL} GIT_TAG ${CATCH_VER})
+
+	FetchContent_GetProperties(catch)
+	if(NOT catch_POPULATED)
+		message(STATUS "Fetching Catch ${CATCH_VER} from ${CATCH_URL}...")
+		FetchContent_Populate(catch)
+		add_subdirectory(${catch_SOURCE_DIR} ${catch_BINARY_DIR})
+	endif()
+
+	target_include_directories(${TGT} PRIVATE ${Catch2_SOURCE_DIR}/single_include)
 endfunction()
 
 

@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,8 @@ public:
 
 private:
 	void convertGeometry(const prtx::InitialShape& initialShape,
-	                     const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* callbacks);
+	                     const prtx::EncodePreparator::InstanceVector& instances, IMayaCallbacks* callbacks,
+	                     prt::Cache* cache);
 };
 
 class MayaEncoderFactory : public prtx::EncoderFactory, public prtx::Singleton<MayaEncoderFactory> {

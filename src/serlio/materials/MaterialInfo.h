@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,13 @@ const std::string PRT_MATERIAL_CHANNEL = "prtMaterialChannel";
 const std::string PRT_MATERIAL_STREAM = "prtMaterialStream";
 const std::string PRT_MATERIAL_FACE_INDEX_START = "faceIndexStart";
 const std::string PRT_MATERIAL_FACE_INDEX_END = "faceIndexEnd";
+
+const std::string PRT_MATERIALINFO_MAP_STRUCTURE = "prtMaterialInfoMapStructure";
+const std::string PRT_MATERIALINFO_MAP_CHANNEL = "prtMaterialInfoMapChannel";
+const std::string PRT_MATERIALINFO_MAP_STREAM = "prtMaterialInfoMapStream";
+const std::string PRT_MATERIALINFO_MAP_KEY = "key";
+const std::string PRT_MATERIALINFO_MAP_VALUE = "value";
+
 const MELVariable MEL_VARIABLE_SHADING_ENGINE(L"shadingGroup");
 
 class MaterialColor {
@@ -40,6 +47,8 @@ public:
 	double r() const noexcept;
 	double g() const noexcept;
 	double b() const noexcept;
+
+	size_t getHash() const;
 
 	bool operator==(const MaterialColor& other) const noexcept;
 	bool operator<(const MaterialColor& rhs) const noexcept;
@@ -58,6 +67,8 @@ public:
 	double tu() const noexcept;
 	double tv() const noexcept;
 	double rw() const noexcept;
+
+	size_t getHash() const;
 
 	std::array<double, 2> tuv() const noexcept;
 	std::array<double, 3> suvw() const noexcept;
@@ -108,4 +119,6 @@ public:
 	bool equals(const MaterialInfo& o) const;
 
 	bool operator<(const MaterialInfo& rhs) const;
+
+	size_t getHash() const;
 };

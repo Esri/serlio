@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 
-proc string[] appendAarray(string $a0[], string $a1[]) {
+proc string[] appendArray(string $a0[], string $a1[]) {
 	string $result[] = $a0;
 	for($e in $a1)
-		$result[size($result)] = $e;
+		if(!stringArrayContains($e, $result)){
+			$result[size($result)] = $e;
+		}
 	return $result;
 }
 
@@ -29,20 +31,49 @@ proc string[] collectInitialShapes(string $nodes[]) {
 	for($node in $nodes) {
 	    string $type = `nodeType $node`;
 		if($type == "mesh") {
-			$result = appendAarray($result, {$node});
+			$result = appendArray($result, {$node});
 		} else if($type == "transform") {
 			string $tmp[] = collectInitialShapes(`listRelatives -ni -pa -children $node`);
-			$result = appendAarray($result, $tmp);
+			$result = appendArray($result, $tmp);
 		}
 	}
 	return $result;	  
+}
+
+proc int hasNodeTypeInHistory(string $node, string $nodeTypes[]){
+	string $hist[] = `listHistory -f false $node`;
+	string $future[] = `listHistory -f true $node`;
+	$hist = appendArray($hist, $future);
+	for ($node in $hist){
+		string $nodeType = `nodeType $node`;
+		if(stringArrayContains($nodeType, $nodeTypes))
+			return true;
+	}
+	return false;
+}
+
+proc deleteNodeTypesFromHistory(string $node, string $nodeTypes[]){
+	string $nodeHistory[] = `listHistory $node`;
+	
+	for($dpNode in $nodeHistory){
+		string $dpNodeType = `nodeType $dpNode`;
+		if(stringArrayContains($dpNodeType, $nodeTypes)){
+			string $previousDpNodePlug =  `connectionInfo -sfd ($dpNode +".inMesh")`;
+			string $nextDpNodePlugs[] = `connectionInfo -dfs ($dpNode +".outMesh")`;
+			if ($previousDpNodePlug != "") {
+				for($nextDpNodePlug in $nextDpNodePlugs)
+					connectAttr -force $previousDpNodePlug $nextDpNodePlug;
+			}
+			delete $dpNode;
+		}
+	}
 }
 
 global proc createPrtNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
-	if(!(size($initialShapes))) {
+	if(size($initialShapes) == 0) {
 		confirmDialog -title "Missing selection" -message "Please select shapes first in order to apply a rule." -button "OK";
 		return;
 	}
@@ -50,52 +81,139 @@ global proc createPrtNode() {
 	$filters = "Rule Package (*.rpk);;All Files (*.*)";
 	string $rulePackage[] = `fileDialog2 -fm 1 -cap "Select Rule Package" -ff $filters`;
 	
-	
-	if(size($rulePackage)) {
+	int $alreadyHasExistingPrtNode = false;
+	if(size($rulePackage) > 0) {
 		for($node in $initialShapes) {
 			select -r $node;
-			serlioAssign $rulePackage;
+			string $nodeHistory[] = `listHistory $node`;
+
+			for($dpNode in $nodeHistory){
+				string $dpNodeType = `nodeType $dpNode`;
+				if($dpNodeType == "serlio"){
+					setAttr -type "string" ($dpNode + ".Rule_Package") $rulePackage[0];  
+					evalDeferred "refreshEditorTemplates()";
+					$alreadyHasExistingPrtNode = true;
+				}
+			}
+
+			if (!$alreadyHasExistingPrtNode && !hasNodeTypeInHistory($node, {"serlio"}))
+				serlioAssign $rulePackage;
+
+			$alreadyHasExistingPrtNode = false;
 		}
 	}
 	select -r $select;
 }
 
-global proc createPrtMaterialNode() {
+global proc removePrtNode() {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
-	if(!(size($initialShapes))) {
-		confirmDialog -title "Missing selection" -message "Please select shapes first in order to create materials." -button "OK";
+	if(size($initialShapes) == 0) {
+		confirmDialog -title "Missing selection" -message "Please select at least one shape to remove the associated rule package." -button "OK";
 		return;
-	}	
-	
+	}
+
 	for($node in $initialShapes) {
-		$prtMaterialName = `createNode serlioMaterial`;
-		$im =  `connectionInfo -sfd ($node +".inMesh")`;
-		if (size($im)>0) {
-			connectAttr -force ( $prtMaterialName + ".outMesh" ) ( $node + ".inMesh" );
-			connectAttr -force ( $im ) ( $prtMaterialName + ".inMesh" );
-		}
+		select -r $node;
+		hyperShade -assign "lambert1";
+		deleteNodeTypesFromHistory($node, {"serlio", "serlioMaterial", "serlioArnoldMaterial"});
+	}
+
+	select -r $select;
+}
+
+global proc displayTextures(){
+	string $panels[] = `getPanel -typ "modelPanel"`;
+	for ($panel in $panels){
+		string $camera = `modelEditor -q -camera $panel`;
+		if (`camera -q -orthographic $camera` == false)
+			modelEditor -e -dtx true $panel;
 	}
 }
 
-global proc createArnoldMaterialNode() {
+global proc createMaterialNode(string $materialType) {
 	string $select[] = `ls -sl`;
 	string $initialShapes[] = collectInitialShapes($select);
 	
-	if(!(size($initialShapes))) {
+	if(size($initialShapes) == 0) {
 		confirmDialog -title "Missing selection" -message "Please select shapes first in order to create materials." -button "OK";
 		return;
 	}	
 	
 	for($node in $initialShapes) {
-		$prtMaterialName = `createNode serlioArnoldMaterial`;
-		$im =  `connectionInfo -sfd ($node +".inMesh")`;
-		if (size($im)>0) {
-			connectAttr -force ( $prtMaterialName + ".outMesh" ) ( $node + ".inMesh" );
-			connectAttr -force ( $im ) ( $prtMaterialName + ".inMesh" );
-		}
+		select -r $node;
+		if(hasNodeTypeInHistory($node, {"serlio"}) && !hasNodeTypeInHistory($node, {"serlioMaterial","serlioArnoldMaterial"}))
+			serlioCreateMaterial $materialType;
 	}
+	displayTextures();
+	select -r $select;
+}
+
+global proc createHelpMenuItems(){
+	string $serlioWebsite = getPluginResource("serlio", "SERLIO_HOME");
+	string $cgaReference = getPluginResource("serlio", "CGA_REFERENCE");
+	string $rulePackageManual = getPluginResource("serlio", "RPK_MANUAL");
+
+	menuItem -label "Serlio Website" -c ("showHelp -absolute \"" + $serlioWebsite + "\"");
+	menuItem -label "CityEngine CGA Reference" -c ("showHelp -absolute \"" + $cgaReference + "\"");
+	menuItem -label "CityEngine Rule Package Manual" -c ("showHelp -absolute \"" + $rulePackageManual + "\"");
+}
+
+global proc createAboutDialog(){
+	string $pluginPath = `pluginInfo -query -path serlio`;
+	string $iconPath = $pluginPath + "../../icons/serlio.xpm";
+	string $serlioVersion = `pluginInfo -query -version serlio`;
+	string $serlioVendor = `pluginInfo -query -vendor serlio`;
+	string $legalText = "Serlio is free for personal, educational, and non-commercial use. " +
+	                    "Commercial use requires at least one commercial license of the latest CityEngine version installed in the organization. " +
+	                    "Redistribution or web service offerings are not allowed unless expressly permitted.\n" +
+	                    "Serlio is under the same license as the included CityEngine SDK.";
+
+	string $window = `window -title "About Serlio"
+		-resizeToFitChildren true
+		-iconName "Serlio"
+		-widthHeight 500 210`;
+
+	string $form = `formLayout -numberOfDivisions 100`;
+
+	string $serlioImage = `iconTextStaticLabel -h 32 -w 28 -st "iconOnly" -i $iconPath`;
+	string $versionText = `text -label ("Version: " + $serlioVersion)`;
+	string $vendorText = `text -label ("Vendor: " + $serlioVendor)`;
+	string $legalField = `scrollField -h 85 -wordWrap true
+		-text $legalText
+		-editable false`;
+
+	string $okButton = `button -label "OK" -command ("deleteUI -window " + $window)`;
+ 
+	formLayout -edit
+		-attachForm    $serlioImage   "top"    5
+		-attachForm    $serlioImage   "left"   5
+		-attachNone    $serlioImage   "bottom"
+		-attachNone    $serlioImage   "right"
+		
+		-attachControl $versionText "top"    5 $serlioImage
+		-attachForm    $versionText "left"   5
+		-attachNone    $versionText "bottom"
+		-attachNone    $versionText "right"
+		
+		-attachControl $vendorText "top"    5 $versionText
+		-attachForm    $vendorText "left"   5
+		-attachNone    $vendorText "bottom"
+		-attachNone    $vendorText "right"
+		
+		-attachControl $legalField "top"    5 $vendorText 
+		-attachForm    $legalField "left"   5
+		-attachControl $legalField "bottom" 5 $okButton
+		-attachForm    $legalField "right"  5
+
+		-attachNone    $okButton "top"
+		-attachForm    $okButton "left"   5
+		-attachForm    $okButton "bottom" 5
+		-attachForm    $okButton "right"  5
+	$form;
+
+	showWindow $window;
 }
 
 global proc createPrtMenu() {
@@ -109,8 +227,14 @@ global proc createPrtMenu() {
 		setParent -m $gPrtMenu;
 		menuItem -divider true;
 		menuItem -label "Attach CityEngine Rule Package..."  -c "createPrtNode" -annotation "Attach a CGA rule package to a geometry";
-		menuItem -label "Create Materials"  -c "createPrtMaterialNode" -annotation "Create Materials";
-        menuItem -label "Create Arnold Materials" -c "createArnoldMaterialNode" -annotation "Create Arnold Materials";
+		menuItem -label "Remove CityEngine Rule Package"  -c "removePrtNode" -annotation "Remove a CGA rule package from a geometry";
+		menuItem -label "Create Materials"  -c "createMaterialNode(\"stingray\")" -annotation "Create Materials";
+		menuItem -label "Create Arnold Materials" -c "createMaterialNode(\"arnold\")" -annotation "Create Arnold Materials";
+		menuItem -divider true;
+		menuItem -subMenu true -label "Help" -i "help.png";
+			createHelpMenuItems();
+			setParent -menu ..;
+		menuItem -label "About Serlio" -c "createAboutDialog()" -annotation "Show about dialog";
 		setParent -m ..;
 	}
 }

@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <filesystem>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -34,36 +35,76 @@ namespace {
 
 constexpr bool DBG = false;
 
-constexpr const wchar_t* PRT_ATTR_FULL_NAME_PREFIX = L"PRT";
+constexpr const wchar_t* PRT_ATTR_FULL_NAME_PREFIX = L"PRT_";
 
-const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-std::wstring cleanForMaya(const std::wstring& name) {
-	auto r = name;
-	replace_all_not_of(r, MAYA_COMPATIBLE_CHARS);
-	return r;
+std::wstring getFullName(const std::wstring& fqAttrName, std::map<std::wstring, int>& mayaNameDuplicateCountMap) {
+	const std::wstring fullName = PRT_ATTR_FULL_NAME_PREFIX + prtu::cleanNameForMaya(fqAttrName);
+	// make sure maya names are unique
+	return fullName + prtu::getDuplicateCountSuffix(fullName, mayaNameDuplicateCountMap);
 }
 
-std::wstring getFullName(const std::wstring& fqAttrName) {
-	return PRT_ATTR_FULL_NAME_PREFIX + cleanForMaya(fqAttrName);
-}
-
-std::wstring getBriefName(const std::wstring& fqAttrName) {
-	return cleanForMaya(prtu::removeStyle(fqAttrName));
+std::wstring getBriefName(const std::wstring& fqAttrName, std::map<std::wstring, int>& mayaNameDuplicateCountMap) {
+	const std::wstring briefName = prtu::cleanNameForMaya(prtu::removeStyle(fqAttrName));
+	// make sure maya names are unique
+	return briefName + prtu::getDuplicateCountSuffix(briefName, mayaNameDuplicateCountMap);
 }
 
 std::wstring getNiceName(const std::wstring& fqAttrName) {
-	return cleanForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
+	return prtu::cleanNameForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
 }
 
 } // namespace
 
-RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
-	RuleAttributes ra;
+std::map<std::wstring, int> getImportOrderMap(const prt::RuleFileInfo* ruleFileInfo) {
+	std::map<std::wstring, int> importOrderMap;
+	int importOrder = 0;
+	for (size_t i = 0; i < ruleFileInfo->getNumAnnotations(); i++) {
+		const prt::Annotation* an = ruleFileInfo->getAnnotation(i);
+		const wchar_t* anName = an->getName();
+		if (std::wcscmp(anName, ANNOT_IMPORTS) == 0) {
+			for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
+				const prt::AnnotationArgument* anArg = an->getArgument(argIdx);
+				if (anArg->getType() == prt::AAT_STR) {
+					const wchar_t* anKey = anArg->getKey();
+					if (std::wcscmp(anKey, ANNOT_IMPORTS_KEY) == 0) {
+						const wchar_t* importRuleCharPtr = anArg->getStr();
+						if (importRuleCharPtr != nullptr) {
+							std::wstring importRule = importRuleCharPtr;
+							importOrderMap[importRule] = importOrder++;
+						}
+					}
+				}
+			}
+		}
+	}
+	return importOrderMap;
+}
 
-	std::wstring mainCgaRuleName = prtu::filename(ruleFile);
-	size_t idxExtension = mainCgaRuleName.find(L".cgb");
-	if (idxExtension != std::wstring::npos)
-		mainCgaRuleName = mainCgaRuleName.substr(0, idxExtension);
+void setGlobalGroupOrder(RuleAttributeVec& ruleAttributes) {
+	AttributeGroupOrder globalGroupOrder;
+	for (const auto& attribute : ruleAttributes) {
+		for (auto it = std::rbegin(attribute.groups); it != std::rend(attribute.groups); ++it) {
+			std::vector<std::wstring> g(it, std::rend(attribute.groups));
+			std::reverse(g.begin(), g.end());
+			auto ggoIt = globalGroupOrder.emplace(std::make_pair(attribute.ruleFile, g), ORDER_NONE).first;
+			ggoIt->second = std::min(attribute.groupOrder, ggoIt->second);
+		}
+	}
+
+	for (auto& attribute : ruleAttributes) {
+		const auto it = globalGroupOrder.find(std::make_pair(attribute.ruleFile, attribute.groups));
+		attribute.globalGroupOrder = (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
+	}
+}
+
+RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFileInfo* ruleFileInfo) {
+	RuleAttributeVec ra;
+
+	std::wstring mainCgaRuleName = std::filesystem::path(ruleFile).stem().wstring();
+
+	const std::map<std::wstring, int> importOrderMap = getImportOrderMap(ruleFileInfo);
+
+	std::map<std::wstring, int> mayaNameDuplicateCountMap;
 
 	for (size_t i = 0; i < ruleFileInfo->getNumAttributes(); i++) {
 		const prt::RuleFileInfo::Entry* attr = ruleFileInfo->getAttribute(i);
@@ -73,10 +114,10 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 
 		RuleAttribute p;
 		p.fqName = attr->getName();
-		p.mayaBriefName = getBriefName(p.fqName);
-		p.mayaFullName = getFullName(p.fqName);
 		p.mayaNiceName = getNiceName(p.fqName);
 		p.mType = attr->getReturnType();
+		p.mayaBriefName = getBriefName(p.fqName, mayaNameDuplicateCountMap);
+		p.mayaFullName = getFullName(p.fqName, mayaNameDuplicateCountMap);
 
 		// TODO: is this correct? import name != rule file name
 		std::wstring ruleName = p.fqName;
@@ -92,18 +133,21 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 			p.memberOfStartRuleFile = true;
 		}
 
+		const auto importOrder = importOrderMap.find(p.ruleFile);
+		p.ruleOrder = (importOrder != importOrderMap.end()) ? importOrder->second : ORDER_NONE;
+
 		bool hidden = false;
 		for (size_t a = 0; a < attr->getNumAnnotations(); a++) {
 			const prt::Annotation* an = attr->getAnnotation(a);
 			const wchar_t* anName = an->getName();
-			if (!(std::wcscmp(anName, ANNOT_HIDDEN)))
+			if (std::wcscmp(anName, ANNOT_HIDDEN) == 0)
 				hidden = true;
-			else if (!(std::wcscmp(anName, ANNOT_ORDER))) {
+			else if (std::wcscmp(anName, ANNOT_ORDER) == 0) {
 				if (an->getNumArguments() >= 1 && an->getArgument(0)->getType() == prt::AAT_FLOAT) {
 					p.order = static_cast<int>(an->getArgument(0)->getFloat());
 				}
 			}
-			else if (!(std::wcscmp(anName, ANNOT_GROUP))) {
+			else if (std::wcscmp(anName, ANNOT_GROUP) == 0) {
 				for (int argIdx = 0; argIdx < an->getNumArguments(); argIdx++) {
 					if (an->getArgument(argIdx)->getType() == prt::AAT_STR) {
 						p.groups.push_back(an->getArgument(argIdx)->getStr());
@@ -127,23 +171,13 @@ RuleAttributes getRuleAttributes(const std::wstring& ruleFile, const prt::RuleFi
 			LOG_DBG << p;
 	}
 
-	return ra;
+	setGlobalGroupOrder(ra);
+	RuleAttributeSet sortedRuleAttributes(ra.begin(), ra.end());
+
+	return sortedRuleAttributes;
 }
 
-AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes) {
-	AttributeGroupOrder globalGroupOrder;
-	for (const auto& attribute : ruleAttributes) {
-		for (auto it = std::rbegin(attribute.groups); it != std::rend(attribute.groups); ++it) {
-			std::vector<std::wstring> g(it, std::rend(attribute.groups));
-			std::reverse(g.begin(), g.end());
-			auto ggoIt = globalGroupOrder.emplace(g, ORDER_NONE).first;
-			ggoIt->second = std::min(attribute.groupOrder, ggoIt->second);
-		}
-	}
-	return globalGroupOrder;
-}
-
-void sortRuleAttributes(RuleAttributes& ra) {
+bool RuleAttributeCmp::operator()(const RuleAttribute& lhs, const RuleAttribute& rhs) const {
 	auto lowerCaseOrdering = [](std::wstring a, std::wstring b) {
 		std::transform(a.begin(), a.end(), a.begin(), ::tolower);
 		std::transform(b.begin(), b.end(), b.begin(), ::tolower);
@@ -152,10 +186,13 @@ void sortRuleAttributes(RuleAttributes& ra) {
 
 	auto compareRuleFile = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		// sort main rule attributes before the rest
-		if (a.memberOfStartRuleFile)
+		if (a.memberOfStartRuleFile && !b.memberOfStartRuleFile)
 			return true;
-		if (b.memberOfStartRuleFile)
+		if (b.memberOfStartRuleFile && !a.memberOfStartRuleFile)
 			return false;
+
+		if (a.ruleOrder != b.ruleOrder)
+			return a.ruleOrder < b.ruleOrder;
 
 		return lowerCaseOrdering(a.ruleFile, b.ruleFile);
 	};
@@ -186,15 +223,6 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return a.groups[i];
 	};
 
-	const AttributeGroupOrder globalGroupOrder = getGlobalGroupOrder(ra);
-	if (DBG)
-		LOG_DBG << "globalGroupOrder:\n" << globalGroupOrder;
-
-	auto getGroupOrder = [&globalGroupOrder](const RuleAttribute& ap) {
-		const auto it = globalGroupOrder.find(ap.groups);
-		return (it != globalGroupOrder.end()) ? it->second : ORDER_NONE;
-	};
-
 	auto compareGroups = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		if (isChildOf(a, b))
 			return false; // child a should be sorted after parent b
@@ -202,8 +230,8 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		if (isChildOf(b, a))
 			return true; // child b should be sorted after parent a
 
-		const auto globalOrderA = getGroupOrder(a);
-		const auto globalOrderB = getGroupOrder(b);
+		const auto globalOrderA = a.globalGroupOrder;
+		const auto globalOrderB = b.globalGroupOrder;
 		if (globalOrderA != globalOrderB)
 			return (globalOrderA < globalOrderB);
 
@@ -215,7 +243,7 @@ void sortRuleAttributes(RuleAttributes& ra) {
 	};
 
 	auto compareAttributeOrder = [&](const RuleAttribute& a, const RuleAttribute& b) {
-		if (a.order == ORDER_NONE && b.order == ORDER_NONE)
+		if (a.order == b.order)
 			return lowerCaseOrdering(a.fqName, b.fqName);
 
 		return a.order < b.order;
@@ -231,14 +259,14 @@ void sortRuleAttributes(RuleAttributes& ra) {
 		return compareAttributeOrder(a, b);
 	};
 
-	std::sort(ra.begin(), ra.end(), attributeOrder);
+	return attributeOrder(lhs, rhs);
 }
 
 std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap) {
 	auto orderVal = [](int order) { return (order == ORDER_NONE) ? L"none" : std::to_wstring(order); };
 	ostr << L"RuleAttribute '" << ap.fqName << L"':" << L" order = " << orderVal(ap.order) << L", groupOrder = "
-	     << orderVal(ap.groupOrder) << L", ruleFile = '" << ap.ruleFile << L"'" << L", groups = [ "
-	     << join<wchar_t>(ap.groups, L" ") << L" ]\n";
+	     << orderVal(ap.groupOrder) << L", globalGroupOrder = " << orderVal(ap.globalGroupOrder) << L", ruleFile = '"
+	     << ap.ruleFile << L"'" << L", groups = [ " << join<wchar_t>(ap.groups, L" ") << L" ]\n";
 	return ostr;
 }
 
@@ -251,7 +279,7 @@ std::ostream& operator<<(std::ostream& ostr, const RuleAttribute& ap) {
 
 std::wostream& operator<<(std::wostream& wostr, const AttributeGroupOrder& ago) {
 	for (const auto& i : ago) {
-		wostr << L"[ " << join<wchar_t>(i.first, L" ") << L"] = " << i.second << L"\n";
+		wostr << L"[ " << i.first.first << " " << join<wchar_t>(i.first.second, L" ") << L"] = " << i.second << L"\n";
 	}
 	return wostr;
 }

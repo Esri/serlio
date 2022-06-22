@@ -1,35 +1,110 @@
+/**
+ * Serlio - Esri CityEngine Plugin for Autodesk Maya
+ *
+ * See https://github.com/esri/serlio for build and usage instructions.
+ *
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "materials/MaterialUtils.h"
 
 #include "utils/MArrayWrapper.h"
 #include "utils/MELScriptBuilder.h"
-#include "utils/MItDependencyNodesWrapper.h"
 #include "utils/MayaUtilities.h"
+#include "utils/Utilities.h"
 
 #include "PRTContext.h"
 
 #include "maya/MDataBlock.h"
 #include "maya/MDataHandle.h"
+#include "maya/MFileIO.h"
 #include "maya/MFnMesh.h"
-#include "maya/MItDependencyNodes.h"
 #include "maya/MPlugArray.h"
+#include "maya/MUuid.h"
 #include "maya/adskDataAssociations.h"
 
 namespace {
+const MELVariable MEL_UNDO_STATE(L"materialUndoState");
 
-MObject findNamedObject(const std::wstring& name, MFn::Type fnType) {
-	MStatus status;
-	MItDependencyNodes nodeIt(fnType, &status);
-	MCHECK(status);
+constexpr const wchar_t* RGBA8_FORMAT = L"RGBA8";
+constexpr const wchar_t* FORMAT_STRING = L"format";
+constexpr const size_t UUID_UINT8_LENGTH = 16;
 
-	for (const auto& nodeObj : MItDependencyNodesWrapper(nodeIt)) {
-		MFnDependencyNode node(nodeObj);
-		if (std::wcscmp(node.name().asWChar(), name.c_str()) == 0)
-			return nodeObj;
-	}
+adsk::Data::Structure* createNewMaterialInfoMapStructure() {
+	// Register our structure since it is not registered yet.
+	adsk::Data::Structure* fStructure = adsk::Data::Structure::create();
+	fStructure->setName(PRT_MATERIALINFO_MAP_STRUCTURE.c_str());
 
-	return MObject::kNullObj;
+	fStructure->addMember(adsk::Data::Member::eDataType::kUInt64, 1, PRT_MATERIALINFO_MAP_KEY.c_str());
+	fStructure->addMember(adsk::Data::Member::eDataType::kUInt8, UUID_UINT8_LENGTH, PRT_MATERIALINFO_MAP_VALUE.c_str());
+
+	adsk::Data::Structure::registerStructure(*fStructure);
+
+	return fStructure;
 }
 
+adsk::Data::Handle getMaterialInfoMapHandle(const adsk::Data::Structure* fStructure, size_t materialInfoHash,
+                                            const MUuid& shadingEngineUuid, MStatus& status) {
+	adsk::Data::Handle handle(*fStructure);
+
+	handle.setPositionByMemberName(PRT_MATERIALINFO_MAP_KEY.c_str());
+	uint64_t* materialInfoHashPtr = handle.asUInt64();
+	if (materialInfoHashPtr == nullptr) {
+		LOG_ERR << "Failed to parse handle value as UInt64";
+		status = MS::kFailure;
+		return handle;
+	}
+	*materialInfoHashPtr = materialInfoHash;
+
+	handle.setPositionByMemberName(PRT_MATERIALINFO_MAP_VALUE.c_str());
+	uint8_t* shadingEngineUuidPtr = handle.asUInt8();
+	if (shadingEngineUuidPtr == nullptr) {
+		LOG_ERR << "Failed to parse handle value as Uint8";
+		status = MS::kFailure;
+		return handle;
+	}
+	uint8_t uuidAsChar[UUID_UINT8_LENGTH];
+	shadingEngineUuid.get(uuidAsChar);
+	for (unsigned int i = 0; i < UUID_UINT8_LENGTH; ++i) {
+		shadingEngineUuidPtr[i] = uuidAsChar[i];
+	}
+
+	status = MS::kSuccess;
+	return handle;
+}
+
+adsk::Data::IndexCount getMaterialInfoMapIndex(const adsk::Data::Stream& stream, const size_t materialInfoHash) {
+	// Check if there is an obsolete matching duplicate.
+	for (adsk::Data::Stream::iterator iterator = stream.cbegin(); iterator != stream.cend(); ++iterator) {
+		iterator->setPositionByMemberName(PRT_MATERIALINFO_MAP_KEY.c_str());
+		size_t* hashPtr = iterator->asUInt64();
+
+		if ((hashPtr != nullptr) && (*hashPtr == materialInfoHash))
+			return iterator.index();
+	}
+
+	adsk::Data::IndexCount elementCount = stream.elementCount();
+
+	// Check if there is an unused index in the defined range.
+	for (adsk::Data::IndexCount i = 0; i < elementCount; ++i) {
+		if (!stream.hasElement(i)) {
+			return i;
+		}
+	}
+
+	return elementCount;
+}
 } // namespace
 
 namespace MaterialUtils {
@@ -105,42 +180,66 @@ MStatus getMeshName(MString& meshName, const MPlug& plug) {
 	return MStatus::kSuccess;
 }
 
-MaterialCache getMaterialsByStructure(const adsk::Data::Structure& materialStructure, const std::wstring& baseName) {
-	MaterialCache existingMaterialInfos;
+MaterialCache getMaterialCache() {
+	const adsk::Data::Associations* metadata = MFileIO::metadata();
+	adsk::Data::Associations materialAssociations(metadata);
+	adsk::Data::Channel* matChannel = materialAssociations.findChannel(PRT_MATERIALINFO_MAP_CHANNEL);
 
-	MStatus status;
-	MItDependencyNodes shaderIt(MFn::kShadingEngine, &status);
-	MCHECK(status);
-	for (const auto& nodeObj : MItDependencyNodesWrapper(shaderIt)) {
-		MFnDependencyNode node(nodeObj);
+	MaterialUtils::MaterialCache existingMaterialInfos;
 
-		const adsk::Data::Associations* materialMetadata = node.metadata(&status);
-		MCHECK(status);
+	if (matChannel == nullptr)
+		return existingMaterialInfos;
 
-		if (materialMetadata == nullptr)
+	adsk::Data::Stream* matStream = matChannel->findDataStream(PRT_MATERIALINFO_MAP_STREAM);
+	if (matStream == nullptr)
+		return existingMaterialInfos;
+
+	for (adsk::Data::Stream::iterator iterator = matStream->begin(); iterator != matStream->end(); ++iterator) {
+		iterator->setPositionByMemberName(PRT_MATERIALINFO_MAP_KEY.c_str());
+		size_t* hashPtr = iterator->asUInt64();
+		if (hashPtr == nullptr)
 			continue;
 
-		adsk::Data::Associations materialAssociations(materialMetadata);
-		adsk::Data::Channel* matChannel = materialAssociations.findChannel(PRT_MATERIAL_CHANNEL);
-
-		if (matChannel == nullptr)
+		iterator->setPositionByMemberName(PRT_MATERIALINFO_MAP_VALUE.c_str());
+		uint8_t* uuidPtr = iterator->asUInt8();
+		if (uuidPtr == nullptr)
 			continue;
 
-		adsk::Data::Stream* matStream = matChannel->findDataStream(PRT_MATERIAL_STREAM);
-		if ((matStream == nullptr) || (matStream->elementCount() != 1))
-			continue;
-
-		adsk::Data::Handle matSHandle = matStream->element(0);
-		if (!matSHandle.usesStructure(materialStructure))
-			continue;
-
-		if (std::wcsncmp(node.name().asWChar(), baseName.c_str(), baseName.length()) != 0)
-			continue;
-
-		existingMaterialInfos.emplace(matSHandle, node.name().asWChar());
+		existingMaterialInfos.emplace(*hashPtr, uuidPtr);
 	}
 
 	return existingMaterialInfos;
+}
+
+MStatus addMaterialInfoMapMetadata(size_t materialInfoHash, const MUuid& shadingEngineUuid) {
+	const adsk::Data::Associations* metadata = MFileIO::metadata();
+	adsk::Data::Associations newMetadata(metadata);
+
+	adsk::Data::Structure* fStructure = adsk::Data::Structure::structureByName(PRT_MATERIALINFO_MAP_STRUCTURE.c_str());
+
+	if (fStructure == nullptr)
+		fStructure = createNewMaterialInfoMapStructure();
+
+	adsk::Data::Stream newStream(*fStructure, PRT_MATERIALINFO_MAP_STREAM);
+	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIALINFO_MAP_CHANNEL);
+	adsk::Data::Stream* newStreamPtr = newChannel.findDataStream(PRT_MATERIALINFO_MAP_STREAM);
+	if (newStreamPtr != nullptr)
+		newStream = *newStreamPtr;
+
+	MStatus status;
+	adsk::Data::Handle handle = getMaterialInfoMapHandle(fStructure, materialInfoHash, shadingEngineUuid, status);
+	if (status != MS::kSuccess)
+		return status;
+
+	adsk::Data::IndexCount index = getMaterialInfoMapIndex(newStream, materialInfoHash);
+
+	newStream.setElement(index, handle);
+	newChannel.setDataStream(newStream);
+	newMetadata.setChannel(newChannel);
+
+	MFileIO::setMetadata(newMetadata);
+
+	return MS::kSuccess;
 }
 
 bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange) {
@@ -155,22 +254,6 @@ bool getFaceRange(adsk::Data::Handle& handle, std::pair<int, int>& faceRange) {
 	return true;
 }
 
-void assignMaterialMetadata(const adsk::Data::Structure& materialStructure, const adsk::Data::Handle& streamHandle,
-                            const std::wstring& shadingEngineName) {
-	MObject shadingEngineObj = findNamedObject(shadingEngineName, MFn::kShadingEngine);
-	MFnDependencyNode shadingEngine(shadingEngineObj);
-
-	adsk::Data::Associations newMetadata;
-	adsk::Data::Channel newChannel = newMetadata.channel(PRT_MATERIAL_CHANNEL);
-	adsk::Data::Stream newStream(materialStructure, PRT_MATERIAL_STREAM);
-	newChannel.setDataStream(newStream);
-	newMetadata.setChannel(newChannel);
-	adsk::Data::Handle handle(streamHandle);
-	handle.makeUnique();
-	newStream.setElement(0, handle);
-	shadingEngine.setMetadata(newMetadata);
-}
-
 std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShadingEngineName,
                                               const MELVariable& shadingEngineVariable, MStatus& status) {
 	MELScriptBuilder scriptBuilder;
@@ -183,15 +266,33 @@ std::wstring synchronouslyCreateShadingEngine(const std::wstring& desiredShading
 	return output;
 }
 
-std::wstring getStingrayShaderPath() {
-	static const std::wstring sfxFile = []() {
-		// mel command wants forward slashes
-		const std::wstring shadersPath = prtu::toGenericPath(PRTContext::get().mPluginRootPath + L"../shaders/");
-		std::wstring p = shadersPath + L"serlioShaderStingray.sfx";
-		LOG_DBG << "stingray shader located at " << p;
-		return p;
+std::filesystem::path getStingrayShaderPath() {
+	static const std::filesystem::path sfxFile = []() {
+		const std::filesystem::path shaderPath =
+		        (PRTContext::get().mPluginRootPath.parent_path() / L"shaders/serlioShaderStingray.sfx");
+		LOG_DBG << "stingray shader located at " << shaderPath;
+		return shaderPath;
 	}();
 	return sfxFile;
 }
 
+bool textureHasAlphaChannel(const std::wstring& path) {
+	const AttributeMapUPtr textureMetadata(prt::createTextureMetadata(prtu::toFileURI(path).c_str()));
+	if (textureMetadata == nullptr)
+		return false;
+	const wchar_t* format = textureMetadata->getString(FORMAT_STRING);
+	if (format != nullptr && std::wcscmp(format, RGBA8_FORMAT) == 0)
+		return true;
+	return false;
+}
+
+void resetMaterial(const std::wstring& meshName) {
+	MELScriptBuilder scriptBuilder;
+	scriptBuilder.declInt(MEL_UNDO_STATE);
+	scriptBuilder.getUndoState(MEL_UNDO_STATE);
+	scriptBuilder.setUndoState(false);
+	scriptBuilder.setsUseInitialShadingGroup(meshName);
+	scriptBuilder.setUndoState(MEL_UNDO_STATE);
+	scriptBuilder.execute();
+}
 } // namespace MaterialUtils

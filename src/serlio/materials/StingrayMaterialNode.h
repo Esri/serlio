@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,24 +19,25 @@
 
 #pragma once
 
-#include "maya/MPxNode.h"
-#include "maya/MString.h"
-#include "maya/adskDataHandle.h"
+#include "MaterialNode.h"
 
-#include <array>
-
-class MaterialColor;
-struct PRTContext;
 class MaterialInfo;
-class MaterialTrafo;
 class MELScriptBuilder;
 
-class StingrayMaterialNode : public MPxNode {
+class StingrayMaterialNode : public MaterialNode {
 public:
 	static MStatus initialize();
-	MStatus compute(const MPlug& plug, MDataBlock& data) override;
-
 	static MTypeId id;
-	static MObject aInMesh;
-	static MObject aOutMesh;
+
+	static MObject mInMesh;
+	static MObject mOutMesh;
+
+private:
+	void declareMaterialStrings(MELScriptBuilder& sb);
+	void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+	                                   const std::wstring& shaderBaseName, const std::wstring& shadingEngineName);
+	std::wstring getBaseName() const override;
+	MObject getInMesh() const override;
+	MObject getOutMesh() const override;
+	std::vector<std::string> getPluginDependencies() const override;
 };

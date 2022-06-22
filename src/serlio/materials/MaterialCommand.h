@@ -19,33 +19,24 @@
 
 #pragma once
 
-#include "utils/Utilities.h"
+#include <maya/MDGModifier.h>
+#include <maya/MDagModifier.h>
+#include <maya/MDagPath.h>
+#include <maya/MPxCommand.h>
 
-#include <chrono>
-#include <filesystem>
-#include <map>
+#include "PRTContext.h"
 
-class ResolveMapCache {
+class MaterialCommand : public MPxCommand {
 public:
-	using KeyType = std::wstring;
+	bool isUndoable() const override;
 
-	ResolveMapCache() = default;
-	ResolveMapCache(const ResolveMapCache&) = delete;
-	ResolveMapCache(ResolveMapCache&&) = delete;
-	ResolveMapCache& operator=(ResolveMapCache const&) = delete;
-	ResolveMapCache& operator=(ResolveMapCache&&) = delete;
-
-	enum class CacheStatus { HIT, MISS };
-	using LookupResult = std::pair<ResolveMapSPtr, CacheStatus>;
-	LookupResult get(const std::wstring& rpk);
+	MStatus doIt(const MArgList&) override;
+	MStatus redoIt() override;
+	MStatus undoIt() override;
 
 private:
-	struct ResolveMapCacheEntry {
-		ResolveMapSPtr mResolveMap;
-		time_t mTimeStamp;
-	};
-	using Cache = std::map<KeyType, ResolveMapCacheEntry>;
-	Cache mCache;
+	MDGModifier fDGModifier;
+	MDagModifier fDagModifier;
+	MDagPath fDagPath;
+	MString fGeometryName;
 };
-
-using ResolveMapCacheUPtr = std::unique_ptr<ResolveMapCache>;

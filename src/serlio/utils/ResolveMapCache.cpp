@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#include "utils/ResolveMapCache.h"
 #include "utils/LogHandler.h"
+#include "utils/ResolveMapCache.h"
 #include "utils/Utilities.h"
 
 #include <mutex>
@@ -32,13 +32,6 @@ const ResolveMapCache::LookupResult LOOKUP_FAILURE = {RESOLVE_MAP_NONE, ResolveM
 std::mutex resolveMapCacheMutex;
 
 } // namespace
-
-ResolveMapCache::~ResolveMapCache() {
-	if (!mRPKUnpackPath.empty())
-		prtu::remove_all(mRPKUnpackPath);
-	if (DBG)
-		LOG_DBG << "Removed RPK unpack directory";
-}
 
 ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
 
@@ -59,10 +52,6 @@ ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
 			LOG_DBG << "rpk: cache timestamp: " << it->second.mTimeStamp;
 		if (it->second.mTimeStamp != timeStamp) {
 			mCache.erase(it);
-			std::wstring filename = prtu::filename(rpk);
-
-			if (!mRPKUnpackPath.empty() && !filename.empty())
-				prtu::remove_all(mRPKUnpackPath + prtu::getDirSeparator<std::wstring>() + prtu::filename(rpk));
 
 			if (DBG)
 				LOG_DBG << "RPK change detected, forcing reload and clearing cache for " << rpk;
@@ -82,13 +71,11 @@ ResolveMapCache::LookupResult ResolveMapCache::get(const std::wstring& rpk) {
 		prt::Status status = prt::STATUS_UNSPECIFIED_ERROR;
 		if (DBG)
 			LOG_DBG << "createResolveMap from " << rpk;
-		rmce.mResolveMap.reset(prt::createResolveMap(rpkURI.c_str(), mRPKUnpackPath.c_str(), &status), PRTDestroyer());
+		rmce.mResolveMap.reset(prt::createResolveMap(rpkURI.c_str(), nullptr, &status), PRTDestroyer());
 		if (status != prt::STATUS_OK)
 			return LOOKUP_FAILURE;
 
 		it = mCache.emplace(rpk, std::move(rmce)).first;
-		if (DBG)
-			LOG_DBG << "Upacked RPK " << rpk << " to " << mRPKUnpackPath;
 	}
 
 	return {it->second.mResolveMap, cs};

@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,38 +35,6 @@
 namespace logging {
 
 struct Logger {};
-
-const std::string LEVELS[] = {"trace", "debug", "info", "warning", "error", "fatal"};
-const std::wstring WLEVELS[] = {L"trace", L"debug", L"info", L"warning", L"error", L"fatal"};
-
-// log to std streams
-template <prt::LogLevel L>
-struct StreamLogger : Logger {
-	explicit StreamLogger(std::wostream& out = std::wcout) : Logger(), mOut(out) {
-		mOut << prefix();
-	}
-	virtual ~StreamLogger() {
-		mOut << std::endl;
-	}
-	StreamLogger<L>& operator<<(std::wostream& (*x)(std::wostream&)) {
-		mOut << x;
-		return *this;
-	}
-	StreamLogger<L>& operator<<(const std::string& x) {
-		std::copy(x.begin(), x.end(), std::ostream_iterator<char, wchar_t>(mOut));
-		return *this;
-	}
-	template <typename T>
-	StreamLogger<L>& operator<<(const T& x) {
-		mOut << x;
-		return *this;
-	}
-	static std::wstring prefix() {
-		return L"[" + WLEVELS[L] + L"] ";
-	}
-	std::wostream& mOut;
-};
-
 // log through the prt logger
 template <prt::LogLevel L>
 struct PRTLogger : Logger {
@@ -101,10 +69,8 @@ struct PRTLogger : Logger {
 
 class LogHandler : public prt::LogHandler {
 public:
-	explicit LogHandler(const std::wstring& name) : mName(name) {}
-
 	void handleLogEvent(const wchar_t* msg, prt::LogLevel) override {
-		std::wcout << L"[" << mName << L"] " << msg << std::endl;
+		std::cout << prtu::toOSNarrowFromUTF16(msg) << std::endl;
 	}
 
 	const prt::LogLevel* getLevels(size_t* count) override {
@@ -116,16 +82,9 @@ public:
 		*dateTime = true;
 		*level = true;
 	}
-
-	void setName(const std::wstring& n) {
-		mName = n;
-	}
-
-private:
-	std::wstring mName;
 };
 
-using LogHandlerPtr = std::unique_ptr<LogHandler>;
+using LogHandlerUPtr = std::unique_ptr<LogHandler>;
 
 } // namespace logging
 

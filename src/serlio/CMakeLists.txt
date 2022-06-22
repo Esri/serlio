@@ -12,14 +12,18 @@ add_library(${SERLIO_TARGET} SHARED
 	modifiers/PRTMesh.cpp
 	modifiers/PRTModifierAction.cpp
 	modifiers/PRTModifierCommand.cpp
+	modifiers/PRTModifierEnum.cpp
 	modifiers/PRTModifierNode.cpp
 	modifiers/polyModifier/polyModifierCmd.cpp
 	modifiers/polyModifier/polyModifierFty.cpp
 	modifiers/polyModifier/polyModifierNode.cpp
 	materials/ArnoldMaterialNode.cpp
 	materials/MaterialInfo.cpp
+	materials/MaterialNode.cpp
 	materials/MaterialUtils.cpp
 	materials/StingrayMaterialNode.cpp
+	materials/MaterialCommand.cpp
+	utils/AssetCache.cpp
 	utils/Utilities.cpp
 	utils/ResolveMapCache.cpp
 	utils/MayaUtilities.cpp
@@ -36,14 +40,18 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio.+")
 		modifiers/PRTMesh.h
 		modifiers/PRTModifierAction.h
 		modifiers/PRTModifierCommand.h
+		modifiers/PRTModifierEnum.h
 		modifiers/PRTModifierNode.h
 		modifiers/polyModifier/polyModifierCmd.h
 		modifiers/polyModifier/polyModifierFty.h
 		modifiers/polyModifier/polyModifierNode.h
 		materials/ArnoldMaterialNode.h
 		materials/MaterialInfo.h
+		materials/MaterialNode.h
 		materials/MaterialUtils.h
 		materials/StingrayMaterialNode.h
+		materials/MaterialCommand.h
+		utils/AssetCache.h
 		utils/Utilities.h
 		utils/ResolveMapCache.h
 		utils/MayaUtilities.h
@@ -61,16 +69,15 @@ set_target_properties(${SERLIO_TARGET} PROPERTIES
 if (WIN32)
 	# On Windows, Maya requires plugins to have the extension "mll"
 	set_target_properties(${SERLIO_TARGET} PROPERTIES SUFFIX ".mll")
+else()
+	# On linux, we need to remove the "lib" prefix otherwise the plugin will be named "libserlio"
+	set_target_properties(${SERLIO_TARGET} PROPERTIES PREFIX "")
 endif ()
 
 
 ### setup compiler flags
 
-set_target_properties(${CLIENT_TARGET} PROPERTIES
-	CXX_STANDARD 14)
-
-target_compile_definitions(${SERLIO_TARGET} PRIVATE
-	-DSRL_VERSION=\"${SRL_VERSION}\") # quoted to use it as string literal
+set_common_target_definitions(${SERLIO_TARGET})
 
 target_include_directories(${SERLIO_TARGET}
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
@@ -139,10 +146,13 @@ install(FILES ${SRL_PRT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins
 
 # PRT: whitelist required extension libraries
 set(SRL_PRT_EXT_LIBRARIES ${PRT_EXT_LIBRARIES})
-list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.codecs|com\\.esri\\.prt\\.adaptors|VueExport")
+list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.(codecs|adaptors|oda|usd)|tbb|usd_ms")
 install(FILES ${SRL_PRT_EXT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
+install(DIRECTORY "${PRT_EXTENSION_PATH}/usd" DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext) # USD resource files
 
 # doc
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/../doc DESTINATION ${INSTALL_FOLDER_PREFIX})
 install(FILES ${PROJECT_SOURCE_DIR}/../README.md ${PROJECT_SOURCE_DIR}/../LICENSE DESTINATION ${INSTALL_FOLDER_PREFIX})
 
+# icons
+install(FILES icons/serlio.xpm DESTINATION ${INSTALL_FOLDER_PREFIX}/icons)

@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 
 #include <limits>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -40,12 +41,14 @@ constexpr const wchar_t* ANNOT_DIR = L"@Directory";
 constexpr const wchar_t* ANNOT_FILE = L"@File";
 constexpr const wchar_t* ANNOT_ORDER = L"@Order";
 constexpr const wchar_t* ANNOT_GROUP = L"@Group";
+constexpr const wchar_t* ANNOT_IMPORTS = L"_$IMPORTS";
+constexpr const wchar_t* ANNOT_IMPORTS_KEY = L"fullPrefix";
 
 constexpr int ORDER_FIRST = std::numeric_limits<int>::min();
 constexpr int ORDER_NONE = std::numeric_limits<int>::max();
 
 using AttributeGroup = std::vector<std::wstring>;
-using AttributeGroupOrder = std::map<AttributeGroup, int>;
+using AttributeGroupOrder = std::map<std::pair<std::wstring, AttributeGroup>, int>;
 
 struct RuleAttribute {
 	std::wstring fqName;        // fully qualified rule name (i.e. including style prefix)
@@ -57,17 +60,24 @@ struct RuleAttribute {
 	AttributeGroup groups; // groups can be nested
 	int order = ORDER_NONE;
 	int groupOrder = ORDER_NONE;
+	int globalGroupOrder = ORDER_NONE;
 
 	std::wstring ruleFile;
+	int ruleOrder = ORDER_NONE;
 	bool memberOfStartRuleFile = false;
 };
 
-using RuleAttributes = std::vector<RuleAttribute>;
+struct RuleAttributeCmp {
+	bool operator()(const RuleAttribute& lhs, const RuleAttribute& rhs) const;
+};
 
-SRL_TEST_EXPORTS_API RuleAttributes getRuleAttributes(const std::wstring& ruleFile,
-                                                      const prt::RuleFileInfo* ruleFileInfo);
-AttributeGroupOrder getGlobalGroupOrder(const RuleAttributes& ruleAttributes);
-void sortRuleAttributes(RuleAttributes& ra);
+using RuleAttributeVec = std::vector<RuleAttribute>;
+using RuleAttributeSet = std::set<RuleAttribute, RuleAttributeCmp>;
+using RuleAttributeMap = std::map<std::wstring, RuleAttribute>;
+
+SRL_TEST_EXPORTS_API RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile,
+                                                        const prt::RuleFileInfo* ruleFileInfo);
+void setGlobalGroupOrder(RuleAttributeVec& ruleAttributes);
 std::wostream& operator<<(std::wostream& ostr, const RuleAttribute& ap);
 std::ostream& operator<<(std::ostream& ostr, const RuleAttribute& ap);
 std::wostream& operator<<(std::wostream& wostr, const AttributeGroupOrder& ago);

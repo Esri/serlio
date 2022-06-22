@@ -29,6 +29,7 @@
 #include <maya/MFloatVector.h>
 #include <maya/MObjectArray.h>
 #include <maya/MPlugArray.h>
+#include <maya/MFnMesh.h>
 
 #include <maya/MIOStream.h>
 
@@ -121,23 +122,6 @@ MStatus polyModifierCmd::initModifierNode( MObject /* modifierNode */ )
 	return MS::kSuccess;
 }
 
-MStatus polyModifierCmd::directModifier( MObject /* mesh */ )
-//
-//	Description:
-//
-//		Override this method in a derived class to provide an implementation for
-//		directly modifying the mesh (writing on the mesh itself). This method is
-//		only called in the case where history does not exist and history is turned
-//		off (ie. DG operations are not desirable).
-//
-//		The argument 'MObject mesh', is not used by this base class implementation.
-//		However, it may be used by derived classes. To avoid compiler warnings
-//		of unreferenced parameters, we comment out the parameter name.
-//
-{
-	return MS::kSuccess;
-}
-
 MStatus polyModifierCmd::doModifyPoly()
 {
 	MStatus status = MS::kFailure;
@@ -148,26 +132,10 @@ MStatus polyModifierCmd::doModifyPoly()
 		//
 		collectNodeState();
 
-		if( !fHasHistory && !fHasRecordHistory )
-		{
-			MObject meshNode = fDagPath.node();
-
-			// Pre-process the mesh - Cache old mesh (including tweaks, if applicable)
-			//
-			cacheMeshData();
-			cacheMeshTweaks();
-
-			// Call the directModifier
-			//
-			status = directModifier( meshNode );
-		}
-		else
-		{
-			MObject modifierNode;
-			createModifierNode( modifierNode );
-			initModifierNode( modifierNode );
-			status = connectNodes( modifierNode );
-		}
+		MObject modifierNode;
+		createModifierNode( modifierNode );
+		initModifierNode( modifierNode );
+		status = connectNodes( modifierNode );
 	}
 
 	return status;
@@ -177,25 +145,14 @@ MStatus polyModifierCmd::redoModifyPoly()
 {
 	MStatus status = MS::kSuccess;
 
-	if( !fHasHistory && !fHasRecordHistory )
+	// Call the redo on the DG and DAG modifiers
+	//
+	if( !fHasHistory )
 	{
-		MObject meshNode = fDagPath.node();
-
-		// Call the directModifier - No need to pre-process the mesh data again
-		//							 since we already have it.
-		//
-		status = directModifier( meshNode );
+		fDagModifier.doIt();
 	}
-	else
-	{
-		// Call the redo on the DG and DAG modifiers
-		//
-		if( !fHasHistory )
-		{
-			fDagModifier.doIt();
-		}
-		status = fDGModifier.doIt();
-	}
+	status = fDGModifier.doIt();
+	
 
 	return status;
 }
@@ -204,28 +161,21 @@ MStatus polyModifierCmd::undoModifyPoly()
 {
 	MStatus status = MS::kSuccess;
 
-	if( !fHasHistory && !fHasRecordHistory )
-	{
-		status = undoDirectModifier();
-	}
-	else
-	{
-		fDGModifier.undoIt();
+	fDGModifier.undoIt();
 
-		// undoCachedMesh must be called before undoTweakProcessing because 
-		// undoCachedMesh copies the original mesh *without* tweaks back onto
-		// the existing mesh. Any changes done before the copy will be lost.
-		//
-		if( !fHasHistory )
-		{
-			status = undoCachedMesh();
-			MCheckStatus( status, "undoCachedMesh" );
-			fDagModifier.undoIt();
-		}
-
-		status = undoTweakProcessing();
-		MCheckStatus( status, "undoTweakProcessing" );
+	// undoCachedMesh must be called before undoTweakProcessing because 
+	// undoCachedMesh copies the original mesh *without* tweaks back onto
+	// the existing mesh. Any changes done before the copy will be lost.
+	//
+	if( !fHasHistory )
+	{
+		status = undoCachedMesh();
+		MCheckStatus( status, "undoCachedMesh" );
+		fDagModifier.undoIt();
 	}
+
+	status = undoTweakProcessing();
+	MCheckStatus( status, "undoTweakProcessing" );
 
 	return status;
 }
@@ -271,7 +221,6 @@ void polyModifierCmd::collectNodeState()
 	//
 	// - HasHistory (Construction History exists)
 	// - HasTweaks
-	// - HasRecordHistory (Construction History is turned on)
 	//
 	fDagPath.extendToShape();
 	MObject meshNodeShape = fDagPath.node();
@@ -316,10 +265,6 @@ void polyModifierCmd::collectNodeState()
 			}
 		}
 	}
-
-	int result;
-	MGlobal::executeCommand( "constructionHistory -q -tgl", result );
-	fHasRecordHistory = (0 != result);
 }
 
 MStatus polyModifierCmd::createModifierNode( MObject& modifierNode )
@@ -739,7 +684,7 @@ MStatus polyModifierCmd::processTweaks( modifyPolyData& data )
 		// Only have to clear the tweaks off the duplicate mesh if we do not have history
 		// and we want history.
 		//
-		if( !fHasHistory && fHasRecordHistory )
+		if( !fHasHistory )
 		{
 			depNodeFn.setObject( data.upstreamNodeShape );
 			upstreamTweakPlug = depNodeFn.findPlug( "pnts", true);
@@ -748,7 +693,7 @@ MStatus polyModifierCmd::processTweaks( modifyPolyData& data )
 			{
 				for( i = 0; i < numTweaks; i++ )
 				{
-					tweak = meshTweakPlug.elementByLogicalIndex( fTweakIndexArray[i] );
+					tweak = upstreamTweakPlug.elementByLogicalIndex( fTweakIndexArray[i] );
 					tweak.setValue( nullVector );
 				}
 			}
@@ -858,114 +803,6 @@ MStatus polyModifierCmd::connectNodes( MObject modifierNode )
 	return status;
 }
 
-MStatus polyModifierCmd::cacheMeshData()
-{
-	MStatus status = MS::kSuccess;
-
-	MFnDependencyNode depNodeFn;
-	MFnDagNode dagNodeFn;
-
-	MObject meshNode = fDagPath.node();
-	MObject dupMeshNode;
-	MPlug dupMeshNodeOutMeshPlug;
-
-	// Duplicate the mesh
-	//
-	dagNodeFn.setObject( meshNode );
-	dupMeshNode = dagNodeFn.duplicate();
-
-	MDagPath dupMeshDagPath;
-	MDagPath::getAPathTo( dupMeshNode, dupMeshDagPath );
-	dupMeshDagPath.extendToShape();
-
-	depNodeFn.setObject( dupMeshDagPath.node() );
-	dupMeshNodeOutMeshPlug = depNodeFn.findPlug( "outMesh", true, &status );
-	MCheckStatus( status, "Could not retrieve outMesh" );
-
-	// Retrieve the meshData
-	//
-	status = dupMeshNodeOutMeshPlug.getValue( fMeshData );
-	MCheckStatus( status, "Could not retrieve meshData" );
-
-	// Delete the duplicated node
-	//
-	MGlobal::deleteNode( dupMeshNode );
-
-	return status;
-}
-
-MStatus polyModifierCmd::cacheMeshTweaks()
-{
-	MStatus status = MS::kSuccess;
-
-	// Clear tweak undo information (to be rebuilt)
-	//
-	fTweakIndexArray.clear();
-	fTweakVectorArray.clear();
-
-	// Extract the tweaks and store them in our local tweak cache members
-	//
-	if( fHasTweaks )
-	{
-		// Declare our function sets
-		//
-		MFnDependencyNode depNodeFn;
-
-		MObject meshNode = fDagPath.node();
-		MPlug	meshTweakPlug;
-
-		// Declare our tweak processing variables
-		//
-		MPlug				tweak;
-		MPlug				tweakChild;
-		MObject				tweakData;
-		MObjectArray		tweakDataArray;
-		MFloatVector		tweakVector;
-
-		MPlugArray			tempPlugArray;
-
-		unsigned i;
-
-		depNodeFn.setObject( meshNode );
-		meshTweakPlug = depNodeFn.findPlug( "pnts", true);
-
-		// ASSERT: meshTweakPlug should be an array plug!
-		//
-		MStatusAssert( (meshTweakPlug.isArray()),
-					   "meshTweakPlug.isArray() -- meshTweakPlug is not an array plug" );
-		unsigned numElements = meshTweakPlug.numElements();
-
-		// Gather meshTweakPlug data
-		//
-		for( i = 0; i < numElements; i++ )
-		{
-			// MPlug::numElements() only returns the number of physical elements
-			// in the array plug. Thus we must use elementByPhysical index when using
-			// the index i.
-			//
-			tweak = meshTweakPlug.elementByPhysicalIndex(i);
-
-			// If the method fails, the element is NULL. Only append the index
-			// if it is a valid plug.
-			//
-			if( !tweak.isNull() )
-			{
-				// Cache the logical index of this element plug
-				//
-				unsigned logicalIndex = tweak.logicalIndex();
-
-				// Collect tweak data and cache the indices and float vectors
-				//
-				getFloat3PlugValue( tweak, tweakVector );
-				fTweakIndexArray.append( logicalIndex );
-				fTweakVectorArray.append( tweakVector );
-			}
-		}
-	}
-
-	return status;
-}
-
 MStatus polyModifierCmd::undoCachedMesh()
 {
 	MStatus status;
@@ -973,7 +810,6 @@ MStatus polyModifierCmd::undoCachedMesh()
 	// Only need to restore the cached mesh if there was no history. Also
 	// check to make sure that we are in the record history state.
 	//
-	MStatusAssert( (fHasRecordHistory), "fHasRecordHistory == true" );
 
 	if( !fHasHistory )
 	{
@@ -1017,7 +853,7 @@ MStatus polyModifierCmd::undoCachedMesh()
 
 			// Need to force a DG evaluation now that the input has been changed.
 			//
-			MString cmd( "dgeval -src " );
+			MString cmd( "dgeval " );
 			cmd += meshNodeName;
 			cmd += ".inMesh";
 			status = MGlobal::executeCommand( cmd, false, false );
@@ -1073,93 +909,6 @@ MStatus polyModifierCmd::undoTweakProcessing()
 		// In the case of no history, the duplicate node shape will be disconnected on undo
 		// so, there is no need to undo the tweak processing on it.
 		//
-	}
-
-	return status;
-}
-
-MStatus polyModifierCmd::undoDirectModifier()
-{
-	MStatus status;
-
-	MFnDependencyNode depNodeFn;
-	MFnDagNode dagNodeFn;
-
-	MObject meshNode = fDagPath.node();
-	depNodeFn.setObject( meshNode );
-	
-	// For the case with tweaks, we cannot write the mesh directly back onto
-	// the cachedInMesh, since the shape can have out of date information from the
-	// cachedInMesh. Thus we temporarily create an duplicate mesh, place our
-	// old mesh on the outMesh attribute of our duplicate mesh, connect the
-	// duplicate mesh shape to the mesh shape, and force a DG evaluation.
-	//
-	// For the case without tweaks, we can simply write onto the outMesh, since
-	// the shape relies solely on an outMesh when there is no history nor tweaks.
-	//
-	if( fHasTweaks )
-	{
-		// Retrieve the inMesh and name of our mesh node (for the DG eval)
-		//
-		depNodeFn.setObject( meshNode );
-		MPlug meshNodeInMeshPlug = depNodeFn.findPlug( "inMesh", true, &status );
-		MCheckStatus( status, "Could not retrieve inMesh" );
-		MString meshNodeName = depNodeFn.name();
-
-		// Duplicate our current mesh
-		//
-		dagNodeFn.setObject( meshNode );
-		MObject dupMeshNode = dagNodeFn.duplicate();
-
-		// The dagNodeFn::duplicate() returns a transform, but we need a shape
-		// so retrieve the DAG path and extend it to the shape.
-		//
-		MDagPath dupMeshDagPath;
-		MDagPath::getAPathTo( dupMeshNode, dupMeshDagPath );
-		dupMeshDagPath.extendToShape();
-
-		// Retrieve the outMesh of the duplicate mesh and set our mesh data back
-		// on it.
-		//
-		depNodeFn.setObject( dupMeshDagPath.node() );
-		MPlug dupMeshNodeOutMeshPlug = depNodeFn.findPlug( "outMesh", true, &status );
-		MCheckStatus( status, "Could not retrieve outMesh" );
-		status = dupMeshNodeOutMeshPlug.setValue( fMeshData );
-
-		// Temporarily connect the duplicate mesh node to our mesh node
-		//
-		MDGModifier dgModifier;
-		dgModifier.connect( dupMeshNodeOutMeshPlug, meshNodeInMeshPlug );
-		status = dgModifier.doIt();
-		MCheckStatus( status, "Could not connect dupMeshNode -> meshNode" );
-
-		// Need to force a DG evaluation now that the input has been changed.
-		//
-		MString cmd("dgeval -src ");
-		cmd += meshNodeName;
-		cmd += ".inMesh";
-		status = MGlobal::executeCommand( cmd, false, false );
-		MCheckStatus( status, "Could not force DG eval" );
-
-		// Disconnect and delete the duplicate mesh node now
-		//
-		dgModifier.undoIt();
-		MGlobal::deleteNode( dupMeshNode );
-
-		// Restore the tweaks on the mesh
-		//
-		status = undoTweakProcessing();
-	}
-	else
-	{
-		// Restore the original mesh by writing the old mesh data (fMeshData) back
-		// onto the outMesh of our meshNode
-		//
-		depNodeFn.setObject( meshNode );
-		MPlug meshNodeOutMeshPlug = depNodeFn.findPlug( "outMesh", true, &status );
-		MCheckStatus( status, "Could not retrieve outMesh" );
-		status = meshNodeOutMeshPlug.setValue( fMeshData );
-		MCheckStatus( status, "Could not set meshData" );
 	}
 
 	return status;

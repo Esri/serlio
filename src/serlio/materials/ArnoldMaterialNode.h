@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,24 +19,25 @@
 
 #pragma once
 
-#include "maya/MPxNode.h"
+#include "MaterialNode.h"
 
 class MaterialInfo;
-class MaterialTrafo;
 class MELScriptBuilder;
 
-class ArnoldMaterialNode : public MPxNode {
-
+class ArnoldMaterialNode : public MaterialNode {
 public:
 	static MStatus initialize();
-
 	static MTypeId id;
-	static MObject aInMesh;
-	static MObject aOutMesh;
 
-	MStatus compute(const MPlug& plug, MDataBlock& data) override;
+	static MObject mInMesh;
+	static MObject mOutMesh;
 
-	MPxNode::SchedulingType schedulingType() const noexcept override {
-		return SchedulingType::kGloballySerial;
-	}
+private:
+	void declareMaterialStrings(MELScriptBuilder& sb);
+	void appendToMaterialScriptBuilder(MELScriptBuilder& sb, const MaterialInfo& matInfo,
+	                                   const std::wstring& shaderBaseName, const std::wstring& shadingEngineName);
+	std::wstring getBaseName() const override;
+	MObject getInMesh() const override;
+	MObject getOutMesh() const override;
+	std::vector<std::string> getPluginDependencies() const override;
 };

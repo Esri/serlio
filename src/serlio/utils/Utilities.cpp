@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#include "utils/LogHandler.h"
 #include "utils/Utilities.h"
 
 #include "prt/API.h"
@@ -30,24 +31,83 @@ struct IUnknown;
 #	include <windows.h>
 #	include <shellapi.h>
 #else
+#	include <cerrno>
 #	include <dlfcn.h>
 #	include <unistd.h>
 #endif
 
+#include <cstring>
 #include <cwchar>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
 
+namespace {
+const std::wstring MAYA_SEPARATOR = L"_";
+const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+const std::wstring DIGIT_CHARS = L"0123456789";
+
+const std::wstring TOO_NEW_CE_VERSION = L"newer than 2021.1";
+const std::wstring CGAC_VERSION_STRING = L"CGAC version ";
+const std::wstring CE_VERSION_STRING = L"CityEngine version ";
+
+const std::map<std::wstring, std::wstring> cgacToCEVersion = {
+        // clang-format off
+	{L"1.17", L"2021.1"},
+	{L"1.16", L"2021.0"},
+	{L"1.15", L"2020.1"},
+	{L"1.14", L"2020.0"},
+	{L"1.13", L"2019.1"},
+	{L"1.12", L"2019.0"},
+	{L"1.11", L"2018.1"},
+	{L"1.10", L"2018.0"},
+	{L"1.9", L"2017.1"},
+	{L"1.8", L"2017.0"},
+	{L"1.7", L"2016.1"},
+	{L"1.6", L"2016.0"},
+	{L"1.5", L"2015.0 - 2015.2"},
+	{L"1.4", L"2014.1"},
+	{L"1.3", L"2014.1"},
+	{L"1.2", L"2014.0"},
+	{L"1.1", L"2013.1"},
+	{L"1.0", L"2013.0"}
+        // clang-format on
+};
+
+void replaceCGACVersionBetween(std::wstring& errorString, const std::wstring prefix, const std::wstring suffix) {
+	size_t versionStartPos = errorString.find(prefix);
+	if (versionStartPos != std::wstring::npos)
+		versionStartPos += prefix.length();
+
+	const size_t versionEndPos = errorString.find(suffix, versionStartPos);
+
+	if ((versionStartPos == std::wstring::npos) || (versionEndPos == std::wstring::npos))
+		return;
+
+	const size_t versionLength = versionEndPos - versionStartPos;
+	const std::wstring cgacV1 = errorString.substr(versionStartPos, versionLength);
+
+	std::wstring CEVersion;
+	const auto it = cgacToCEVersion.find(cgacV1);
+	if (it != cgacToCEVersion.end()) {
+		CEVersion = it->second;
+	}
+	else {
+		CEVersion = TOO_NEW_CE_VERSION;
+	}
+	errorString.replace(versionStartPos, versionLength, CEVersion);
+}
+} // namespace
+
 namespace prtu {
 
 // plugin root = location of serlio shared library
-std::wstring getPluginRoot() {
+std::filesystem::path getPluginRoot() {
+	std::filesystem::path rootPath;
 #ifdef _WIN32
 	char dllPath[_MAX_PATH];
-	char drive[8];
-	char dir[_MAX_PATH];
 	HMODULE hModule = 0;
 
 	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
@@ -58,60 +118,15 @@ std::wstring getPluginRoot() {
 		throw std::runtime_error("failed to get plugin location");
 	}
 
-	_splitpath_s(dllPath, drive, 8, dir, _MAX_PATH, 0, 0, 0, 0);
-	std::wstring rootPath = prtu::toUTF16FromOSNarrow(drive);
-	rootPath.append(prtu::toUTF16FromOSNarrow(dir));
+	rootPath = std::filesystem::path(dllPath).parent_path();
 #else
 	Dl_info dl_info;
 	dladdr((const void*)getPluginRoot, &dl_info);
 	const std::string tmp(dl_info.dli_fname);
-	std::wstring rootPath = prtu::toUTF16FromOSNarrow(tmp.substr(0, tmp.find_last_of(prtu::getDirSeparator<char>())));
+	rootPath = std::filesystem::path(tmp).parent_path();
 #endif
-
-	// ensure path separator at end
-	if (*rootPath.rbegin() != prtu::getDirSeparator<wchar_t>())
-		rootPath.append(1, prtu::getDirSeparator<wchar_t>());
 
 	return rootPath;
-}
-
-std::wstring filename(const std::wstring& path) {
-	size_t pos = path.find_last_of(L'/');
-	if (pos != std::string::npos) {
-		return path.substr(pos + 1);
-	}
-	else
-		return path;
-}
-
-template <>
-char getDirSeparator() {
-#ifdef _WIN32
-	static const char SEPARATOR = '\\';
-#else
-	static const char SEPARATOR = '/';
-#endif
-	return SEPARATOR;
-}
-
-template <>
-wchar_t getDirSeparator() {
-#ifdef _WIN32
-	static const wchar_t SEPARATOR = L'\\';
-#else
-	static const wchar_t SEPARATOR = L'/';
-#endif
-	return SEPARATOR;
-}
-
-template <>
-std::string getDirSeparator() {
-	return std::string(1, getDirSeparator<char>());
-}
-
-template <>
-std::wstring getDirSeparator() {
-	return std::wstring(1, getDirSeparator<wchar_t>());
 }
 
 int fromHex(wchar_t c) {
@@ -211,103 +226,21 @@ std::wstring toFileURI(const std::wstring& p) {
 	return schema + u16String;
 }
 
-void remove_all(const std::wstring& path) {
-#ifdef _WIN32
-	std::wstring pc = path;
-	std::replace(pc.begin(), pc.end(), L'/', L'\\');
-	const wchar_t* lpszDir = pc.c_str();
-
-	size_t len = wcslen(lpszDir);
-	wchar_t* pszFrom = new wchar_t[len + 2];
-	wcscpy_s(pszFrom, len + 2, lpszDir);
-	pszFrom[len] = 0;
-	pszFrom[len + 1] = 0;
-
-	SHFILEOPSTRUCTW fileop;
-	fileop.hwnd = NULL;                              // no status display
-	fileop.wFunc = FO_DELETE;                        // delete operation
-	fileop.pFrom = pszFrom;                          // source file name as double null terminated string
-	fileop.pTo = NULL;                               // no destination needed
-	fileop.fFlags = FOF_NOCONFIRMATION | FOF_SILENT; // do not prompt the user
-	fileop.fAnyOperationsAborted = FALSE;
-	fileop.lpszProgressTitle = NULL;
-	fileop.hNameMappings = NULL;
-
-	int ret = SHFileOperationW(&fileop);
-	delete[] pszFrom;
-#else
-	system((std::string("rm -rf ") + toOSNarrowFromUTF16(path)).c_str());
-#endif
-}
-
-std::wstring temp_directory_path() {
-#ifdef _WIN32
-	DWORD dwRetVal = 0;
-	wchar_t lpTempPathBuffer[MAX_PATH];
-
-	dwRetVal = GetTempPathW(MAX_PATH, lpTempPathBuffer);
-	if (dwRetVal > MAX_PATH || (dwRetVal == 0)) {
-		return L".\tmp";
-	}
-	else {
-		return std::wstring(lpTempPathBuffer);
-	}
-
-#else
-
-	char const* folder = getenv("TMPDIR");
-	if (folder == nullptr) {
-		folder = getenv("TMP");
-		if (folder == nullptr) {
-			folder = getenv("TEMP");
-			if (folder == nullptr) {
-				folder = getenv("TEMPDIR");
-				if (folder == nullptr)
-					folder = "/tmp";
-			}
-		}
-	}
-
-	return toUTF16FromOSNarrow(std::string(folder));
-#endif
-}
-
-std::wstring getProcessTempDir(const std::wstring& prefix) {
-	std::wstring tp = prtu::temp_directory_path();
-	wchar_t sep = prtu::getDirSeparator<wchar_t>();
-	if (*tp.rbegin() != sep)
-		tp += sep;
-	std::wstring n = prefix;
-#ifdef _WIN32
-	n += std::to_wstring(::_getpid()); // prevent warning in win32
-#else
-	n += std::to_wstring(::getpid());
-#endif
-	return {tp.append(n)};
-}
-
 time_t getFileModificationTime(const std::wstring& p) {
+	std::wstring pn = std::filesystem::path(p).make_preferred().wstring();
 
 #ifdef _WIN32
-	std::wstring pn = p;
-	std::replace(pn.begin(), pn.end(), L'/', L'\\');
 	struct _stat st;
 	int ierr = _wstat(pn.c_str(), &st);
 #else
 	struct stat st;
-	int ierr = stat(prtu::toOSNarrowFromUTF16(p).c_str(), &st);
+	int ierr = stat(prtu::toOSNarrowFromUTF16(pn).c_str(), &st);
 #endif
 
 	if (ierr == 0) {
 		return st.st_mtime;
 	}
 	return -1;
-}
-
-std::wstring toGenericPath(const std::wstring& osPath) {
-	std::wstring genPath = osPath;
-	std::replace(genPath.begin(), genPath.end(), L'\\', L'/');
-	return genPath;
 }
 
 std::string objectToXML(prt::Object const* obj) {
@@ -338,4 +271,29 @@ AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::Attribu
 	return AttributeMapUPtr(validatedOptions);
 }
 
+void replaceCGACWithCEVersion(std::wstring& errorString) {
+	// a typical CGAC version error string looks like:
+	// Potentially unsupported CGAC version X.YY : major number smaller than current (A.BB)
+	replaceAllSubstrings(errorString, CGAC_VERSION_STRING, CE_VERSION_STRING);
+
+	replaceCGACVersionBetween(errorString, CE_VERSION_STRING, L" ");
+	replaceCGACVersionBetween(errorString, L"(", L")");
+}
+
+std::wstring getDuplicateCountSuffix(const std::wstring& name, std::map<std::wstring, int>& duplicateCountMap) {
+	auto [iterator, isFirstEntry] = duplicateCountMap.try_emplace(name, 0);
+	if (!isFirstEntry)
+		iterator->second++;
+	return MAYA_SEPARATOR + std::to_wstring(iterator->second);
+}
+
+std::wstring cleanNameForMaya(const std::wstring& name) {
+	std::wstring r = name;
+	replaceAllNotOf(r, MAYA_COMPATIBLE_CHARS);
+
+	if (!r.empty() && (DIGIT_CHARS.find(r.front()) != std::wstring::npos))
+		return MAYA_SEPARATOR + r;
+
+	return r;
+}
 } // namespace prtu

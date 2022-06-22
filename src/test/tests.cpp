@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@
 #include "utils/Utilities.h"
 
 #define CATCH_CONFIG_RUNNER
-#include "catch/catch.hpp"
+#define CATCH_CONFIG_FAST_COMPILE
+#include "catch2/catch.hpp"
 
 #include <sstream>
 
@@ -128,7 +129,7 @@ TEST_CASE("default attribute values") {
 	std::wstring ruleFile = L"bin/r1.cgb";
 	RuleFileInfoUPtr ruleInfo(prt::createRuleFileInfo(resolveMap->getString(ruleFile.c_str())));
 
-	RuleAttributes ruleAttrs = getRuleAttributes(ruleFile, ruleInfo.get());
+	RuleAttributeSet ruleAttrs = getRuleAttributes(ruleFile, ruleInfo.get());
 
 	for (const auto& ap : ruleAttrs) {
 		LOG_DBG << ap.fqName;
@@ -144,127 +145,133 @@ const AttributeGroup AG_B = {L"b"};
 const AttributeGroup AG_BK = {L"b", L"k"};
 const AttributeGroup AG_BKP = {L"b", L"k", L"p"};
 
-RuleAttribute getAttr(std::wstring fqName, AttributeGroup ag, int o, int go, std::wstring rf, bool sr) {
-	return RuleAttribute{fqName, L"", L"", L"", prt::AAT_UNKNOWN, ag, o, go, rf, sr};
+RuleAttribute getAttr(std::wstring fqName, AttributeGroup ag, int o, int go, std::wstring rf, int ro, bool sr) {
+	return RuleAttribute{fqName, L"", L"", L"", prt::AAT_UNKNOWN, ag, o, go, go, rf, ro, sr};
 }
 
 TEST_CASE("global group order") {
-	const RuleAttribute A = getAttr(L"style$A", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", true);
-	const RuleAttribute B = getAttr(L"style$B", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", true);
-	const RuleAttribute C = getAttr(L"style$C", AG_BKP, ORDER_NONE, 10, L"foo", true);
-	const RuleAttribute D = getAttr(L"style$D", AG_A, ORDER_NONE, 20, L"foo", true);
-	const RuleAttribute E = getAttr(L"style$E", AG_AK, ORDER_NONE, ORDER_NONE, L"foo", true);
+	const RuleAttribute A = getAttr(L"style$A", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+	const RuleAttribute B = getAttr(L"style$B", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+	const RuleAttribute C = getAttr(L"style$C", AG_BKP, ORDER_NONE, 10, L"foo", ORDER_NONE, true);
+	const RuleAttribute D = getAttr(L"style$D", AG_A, ORDER_NONE, 20, L"foo", ORDER_NONE, true);
+	const RuleAttribute E = getAttr(L"style$E", AG_AK, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-	const RuleAttributes inp = {A, B, C, D, E};
-	const AttributeGroupOrder ago = getGlobalGroupOrder(inp);
-	CHECK(ago.size() == 5);
-	CHECK(ago.at(AG_BKP) == 10);
-	CHECK(ago.at(AG_BK) == 10);
-	CHECK(ago.at(AG_B) == 10);
-	CHECK(ago.at(AG_AK) == ORDER_NONE);
-	CHECK(ago.at(AG_A) == 20);
+	RuleAttributeVec inp = {A, B, C, D, E};
+	setGlobalGroupOrder(inp);
+	CHECK(inp.size() == 5);
+	CHECK(inp[0].globalGroupOrder == 10);
+	CHECK(inp[1].globalGroupOrder == 10);
+	CHECK(inp[2].globalGroupOrder == 10);
+	CHECK(inp[3].globalGroupOrder == 20);
+	CHECK(inp[4].globalGroupOrder == ORDER_NONE);
 }
 
 TEST_CASE("rule attribute sorting") {
 
 	SECTION("rule file 1") {
-		const RuleAttribute A = getAttr(L"style$A", AG_NONE, ORDER_NONE, ORDER_NONE, L"bar", true);
-		const RuleAttribute B = getAttr(L"style$B", AG_NONE, ORDER_NONE, ORDER_NONE, L"foo", false);
+		const RuleAttribute A = getAttr(L"style$A", AG_NONE, ORDER_NONE, ORDER_NONE, L"bar", ORDER_NONE, true);
+		const RuleAttribute B = getAttr(L"style$B", AG_NONE, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, false);
 
-		RuleAttributes inp = {B, A};
-		const RuleAttributes exp = {A, B};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {B, A};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {A, B};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("rule file 2") {
-		const RuleAttribute A = getAttr(L"style$A", AG_NONE, ORDER_NONE, ORDER_NONE, L"bar", false);
-		const RuleAttribute B = getAttr(L"style$B", AG_NONE, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", AG_NONE, ORDER_NONE, ORDER_NONE, L"bar", ORDER_NONE, false);
+		const RuleAttribute B = getAttr(L"style$B", AG_NONE, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {B, A};
-		const RuleAttributes exp = {B, A};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {B, A};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {B, A};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("group order") {
-		const RuleAttribute A = getAttr(L"style$A", {L"foo"}, ORDER_NONE, 0, L"foo", true);
-		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, 1, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo"}, ORDER_NONE, 0, L"foo", ORDER_NONE, true);
+		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, 1, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {B, A};
-		const RuleAttributes exp = {A, B};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {B, A};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {A, B};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("nested groups") {
-		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"bar", true);
-		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {A, B};
-		const RuleAttributes exp = {B, A};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {A, B};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {B, A};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("nested groups disjunct") {
-		const RuleAttribute A = getAttr(L"style$A", {L"foo1", L"bar"}, ORDER_NONE, ORDER_NONE, L"bar", true);
-		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute A =
+		        getAttr(L"style$A", {L"foo1", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {A, B};
-		const RuleAttributes exp = {B, A};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {A, B};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {B, A};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("nested groups on same level") {
-		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", true);
-		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", true);
-		const RuleAttribute C = getAttr(L"style$C", {L"foo", L"baz"}, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+		const RuleAttribute C = getAttr(L"style$C", {L"foo", L"baz"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {C, A, B};
-		const RuleAttributes exp = {B, A, C};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {C, A, B};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {B, A, C};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("nested groups with group order") {
-		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", true);
-		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", true);
-		const RuleAttribute C = getAttr(L"style$C", {L"foo", L"baz"}, ORDER_NONE, 0, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", {L"foo", L"bar"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+		const RuleAttribute B = getAttr(L"style$B", {L"foo"}, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+		const RuleAttribute C = getAttr(L"style$C", {L"foo", L"baz"}, ORDER_NONE, 0, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {C, A, B};
-		const RuleAttributes exp = {B, C, A};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {C, A, B};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {B, C, A};
+		for (const auto& ref : inpAsVec) {
+			std::wcout << ref;
+		}
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("all properties") {
-		const RuleAttribute A = getAttr(L"style$A", {L"First1", L"Second1", L"Third1"}, ORDER_NONE, 0, L"foo", true);
-		const RuleAttribute B = getAttr(L"style$B", {L"First"}, ORDER_NONE, 3, L"foo", true);
-		const RuleAttribute C = getAttr(L"style$C", {L"First", L"Second"}, 0, 2, L"foo", true);
-		const RuleAttribute D = getAttr(L"style$D", {L"First", L"Second"}, 1, 2, L"foo", true);
-		const RuleAttribute E = getAttr(L"style$E", {L"First", L"Second", L"Third"}, ORDER_NONE, 1, L"foo", true);
+		const RuleAttribute A =
+		        getAttr(L"style$A", {L"First1", L"Second1", L"Third1"}, ORDER_NONE, 0, L"foo", ORDER_NONE, true);
+		const RuleAttribute B = getAttr(L"style$B", {L"First"}, ORDER_NONE, 3, L"foo", ORDER_NONE, true);
+		const RuleAttribute C = getAttr(L"style$C", {L"First", L"Second"}, 0, 2, L"foo", ORDER_NONE, true);
+		const RuleAttribute D = getAttr(L"style$D", {L"First", L"Second"}, 1, 2, L"foo", ORDER_NONE, true);
+		const RuleAttribute E =
+		        getAttr(L"style$E", {L"First", L"Second", L"Third"}, ORDER_NONE, 1, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {B, A, C, D, E};
-		const RuleAttributes exp = {A, B, C, D, E};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {B, A, C, D, E};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {A, B, C, D, E};
+		CHECK(inpAsVec == exp);
 	}
 
 	SECTION("review example") {
 		// b k < b k p (group order=10) < a (group order=20) < a k < b k
 
-		const RuleAttribute A = getAttr(L"style$A", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", true);
-		const RuleAttribute B = getAttr(L"style$B", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", true);
-		const RuleAttribute C = getAttr(L"style$C", AG_BKP, ORDER_NONE, 10, L"foo", true);
-		const RuleAttribute D = getAttr(L"style$D", AG_A, ORDER_NONE, 20, L"foo", true);
-		const RuleAttribute E = getAttr(L"style$E", AG_AK, ORDER_NONE, ORDER_NONE, L"foo", true);
+		const RuleAttribute A = getAttr(L"style$A", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+		const RuleAttribute B = getAttr(L"style$B", AG_BK, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
+		const RuleAttribute C = getAttr(L"style$C", AG_BKP, ORDER_NONE, 10, L"foo", ORDER_NONE, true);
+		const RuleAttribute D = getAttr(L"style$D", AG_A, ORDER_NONE, 20, L"foo", ORDER_NONE, true);
+		const RuleAttribute E = getAttr(L"style$E", AG_AK, ORDER_NONE, ORDER_NONE, L"foo", ORDER_NONE, true);
 
-		RuleAttributes inp = {A, B, C, D, E};
-		const RuleAttributes exp = {A, B, C, D, E};
-		sortRuleAttributes(inp);
-		CHECK(inp == exp);
+		const RuleAttributeSet inp = {A, B, C, D, E};
+		const RuleAttributeVec inpAsVec(inp.begin(), inp.end());
+		const RuleAttributeVec exp = {A, B, C, D, E};
+		CHECK(inpAsVec == exp);
 	}
 }
 
@@ -282,6 +289,48 @@ TEST_CASE("join") {
 	CHECK(join<wchar_t>(input3, L" ") == L"");
 }
 
+TEST_CASE("replaceCGACWithCEVersion") {
+	SECTION("do nothing") {
+		std::wstring inp = L"No CGA and CGAC versions found - assuming unreleased CGA 2020.0 and CGAC 1.14";
+		const std::wstring exp = L"No CGA and CGAC versions found - assuming unreleased CGA 2020.0 and CGAC 1.14";
+		prtu::replaceCGACWithCEVersion(inp);
+		CHECK(inp == exp);
+	}
+
+	SECTION("major number larger than current") {
+		std::wstring inp = L"Unsupported CGAC version 2.0 : major number larger than current (1.17)";
+		const std::wstring exp =
+		        L"Unsupported CityEngine version newer than 2021.1 : major number larger than current (2021.1)";
+		prtu::replaceCGACWithCEVersion(inp);
+		CHECK(inp == exp);
+	}
+
+	SECTION("major number smaller than current") {
+		std::wstring inp = L"Potentially unsupported CGAC version 1.0 : major number smaller than current (2.0)";
+		const std::wstring exp = L"Potentially unsupported CityEngine version 2013.0 : major number smaller than "
+		                         L"current (newer than 2021.1)";
+		prtu::replaceCGACWithCEVersion(inp);
+		CHECK(inp == exp);
+	}
+
+	SECTION("minor number larger than current") {
+		std::wstring inp = L"Potentially unsupported CGAC version 1.17 : newer than current (1.5)";
+		const std::wstring exp =
+		        L"Potentially unsupported CityEngine version 2021.1 : newer than current (2015.0 - 2015.2)";
+		prtu::replaceCGACWithCEVersion(inp);
+		CHECK(inp == exp);
+	}
+
+	SECTION("problematic CityEngine version") {
+		std::wstring inp = L"Potentially problematic CGAC version 1.3 : recompiling with current CGA Compiler (1.17) "
+		                   L"is recommended.";
+		const std::wstring exp = L"Potentially problematic CityEngine version 2014.1 : recompiling with current CGA "
+		                         L"Compiler (2021.1) is recommended.";
+		prtu::replaceCGACWithCEVersion(inp);
+		CHECK(inp == exp);
+	}
+}
+
 TEST_CASE("toFileURI") {
 #if _WIN32
 	SECTION("windows") {
@@ -295,6 +344,129 @@ TEST_CASE("toFileURI") {
 		CHECK(prtu::toFileURI(path) == L"file:/tmp/foo.bar");
 	}
 #endif
+}
+
+TEST_CASE("getDuplicateCountSuffix") {
+	std::map<std::wstring, int> duplicateCountMap;
+
+	// Fully quantified attributename: Default$import1.myAttr
+	const std::wstring briefAttr1 = L"import1_myAttr";
+	const std::wstring fullAttr1 = L"Default_import1_myAttr";
+	const std::wstring briefAttr1Suffix = prtu::getDuplicateCountSuffix(briefAttr1, duplicateCountMap);
+	const std::wstring fullAttr1Suffix = prtu::getDuplicateCountSuffix(fullAttr1, duplicateCountMap);
+	const std::wstring expectedBriefAttr1Suffix = L"_0";
+	const std::wstring expectedfullAttr1Suffix = L"_0";
+	CHECK(briefAttr1Suffix == expectedBriefAttr1Suffix);
+	CHECK(fullAttr1Suffix == expectedfullAttr1Suffix);
+
+	// Fully quantified attributename: Default$import1_myAttr
+	const std::wstring briefAttr2 = L"import1_myAttr";
+	const std::wstring fullAttr2 = L"Default_import1_myAttr";
+	const std::wstring briefAttr2Suffix = prtu::getDuplicateCountSuffix(briefAttr2, duplicateCountMap);
+	const std::wstring fullAttr2Suffix = prtu::getDuplicateCountSuffix(fullAttr2, duplicateCountMap);
+	const std::wstring expectedBriefAttr2Suffix = L"_1";
+	const std::wstring expectedfullAttr2Suffix = L"_1";
+	CHECK(briefAttr2Suffix == expectedBriefAttr2Suffix);
+	CHECK(fullAttr2Suffix == expectedfullAttr2Suffix);
+
+	// Fully quantified attributename: Default_import1$myAttr
+	const std::wstring briefAttr3 = L"myAttr";
+	const std::wstring fullAttr3 = L"Default_import1_myAttr";
+	const std::wstring briefAttr3Suffix = prtu::getDuplicateCountSuffix(briefAttr3, duplicateCountMap);
+	const std::wstring fullAttr3Suffix = prtu::getDuplicateCountSuffix(fullAttr3, duplicateCountMap);
+	const std::wstring expectedBriefAttr3Suffix = L"_0";
+	const std::wstring expectedfullAttr3Suffix = L"_2";
+	CHECK(briefAttr3Suffix == expectedBriefAttr3Suffix);
+	CHECK(fullAttr3Suffix == expectedfullAttr3Suffix);
+}
+
+TEST_CASE("replaceAllNotOf") {
+	const std::wstring allowedChars = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	SECTION("empty") {
+		std::wstring testString;
+		const std::wstring expected;
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace nothing") {
+		std::wstring testString = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		const std::wstring expected = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace some") {
+		std::wstring testString = L"Replace:all\r\nbut=alpha^numerical.characters;";
+		const std::wstring expected = L"Replace_all__but_alpha_numerical_characters_";
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace all") {
+		std::wstring testString = L"/:\r^?=-\\%`*\"+-";
+		const std::wstring expected = L"______________";
+		replaceAllNotOf(testString, allowedChars);
+		CHECK(testString == expected);
+	}
+}
+
+TEST_CASE("replaceAllOf") {
+	const std::wstring bannedChars = L"=:\\;\r\n";
+	SECTION("empty") {
+		std::wstring testString;
+		const std::wstring expected;
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace nothing") {
+		std::wstring testString = L"The quick brown fox jumps over the lazy dog";
+		const std::wstring expected = L"The quick brown fox jumps over the lazy dog";
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace some") {
+		std::wstring testString = L"A=B+C;\r\nE:F";
+		const std::wstring expected = L"A_B+C___E_F";
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+	SECTION("replace all") {
+		std::wstring testString = L"=:\\;\r\n";
+		const std::wstring expected = L"______";
+		replaceAllOf(testString, bannedChars);
+		CHECK(testString == expected);
+	}
+}
+
+TEST_CASE("cleanNameForMaya") {
+	SECTION("empty") {
+		std::wstring testString;
+		const std::wstring expected;
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("replace nothing") {
+		std::wstring testString = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		const std::wstring expected = L"The_quick_brown_fox_jumps_over_the_lazy_dog";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("replace some") {
+		std::wstring testString = L"Replace:all\r\nbut=alpha^numerical.characters;";
+		const std::wstring expected = L"Replace_all__but_alpha_numerical_characters_";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("replace all") {
+		std::wstring testString = L"/:\r^?=-\\%`*\"+-";
+		const std::wstring expected = L"______________";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
+	SECTION("add prefix") {
+		std::wstring testString = L"42";
+		const std::wstring expected = L"_42";
+		const std::wstring output = prtu::cleanNameForMaya(testString);
+		CHECK(output == expected);
+	}
 }
 
 // we use a custom main function to manage PRT lifetime

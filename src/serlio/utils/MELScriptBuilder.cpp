@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,22 @@
 namespace {
 
 constexpr bool MEL_ENABLE_DISPLAY = false;
+const std::wstring ENUM_BANNED_CHARS = L"=:\\;\r\n";
 
 std::wstring composeAttributeExpression(const MELVariable& node, const std::wstring& attribute) {
 	assert(!attribute.empty() && attribute[0] != L'.'); // to catch refactoring bugs
 	std::wostringstream out;
 	out << "(" << node.mel() << " + " << std::quoted(L'.' + attribute) << ")";
 	return out.str();
+}
+
+void cleanEnumOptionName(std::wstring& optionName) {
+	if (optionName.empty()) {
+		optionName = L" ";
+	}
+	else {
+		replaceAllOf(optionName, ENUM_BANNED_CHARS);
+	}
 }
 
 } // namespace
@@ -85,14 +95,37 @@ void MELScriptBuilder::setAttr(const MELVariable& node, const std::wstring& attr
 	setAttr(node, attribute, color.r(), color.g(), color.b());
 }
 
+void MELScriptBuilder::setAttrEnumOptions(const MELVariable& node, const std::wstring& attribute,
+                                          const std::vector<std::wstring>& enumOptions,
+                                          const std::optional<std::wstring>& customDefaultOption) {
+	std::wstring enumString;
+
+	if (customDefaultOption.has_value()) {
+		std::wstring customDefaultOptionString = customDefaultOption.value();
+		cleanEnumOptionName(customDefaultOptionString);
+		enumString.append(customDefaultOptionString + L"=0");
+	}
+	for (size_t idx = 0; idx < enumOptions.size(); idx++) {
+		std::wstring enumOption = enumOptions[idx];
+		if (!enumString.empty())
+			enumString.append(L":");
+		cleanEnumOptionName(enumOption);
+		enumString.append(enumOption + L"=" + std::to_wstring(idx + 1));
+	}
+	// Don't update to an empty enum
+	if (enumString.empty())
+		enumString.append(L" ");
+
+	commandStream << "addAttr -e -en " << MELStringLiteral(enumString).mel() << " "
+	              << composeAttributeExpression(node, attribute) << ";\n";
+	commandStream << "if (`exists redrawEnum`)\n";
+	commandStream << "\tredrawEnum(" << composeAttributeExpression(node, attribute) << ");\n";
+}
+
 void MELScriptBuilder::connectAttr(const MELVariable& srcNode, const std::wstring& srcAttr, const MELVariable& dstNode,
                                    const std::wstring& dstAttr) {
 	commandStream << "connectAttr -force " << composeAttributeExpression(srcNode, srcAttr) << " "
 	              << composeAttributeExpression(dstNode, dstAttr) << ";\n";
-}
-
-void MELScriptBuilder::python(const std::wstring& pythonCmd) {
-	commandStream << "python(\"" << pythonCmd << "\");\n";
 }
 
 void MELScriptBuilder::declInt(const MELVariable& varName) {
@@ -118,6 +151,10 @@ void MELScriptBuilder::setsAddFaceRange(const std::wstring& setName, const std::
 	              << "];\n";
 }
 
+void MELScriptBuilder::setsUseInitialShadingGroup(const std::wstring& meshName) {
+	commandStream << "sets -forceElement initialShadingGroup " << meshName << ";";
+}
+
 void MELScriptBuilder::createShader(const std::wstring& shaderType, const MELVariable& nodeName) {
 	const auto mel = nodeName.mel();
 	commandStream << mel << " = `shadingNode -asShader -skipSelect -name " << mel << " " << shaderType << "`;\n";
@@ -128,8 +165,32 @@ void MELScriptBuilder::createTextureShadingNode(const MELVariable& nodeName) {
 	commandStream << mel << "= `shadingNode -asTexture -skipSelect -name " << mel << " file`;\n";
 }
 
+void MELScriptBuilder::forceValidTextureAlphaChannel(const MELVariable& nodeName) {
+	commandStream << "setAttr " << composeAttributeExpression(nodeName, L"alphaIsLuminance") << "(!`getAttr "
+	              << composeAttributeExpression(nodeName, L"fileHasAlpha") << "`);";
+}
+
+void MELScriptBuilder::getUndoState(const MELVariable& undoName) {
+	const auto mel = undoName.mel();
+	commandStream << mel << " = `undoInfo -q -state`;\n";
+}
+
+void MELScriptBuilder::setUndoState(const MELVariable& undoName) {
+	const auto mel = undoName.mel();
+	commandStream << "undoInfo -stateWithoutFlush " << mel << ";\n";
+}
+
+void MELScriptBuilder::setUndoState(bool undoState) {
+	std::wstring undoString = undoState ? L"on" : L"off";
+	commandStream << "undoInfo -stateWithoutFlush " << undoString << ";\n";
+}
+
 void MELScriptBuilder::addCmdLine(const std::wstring& line) {
 	commandStream << line << L"\n";
+}
+
+void MELScriptBuilder::getWorkspaceDir() {
+	commandStream << L"workspace -q -rd;\n";
 }
 
 MStatus MELScriptBuilder::executeSync(std::wstring& output) {

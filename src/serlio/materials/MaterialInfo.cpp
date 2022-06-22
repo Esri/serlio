@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 
 #include "materials/MaterialInfo.h"
 
+#include "MaterialInfo.h"
+#include "utils/Utilities.h"
 #include <cmath>
 
 namespace {
@@ -70,6 +72,13 @@ double MaterialColor::b() const noexcept {
 	return data[2];
 }
 
+size_t MaterialColor::getHash() const {
+	size_t seed = 0;
+	for (double elem : data)
+		prtu::hash_combine(seed, std::hash<double>{}(elem));
+	return seed;
+}
+
 bool MaterialColor::operator==(const MaterialColor& other) const noexcept {
 	return this->data == other.data;
 }
@@ -104,6 +113,13 @@ double MaterialTrafo::tv() const noexcept {
 
 double MaterialTrafo::rw() const noexcept {
 	return data[4];
+}
+
+size_t MaterialTrafo::getHash() const {
+	size_t seed = 0;
+	for (double elem : data)
+		prtu::hash_combine(seed, std::hash<double>{}(elem));
+	return seed;
 }
 
 std::array<double, 2> MaterialTrafo::tuv() const noexcept {
@@ -243,4 +259,40 @@ bool MaterialInfo::operator<(const MaterialInfo& rhs) const {
 	// clang-format on
 
 	return false; // equality
+}
+
+size_t MaterialInfo::getHash() const {
+	std::size_t seed = 0;
+
+	prtu::hash_combine(seed, std::hash<std::string>{}(bumpMap));
+	prtu::hash_combine(seed, std::hash<std::string>{}(colormap));
+	prtu::hash_combine(seed, std::hash<std::string>{}(dirtmap));
+	prtu::hash_combine(seed, std::hash<std::string>{}(emissiveMap));
+	prtu::hash_combine(seed, std::hash<std::string>{}(metallicMap));
+	prtu::hash_combine(seed, std::hash<std::string>{}(normalMap));
+	prtu::hash_combine(seed, std::hash<std::string>{}(occlusionMap));
+	prtu::hash_combine(seed, std::hash<std::string>{}(opacityMap));
+	prtu::hash_combine(seed, std::hash<std::string>{}(roughnessMap));
+	prtu::hash_combine(seed, std::hash<std::string>{}(specularMap));
+
+	prtu::hash_combine(seed, std::hash<double>{}(opacity));
+	prtu::hash_combine(seed, std::hash<double>{}(metallic));
+	prtu::hash_combine(seed, std::hash<double>{}(roughness));
+
+	prtu::hash_combine(seed, ambientColor.getHash());
+	prtu::hash_combine(seed, diffuseColor.getHash());
+	prtu::hash_combine(seed, emissiveColor.getHash());
+	prtu::hash_combine(seed, specularColor.getHash());
+	prtu::hash_combine(seed, specularmapTrafo.getHash());
+	prtu::hash_combine(seed, bumpmapTrafo.getHash());
+	prtu::hash_combine(seed, dirtmapTrafo.getHash());
+	prtu::hash_combine(seed, emissivemapTrafo.getHash());
+	prtu::hash_combine(seed, metallicmapTrafo.getHash());
+	prtu::hash_combine(seed, normalmapTrafo.getHash());
+	prtu::hash_combine(seed, occlusionmapTrafo.getHash());
+	prtu::hash_combine(seed, opacitymapTrafo.getHash());
+	prtu::hash_combine(seed, roughnessmapTrafo.getHash());
+	prtu::hash_combine(seed, specularmapTrafo.getHash());
+
+	return seed;
 }

@@ -3,7 +3,7 @@
  *
  * See https://github.com/esri/serlio for build and usage instructions.
  *
- * Copyright (c) 2012-2019 Esri R&D Center Zurich
+ * Copyright (c) 2012-2022 Esri R&D Center Zurich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,9 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -66,6 +68,7 @@ using CacheObjectUPtr = std::unique_ptr<prt::CacheObject, PRTDestroyer>;
 using AttributeMapUPtr = std::unique_ptr<const prt::AttributeMap, PRTDestroyer>;
 using AttributeMapVector = std::vector<AttributeMapUPtr>;
 using AttributeMapBuilderUPtr = std::unique_ptr<prt::AttributeMapBuilder, PRTDestroyer>;
+using AttributeMapBuilderSPtr = std::shared_ptr<prt::AttributeMapBuilder>;
 using AttributeMapBuilderVector = std::vector<AttributeMapBuilderUPtr>;
 using InitialShapeUPtr = std::unique_ptr<const prt::InitialShape, PRTDestroyer>;
 using InitialShapeBuilderUPtr = std::unique_ptr<prt::InitialShapeBuilder, PRTDestroyer>;
@@ -78,7 +81,7 @@ using ResolveMapSPtr = std::shared_ptr<const prt::ResolveMap>;
 
 namespace prtu {
 
-std::wstring getPluginRoot();
+std::filesystem::path getPluginRoot();
 
 template <typename C>
 std::vector<const C*> toPtrVec(const std::vector<std::basic_string<C>>& sv) {
@@ -94,20 +97,23 @@ std::vector<const C*> toPtrVec(const std::vector<std::unique_ptr<C, D>>& sv) {
 	return pv;
 }
 
-// poor mans std::filesystem - we don't want boost or c++17 dependency right now
-SRL_TEST_EXPORTS_API std::wstring filename(const std::wstring& path);
-time_t getFileModificationTime(const std::wstring& p);
-std::wstring temp_directory_path();
-std::wstring getProcessTempDir(const std::wstring& prefix);
-void remove_all(const std::wstring& path);
-std::wstring toGenericPath(const std::wstring& osPath);
+// hash_combine function from boost library: https://www.boost.org/doc/libs/1_73_0/boost/container_hash/hash.hpp
+template <class SizeT>
+inline void hash_combine(SizeT& seed, SizeT value) {
+	seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
 
-template <typename C>
-C getDirSeparator();
-template <>
-char getDirSeparator();
-template <>
-wchar_t getDirSeparator();
+struct pair_hash {
+	template <class A, class B>
+	std::size_t operator()(const std::pair<A, B>& v) const {
+		std::size_t seed = 0;
+		hash_combine(seed, std::hash<A>{}(v.first));
+		hash_combine(seed, std::hash<B>{}(v.second));
+		return seed;
+	}
+};
+
+time_t getFileModificationTime(const std::wstring& p);
 
 int fromHex(wchar_t c);
 wchar_t toHex(int i);
@@ -188,7 +194,7 @@ SRL_TEST_EXPORTS_API inline std::wstring getStyle(const std::wstring& fqRuleName
 }
 
 SRL_TEST_EXPORTS_API inline std::wstring removePrefix(const std::wstring& fqRuleName, wchar_t delim) {
-	const auto sepPos = fqRuleName.find(delim);
+	const auto sepPos = fqRuleName.rfind(delim);
 	if (sepPos == std::wstring::npos)
 		return fqRuleName;
 	if (sepPos == fqRuleName.length() - 1)
@@ -206,15 +212,48 @@ SRL_TEST_EXPORTS_API inline std::wstring removeImport(const std::wstring& fqRule
 	return removePrefix(fqRuleName, IMPORT_DELIMITER);
 }
 
+SRL_TEST_EXPORTS_API inline std::wstring getImport(const std::wstring& fqRuleName) {
+	const std::wstring ruleWithoutStyle = removeStyle(fqRuleName);
+	const auto sepPos = ruleWithoutStyle.rfind(IMPORT_DELIMITER);
+	if (sepPos == std::wstring::npos || sepPos == 0)
+		return {};
+	return ruleWithoutStyle.substr(0, sepPos);
+}
+
+SRL_TEST_EXPORTS_API void replaceCGACWithCEVersion(std::wstring& errorString);
+
+SRL_TEST_EXPORTS_API std::wstring getDuplicateCountSuffix(const std::wstring& name,
+                                                          std::map<std::wstring, int>& duplicateCountMap);
+SRL_TEST_EXPORTS_API std::wstring cleanNameForMaya(const std::wstring& name);
 } // namespace prtu
 
-inline void replace_all_not_of(std::wstring& s, const std::wstring& allowedChars) {
+SRL_TEST_EXPORTS_API inline void replaceAllNotOf(std::wstring& s, const std::wstring& allowedChars) {
 	std::wstring::size_type pos = 0;
 	while (pos < s.size()) {
 		pos = s.find_first_not_of(allowedChars, pos);
 		if (pos == std::wstring::npos)
 			break;
 		s[pos++] = L'_';
+	}
+}
+
+SRL_TEST_EXPORTS_API inline void replaceAllOf(std::wstring& s, const std::wstring& bannedChars) {
+	std::wstring::size_type pos = 0;
+	while (pos < s.size()) {
+		pos = s.find_first_of(bannedChars, pos);
+		if (pos == std::wstring::npos)
+			break;
+		s[pos++] = L'_';
+	}
+}
+
+template <typename C>
+void replaceAllSubstrings(std::basic_string<C>& str, const std::basic_string<C>& oldStr,
+                          const std::basic_string<C>& newStr) {
+	typename std::basic_string<C>::size_type pos = 0;
+	while ((pos = str.find(oldStr, pos)) != std::basic_string<C>::npos) {
+		str.replace(pos, oldStr.length(), newStr);
+		pos += newStr.length();
 	}
 }
 

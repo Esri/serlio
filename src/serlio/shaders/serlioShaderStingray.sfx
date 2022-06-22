@@ -1,14 +1,14 @@
-SFB_UNX = {  /*
+SFB_WIN = {  /*
 Version=28
 GroupVersion=-1.000000
 Advanced=0
 HelpID=0
 ParentMaterial=0
-NumberOfNodes=74
+NumberOfNodes=81
 #NT=20178 0
 	PC=3
-	posx=1 v=2003 -438.892761
-	posy=1 v=2003 -1197.870361
+	posx=1 v=2003 -972.225708
+	posy=1 v=2003 -571.203430
 	previewswatch=1 v=2002 1
 	group=-1
 	ISC=0
@@ -38,8 +38,8 @@ NumberOfNodes=74
 #NT=20189 0
 	PC=3
 	name=1 v=5000 Normal_Map_Switch
-	posx=1 v=2003 1172.062012
-	posy=1 v=2003 150.317429
+	posx=1 v=2003 648.729248
+	posy=1 v=2003 706.983521
 	group=-1
 	ISC=4
 		SVT=5022 2003 1 0 0 
@@ -91,8 +91,8 @@ NumberOfNodes=74
 #NT=20189 0
 	PC=3
 	name=1 v=5000 Color_Map_Switch
-	posx=1 v=2003 959.622864
-	posy=1 v=2003 -1218.670410
+	posx=1 v=2003 426.289581
+	posy=1 v=2003 -592.003357
 	group=-1
 	ISC=4
 		SVT=5022 2003 1 0 0 
@@ -108,8 +108,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20194 0
 	PC=2
-	posx=1 v=2003 854.919678
-	posy=1 v=2003 321.746094
+	posx=1 v=2003 331.585999
+	posy=1 v=2003 878.411560
 	group=-1
 	ISC=0
 	OSC=1
@@ -119,8 +119,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20195 0
 	PC=2
-	posx=1 v=2003 850.475525
-	posy=1 v=2003 202.539703
+	posx=1 v=2003 327.141846
+	posy=1 v=2003 759.205750
 	group=-1
 	ISC=1
 		SVT=5022 3002 1 0 1 
@@ -131,10 +131,11 @@ NumberOfNodes=74
 			C=7 0 2 2 2 3 0
 			CPC=0
 #NT=20176 0
-	PC=3
+	PC=4
 	posx=1 v=2003 1636.499512
 	posy=1 v=2003 871.666687
 	normalspace=2 e=0 v=5012 1
+	blendmode=2 e=0 v=5012 2
 	group=-1
 	ISC=13
 		SVT=5022 3002 1 0 0 
@@ -153,8 +154,8 @@ NumberOfNodes=74
 	OSC=0
 #NT=20189 0
 	PC=2
-	posx=1 v=2003 1106.586426
-	posy=1 v=2003 -449.900818
+	posx=1 v=2003 1113.251587
+	posy=1 v=2003 100.516365
 	group=-1
 	ISC=4
 		SVT=5022 2003 1 0 0 
@@ -171,8 +172,8 @@ NumberOfNodes=74
 #NT=20177 0
 	PC=4
 	name=1 v=5000 color_map
-	posx=1 v=2003 543.512024
-	posy=1 v=2003 -1111.884766
+	posx=1 v=2003 10.178637
+	posy=1 v=2003 -485.219147
 	uiorder=2 e=0 v=2002 2
 	group=-1
 	ISC=2
@@ -186,8 +187,8 @@ NumberOfNodes=74
 #NT=20177 0
 	PC=5
 	name=1 v=5000 normal_map
-	posx=1 v=2003 573.777466
-	posy=1 v=2003 154.460297
+	posx=1 v=2003 50.444195
+	posy=1 v=2003 711.126404
 	encoding=2 e=0 v=5012 2
 	uiorder=2 e=0 v=2002 3
 	group=-1
@@ -262,12 +263,11 @@ NumberOfNodes=74
 			C=15 0 3 8 7 8 0
 			CPC=0
 #NT=20185 0
-	PC=7
+	PC=6
 	name=1 v=5000 use_color_map
-	posx=1 v=2003 542.361267
-	posy=1 v=2003 -1214.742188
+	posx=1 v=2003 9.027872
+	posy=1 v=2003 -588.075134
 	type=2 e=0 v=5012 0
-	defaultscalar=2 e=0 v=2003 1.000000
 	uitype=2 e=0 v=5012 1
 	uiorder=2 e=0 v=2002 11
 	group=-1
@@ -280,10 +280,10 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=7
 	name=1 v=5000 diffuse_color
-	posx=1 v=2003 542.261963
-	posy=1 v=2003 -977.162415
+	posx=1 v=2003 8.928568
+	posy=1 v=2003 -350.497345
 	type=2 e=0 v=5012 2
-	defaultvecthree=2 e=0 v=3002 0.988235,0.937255,0.886275
+	defaultvecthree=2 e=0 v=3002 1.000000,1.000000,1.000000
 	defaultvector=2 e=0 v=3003 0.500000,0.500000,0.500000,0.000000
 	uiorder=2 e=0 v=2002 21
 	group=-1
@@ -296,8 +296,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=6
 	name=1 v=5000 use_opacity_map
-	posx=1 v=2003 574.821472
-	posy=1 v=2003 -488.809418
+	posx=1 v=2003 910.238281
+	posy=1 v=2003 7.857183
 	type=2 e=0 v=5012 0
 	uitype=2 e=0 v=5012 1
 	uiorder=2 e=0 v=2002 12
@@ -311,8 +311,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=6
 	name=1 v=5000 opacity
-	posx=1 v=2003 577.500122
-	posy=1 v=2003 -125.297607
+	posx=1 v=2003 1102.915283
+	posy=1 v=2003 388.869263
 	type=2 e=0 v=5012 0
 	defaultscalar=2 e=0 v=2003 1.000000
 	uiorder=2 e=0 v=2002 22
@@ -326,8 +326,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=6
 	name=1 v=5000 use_normal_map
-	posx=1 v=2003 573.491089
-	posy=1 v=2003 44.126915
+	posx=1 v=2003 50.157818
+	posy=1 v=2003 600.793518
 	type=2 e=0 v=5012 0
 	uitype=2 e=0 v=5012 1
 	uiorder=2 e=0 v=2002 13
@@ -428,8 +428,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20186 0
 	PC=2
-	posx=1 v=2003 1215.337524
-	posy=1 v=2003 -989.622620
+	posx=1 v=2003 682.004456
+	posy=1 v=2003 -362.957672
 	group=-1
 	ISC=2
 		SVT=5022 3002 1 0 0 
@@ -441,8 +441,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20190 0
 	PC=2
-	posx=1 v=2003 780.059753
-	posy=1 v=2003 -1055.316772
+	posx=1 v=2003 246.726425
+	posy=1 v=2003 -428.651733
 	group=-1
 	ISC=1
 		SVT=5022 3002 1 1 0 
@@ -455,8 +455,8 @@ NumberOfNodes=74
 #NT=20177 0
 	PC=4
 	name=1 v=5000 opacity_map
-	posx=1 v=2003 577.039429
-	posy=1 v=2003 -377.170197
+	posx=1 v=2003 -5.044054
+	posy=1 v=2003 89.496941
 	uiorder=2 e=0 v=2002 2
 	group=-1
 	ISC=2
@@ -464,13 +464,19 @@ NumberOfNodes=74
 		SVT=5022 2003 2 0 0 
 	OSC=1
 		SVT=5022 3003 3 
-		CC=1
-			C=29 0 3 9 2 3 0
+		CC=4
+			C=29 0 3 76 0 1 0
+			CPC=0
+			C=29 0 3 77 0 1 0
+			CPC=0
+			C=29 0 3 78 0 1 0
+			CPC=0
+			C=29 0 3 79 2 3 0
 			CPC=0
 #NT=20186 0
 	PC=2
-	posx=1 v=2003 1279.500244
-	posy=1 v=2003 -222.999985
+	posx=1 v=2003 1328.665405
+	posy=1 v=2003 198.666992
 	group=-1
 	ISC=2
 		SVT=5022 2003 1 0 0 
@@ -482,8 +488,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20196 0
 	PC=2
-	posx=1 v=2003 853.745850
-	posy=1 v=2003 -205.730118
+	posx=1 v=2003 841.662842
+	posy=1 v=2003 319.686646
 	group=-1
 	ISC=1
 		SVT=5022 2003 1 1 0 
@@ -564,8 +570,8 @@ NumberOfNodes=74
 #NT=20189 0
 	PC=3
 	name=1 v=5000 dirt_map_switch
-	posx=1 v=2003 941.047363
-	posy=1 v=2003 -830.847717
+	posx=1 v=2003 407.714081
+	posy=1 v=2003 -204.182373
 	group=-1
 	ISC=4
 		SVT=5022 2003 1 0 0 
@@ -582,8 +588,8 @@ NumberOfNodes=74
 #NT=20177 0
 	PC=4
 	name=1 v=5000 dirt_map
-	posx=1 v=2003 544.877319
-	posy=1 v=2003 -723.943176
+	posx=1 v=2003 11.543928
+	posy=1 v=2003 -97.277359
 	uiorder=2 e=0 v=2002 2
 	group=-1
 	ISC=2
@@ -595,12 +601,11 @@ NumberOfNodes=74
 			C=38 0 3 37 2 3 0
 			CPC=0
 #NT=20185 0
-	PC=7
+	PC=6
 	name=1 v=5000 use_dirt_map
-	posx=1 v=2003 544.976562
-	posy=1 v=2003 -833.050415
+	posx=1 v=2003 11.643171
+	posy=1 v=2003 -206.385086
 	type=2 e=0 v=5012 0
-	defaultscalar=2 e=0 v=2003 1.000000
 	uitype=2 e=0 v=5012 1
 	uiorder=2 e=0 v=2002 11
 	group=-1
@@ -612,8 +617,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20190 0
 	PC=3
-	posx=1 v=2003 776.305542
-	posy=1 v=2003 -638.982544
+	posx=1 v=2003 242.972260
+	posy=1 v=2003 -12.316059
 	collapsed=1 v=2001 1
 	group=-1
 	ISC=1
@@ -626,8 +631,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20186 0
 	PC=2
-	posx=1 v=2003 1409.227417
-	posy=1 v=2003 -837.289124
+	posx=1 v=2003 875.894226
+	posy=1 v=2003 -210.623810
 	group=-1
 	ISC=2
 		SVT=5022 3002 1 0 0 
@@ -639,8 +644,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20186 0
 	PC=2
-	posx=1 v=2003 129.678635
-	posy=1 v=2003 -1105.106689
+	posx=1 v=2003 -403.654968
+	posy=1 v=2003 -478.441132
 	group=-1
 	ISC=2
 		SVT=5022 3001 1 0 1 
@@ -653,8 +658,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20187 0
 	PC=2
-	posx=1 v=2003 292.178558
-	posy=1 v=2003 -1199.392944
+	posx=1 v=2003 -241.154785
+	posy=1 v=2003 -572.726013
 	group=-1
 	ISC=2
 		SVT=5022 3001 1 0 1 
@@ -668,8 +673,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=10
 	name=1 v=5000 colormap_trafo_suvw
-	posx=1 v=2003 -65.817390
-	posy=1 v=2003 -1162.567627
+	posx=1 v=2003 -599.150330
+	posy=1 v=2003 -535.901367
 	type=2 e=0 v=5012 2
 	defaultvectwo=2 e=0 v=3001 1.000000,1.000000
 	defaultvecthree=2 e=0 v=3002 1.000000,1.000000,0.000000
@@ -686,8 +691,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20186 0
 	PC=2
-	posx=1 v=2003 97.178650
-	posy=1 v=2003 -702.356812
+	posx=1 v=2003 -436.154999
+	posy=1 v=2003 -75.690872
 	group=-1
 	ISC=2
 		SVT=5022 3001 1 0 1 
@@ -700,8 +705,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20187 0
 	PC=2
-	posx=1 v=2003 263.428589
-	posy=1 v=2003 -792.893066
+	posx=1 v=2003 -269.904785
+	posy=1 v=2003 -166.227600
 	group=-1
 	ISC=2
 		SVT=5022 3001 1 0 1 
@@ -715,8 +720,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=10
 	name=1 v=5000 dirtmap_trafo_suvw
-	posx=1 v=2003 -68.178497
-	posy=1 v=2003 -818.428833
+	posx=1 v=2003 -601.511414
+	posy=1 v=2003 -191.763519
 	type=2 e=0 v=5012 2
 	defaultvectwo=2 e=0 v=3001 1.000000,1.000000
 	defaultvecthree=2 e=0 v=3002 1.000000,1.000000,0.000000
@@ -733,8 +738,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20186 0
 	PC=3
-	posx=1 v=2003 105.428665
-	posy=1 v=2003 -362.106934
+	posx=1 v=2003 -427.904938
+	posy=1 v=2003 264.559814
 	previewswatch=1 v=2002 1
 	group=-1
 	ISC=2
@@ -748,8 +753,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20187 0
 	PC=2
-	posx=1 v=2003 262.928619
-	posy=1 v=2003 -462.643188
+	posx=1 v=2003 -270.404755
+	posy=1 v=2003 164.023895
 	group=-1
 	ISC=2
 		SVT=5022 3001 1 0 1 
@@ -763,8 +768,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=10
 	name=1 v=5000 opacitymap_trafo_suvw
-	posx=1 v=2003 -68.678497
-	posy=1 v=2003 -486.928955
+	posx=1 v=2003 -602.011414
+	posy=1 v=2003 139.738235
 	type=2 e=0 v=5012 2
 	defaultvectwo=2 e=0 v=3001 1.000000,1.000000
 	defaultvecthree=2 e=0 v=3002 1.000000,1.000000,0.000000
@@ -781,8 +786,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20186 0
 	PC=2
-	posx=1 v=2003 125.928665
-	posy=1 v=2003 166.143021
+	posx=1 v=2003 -397.405060
+	posy=1 v=2003 722.809204
 	group=-1
 	ISC=2
 		SVT=5022 3001 1 0 1 
@@ -795,8 +800,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20187 0
 	PC=2
-	posx=1 v=2003 289.678619
-	posy=1 v=2003 79.356758
+	posx=1 v=2003 -233.654556
+	posy=1 v=2003 636.023010
 	group=-1
 	ISC=2
 		SVT=5022 3001 1 0 1 
@@ -810,8 +815,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=10
 	name=1 v=5000 normalmap_trafo_suvw
-	posx=1 v=2003 -41.928528
-	posy=1 v=2003 55.070992
+	posx=1 v=2003 -565.261475
+	posy=1 v=2003 611.737488
 	type=2 e=0 v=5012 2
 	defaultvectwo=2 e=0 v=3001 1.000000,1.000000
 	defaultvecthree=2 e=0 v=3002 1.000000,1.000000,0.000000
@@ -970,8 +975,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=8
 	name=1 v=5000 colormap_trafo_tuv
-	posx=1 v=2003 -68.178497
-	posy=1 v=2003 -1279.428711
+	posx=1 v=2003 -601.511414
+	posy=1 v=2003 -652.760681
 	type=2 e=0 v=5012 1
 	defaultvector=2 e=0 v=3003 1.000000,1.000000,0.000000,0.000000
 	minrange=2 e=0 v=2003 -100001.000000
@@ -987,8 +992,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=8
 	name=1 v=5000 dirtmap_trafo_tuv
-	posx=1 v=2003 -67.678497
-	posy=1 v=2003 -922.928833
+	posx=1 v=2003 -601.011414
+	posy=1 v=2003 -296.263733
 	type=2 e=0 v=5012 1
 	defaultvector=2 e=0 v=3003 1.000000,0.000000,0.000000,0.000000
 	minrange=2 e=0 v=2003 -100001.000000
@@ -1004,8 +1009,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=8
 	name=1 v=5000 opacitymap_trafo_tuv
-	posx=1 v=2003 -64.428497
-	posy=1 v=2003 -595.928955
+	posx=1 v=2003 -597.761414
+	posy=1 v=2003 30.737833
 	type=2 e=0 v=5012 1
 	defaultvector=2 e=0 v=3003 1.000000,1.000000,0.000000,0.000000
 	minrange=2 e=0 v=2003 -100001.000000
@@ -1021,8 +1026,8 @@ NumberOfNodes=74
 #NT=20185 0
 	PC=8
 	name=1 v=5000 normalmap_trafo_tuv
-	posx=1 v=2003 -40.928528
-	posy=1 v=2003 -63.679016
+	posx=1 v=2003 -564.261475
+	posy=1 v=2003 492.988098
 	type=2 e=0 v=5012 1
 	defaultvector=2 e=0 v=3003 1.000000,1.000000,0.000000,0.000000
 	minrange=2 e=0 v=2003 -100001.000000
@@ -1088,8 +1093,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20179 0
 	PC=2
-	posx=1 v=2003 -451.357483
-	posy=1 v=2003 -924.207947
+	posx=1 v=2003 -984.690552
+	posy=1 v=2003 -297.542847
 	group=-1
 	ISC=0
 	OSC=1
@@ -1099,8 +1104,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20180 0
 	PC=2
-	posx=1 v=2003 -432.126617
-	posy=1 v=2003 -47.511288
+	posx=1 v=2003 -955.458862
+	posy=1 v=2003 509.155853
 	group=-1
 	ISC=0
 	OSC=1
@@ -1110,8 +1115,8 @@ NumberOfNodes=74
 			CPC=0
 #NT=20181 0
 	PC=2
-	posx=1 v=2003 -450.226135
-	posy=1 v=2003 -447.963623
+	posx=1 v=2003 -983.559143
+	posy=1 v=2003 178.703445
 	group=-1
 	ISC=0
 	OSC=1
@@ -1134,6 +1139,109 @@ NumberOfNodes=74
 			CPC=0
 			C=73 0 1 60 1 2 0
 			CPC=0
+#NT=20187 0
+	PC=2
+	posx=1 v=2003 605.417053
+	posy=1 v=2003 260.416748
+	group=-1
+	ISC=2
+		SVT=5022 2003 1 0 0 
+		SVT=5022 2003 2 0 0 
+	OSC=1
+		SVT=5022 2003 3 
+		CC=1
+			C=74 0 3 79 3 4 0
+			CPC=0
+#NT=20187 0
+	PC=2
+	posx=1 v=2003 407.916718
+	posy=1 v=2003 221.666885
+	group=-1
+	ISC=2
+		SVT=5022 2003 1 0 0 
+		SVT=5022 2003 2 0 0 
+	OSC=1
+		SVT=5022 2003 3 
+		CC=1
+			C=75 0 3 74 0 1 0
+			CPC=0
+#NT=20186 0
+	PC=2
+	posx=1 v=2003 230.416794
+	posy=1 v=2003 156.667099
+	group=-1
+	ISC=2
+		SVT=5022 2003 1 0 1 
+		SCS=r
+		SVT=5022 2003 2 1 0 
+		SDV=0.298900
+	OSC=1
+		SVT=5022 2003 3 
+		CC=1
+			C=76 0 3 75 0 1 0
+			CPC=0
+#NT=20186 0
+	PC=2
+	posx=1 v=2003 226.666870
+	posy=1 v=2003 301.666748
+	group=-1
+	ISC=2
+		SVT=5022 2003 1 0 1 
+		SCS=g
+		SVT=5022 2003 2 1 0 
+		SDV=0.587000
+	OSC=1
+		SVT=5022 2003 3 
+		CC=1
+			C=77 0 3 75 1 2 0
+			CPC=0
+#NT=20186 0
+	PC=2
+	posx=1 v=2003 227.916870
+	posy=1 v=2003 459.167023
+	group=-1
+	ISC=2
+		SVT=5022 2003 1 0 1 
+		SCS=b
+		SVT=5022 2003 2 1 0 
+		SDV=0.114000
+	OSC=1
+		SVT=5022 2003 3 
+		CC=1
+			C=78 0 3 74 1 2 0
+			CPC=0
+#NT=20189 0
+	PC=2
+	posx=1 v=2003 807.916992
+	posy=1 v=2003 107.917221
+	group=-1
+	ISC=4
+		SVT=5022 2003 1 0 0 
+		SVT=5022 2003 2 1 0 
+		SDV=1.000000
+		SVT=5022 2003 3 0 1 
+		SCS=a
+		SVT=5022 2003 4 0 0 
+	OSC=1
+		SVT=5022 2003 5 
+		CC=1
+			C=79 0 5 9 2 3 0
+			CPC=0
+#NT=20185 0
+	PC=6
+	name=1 v=5000 opacity_map_uses_alpha_channel
+	posx=1 v=2003 527.916992
+	posy=1 v=2003 57.916878
+	type=2 e=0 v=5012 0
+	uitype=2 e=0 v=5012 1
+	uiorder=2 e=0 v=2002 12
+	group=-1
+	ISC=0
+	OSC=1
+		SVT=5022 2003 1 
+		CC=1
+			C=80 0 1 79 0 1 0
+			CPC=0
 
  */ } 
 connections = [
@@ -1143,13 +1251,13 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb9" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab44" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab42" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab44" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab42" 
 		} 
 		source = { 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab28" 
@@ -1191,46 +1299,46 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab11" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab46" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab44" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "f72597c4-7487-419a-affb-df690e6582e1" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab46" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab44" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab66" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab64" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "0806db0d-2c4a-43ca-99cc-f5a2f036a8e8" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab46" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab44" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab45" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab43" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab45" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab43" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab47" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab45" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab45" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab43" 
 		} 
 		source = { 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb1" 
@@ -1257,91 +1365,91 @@ connections = [
 	{ 
 		destination = { 
 			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab44" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab42" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab40" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab38" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "CED7BBF3-0B48-4335-B933-095A41CA0294" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab40" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab38" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab42" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab40" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "4CBB4480-79E8-4CE7-AC0F-8B09BAF12390" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab40" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab38" 
 		} 
 		select = [ 
 			"rgb" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab41" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab39" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "1ee9af1f-65f2-4739-ad28-5ea6a0e68fc3" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab41" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab39" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab49" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab47" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "f72597c4-7487-419a-affb-df690e6582e1" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab49" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab47" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab67" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab65" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "0806db0d-2c4a-43ca-99cc-f5a2f036a8e8" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab49" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab47" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab48" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab46" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab48" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab46" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab50" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab48" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab48" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab46" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab73" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab71" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "F2F74E58-402D-472B-87DD-331E00DB416C" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab40" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab38" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab43" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab41" 
 		} 
 	} 
 	{ 
@@ -1376,6 +1484,60 @@ connections = [
 			connector_id = "4CBB4480-79E8-4CE7-AC0F-8B09BAF12390" 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab10" 
 		} 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab80" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "CED7BBF3-0B48-4335-B933-095A41CA0294" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab80" 
+		} 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab81" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab77" 
+		} 
+		select = [ 
+			"r" 
+			] 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab30" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab78" 
+		} 
+		select = [ 
+			"g" 
+			] 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab30" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab79" 
+		} 
+		select = [ 
+			"b" 
+			] 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab30" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "4CBB4480-79E8-4CE7-AC0F-8B09BAF12390" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab80" 
+		} 
 		select = [ 
 			"a" 
 			] 
@@ -1389,49 +1551,94 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab30" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab52" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab50" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "f72597c4-7487-419a-affb-df690e6582e1" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab52" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab50" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab68" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab66" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "0806db0d-2c4a-43ca-99cc-f5a2f036a8e8" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab52" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab50" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab51" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab49" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab51" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab49" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab53" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab51" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab51" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab49" 
+		} 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab73" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "F2F74E58-402D-472B-87DD-331E00DB416C" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab80" 
 		} 
 		source = { 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab75" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "f72597c4-7487-419a-affb-df690e6582e1" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab75" 
+		} 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab76" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "f72597c4-7487-419a-affb-df690e6582e1" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab76" 
+		} 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab77" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "0806db0d-2c4a-43ca-99cc-f5a2f036a8e8" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab76" 
+		} 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab78" 
+		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "0806db0d-2c4a-43ca-99cc-f5a2f036a8e8" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab75" 
+		} 
+		source = { 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab79" 
 		} 
 	} 
 	{ 
@@ -1497,49 +1704,49 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab12" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab55" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab53" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "f72597c4-7487-419a-affb-df690e6582e1" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab55" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab53" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab69" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab67" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "0806db0d-2c4a-43ca-99cc-f5a2f036a8e8" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab55" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab53" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab54" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab52" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab54" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab52" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab56" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab54" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab54" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab52" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab74" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab72" 
 		} 
 	} 
 	{ 
@@ -1557,13 +1764,13 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb9" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab35" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab33" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab35" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab33" 
 		} 
 		source = { 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb4" 
@@ -1596,67 +1803,67 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab13" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab58" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab56" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "f72597c4-7487-419a-affb-df690e6582e1" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab58" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab56" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab70" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab68" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "0806db0d-2c4a-43ca-99cc-f5a2f036a8e8" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab58" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab56" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab57" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab55" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab57" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab55" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab59" 
-		} 
-	} 
-	{ 
-		destination = { 
-			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab57" 
 		} 
+	} 
+	{ 
+		destination = { 
+			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab55" 
+		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab76" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab74" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab60" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab58" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab76" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab74" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab63" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab61" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab76" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab74" 
 		} 
 	} 
 	{ 
@@ -1665,13 +1872,13 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb4" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab36" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab34" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab35" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab33" 
 		} 
 		source = { 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab23" 
@@ -1683,13 +1890,13 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb9" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab38" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab36" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab38" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab36" 
 		} 
 		source = { 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb2" 
@@ -1722,40 +1929,40 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab14" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab61" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab59" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "f72597c4-7487-419a-affb-df690e6582e1" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab61" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab59" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab71" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab69" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "0806db0d-2c4a-43ca-99cc-f5a2f036a8e8" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab61" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab59" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab60" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab58" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab60" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab58" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab62" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab60" 
 		} 
 	} 
 	{ 
@@ -1764,13 +1971,13 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb2" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab37" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab35" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "242d1648-a626-445b-9534-bccec094112f" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab38" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab36" 
 		} 
 		source = { 
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab25" 
@@ -1821,40 +2028,40 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaab15" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab64" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab62" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "f72597c4-7487-419a-affb-df690e6582e1" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab64" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab62" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab72" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab70" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "0806db0d-2c4a-43ca-99cc-f5a2f036a8e8" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab64" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab62" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab63" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab61" 
 		} 
 	} 
 	{ 
 		destination = { 
 			connector_id = "c5823c75-4ae5-4c71-b070-315fa4d03e8e" 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab63" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab61" 
 		} 
 		select = [ 
 			"xy" 
 			] 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab65" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab63" 
 		} 
 	} 
 	{ 
@@ -1863,7 +2070,7 @@ connections = [
 			instance_id = "abbaabba-abba-abba-abba-abbaabbaabb5" 
 		} 
 		source = { 
-			instance_id = "abbaabba-abba-abba-abba-abbaabbaab39" 
+			instance_id = "abbaabba-abba-abba-abba-abbaabbaab37" 
 		} 
 	} 
 	{ 
@@ -1895,16 +2102,16 @@ constants = [
 	} 
 	{ 
 		connector_id = "39BC7619-2768-480B-ACFD-63FA66EF6905" 
-		id = "1bbaabba-abba-abba-abba-abbaabbaab40" 
-		instance_id = "abbaabba-abba-abba-abba-abbaabbaab40" 
+		id = "1bbaabba-abba-abba-abba-abbaabbaab38" 
+		instance_id = "abbaabba-abba-abba-abba-abbaabbaab38" 
 		value = [ 
 			1.000000
 		] 
 	} 
 	{ 
 		connector_id = "6ff26be7-68a1-4b89-b9dd-551d216086c2" 
-		id = "0bbaabba-abba-abba-abba-abbaabbaab43" 
-		instance_id = "abbaabba-abba-abba-abba-abbaabbaab43" 
+		id = "0bbaabba-abba-abba-abba-abbaabbaab41" 
+		instance_id = "abbaabba-abba-abba-abba-abbaabbaab41" 
 		value = [ 
 			1.000000 1.000000 1.000000
 		] 
@@ -1915,6 +2122,38 @@ constants = [
 		instance_id = "abbaabba-abba-abba-abba-abbaabbaab10" 
 		value = [ 
 			1.000000
+		] 
+	} 
+	{ 
+		connector_id = "39BC7619-2768-480B-ACFD-63FA66EF6905" 
+		id = "1bbaabba-abba-abba-abba-abbaabbaab80" 
+		instance_id = "abbaabba-abba-abba-abba-abbaabbaab80" 
+		value = [ 
+			1.000000
+		] 
+	} 
+	{ 
+		connector_id = "242d1648-a626-445b-9534-bccec094112f" 
+		id = "1bbaabba-abba-abba-abba-abbaabbaab77" 
+		instance_id = "abbaabba-abba-abba-abba-abbaabbaab77" 
+		value = [ 
+			0.298900
+		] 
+	} 
+	{ 
+		connector_id = "242d1648-a626-445b-9534-bccec094112f" 
+		id = "1bbaabba-abba-abba-abba-abbaabbaab78" 
+		instance_id = "abbaabba-abba-abba-abba-abbaabbaab78" 
+		value = [ 
+			0.587000
+		] 
+	} 
+	{ 
+		connector_id = "242d1648-a626-445b-9534-bccec094112f" 
+		id = "1bbaabba-abba-abba-abba-abbaabbaab79" 
+		instance_id = "abbaabba-abba-abba-abba-abbaabbaab79" 
+		value = [ 
+			0.114000
 		] 
 	} 
 	{ 
@@ -1943,8 +2182,8 @@ constants = [
 	} 
 	{ 
 		connector_id = "c4d6bc08-c489-430f-a836-ed490e59c3f9" 
-		id = "0bbaabba-abba-abba-abba-abbaabbaab36" 
-		instance_id = "abbaabba-abba-abba-abba-abbaabbaab36" 
+		id = "0bbaabba-abba-abba-abba-abbaabbaab34" 
+		instance_id = "abbaabba-abba-abba-abba-abbaabbaab34" 
 		value = [ 
 			1.000000
 		] 
@@ -1959,8 +2198,8 @@ constants = [
 	} 
 	{ 
 		connector_id = "c4d6bc08-c489-430f-a836-ed490e59c3f9" 
-		id = "0bbaabba-abba-abba-abba-abbaabbaab37" 
-		instance_id = "abbaabba-abba-abba-abba-abbaabbaab37" 
+		id = "0bbaabba-abba-abba-abba-abbaabbaab35" 
+		instance_id = "abbaabba-abba-abba-abba-abbaabbaab35" 
 		value = [ 
 			1.000000
 		] 
@@ -1975,8 +2214,8 @@ constants = [
 	} 
 	{ 
 		connector_id = "6ff26be7-68a1-4b89-b9dd-551d216086c2" 
-		id = "0bbaabba-abba-abba-abba-abbaabbaab39" 
-		instance_id = "abbaabba-abba-abba-abba-abbaabbaab39" 
+		id = "0bbaabba-abba-abba-abba-abbaabbaab37" 
+		instance_id = "abbaabba-abba-abba-abba-abbaabbaab37" 
 		value = [ 
 			1.000000 1.000000 1.000000
 		] 
@@ -1992,6 +2231,7 @@ nodes = [
 		} 
 		id = "abbaabba-abba-abba-abba-abbaabbaabb9" 
 		options = [ 
+			"3b55d6c6-4398-4dbc-b9ef-570aff8696ae"
 			"2b136447-676e-4943-997b-04a28ae68497"
 		] 
 		position = [ 
@@ -2010,12 +2250,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab44" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab42" 
 		options = [ 
 		] 
 		position = [ 
-			1409 
-			-837 
+			875 
+			-210 
 		] 
 		samplers = { 
 		} 
@@ -2033,8 +2273,8 @@ nodes = [
 		options = [ 
 		] 
 		position = [ 
-			1215 
-			-989 
+			682 
+			-362 
 		] 
 		samplers = { 
 		} 
@@ -2053,8 +2293,8 @@ nodes = [
 			"9A84282B-F1A2-46D4-9FC4-5A76FC9B30DD"
 		] 
 		position = [ 
-			959 
-			-1218 
+			426 
+			-592 
 		] 
 		samplers = { 
 		} 
@@ -2078,15 +2318,15 @@ nodes = [
 					ui_type = "checkbox" 
 				} 
 				type = "float" 
-				value = 1.000000 
+				value = 0.000000 
 			} 
 		} 
 		id = "abbaabba-abba-abba-abba-abbaabbaab17" 
 		options = [ 
 		] 
 		position = [ 
-			542 
-			-1214 
+			9 
+			-588 
 		] 
 		samplers = { 
 		} 
@@ -2107,8 +2347,8 @@ nodes = [
 			"5dd59b3d-1762-4a14-9930-7500230ef3db"
 		] 
 		position = [ 
-			543 
-			-1111 
+			10 
+			-485 
 		] 
 		samplers = { 
 			texture_map = { 
@@ -2129,12 +2369,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab46" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab44" 
 		options = [ 
 		] 
 		position = [ 
-			292 
-			-1199 
+			-241 
+			-572 
 		] 
 		samplers = { 
 		} 
@@ -2160,12 +2400,12 @@ nodes = [
 				value = [0.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab66" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab64" 
 		options = [ 
 		] 
 		position = [ 
-			-68 
-			-1279 
+			-601 
+			-652 
 		] 
 		samplers = { 
 		} 
@@ -2179,12 +2419,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab45" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab43" 
 		options = [ 
 		] 
 		position = [ 
-			129 
-			-1105 
+			-403 
+			-478 
 		] 
 		samplers = { 
 		} 
@@ -2211,12 +2451,12 @@ nodes = [
 				value = [1.000000 1.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab47" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab45" 
 		options = [ 
 		] 
 		position = [ 
-			-65 
-			-1162 
+			-599 
+			-535 
 		] 
 		samplers = { 
 		} 
@@ -2234,8 +2474,8 @@ nodes = [
 		options = [ 
 		] 
 		position = [ 
-			-438 
-			-1197 
+			-972 
+			-571 
 		] 
 		samplers = { 
 		} 
@@ -2253,8 +2493,8 @@ nodes = [
 		options = [ 
 		] 
 		position = [ 
-			780 
-			-1055 
+			246 
+			-428 
 		] 
 		samplers = { 
 		} 
@@ -2278,15 +2518,15 @@ nodes = [
 					ui_type = "color" 
 				} 
 				type = "float3" 
-				value = [0.988235 0.937255 0.886275] 
+				value = [1.000000 1.000000 1.000000] 
 			} 
 		} 
 		id = "abbaabba-abba-abba-abba-abbaabbaab18" 
 		options = [ 
 		] 
 		position = [ 
-			542 
-			-977 
+			8 
+			-350 
 		] 
 		samplers = { 
 		} 
@@ -2300,13 +2540,13 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab40" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab38" 
 		options = [ 
 			"9A84282B-F1A2-46D4-9FC4-5A76FC9B30DD"
 		] 
 		position = [ 
-			941 
-			-830 
+			407 
+			-204 
 		] 
 		samplers = { 
 		} 
@@ -2330,15 +2570,15 @@ nodes = [
 					ui_type = "checkbox" 
 				} 
 				type = "float" 
-				value = 1.000000 
+				value = 0.000000 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab42" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab40" 
 		options = [ 
 		] 
 		position = [ 
-			544 
-			-833 
+			11 
+			-206 
 		] 
 		samplers = { 
 		} 
@@ -2352,15 +2592,15 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab41" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab39" 
 		options = [ 
 			"1e067464-12d8-4826-9b72-cfd5765003e3"
 			"fb3f709b-a54a-4e93-ac9f-e9fc76fb8bcd"
 			"5dd59b3d-1762-4a14-9930-7500230ef3db"
 		] 
 		position = [ 
-			544 
-			-723 
+			11 
+			-97 
 		] 
 		samplers = { 
 			texture_map = { 
@@ -2381,12 +2621,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab49" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab47" 
 		options = [ 
 		] 
 		position = [ 
-			263 
-			-792 
+			-269 
+			-166 
 		] 
 		samplers = { 
 		} 
@@ -2412,12 +2652,12 @@ nodes = [
 				value = [0.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab67" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab65" 
 		options = [ 
 		] 
 		position = [ 
-			-67 
-			-922 
+			-601 
+			-296 
 		] 
 		samplers = { 
 		} 
@@ -2431,12 +2671,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab48" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab46" 
 		options = [ 
 		] 
 		position = [ 
-			97 
-			-702 
+			-436 
+			-75 
 		] 
 		samplers = { 
 		} 
@@ -2463,12 +2703,12 @@ nodes = [
 				value = [1.000000 1.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab50" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab48" 
 		options = [ 
 		] 
 		position = [ 
-			-68 
-			-818 
+			-601 
+			-191 
 		] 
 		samplers = { 
 		} 
@@ -2482,12 +2722,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab73" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab71" 
 		options = [ 
 		] 
 		position = [ 
-			-451 
-			-924 
+			-984 
+			-297 
 		] 
 		samplers = { 
 		} 
@@ -2501,12 +2741,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab43" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab41" 
 		options = [ 
 		] 
 		position = [ 
-			776 
-			-638 
+			242 
+			-12 
 		] 
 		samplers = { 
 		} 
@@ -2524,8 +2764,8 @@ nodes = [
 		options = [ 
 		] 
 		position = [ 
-			1279 
-			-222 
+			1328 
+			198 
 		] 
 		samplers = { 
 		} 
@@ -2544,8 +2784,8 @@ nodes = [
 			"9A84282B-F1A2-46D4-9FC4-5A76FC9B30DD"
 		] 
 		position = [ 
-			1106 
-			-449 
+			1113 
+			100 
 		] 
 		samplers = { 
 		} 
@@ -2576,12 +2816,64 @@ nodes = [
 		options = [ 
 		] 
 		position = [ 
-			574 
-			-488 
+			910 
+			7 
 		] 
 		samplers = { 
 		} 
 		title = "Use Opacity Map" 
+		type = "core/shader_nodes/material_variable" 
+	} 
+	{ 
+		content_size = [ 
+			160 
+			0 
+		] 
+		export = { 
+		} 
+		id = "abbaabba-abba-abba-abba-abbaabbaab80" 
+		options = [ 
+			"9A84282B-F1A2-46D4-9FC4-5A76FC9B30DD"
+		] 
+		position = [ 
+			807 
+			107 
+		] 
+		samplers = { 
+		} 
+		title = "If Statement" 
+		type = "core/shader_nodes/if" 
+	} 
+	{ 
+		content_size = [ 
+			160 
+			0 
+		] 
+		export = { 
+			material_variable = { 
+				display_name = "Opacity Map Uses Alpha Channel" 
+				name = "opacity_map_uses_alpha_channel" 
+				ui = { 
+					max = 1 
+					min = 0.000000 
+					step = 1 
+					order = 12 
+					ui_type = "checkbox" 
+				} 
+				type = "float" 
+				value = 0.000000 
+			} 
+		} 
+		id = "abbaabba-abba-abba-abba-abbaabbaab81" 
+		options = [ 
+		] 
+		position = [ 
+			527 
+			57 
+		] 
+		samplers = { 
+		} 
+		title = "Opacity Map Uses Alpha Channel" 
 		type = "core/shader_nodes/material_variable" 
 	} 
 	{ 
@@ -2598,8 +2890,8 @@ nodes = [
 			"5dd59b3d-1762-4a14-9930-7500230ef3db"
 		] 
 		position = [ 
-			577 
-			-377 
+			-5 
+			89 
 		] 
 		samplers = { 
 			texture_map = { 
@@ -2620,12 +2912,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab52" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab50" 
 		options = [ 
 		] 
 		position = [ 
-			262 
-			-462 
+			-270 
+			164 
 		] 
 		samplers = { 
 		} 
@@ -2651,12 +2943,12 @@ nodes = [
 				value = [0.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab68" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab66" 
 		options = [ 
 		] 
 		position = [ 
-			-64 
-			-595 
+			-597 
+			30 
 		] 
 		samplers = { 
 		} 
@@ -2670,12 +2962,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab51" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab49" 
 		options = [ 
 		] 
 		position = [ 
-			105 
-			-362 
+			-427 
+			264 
 		] 
 		samplers = { 
 		} 
@@ -2702,12 +2994,12 @@ nodes = [
 				value = [1.000000 1.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab53" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab51" 
 		options = [ 
 		] 
 		position = [ 
-			-68 
-			-486 
+			-602 
+			139 
 		] 
 		samplers = { 
 		} 
@@ -2721,12 +3013,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab75" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab73" 
 		options = [ 
 		] 
 		position = [ 
-			-450 
-			-447 
+			-983 
+			178 
 		] 
 		samplers = { 
 		} 
@@ -2740,12 +3032,107 @@ nodes = [
 		] 
 		export = { 
 		} 
+		id = "abbaabba-abba-abba-abba-abbaabbaab75" 
+		options = [ 
+		] 
+		position = [ 
+			605 
+			260 
+		] 
+		samplers = { 
+		} 
+		title = "Add" 
+		type = "core/shader_nodes/add" 
+	} 
+	{ 
+		content_size = [ 
+			160 
+			0 
+		] 
+		export = { 
+		} 
+		id = "abbaabba-abba-abba-abba-abbaabbaab76" 
+		options = [ 
+		] 
+		position = [ 
+			407 
+			221 
+		] 
+		samplers = { 
+		} 
+		title = "Add" 
+		type = "core/shader_nodes/add" 
+	} 
+	{ 
+		content_size = [ 
+			160 
+			0 
+		] 
+		export = { 
+		} 
+		id = "abbaabba-abba-abba-abba-abbaabbaab77" 
+		options = [ 
+		] 
+		position = [ 
+			230 
+			156 
+		] 
+		samplers = { 
+		} 
+		title = "Multiply" 
+		type = "core/shader_nodes/mul" 
+	} 
+	{ 
+		content_size = [ 
+			160 
+			0 
+		] 
+		export = { 
+		} 
+		id = "abbaabba-abba-abba-abba-abbaabbaab78" 
+		options = [ 
+		] 
+		position = [ 
+			226 
+			301 
+		] 
+		samplers = { 
+		} 
+		title = "Multiply" 
+		type = "core/shader_nodes/mul" 
+	} 
+	{ 
+		content_size = [ 
+			160 
+			0 
+		] 
+		export = { 
+		} 
+		id = "abbaabba-abba-abba-abba-abbaabbaab79" 
+		options = [ 
+		] 
+		position = [ 
+			227 
+			459 
+		] 
+		samplers = { 
+		} 
+		title = "Multiply" 
+		type = "core/shader_nodes/mul" 
+	} 
+	{ 
+		content_size = [ 
+			160 
+			0 
+		] 
+		export = { 
+		} 
 		id = "abbaabba-abba-abba-abba-abbaabbaab32" 
 		options = [ 
 		] 
 		position = [ 
-			853 
-			-205 
+			841 
+			319 
 		] 
 		samplers = { 
 		} 
@@ -2775,8 +3162,8 @@ nodes = [
 		options = [ 
 		] 
 		position = [ 
-			577 
-			-125 
+			1102 
+			388 
 		] 
 		samplers = { 
 		} 
@@ -2795,8 +3182,8 @@ nodes = [
 			"9A84282B-F1A2-46D4-9FC4-5A76FC9B30DD"
 		] 
 		position = [ 
-			1172 
-			150 
+			648 
+			706 
 		] 
 		samplers = { 
 		} 
@@ -2827,8 +3214,8 @@ nodes = [
 		options = [ 
 		] 
 		position = [ 
-			573 
-			44 
+			50 
+			600 
 		] 
 		samplers = { 
 		} 
@@ -2847,8 +3234,8 @@ nodes = [
 			"0a0fb5ad-145d-4229-abd4-5b36562607b3"
 		] 
 		position = [ 
-			850 
-			202 
+			327 
+			759 
 		] 
 		samplers = { 
 		} 
@@ -2869,8 +3256,8 @@ nodes = [
 			"5dd59b3d-1762-4a14-9930-7500230ef3db"
 		] 
 		position = [ 
-			573 
-			154 
+			50 
+			711 
 		] 
 		samplers = { 
 			texture_map = { 
@@ -2891,12 +3278,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab55" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab53" 
 		options = [ 
 		] 
 		position = [ 
-			289 
-			79 
+			-233 
+			636 
 		] 
 		samplers = { 
 		} 
@@ -2922,12 +3309,12 @@ nodes = [
 				value = [0.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab69" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab67" 
 		options = [ 
 		] 
 		position = [ 
-			-40 
-			-63 
+			-564 
+			492 
 		] 
 		samplers = { 
 		} 
@@ -2941,12 +3328,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab54" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab52" 
 		options = [ 
 		] 
 		position = [ 
-			125 
-			166 
+			-397 
+			722 
 		] 
 		samplers = { 
 		} 
@@ -2973,12 +3360,12 @@ nodes = [
 				value = [1.000000 1.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab56" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab54" 
 		options = [ 
 		] 
 		position = [ 
-			-41 
-			55 
+			-565 
+			611 
 		] 
 		samplers = { 
 		} 
@@ -2992,12 +3379,12 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab74" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab72" 
 		options = [ 
 		] 
 		position = [ 
-			-432 
-			-47 
+			-955 
+			509 
 		] 
 		samplers = { 
 		} 
@@ -3015,8 +3402,8 @@ nodes = [
 		options = [ 
 		] 
 		position = [ 
-			854 
-			321 
+			331 
+			878 
 		] 
 		samplers = { 
 		} 
@@ -3030,7 +3417,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab35" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab33" 
 		options = [ 
 		] 
 		position = [ 
@@ -3130,7 +3517,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab58" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab56" 
 		options = [ 
 		] 
 		position = [ 
@@ -3161,7 +3548,7 @@ nodes = [
 				value = [0.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab70" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab68" 
 		options = [ 
 		] 
 		position = [ 
@@ -3180,7 +3567,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab57" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab55" 
 		options = [ 
 		] 
 		position = [ 
@@ -3212,7 +3599,7 @@ nodes = [
 				value = [1.000000 1.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab59" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab57" 
 		options = [ 
 		] 
 		position = [ 
@@ -3231,7 +3618,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab76" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab74" 
 		options = [ 
 		] 
 		position = [ 
@@ -3250,7 +3637,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab36" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab34" 
 		options = [ 
 		] 
 		position = [ 
@@ -3300,7 +3687,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab38" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab36" 
 		options = [ 
 		] 
 		position = [ 
@@ -3400,7 +3787,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab61" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab59" 
 		options = [ 
 		] 
 		position = [ 
@@ -3431,7 +3818,7 @@ nodes = [
 				value = [0.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab71" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab69" 
 		options = [ 
 		] 
 		position = [ 
@@ -3450,7 +3837,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab60" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab58" 
 		options = [ 
 		] 
 		position = [ 
@@ -3482,7 +3869,7 @@ nodes = [
 				value = [1.000000 1.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab62" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab60" 
 		options = [ 
 		] 
 		position = [ 
@@ -3501,7 +3888,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab37" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab35" 
 		options = [ 
 		] 
 		position = [ 
@@ -3651,7 +4038,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab64" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab62" 
 		options = [ 
 		] 
 		position = [ 
@@ -3682,7 +4069,7 @@ nodes = [
 				value = [0.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab72" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab70" 
 		options = [ 
 		] 
 		position = [ 
@@ -3701,7 +4088,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab63" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab61" 
 		options = [ 
 		] 
 		position = [ 
@@ -3733,7 +4120,7 @@ nodes = [
 				value = [1.000000 1.000000 0.000000] 
 			} 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab65" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab63" 
 		options = [ 
 		] 
 		position = [ 
@@ -3752,7 +4139,7 @@ nodes = [
 		] 
 		export = { 
 		} 
-		id = "abbaabba-abba-abba-abba-abbaabbaab39" 
+		id = "abbaabba-abba-abba-abba-abbaabbaab37" 
 		options = [ 
 		] 
 		position = [ 

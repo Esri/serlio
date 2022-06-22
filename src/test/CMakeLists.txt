@@ -5,9 +5,12 @@ add_executable(${TEST_TARGET}
 	../serlio/PRTContext.cpp
 	../serlio/utils/Utilities.cpp
 	../serlio/utils/ResolveMapCache.cpp
+	../serlio/utils/AssetCache.cpp
 	../serlio/modifiers/RuleAttributes.cpp)
 
-set_target_properties(${TEST_TARGET} PROPERTIES CXX_STANDARD 14)
+set_target_properties(${TEST_TARGET} PROPERTIES CXX_STANDARD 17)
+
+set_common_target_definitions(${TEST_TARGET})
 
 target_compile_definitions(${TEST_TARGET} PRIVATE
 	-DSRL_TEST_EXPORTS
@@ -18,9 +21,10 @@ if (WIN32)
 
 else ()
 	target_compile_options(${TEST_TARGET} PRIVATE
-		-D_GLIBCXX_USE_CXX11_ABI=0 -Wl,--exclude-libs,ALL
+		-D_GLIBCXX_USE_CXX11_ABI=0
 		-fvisibility=hidden -fvisibility-inlines-hidden)
 
+	target_link_options(${TEST_TARGET} PRIVATE "LINKER:SHELL:--exclude-libs ALL")
 	target_link_libraries(${TEST_TARGET} PRIVATE dl)
 endif ()
 
@@ -29,6 +33,7 @@ target_include_directories(${TEST_TARGET} PRIVATE
 	$<TARGET_PROPERTY:${SERLIO_TARGET},INTERFACE_INCLUDE_DIRECTORIES>)
 
 srl_add_dependency_prt(${TEST_TARGET})
+srl_add_dependency_catch(${TEST_TARGET})
 
 # copy libraries next to test excutable so they can be found
 # TODO: do a proper install of the test executable alongside its dependencies
