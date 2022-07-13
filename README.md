@@ -192,7 +192,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 ### v2.1.0 (2022-07-06)
 Required CityEngine version: 2022.0 or older.
 #### Added:
-* Support for rule file created with CE 2022.0
+* Support for Rule Packages (RPK) created with CityEngine 2022.0
 
 ### v2.0.0 (2022-06-20)
 Required CityEngine version: 2021.1 or older.
