@@ -267,7 +267,7 @@ bool RuleAttributeCmp::operator()(const RuleAttribute& lhs, const RuleAttribute&
 
 	auto compareAttributeOrder = [&](const RuleAttribute& a, const RuleAttribute& b) {
 		if (a.order == b.order)
-			return a.fqName < b.fqName;
+			return getAttrBaseName(a.fqName) < getAttrBaseName(b.fqName);
 
 		return a.order < b.order;
 	};
