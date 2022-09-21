@@ -182,7 +182,7 @@ RuleAttributeSet getRuleAttributes(const std::wstring& ruleFile, const prt::Rule
 }
 
 bool RuleAttributeCmp::operator()(const RuleAttribute& lhs, const RuleAttribute& rhs) const {
-	auto compareRuleFile = [&](const RuleAttribute& a, const RuleAttribute& b) {
+	auto compareRuleFile = [](const RuleAttribute& a, const RuleAttribute& b) {
 		// sort main rule attributes before the rest
 		if (a.memberOfStartRuleFile && !b.memberOfStartRuleFile)
 			return true;
@@ -232,7 +232,7 @@ bool RuleAttributeCmp::operator()(const RuleAttribute& lhs, const RuleAttribute&
 		return false;
 	};
 
-	auto compareOrderToGroupOrder = [&](const RuleAttribute& ruleAttrWithGroups,
+	auto compareOrderToGroupOrder = [](const RuleAttribute& ruleAttrWithGroups,
 	                                    const RuleAttribute& ruleAttrWithoutGroups) {
 		if ((ruleAttrWithGroups.groups.size() > 0) &&
 		    (ruleAttrWithGroups.globalGroupOrder == ruleAttrWithoutGroups.order))
@@ -265,7 +265,7 @@ bool RuleAttributeCmp::operator()(const RuleAttribute& lhs, const RuleAttribute&
 		return compareGroups(a, b);
 	};
 
-	auto compareAttributeOrder = [&](const RuleAttribute& a, const RuleAttribute& b) {
+	auto compareAttributeOrder = [](const RuleAttribute& a, const RuleAttribute& b) {
 		if (a.order == b.order)
 			return getAttrBaseName(a.fqName) < getAttrBaseName(b.fqName);
 
