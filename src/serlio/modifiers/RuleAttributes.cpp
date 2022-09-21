@@ -49,8 +49,12 @@ std::wstring getBriefName(const std::wstring& fqAttrName, std::map<std::wstring,
 	return briefName + prtu::getDuplicateCountSuffix(briefName, mayaNameDuplicateCountMap);
 }
 
+std::wstring getAttrBaseName(const std::wstring& fqAttrName) {
+	return prtu::removeImport(prtu::removeStyle(fqAttrName));
+}
+
 std::wstring getNiceName(const std::wstring& fqAttrName) {
-	return prtu::cleanNameForMaya(prtu::removeImport(prtu::removeStyle(fqAttrName)));
+	return prtu::cleanNameForMaya(getAttrBaseName(fqAttrName));
 }
 
 } // namespace
