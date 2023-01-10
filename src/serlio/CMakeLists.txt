@@ -146,7 +146,7 @@ install(FILES ${SRL_PRT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins
 
 # PRT: whitelist required extension libraries
 set(SRL_PRT_EXT_LIBRARIES ${PRT_EXT_LIBRARIES})
-list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.(codecs|adaptors|oda|usd)|tbb|usd_ms")
+list(FILTER SRL_PRT_EXT_LIBRARIES INCLUDE REGEX "com\\.esri\\.prt\\.(codecs|adaptors|oda|usd)|prt_tbb|prt_usd_ms|libcrypto")
 install(FILES ${SRL_PRT_EXT_LIBRARIES} DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext)
 install(DIRECTORY "${PRT_EXTENSION_PATH}/usd" DESTINATION ${INSTALL_FOLDER_PREFIX}/plug-ins/ext) # USD resource files
 
