@@ -36,7 +36,7 @@ Please refer to the [release notes](#release-notes) for the supported CityEngine
 
 #### Software Requirements
 - Windows 10 and 11 (64bit)
-- CityEngine 2021.1 or older
+- CityEngine 2022.1 or older
 - Autodesk Maya 2019, 2020 or 2022
 
 #### Windows: Provided Installer
@@ -188,6 +188,12 @@ Currently we only support one material type per mesh (see [known limitations](#k
 1. The plugin should load and a new menu item `Serlio` should appear in Maya.
 
 ## Release Notes
+
+### v2.2.0 (2023-01-XX)
+Required Cityengine version: 2022.1 or older.
+
+#### Changed:
+* Updated Procedural Runtime (PRT) to 2.7 (corresponds to CityEngine 2022.1).
 
 ### v2.1.0 (2022-07-06)
 Required CityEngine version: 2022.0 or older.
