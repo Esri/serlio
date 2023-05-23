@@ -37,7 +37,7 @@ Please refer to the [release notes](#release-notes) for the supported CityEngine
 #### Software Requirements
 - Windows 10 and 11 (64bit)
 - CityEngine 2022.1 or older
-- Autodesk Maya 2019, 2020 or 2022
+- Autodesk Maya 2020, 2022 or 2023
 
 #### Windows: Provided Installer
 1. Download the MSI installer for the latest [release](https://github.com/Esri/serlio/releases/latest).
@@ -95,7 +95,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 #### All Platforms
 * License for CityEngine (2019.0 or later), e.g. to author Rule Packages.
 * CMake 3.13 or later (http://www.cmake.org)
-* Autodesk Maya 2019, 2020 or 2022 or the corresponding development kit
+* Autodesk Maya 2020, 2022 or 2023 or the corresponding development kit
 
 #### Windows
 * Windows 7, 8.1 or 10 (64bit)
@@ -143,7 +143,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 3. Open a Command Shell in the `serlio\deploy` directory.
 4. Run `ant` in the current directioy. Make sure to set at least one valid install path:
    ```
-   ant -D"maya2022.dir"=../install
+   ant -D"maya2023.dir"=../install
    ```
 5. The installer will appear in `serlio\build\build_msi`.
 
@@ -151,14 +151,14 @@ Currently we only support one material type per mesh (see [known limitations](#k
 1. Open a terminal (e.g. bash).
 1. Change into the example directory: `cd <your path to>/esri-cityengine-sdk/examples/serlio`
 1. Create a build directory and change into it: `mkdir build && cd build`
-1. Run cmake (adjust the Maya path if necessary): `cmake -Dmaya_DIR=/usr/autodesk/maya2022 ../src`
+1. Run cmake (adjust the Maya path if necessary): `cmake -Dmaya_DIR=/usr/autodesk/maya2023 ../src`
 1. Compile: `make install`
 1. The build result will appear in the `install` directory in parallel to the `build` directory. We will use this as the plugin directory below.
 
 ### Install local build
 #### Windows
 1. Locate the `install` directory where you [built](build.md) the plugin, let's call it `PLUGINDIR`.
-1. Locate the Maya.env file in your home, usually its in `<home directory>\Documents\maya\2020`.
+1. Locate the Maya.env file in your home, usually its in `<home directory>\Documents\maya\2023`.
 1. Edit Maya.env as follows:
    ```
    :: replace <PLUGINDIR> with the actual path
