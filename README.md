@@ -294,6 +294,7 @@ Required CityEngine version: 2021.1 or older.
 
 ## Known Limitations
 
+* Serlio 2.2 and Maya 2023 **on Linux**: Serlio does not work if the Maya 2023 USD plugin is active at the same time (USD library clash).
 * Serlio 2.0: In Maya 2019 on Windows, Serlio does not support reading USD assets from RPKs.
 * Modifying the input shape after a Serlio node is attached is not supported.
 * Scaling transformations on the initial shape mesh will scale the entire generated model. Make sure that all scaling transformations on the initial shape mesh are frozen before applying a rule ("Modify" > "Freeze Transformations").
