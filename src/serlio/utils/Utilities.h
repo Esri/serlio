@@ -151,6 +151,7 @@ std::string objectToXML(std::unique_ptr<T, PRTDestroyer>& ptr) {
 AttributeMapUPtr createValidatedOptions(const wchar_t* encID, const prt::AttributeMap* unvalidatedOptions = nullptr);
 
 inline std::wstring getRuleFileEntry(ResolveMapSPtr resolveMap) {
+#if PRT_VERSION_MAJOR < 3
 	const std::wstring sCGB(L".cgb");
 
 	size_t nKeys;
@@ -162,6 +163,14 @@ inline std::wstring getRuleFileEntry(ResolveMapSPtr resolveMap) {
 	}
 
 	return {};
+#else
+	prt::Status status = prt::STATUS_UNSPECIFIED_ERROR;
+	const wchar_t* cgbKey = resolveMap->findCGBKey(&status);
+	if (cgbKey == nullptr || (status != prt::STATUS_OK))
+		return {};
+
+	return std::wstring(cgbKey);
+#endif
 }
 
 constexpr const wchar_t* ANNOT_START_RULE = L"@StartRule";
