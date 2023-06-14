@@ -102,10 +102,10 @@
 		</copy>
 	</target>
 
-	<target name="copy2023" depends="prepare" if="copy2023.dir">
+	<target name="copy2023" depends="prepare" if="maya2023.dir">
 		<mkdir dir="${install.dir}\2023" />
 		<copy todir="${install.dir}\2023" >
-			<fileset dir="${copy2023.dir}" />
+			<fileset dir="${maya2023.dir}" />
 		</copy>
 	</target>
 
