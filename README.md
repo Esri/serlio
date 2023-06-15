@@ -189,7 +189,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 
 ## Release Notes
 
-### v2.2.0 (2023-06-XX)
+### v2.2.0 (2023-06-15)
 Required Cityengine version: 2023.0 or older.
 
 #### Added:
