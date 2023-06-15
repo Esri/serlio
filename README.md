@@ -189,11 +189,17 @@ Currently we only support one material type per mesh (see [known limitations](#k
 
 ## Release Notes
 
-### v2.2.0 (2023-01-XX)
-Required Cityengine version: 2022.1 or older.
+### v2.2.0 (2023-06-XX)
+Required Cityengine version: 2023.0 or older.
+
+#### Added:
+* Support for Maya 2023.
 
 #### Changed:
-* Updated Procedural Runtime (PRT) to 2.7 (corresponds to CityEngine 2022.1).
+* Updated Procedural Runtime (PRT) to 3.0 (corresponds to CityEngine 2023.0).
+
+#### Removed:
+* Support for Maya 2019.
 
 ### v2.1.0 (2022-07-06)
 Required CityEngine version: 2022.0 or older.
