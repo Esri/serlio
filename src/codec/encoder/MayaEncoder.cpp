@@ -75,7 +75,7 @@ constexpr const wchar_t* ENC_DESCRIPTION = L"Encodes geometry into the Maya form
 const prtx::EncodePreparator::PreparationFlags PREP_FLAGS =
         prtx::EncodePreparator::PreparationFlags()
                 .instancing(false)
-                .mergeByMaterial(true)
+                .meshMerging(prtx::MeshMerging::ALL_OF_SAME_MATERIAL_AND_TYPE)
                 .triangulate(false)
                 .processHoles(prtx::HoleProcessor::TRIANGULATE_FACES_WITH_HOLES)
                 .mergeVertices(true)
@@ -554,9 +554,11 @@ private:
 					mCounts.push_back(vtxCnt);
 					const uint32_t* vtxIdx = mesh->getFaceVertexIndices(fi);
 					const uint32_t* nrmIdx = mesh->getFaceVertexNormalIndices(fi);
+					const size_t nrmCnt = mesh->getFaceVertexNormalCount(fi);
 					for (uint32_t vi = 0; vi < vtxCnt; vi++) {
 						mVertexIndices.push_back(vertexIndexBase + vtxIdx[vi]);
-						mNormalIndices.push_back(normalIndexBase + nrmIdx[vi]);
+						if (nrmCnt > vi && nrmIdx != nullptr)
+							mNormalIndices.push_back(normalIndexBase + nrmIdx[vi]);
 					}
 				}
 

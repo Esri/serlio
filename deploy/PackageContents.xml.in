@@ -22,15 +22,6 @@
 
     <!-- OS: Valid values seem to be win64|macOS|linux -->
     <Components>
-        <RuntimeRequirements SupportPath="./2019/doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="2019" SeriesMax="2019" />
-        <MayaEnv expr="PATH+:=2019/plug-ins/" />
-        <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2019/plug-ins/" />
-        <MayaEnv expr="MAYA_SCRIPT_PATH+:=2019/scripts/" />
-        <MayaEnv expr="XBMLANGPATH+:=2019/icons/" />
-        <ComponentEntry ModuleName="@MLL_NAME@.mll" AutoLoad="True" />
-    </Components>
-
-    <Components>
         <RuntimeRequirements SupportPath="./2020/doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="2020" SeriesMax="2020" />
         <MayaEnv expr="PATH+:=2020/plug-ins/" />
         <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2020/plug-ins/" />
@@ -45,6 +36,15 @@
         <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2022/plug-ins/" />
         <MayaEnv expr="MAYA_SCRIPT_PATH+:=2022/scripts/" />
         <MayaEnv expr="XBMLANGPATH+:=2022/icons/" />
+        <ComponentEntry ModuleName="@MLL_NAME@.mll" AutoLoad="True" />
+    </Components>
+
+    <Components>
+        <RuntimeRequirements SupportPath="./2023/doc" OS="@SRL_INST_OS@" Platform="Maya" SeriesMin="2023" SeriesMax="2023" />
+        <MayaEnv expr="PATH+:=2023/plug-ins/" />
+        <MayaEnv expr="MAYA_PLUG_IN_PATH+:=2023/plug-ins/" />
+        <MayaEnv expr="MAYA_SCRIPT_PATH+:=2023/scripts/" />
+        <MayaEnv expr="XBMLANGPATH+:=2023/icons/" />
         <ComponentEntry ModuleName="@MLL_NAME@.mll" AutoLoad="True" />
     </Components>
 </ApplicationPackage>
