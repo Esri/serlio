@@ -198,6 +198,7 @@ Required Cityengine version: 2023.0 or older.
 
 #### Changed:
 * Updated Procedural Runtime (PRT) to 3.0 (corresponds to CityEngine 2023.0).
+* Fixed sorting of rule attributes in the Attribute Editor to get same behavior as in the CityEngine Inspector.
 
 #### Removed:
 * Support for Maya 2019.
