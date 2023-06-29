@@ -34,8 +34,9 @@ External documentation:
 Please refer to the [release notes](#release-notes) for the supported CityEngine version.
 ### Installation
 
-#### Software Requirements
+#### Software Requirements (Latest Release)
 - Windows 10 and 11 (64bit)
+- RedHat Enterprise Linux 7, 8, 9 and compatible (CentOS, Alma Linux, Rocky Linux, ...)
 - CityEngine 2022.1 or older
 - Autodesk Maya 2020, 2022 or 2023
 
