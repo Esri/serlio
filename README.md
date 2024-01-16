@@ -190,6 +190,12 @@ Currently we only support one material type per mesh (see [known limitations](#k
 
 ## Release Notes
 
+### v2.3.0 (2024-04-02)
+Required Cityengine version: 2023.1 or older.
+
+#### Changed:
+* Updated Procedural Runtime (PRT) to 3.1 (corresponds to CityEngine 2023.1).
+
 ### v2.2.0 (2023-06-15)
 Required Cityengine version: 2023.0 or older.
 

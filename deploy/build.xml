@@ -16,7 +16,7 @@
 
 	<property name="serlio.vendor" value="Esri R&amp;amp;D Center Zurich" />
 	<property name="serlio.version.major" value="2" />
-	<property name="serlio.version.minor" value="2" />
+	<property name="serlio.version.minor" value="3" />
 	<property name="serlio.version.patch" value="0" />
 	<property name="serlio.version.mmp" value="${serlio.version.major}.${serlio.version.minor}.${serlio.version.patch}" />
 	<property name="serlio.version.preRelease" value="" />

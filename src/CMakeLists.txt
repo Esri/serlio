@@ -11,7 +11,7 @@ include(common.cmake)
 ### version (keep in sync with deploy/build.xml)
 
 set(SRL_VERSION_MAJOR 2)
-set(SRL_VERSION_MINOR 2)
+set(SRL_VERSION_MINOR 3)
 set(SRL_VERSION_PATCH 0)
 
 if (NOT SRL_VERSION_BUILD)
