@@ -37,7 +37,7 @@ Please refer to the [release notes](#release-notes) for the supported CityEngine
 #### Software Requirements (Latest Release)
 - Windows 10 and 11 (64bit)
 - RedHat Enterprise Linux 7, 8, 9 and compatible (CentOS, Alma Linux, Rocky Linux, ...)
-- CityEngine 2022.1 or older
+- See [release notes](#release-notes) for compatible CityEngine versions and requirements for commercial work.
 - Autodesk Maya 2020, 2022 or 2023
 
 #### Windows: Provided Installer
@@ -192,7 +192,8 @@ Currently we only support one material type per mesh (see [known limitations](#k
 
 ### v2.3.0 (2024-04-02)
 Required Cityengine version: 2023.1 or older.
-
+For commercial work, a [license](https://www.esri.com/cityengine) for CityEngine 2023.1 is required.
+  
 #### Changed:
 * Updated Procedural Runtime (PRT) to 3.1 (corresponds to CityEngine 2023.1).
 
