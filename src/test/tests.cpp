@@ -298,17 +298,17 @@ TEST_CASE("replaceCGACWithCEVersion") {
 	}
 
 	SECTION("major number larger than current") {
-		std::wstring inp = L"Unsupported CGAC version 2.0 : major number larger than current (1.17)";
+		std::wstring inp = L"Unsupported CGAC version 3.0 : major number larger than current (1.17)";
 		const std::wstring exp =
-		        L"Unsupported CityEngine version newer than 2022.0 : major number larger than current (2021.1)";
+		        L"Unsupported CityEngine version newer than 2023.1 : major number larger than current (2021.1)";
 		prtu::replaceCGACWithCEVersion(inp);
 		CHECK(inp == exp);
 	}
 
 	SECTION("major number smaller than current") {
-		std::wstring inp = L"Potentially unsupported CGAC version 1.0 : major number smaller than current (2.0)";
+		std::wstring inp = L"Potentially unsupported CGAC version 1.0 : major number smaller than current (3.0)";
 		const std::wstring exp = L"Potentially unsupported CityEngine version 2013.0 : major number smaller than "
-		                         L"current (newer than 2022.0)";
+		                         L"current (newer than 2023.1)";
 		prtu::replaceCGACWithCEVersion(inp);
 		CHECK(inp == exp);
 	}
