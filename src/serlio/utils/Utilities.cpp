@@ -49,12 +49,16 @@ const std::wstring MAYA_SEPARATOR = L"_";
 const std::wstring MAYA_COMPATIBLE_CHARS = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
 const std::wstring DIGIT_CHARS = L"0123456789";
 
-const std::wstring TOO_NEW_CE_VERSION = L"newer than 2022.0";
+const std::wstring TOO_NEW_CE_VERSION = L"newer than 2023.1";
 const std::wstring CGAC_VERSION_STRING = L"CGAC version ";
 const std::wstring CE_VERSION_STRING = L"CityEngine version ";
 
 const std::map<std::wstring, std::wstring> cgacToCEVersion = {
         // clang-format off
+	{L"2.2", L"2023.1"},
+	{L"2.1", L"2023.0"},
+	{L"2.0", L"2023.0"},
+	{L"1.19", L"2022.1"},
 	{L"1.18", L"2022.0"},
 	{L"1.17", L"2021.1"},
 	{L"1.16", L"2021.0"},
