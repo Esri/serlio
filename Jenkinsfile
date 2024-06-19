@@ -130,9 +130,7 @@ def taskBuildCMake(cfg, target){
 	cepl.cleanCurrentDir()
 	unstash(name: SOURCE_STASH)
 	deps.each { d -> papl.fetchDependency(d, cfg) }
-	papl.jpe.dir(path: 'build') {
-		papl.runCMakeBuild(SOURCES, target, cfg, defs)
-	}
+	papl.runCMakeBuild(SOURCES, 'build', target, cfg, defs)
 }
 
 def taskBuildSerlio(cfg) {
