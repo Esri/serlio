@@ -100,12 +100,12 @@ Currently we only support one material type per mesh (see [known limitations](#k
 
 #### Windows
 * Windows 7, 8.1 or 10 (64bit)
-* Required C++ compiler: Visual Studio 2019 with Toolset MSVC 14.27 or later
+* Required C++ compiler: Visual Studio 2022 with Toolset MSVC 14.37 or later
 * WiX Toolset 3.11.1: Optional, required for building .msi installers
 
 #### Linux
-* RedHat Enterprise Linux 7.x or compatible
-* Required C++ compiler: GCC 9.3 or later (RedHat Enterprise Linux DevToolSet 9.1)
+* RedHat Enterprise Linux 8.x or compatible
+* Required C++ compiler: GCC 11.2 or later (RedHat Enterprise Linux DevToolSet 11)
 
 ### Build Instructions 
 
@@ -116,7 +116,7 @@ Currently we only support one material type per mesh (see [known limitations](#k
 2. Create a build directory with `mkdir build` and change into it with `cd build`.
 3. Run `cmake` to generate a Visual Studio solution:
    ```
-   cmake -G "Visual Studio 16 2019" ../src
+   cmake -G "Visual Studio 17 2022" ../src
    ```
    Use options `-Dprt_DIR=<ce sdk root>\cmake` and `-Dmaya_DIR=<maya installation root>` to override the default locations of CityEngine SDK and Maya.
 1. Open the generated `serlio_parent.sln` in Visual Studio.
