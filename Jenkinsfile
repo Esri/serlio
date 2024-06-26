@@ -32,6 +32,7 @@ properties([ disableConcurrentBuilds() ])
 @Field final String BUILD_TARGET = 'package'
 @Field final String SOURCE_STASH = 'serlio-src'
 
+
 @Field final Map DOCKER_IMAGE_LINUX_CONFIG = [ ba: psl.BA_LINUX_DOCKER, containerId: "build_tools/ce-tc-prt:almalinux8-gcc11-v2", containerWorkspace: "/tmp/app" ]
 
 @Field final List CHECKOUT_CONFIG = [
