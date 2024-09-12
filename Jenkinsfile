@@ -4,7 +4,7 @@
 
 // -- PIPELINE LIBRARIES
 
-@Library('psl')
+@Library('psl@chr11115/upgrade_outdated_papl_deps')
 import com.esri.zrh.jenkins.PipelineSupportLibrary 
 import com.esri.zrh.jenkins.PslFactory 
 import com.esri.zrh.jenkins.psl.UploadTrackingPsl
@@ -20,7 +20,7 @@ import groovy.transform.Field
 
 // -- SETUP
 
-psl.runsHere('production')
+psl.runsHere('development')
 env.PIPELINE_ARCHIVING_ALLOWED = "true"
 properties([ disableConcurrentBuilds() ])
 
